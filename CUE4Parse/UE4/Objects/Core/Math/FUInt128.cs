@@ -34,10 +34,10 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         {
             switch (part)
             {
-                case 3: Hi &= 4294967295u | ((ulong)value << 32); break;
-                case 2: Hi &= 18446744069414584320u | value; break;
-                case 1: Lo &= 4294967295u | ((ulong)value << 32); break;
-                case 0: Lo &= 18446744069414584320u | value; break;
+                case 3: Hi = (Hi & 4294967295u) | ((ulong)value << 32); break;
+                case 2: Hi = (Hi & 18446744069414584320u) | value; break;
+                case 1: Lo = (Lo & 4294967295u) | ((ulong)value << 32); break;
+                case 0: Lo = (Lo & 18446744069414584320u) | value; break;
                 default: break;
             }
         }

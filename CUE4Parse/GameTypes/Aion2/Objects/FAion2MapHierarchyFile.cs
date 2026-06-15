@@ -35,7 +35,7 @@ public class FAion2MapHierarchyFile : FAion2DataFile
                 throw new ParserException(Ar, $"Expected Subzone type, got {type} type");
             Id = Ar.Read<uint>();
             if (Id != id)
-                throw new ParserException(Ar, $"World ID mismatch, expected {Id}, got {Id}");
+                throw new ParserException(Ar, $"World ID mismatch, expected {id}, got {Id}");
             SubZones = Ar.ReadArray(() => new FAion2SubZone(Ar));
         }
     }

@@ -211,7 +211,7 @@ public class CriWareProvider
                 }
             }
 
-            int waveformsCount = memoryAwb?.Waves.Count ?? 0 + streamingAwb?.Waves.Count ?? 0;
+            int waveformsCount = (memoryAwb?.Waves.Count ?? 0) + (streamingAwb?.Waves.Count ?? 0);
             if (visitedWaveforms.Count < waveformsCount)
             {
                 Log.Warning($"Not all waveforms were extracted from ACB '{baseName}'. Extracted {visitedWaveforms.Count} out of {waveformsCount}.");

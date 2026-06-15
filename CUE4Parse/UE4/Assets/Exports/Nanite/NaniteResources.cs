@@ -170,7 +170,7 @@ public class FNaniteResources
                 Buffer.BlockCopy(StreamablePages.Data, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
             }
 
-            using var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, versionContainer);
+            using var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, (long) page.BulkSize, versionContainer);
             outPage = new FNaniteStreamableData(pageArchive, this, pageIndex);
         }
         catch (Exception ex)

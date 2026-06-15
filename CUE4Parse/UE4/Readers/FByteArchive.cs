@@ -125,6 +125,6 @@ namespace CUE4Parse.UE4.Readers
             Position += size;
         }
 
-        public override object Clone() => new FByteArchive(Name, _data, Versions) {Position = Position};
+        public override object Clone() => new FByteArchive(Name, _data, Length, Versions) {Position = Position};
     }
 }

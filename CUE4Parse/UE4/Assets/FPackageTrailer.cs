@@ -109,6 +109,7 @@ public class FPackageTrailer
                 if (Version < (uint) EPackageTrailerVersion.ACCESS_PER_PAYLOAD)
                 {
                     entry.AccessMode = entry.OffsetInFile != -1 ? LegacyAccessMode : EPayloadAccessMode.Virtualized;
+                    PayloadLookupTable[i] = entry;
                 }
             }
         }

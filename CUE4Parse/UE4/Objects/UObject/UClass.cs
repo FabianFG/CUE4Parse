@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
+using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler.Cfg;
 using CUE4Parse.UE4.Objects.UObject.Editor;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -110,12 +111,18 @@ public class UClass : UStruct
         BlueprintDecompilerUtils.Mappings = mappings;
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
+        if (baseClass == "IInterface") baseClass = "UInterface";
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
 
         var classDefaultObject = ClassDefaultObject.Load();
         bool emptyClass = Properties.Count == 0 && (ChildProperties?.Length ?? 0) == 0 && FuncMap.Count == 0 && (classDefaultObject?.Properties.Count ?? 0) == 0;
 
         var c = $"class {derivedClass} : {accessSpecifier} {baseClass}";
+        foreach (var implementedInterface in Interfaces)
+        {
+            if (implementedInterface.Class.IsNull) continue;
+            c += $", public I{implementedInterface.Class.Name}";
+        }
         if (emptyClass) return $"{c};";
 
         var stringBuilder = new CustomStringBuilder();
@@ -125,11 +132,42 @@ public class UClass : UStruct
         var distinct = new HashSet<string>();
         var variables = new Dictionary<string, EAccessMode>();
 
+        var containerStructByName = new Dictionary<string, string>();
+        var containerTypeByName = new Dictionary<string, string>();
+        var scope = (UStruct?) this;
+        for (var depth = 0; scope is not null and not UScriptClass && depth < 100; scope = scope.SuperStruct.Load<UStruct>(), depth++)
+        {
+            foreach (var childProperty in scope.ChildProperties ?? [])
+            {
+                if (childProperty is not FProperty property)
+                    continue;
+                FProperty? element = property switch
+                {
+                    FMapProperty map => map.ValueProp,
+                    FArrayProperty array => array.Inner,
+                    FSetProperty set => set.ElementProp,
+                    _ => null
+                };
+                if (element is FStructProperty structElement)
+                    containerStructByName.TryAdd(property.Name.Text, structElement.Struct.Name);
+
+                var containerType = BlueprintDecompilerUtils.ResolveContainerType(property);
+                if (containerType is not null)
+                    containerTypeByName.TryAdd(property.Name.Text, containerType);
+            }
+        }
+
         var combined = Properties.Concat(classDefaultObject?.Properties ?? []).Concat(classDefaultObject?.SerializedSparseClassData?.Properties ?? []);
         foreach (var property in combined)
         {
             if (!distinct.Add(property.Name.Text)) continue;
-            variables.TryAdd(property.GetCppVariable(), EAccessMode.Public); // should always be public
+            var cppVariable = property.GetCppVariable();
+            if (containerTypeByName.TryGetValue(property.Name.Text, out var containerType))
+                cppVariable = BlueprintDecompilerUtils.ReplaceUnknownContainer(cppVariable, containerType);
+            if (containerStructByName.TryGetValue(property.Name.Text, out var structName)
+                && System.Text.RegularExpressions.Regex.Matches(cppVariable, @"\bstruct\b(?! F)").Count == 1)
+                cppVariable = System.Text.RegularExpressions.Regex.Replace(cppVariable, @"\bstruct\b(?! F)", $"struct F{structName}");
+            variables.TryAdd(cppVariable, EAccessMode.Public); // should always be public
         }
         foreach (var childProperty in ChildProperties ?? [])
         {
@@ -141,7 +179,10 @@ public class UClass : UStruct
                 continue;
 
             var value = variableValue is null ? string.Empty : $" = {variableValue}";
-            variables.TryAdd($"{variableType} {property.Name.Text}{value};", property.GetAccessMode());
+            var bitfield = property is FBoolProperty { bIsNativeBool: false } ? " : 1" : "";
+            var arrayDim = property.ArrayDim > 1 ? $"[{property.ArrayDim}]" : "";
+            var specifiers = GetPropertySpecifiers(property);
+            variables.TryAdd($"{specifiers}{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(property.Name.Text)}{arrayDim}{bitfield}{value};", property.GetAccessMode());
         }
 
         foreach (var group in variables.GroupBy(pair => pair.Value))
@@ -160,6 +201,7 @@ public class UClass : UStruct
         if (totalFuncMapCount > 0) stringBuilder.AppendLine();
 
         var jumpCodeOffsetsMap = new Dictionary<string, List<int>>();
+        var entryOffsetsMap = new Dictionary<string, List<int>>();
         foreach (var value in FuncMap.Values.Reverse())
         {
             if (!value.TryLoad(out var export) || export is not UFunction function)
@@ -170,9 +212,12 @@ public class UClass : UStruct
             {
                 string? label = null;
                 int? offset = null;
+                var isEntryCall = false;
 
                 switch (expression)
                 {
+                    case EX_Skip:
+                        break;
                     case EX_Jump jump:
                         var targetIndex = (int)jump.CodeOffset;
                         targetIndex = Array.FindIndex(function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
@@ -187,11 +232,13 @@ public class UClass : UStruct
                         label = final.VirtualFunctionName.Text.Split('.').Last().Split('[')[0];
                         if (final.Parameters is [EX_IntConst intConstVirtual])
                             offset = intConstVirtual.Value;
+                        isEntryCall = true;
                         break;
                     case EX_LocalFinalFunction final:
                         label = final.StackNode.Name.Split('.').Last().Split('[')[0];
                         if (final.Parameters is [EX_IntConst intConst])
                             offset = intConst.Value;
+                        isEntryCall = true;
                         break;
                     case EX_CallMath math:
                         // creates Labels for Delayed jumps
@@ -223,14 +270,33 @@ public class UClass : UStruct
                         jumpCodeOffsetsMap[label] = list = [];
 
                     list.Add(offset.Value);
+
+                    if (isEntryCall)
+                    {
+                        if (!entryOffsetsMap.TryGetValue(label, out var entryList))
+                            entryOffsetsMap[label] = entryList = [];
+
+                        entryList.Add(offset.Value);
+                    }
                 }
             }
         }
+
+        UFunction? inlineUbergraph = null;
+        UbergraphInlinePlan? inlinePlan = null;
+        var eventInlineOffset = new Dictionary<FName, int>();
+        if (Owner?.Provider?.RaiseBlueprintIdioms ?? false)
+            inlinePlan = PlanUbergraphInlining(entryOffsetsMap, out inlineUbergraph, eventInlineOffset);
+        if (inlinePlan != null)
+            totalFuncMapCount--;
 
         var index = 1;
         foreach (var (key, value) in FuncMap)
         {
             if (!value.TryLoad(out var export) || export is not UFunction function)
+                continue;
+
+            if (inlinePlan != null && function == inlineUbergraph)
                 continue;
 
             BlueprintDecompilerUtils.Function = function;
@@ -252,7 +318,7 @@ public class UClass : UStruct
                     continue;
                 }
 
-                parametersList.Add($"{variableType} {property.Name}");
+                parametersList.Add($"{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(property.Name.ToString())}");
             }
 
             foreach (var child in function.Children ?? [])
@@ -270,7 +336,7 @@ public class UClass : UStruct
                     continue;
                 }
 
-                parametersList.Add($"{variableType} {property.Name}");
+                parametersList.Add($"{variableType} {BlueprintDecompilerUtils.SanitizeIdentifier(property.Name.ToString())}");
             }
 
             var functionStringBuilder = new CustomStringBuilder();
@@ -291,18 +357,52 @@ public class UClass : UStruct
             }
 
             var flags = $"({string.Join(", ", function.FunctionFlags.ToString().Split('|').Select(f => f.Trim().Replace("FUNC_", "")))})";
-            var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {returnType} {key.Text}({string.Join(", ", parametersList)})";
+            var functionFlags = function.FunctionFlags;
+            var isBlueprintEvent = functionFlags.HasFlag(EFunctionFlags.FUNC_BlueprintEvent);
+            var functionQualifiers = functionFlags.HasFlag(EFunctionFlags.FUNC_Static) ? "static "
+                : isBlueprintEvent && !functionFlags.HasFlag(EFunctionFlags.FUNC_Final) ? "virtual " : "";
+            var functionConst = functionFlags.HasFlag(EFunctionFlags.FUNC_Const) && !functionFlags.HasFlag(EFunctionFlags.FUNC_Static) ? " const" : "";
+            var functionOverride = IsOverriddenFunction(key) ? " override" : "";
+            var sanitizedFunctionName = BlueprintDecompilerUtils.SanitizeIdentifier(key.Text);
+            var functionName = isBlueprintEvent && functionFlags.HasFlag(EFunctionFlags.FUNC_Native) ? $"{sanitizedFunctionName}_Implementation" : sanitizedFunctionName;
+            var functionExpression = $"{function.GetAccessMode().ToString().ToLower()} {functionQualifiers}{returnType} {functionName}({string.Join(", ", parametersList)}){functionConst}{functionOverride}";
+            var replicationSpecifiers = GetFunctionReplicationSpecifiers(functionFlags);
+            if (replicationSpecifiers.Length > 0)
+                functionStringBuilder.AppendLine($"// {replicationSpecifiers}");
             functionStringBuilder.AppendLine($"// {flags}");
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();
 
+            if (inlinePlan != null && eventInlineOffset.TryGetValue(key, out var inlineOffset))
+            {
+                BlueprintDecompilerUtils.Function = inlineUbergraph!;
+                inlinePlan.TryEmit(inlineOffset, functionStringBuilder);
+                functionStringBuilder.CloseBlock();
+                stringBuilder.AppendLine(functionStringBuilder.ToString());
+                if (index < totalFuncMapCount) stringBuilder.AppendLine();
+                index++;
+                continue;
+            }
+
             if (function?.ScriptBytecode == null || function?.ScriptBytecode.Length == 0)
             {
                 functionStringBuilder.AppendLine("// No Script Bytecode");
-                stringBuilder.CloseBlock("};");
-                return stringBuilder.ToString();
+                functionStringBuilder.CloseBlock();
+                stringBuilder.AppendLine(functionStringBuilder.ToString());
+                if (index < totalFuncMapCount) stringBuilder.AppendLine();
+                index++;
+                continue;
             }
             var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
+            var entryCodeOffsets = entryOffsetsMap.TryGetValue(function.Name, out var entryList) ? entryList : [];
+            if ((Owner?.Provider?.StructureControlFlow ?? false) && BlueprintCfg.TryStructure(function, entryCodeOffsets, functionStringBuilder))
+            {
+                functionStringBuilder.CloseBlock();
+                stringBuilder.AppendLine(functionStringBuilder.ToString());
+                if (index < totalFuncMapCount) stringBuilder.AppendLine();
+                index++;
+                continue;
+            }
             for (int i = 0; i < function.ScriptBytecode.Length; i++)
             {
                 var kismetExpression = function.ScriptBytecode[i];
@@ -340,6 +440,137 @@ public class UClass : UStruct
 
         stringBuilder.CloseBlock("};");
         return stringBuilder.ToString();
+    }
+
+    private static string GetPropertySpecifiers(FProperty property)
+    {
+        var flags = property.PropertyFlags;
+        var specifiers = new List<string>();
+        if (flags.HasFlag(EPropertyFlags.Edit)) specifiers.Add("EditAnywhere");
+        if (flags.HasFlag(EPropertyFlags.BlueprintVisible)) specifiers.Add(flags.HasFlag(EPropertyFlags.BlueprintReadOnly) ? "BlueprintReadOnly" : "BlueprintReadWrite");
+        if (flags.HasFlag(EPropertyFlags.Net))
+        {
+            specifiers.Add(property.RepNotifyFunc.IsNone ? "Replicated" : $"ReplicatedUsing={property.RepNotifyFunc.Text}");
+            if (property.BlueprintReplicationCondition != ELifetimeCondition.COND_None) specifiers.Add(property.BlueprintReplicationCondition.ToString());
+        }
+        if (flags.HasFlag(EPropertyFlags.Transient)) specifiers.Add("Transient");
+        if (flags.HasFlag(EPropertyFlags.SaveGame)) specifiers.Add("SaveGame");
+        if (flags.HasFlag(EPropertyFlags.Config)) specifiers.Add("Config");
+        return specifiers.Count > 0 ? $"// ({string.Join(", ", specifiers)})\n" : "";
+    }
+
+    private enum UbergraphCall { None, Pure, Impure }
+
+    private UbergraphInlinePlan? PlanUbergraphInlining(Dictionary<string, List<int>> entryOffsetsMap, out UFunction? ubergraph, Dictionary<FName, int> eventInlineOffset)
+    {
+        ubergraph = null;
+
+        UFunction? found = null;
+        foreach (var (_, value) in FuncMap)
+        {
+            if (!value.TryLoad(out var export) || export is not UFunction fn || !fn.FunctionFlags.HasFlag(EFunctionFlags.FUNC_UbergraphFunction))
+                continue;
+            if (found != null) return null;
+            found = fn;
+        }
+        if (found is null || found.ScriptBytecode is not { Length: > 0 })
+            return null;
+        if (!entryOffsetsMap.TryGetValue(found.Name, out var entries) || entries.Count == 0)
+            return null;
+
+        var plan = BlueprintCfg.TryPlanUbergraphInline(found, entries);
+        if (plan is null)
+            return null;
+
+        var offsetToEvent = new Dictionary<int, FName>();
+        foreach (var (key, value) in FuncMap)
+        {
+            if (!value.TryLoad(out var export) || export is not UFunction fn || fn == found)
+                continue;
+            switch (AnalyzeUbergraphCaller(fn, found.Name, out var offset))
+            {
+                case UbergraphCall.Pure:
+                    if (!plan.Contains(offset) || !offsetToEvent.TryAdd(offset, key)) return null;
+                    break;
+                case UbergraphCall.Impure:
+                    return null;
+            }
+        }
+        if (offsetToEvent.Count != plan.EntryOffsets.Count)
+            return null;
+
+        ubergraph = found;
+        foreach (var (offset, eventKey) in offsetToEvent)
+            eventInlineOffset[eventKey] = offset;
+        return plan;
+    }
+
+    private static UbergraphCall AnalyzeUbergraphCaller(UFunction function, string ubergraphName, out int offset)
+    {
+        offset = 0;
+        if (function.ScriptBytecode is not { } code)
+            return UbergraphCall.None;
+
+        var dispatches = 0;
+        var meaningful = 0;
+        foreach (var statement in code)
+        {
+            if (statement is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript or EX_Return)
+                continue;
+            meaningful++;
+            if (TryUbergraphDispatch(statement, ubergraphName, out var dispatchOffset))
+            {
+                dispatches++;
+                offset = dispatchOffset;
+            }
+        }
+
+        if (dispatches == 0) return UbergraphCall.None;
+        return dispatches == 1 && meaningful == 1 ? UbergraphCall.Pure : UbergraphCall.Impure;
+    }
+
+    private static bool TryUbergraphDispatch(KismetExpression statement, string ubergraphName, out int offset)
+    {
+        offset = 0;
+        switch (statement)
+        {
+            case EX_FinalFunction local when local.StackNode.Name.Split('.').Last().Split('[')[0] == ubergraphName && local.Parameters is [EX_IntConst localConst]:
+                offset = localConst.Value;
+                return true;
+            case EX_VirtualFunction virtualFunc when virtualFunc.VirtualFunctionName.Text.Split('.').Last().Split('[')[0] == ubergraphName && virtualFunc.Parameters is [EX_IntConst virtualConst]:
+                offset = virtualConst.Value;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static string GetFunctionReplicationSpecifiers(EFunctionFlags flags)
+    {
+        if (!flags.HasFlag(EFunctionFlags.FUNC_Net)) return "";
+        var specifiers = new List<string>();
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetServer)) specifiers.Add("Server");
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetClient)) specifiers.Add("Client");
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetMulticast)) specifiers.Add("NetMulticast");
+        specifiers.Add(flags.HasFlag(EFunctionFlags.FUNC_NetReliable) ? "Reliable" : "Unreliable");
+        if (flags.HasFlag(EFunctionFlags.FUNC_NetValidate)) specifiers.Add("WithValidation");
+        return $"UFUNCTION({string.Join(", ", specifiers)})";
+    }
+
+    private bool IsOverriddenFunction(FName name)
+    {
+        var current = SuperStruct.Load<UStruct>();
+        var depth = 0;
+        while (current is UClass parent && parent is not UScriptClass && depth++ < 100)
+        {
+            foreach (var parentFunction in parent.FuncMap.Keys)
+            {
+                if (string.Equals(parentFunction.Text, name.Text, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            current = parent.SuperStruct.Load<UStruct>();
+        }
+        return false;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

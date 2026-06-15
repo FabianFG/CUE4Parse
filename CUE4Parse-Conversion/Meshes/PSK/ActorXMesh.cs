@@ -363,14 +363,19 @@ public class ActorXMesh
         {
             case ESocketFormat.Socket:
             {
-                var socketInfoHdr = new VChunkHeader { DataCount = sockets.Length, DataSize = Constants.VSocket_SIZE };
-                Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
-
+                var loadedSockets = new List<USkeletalMeshSocket>();
                 for (var i = 0; i < sockets.Length; i++)
                 {
                     var socket = sockets[i].Load<USkeletalMeshSocket>();
                     if (socket is null) continue;
+                    loadedSockets.Add(socket);
+                }
 
+                var socketInfoHdr = new VChunkHeader { DataCount = loadedSockets.Count, DataSize = Constants.VSocket_SIZE };
+                Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
+
+                foreach (var socket in loadedSockets)
+                {
                     var pskSocket = new VSocket(socket.SocketName.Text, socket.BoneName.Text, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
                     pskSocket.Serialize(Ar);
                 }
@@ -418,14 +423,19 @@ public class ActorXMesh
         {
             case ESocketFormat.Socket:
             {
-                var socketInfoHdr = new VChunkHeader { DataCount = sockets.Length, DataSize = Constants.VSocket_SIZE };
-                Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
-
+                var loadedSockets = new List<UStaticMeshSocket>();
                 for (var i = 0; i < sockets.Length; i++)
                 {
                     var socket = sockets[i].Load<UStaticMeshSocket>();
                     if (socket is null) continue;
+                    loadedSockets.Add(socket);
+                }
 
+                var socketInfoHdr = new VChunkHeader { DataCount = loadedSockets.Count, DataSize = Constants.VSocket_SIZE };
+                Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
+
+                foreach (var socket in loadedSockets)
+                {
                     var pskSocket = new VSocket(socket.SocketName.Text, string.Empty, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
                     pskSocket.Serialize(Ar);
                 }

@@ -67,6 +67,16 @@ namespace CUE4Parse.FileProvider
         public bool ReadScriptData { get; set; }
 
         /// <summary>
+        /// Whether the blueprint decompiler should recover structured control flow instead of emitting labels and gotos
+        /// </summary>
+        public bool StructureControlFlow { get; set; }
+
+        /// <summary>
+        /// Whether the blueprint decompiler should raise blueprint idioms, e.g. inline ubergraph event bodies into their event handlers
+        /// </summary>
+        public bool RaiseBlueprintIdioms { get; set; }
+
+        /// <summary>
         /// Whether UMaterials by this file provider should read the inlined shader maps
         /// </summary>
         public bool ReadShaderMaps { get; set; }

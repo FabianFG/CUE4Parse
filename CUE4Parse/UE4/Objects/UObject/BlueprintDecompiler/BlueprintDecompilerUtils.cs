@@ -25,13 +25,89 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 public static class BlueprintDecompilerUtils
 {
     public static TypeMappings? Mappings { get; set; }
-    public static UFunction Function { get; set; }
+    private static UFunction _function = null!;
+    public static UFunction Function
+    {
+        get => _function;
+        set
+        {
+            _function = value;
+            _executionFlowStack.Clear();
+            ComputeDelegateFolds(value);
+        }
+    }
     private static readonly Stack<int> _executionFlowStack = new();
+
+    private static bool RaiseIdioms => Function?.Owner?.Provider?.RaiseBlueprintIdioms ?? false;
+
+    private static readonly HashSet<KismetExpression> _foldedDelegateBinds = new();
+    private static readonly Dictionary<KismetExpression, string> _foldedDelegateTargets = new();
+
+    private static void ComputeDelegateFolds(UFunction? function)
+    {
+        _foldedDelegateBinds.Clear();
+        _foldedDelegateTargets.Clear();
+        if (function?.ScriptBytecode is not { } code || !(function.Owner?.Provider?.RaiseBlueprintIdioms ?? false))
+            return;
+
+        var builder = new System.Text.StringBuilder();
+        foreach (var statement in code)
+        {
+            if (statement is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript)
+                continue;
+            builder.Append(GetLineExpression(statement));
+            builder.Append('\n');
+        }
+        var rendered = builder.ToString();
+
+        foreach (var statement in code)
+        {
+            if (statement is not EX_BindDelegate bind || bind.Delegate is not EX_VariableBase bindVariable)
+                continue;
+
+            var localName = bindVariable.Variable.ToString();
+            if (!IsIdentifierName(localName))
+                continue;
+            if (System.Text.RegularExpressions.Regex.Matches(rendered, $@"\b{System.Text.RegularExpressions.Regex.Escape(localName)}\b").Count != 2)
+                continue;
+
+            foreach (var consumer in code)
+            {
+                KismetExpression? toAdd = consumer switch
+                {
+                    EX_AddMulticastDelegate add => add.DelegateToAdd,
+                    EX_RemoveMulticastDelegate remove => remove.DelegateToAdd,
+                    _ => null
+                };
+                if (toAdd is not EX_VariableBase addVariable || addVariable.Variable.ToString() != localName)
+                    continue;
+
+                _foldedDelegateBinds.Add(bind);
+                _foldedDelegateTargets[consumer] = $"{GetLineExpression(bind.ObjectTerm)}->{SanitizeIdentifier(bind.FunctionName.Text)}";
+                break;
+            }
+        }
+
+        _executionFlowStack.Clear();
+    }
+
+    private static bool IsIdentifierName(string name)
+    {
+        if (name.Length == 0) return false;
+        foreach (var c in name)
+        {
+            if (c != '_' && !(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9'))
+                return false;
+        }
+        return true;
+    }
 
     public static string GetClassWithPrefix(UStruct? prefixClassStruct)
     {
+        if (prefixClassStruct?.Name is not { Length: > 0 } name)
+            return "UObject";
         var prefix = GetPrefix(prefixClassStruct);
-        return $"{prefix}{prefixClassStruct?.Name}";
+        return $"{prefix}{name}";
     }
 
     private static string GetPrefix(UStruct? struc)
@@ -111,9 +187,9 @@ public static class BlueprintDecompilerUtils
         if (className.StartsWith("SolarisMathLibrary_") || className == "KismetMathLibrary")
         {
             if (functionName.StartsWith("EqualEqual_ByteByte")) return $"((!{parametersList[0]}) == (!{parametersList[1]}))";
-            if (functionName.StartsWith("NotEqual_ByteByte")) return $"((!{parametersList[0]}) !== (!{parametersList[1]}))";
+            if (functionName.StartsWith("NotEqual_ByteByte")) return $"((!{parametersList[0]}) != (!{parametersList[1]}))";
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
-            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
+            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
             if (functionName.StartsWith("NotEqualExactly_")) return $"({parametersList[0]} != {parametersList[1]})";
             if (functionName.StartsWith("LessEqual_")) return $"({parametersList[0]} <= {parametersList[1]})";
             if (functionName.StartsWith("Less_")) return $"({parametersList[0]} < {parametersList[1]})";
@@ -212,7 +288,7 @@ public static class BlueprintDecompilerUtils
         if (className == "KismetStringLibrary")
         {
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
-            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
+            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
 
             if (functionName.EndsWith("ToDouble")) return $"(double){parametersList[0]}";
             if (functionName.EndsWith("ToFloat")) return $"(float){parametersList[0]}";
@@ -223,12 +299,11 @@ public static class BlueprintDecompilerUtils
             if (functionName.StartsWith("Conv_BoolToString")) return $"{parametersList[0]} ? \"true\" : \"false\"";
             if (functionName.EndsWith("ToString")) return $"FString({parametersList[0]})";
             if (functionName.EndsWith("ToName")) return $"FName({parametersList[0]})";
-            if (functionName.StartsWith("Concat_StrStr")) return string.Join(" += ", parametersList);
+            if (functionName.StartsWith("Concat_StrStr")) return string.Join(" + ", parametersList);
             if (functionName.StartsWith("ParseIntoArray")) return $"{parametersList[0]}.Split({parametersList[1]}, /* removeEmpty = */ {parametersList[2]})";
-            if (functionName.StartsWith("Contains")) return $"{parametersList[0]}.Contains({parametersList[1]}, /* removeEmpty = */ {parametersList[2]})";
             if (functionName.StartsWith("JoinStringArray")) return $"{parametersList[0]}.Join({parametersList[1]})";
             if (functionName.StartsWith("Replace")) return $"{parametersList[0]}.Replace({parametersList[1]}, {parametersList[2]}, /* SearchCase = */ {parametersList[3]})";
-            if (functionName.StartsWith("StartsWith")) return $"{parametersList[0]}.startswith({parametersList[1]}, /* SearchCase = */ {parametersList[2]})";
+            if (functionName.StartsWith("StartsWith")) return $"{parametersList[0]}.StartsWith({parametersList[1]}, /* SearchCase = */ {parametersList[2]})";
             if (functionName.StartsWith("Contains")) return $"{parametersList[0]}.Contains({parametersList[1]}, /* bUseCase = */ {parametersList[2]}, /* bSearchFromEnd = */ {parametersList[3]})";
             if (functionName.StartsWith("IsNumeric")) return $"{parametersList[0]}.IsNumeric()";
             if (functionName.StartsWith("Len")) return $"{parametersList[0]}.Length";
@@ -247,7 +322,7 @@ public static class BlueprintDecompilerUtils
         if (className == "KismetInputLibrary" || className == "BlueprintGameplayTagLibrary" || className == "FortKismetLibrary" || className == "KismetTextLibrary")
         {
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
-            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} !== {parametersList[1]})";
+            if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
             if (functionName.EndsWith("ToText")) return $"FText({parametersList[0]})";
             if (functionName.EndsWith("ToString"))  return $"FString({parametersList[0]})";
         }
@@ -320,16 +395,54 @@ public static class BlueprintDecompilerUtils
             "ObjectProperty" or "ClassProperty" => "UObject*",
             "StructProperty" => $"F{tagType.StructType}",
             "InterfaceProperty" => $"I{tagType.StructType}",
-            _ => throw new NotSupportedException($"PropertyType {tagType?.Type} is currently not supported")
+            _ => tagType?.Type ?? "unknown"
         };
 
-    private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
-                                                         property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
+    private static string EscapeCpp(string value) => value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r\n", "\\n").Replace("\n", "\\n");
+
+    private static readonly HashSet<string> ReservedIdentifiers = new()
+    {
+        "alignas", "alignof", "auto", "bool", "break", "case", "catch", "char", "class", "const",
+        "constexpr", "continue", "decltype", "default", "delete", "do", "double", "else", "enum",
+        "explicit", "extern", "false", "float", "for", "friend", "goto", "if", "inline", "int",
+        "long", "mutable", "namespace", "new", "noexcept", "nullptr", "operator", "private",
+        "protected", "public", "register", "return", "short", "signed", "sizeof", "static",
+        "struct", "switch", "template", "this", "throw", "true", "try", "typedef", "typename",
+        "union", "unsigned", "using", "virtual", "void", "volatile", "while"
+    };
+
+    public static string SanitizeIdentifier(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+
+        var valid = true;
+        for (var i = 0; i < name.Length; i++)
+        {
+            var c = name[i];
+            if (c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (i > 0 && c >= '0' && c <= '9'))
+                continue;
+            valid = false;
+            break;
+        }
+        if (valid && !ReservedIdentifiers.Contains(name)) return name;
+
+        var chars = name.ToCharArray();
+        for (var i = 0; i < chars.Length; i++)
+        {
+            var c = chars[i];
+            if (c != '_' && !(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9'))
+                chars[i] = '_';
+        }
+
+        var sanitized = char.IsDigit(chars[0]) ? "_" + new string(chars) : new string(chars);
+        return ReservedIdentifiers.Contains(sanitized) ? sanitized + "_" : sanitized;
+    }
+
+    private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
                                                          property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
                                                          property.GetType() == typeof(FObjectProperty);
 
-    private static bool IsPointer(UProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
-                                                         property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
+    private static bool IsPointer(UProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
                                                          property.PropertyFlags.HasFlag(EPropertyFlags.ContainsInstancedReference) ||
                                                          property.GetType() == typeof(UObjectProperty);
 
@@ -346,6 +459,26 @@ public static class BlueprintDecompilerUtils
 
         switch (property)
         {
+            case FSoftClassProperty softClassProperty:
+            {
+                type += $"TSoftClassPtr<{GetClassWithPrefix(softClassProperty.MetaClass.Load<UStruct>())}>";
+                break;
+            }
+            case FClassProperty classProperty:
+            {
+                type += $"TSubclassOf<{GetClassWithPrefix(classProperty.MetaClass.Load<UStruct>())}>";
+                break;
+            }
+            case FSoftObjectProperty softObjectProperty:
+            {
+                type += $"TSoftObjectPtr<{GetClassWithPrefix(softObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
+            case FWeakObjectProperty weakObjectProperty:
+            {
+                type += $"TWeakObjectPtr<{GetClassWithPrefix(weakObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
             case FObjectProperty objectProperty:
             {
                 // Looks bad and provides useless information.
@@ -367,19 +500,24 @@ public static class BlueprintDecompilerUtils
                 type += $"TArray<{innerType}>";
                 break;
             }
+            case FSetProperty setProperty:
+            {
+                var (_, innerType) = GetPropertyType(setProperty.ElementProp!);
+                type += $"TSet<{innerType}>";
+                break;
+            }
             case FStructProperty structProperty:
             {
                 var structType = structProperty.Struct.Name;
 
                 type += $"struct F{structType}";
-                value = structProperty.Struct.ToString();
                 break;
             }
             case FNumericProperty:
             {
                 if (property is FByteProperty byteProperty && byteProperty.Enum.TryLoad(out var enumObj))
                 {
-                    type = enumObj.Name;
+                    type = $"TEnumAsByte<{enumObj.Name}>";
                 }
                 else
                 {
@@ -389,7 +527,7 @@ public static class BlueprintDecompilerUtils
             }
             case FInterfaceProperty interfaceProperty:
             {
-                type = $"F{interfaceProperty.InterfaceClass.Name}";
+                type = $"I{interfaceProperty.InterfaceClass.Name}";
                 break;
             }
             case FBoolProperty boolProperty:
@@ -401,6 +539,11 @@ public static class BlueprintDecompilerUtils
             case FVerseStringProperty:
             {
                 type = "FString";
+                break;
+            }
+            case FUtf8StrProperty:
+            {
+                type = "FUtf8String";
                 break;
             }
             case FTextProperty:
@@ -441,6 +584,31 @@ public static class BlueprintDecompilerUtils
                 type = $"TOptional<{keyinnerType}>";
                 break;
             }
+            case FFieldPathProperty fieldPathProperty:
+            {
+                type = $"TFieldPath<F{fieldPathProperty.PropertyClass}>";
+                break;
+            }
+            case FMulticastInlineDelegateProperty multicastInlineDelegateProperty:
+            {
+                type = $"F{multicastInlineDelegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
+            case FMulticastDelegateProperty multicastDelegateProperty:
+            {
+                type = $"F{multicastDelegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
+            case FDelegateProperty delegateProperty:
+            {
+                type = $"F{delegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
+            case FReferenceProperty:
+            {
+                type = "Reference";
+                break;
+            }
             default:
             {
                 Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
@@ -448,13 +616,51 @@ public static class BlueprintDecompilerUtils
             }
         }
 
-        if (IsPointer(property))
+        if (IsPointer(property) && !type.Contains('<'))
             type += "*";
 
-        if (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+        if (propertyFlags.HasFlag(EPropertyFlags.ReferenceParm) || (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm)))
             type += "&";
 
         return (value, type);
+    }
+
+    public static string? ResolveContainerType(FProperty property)
+    {
+        switch (property)
+        {
+            case FMapProperty { KeyProp: { } keyProp, ValueProp: { } valueProp }:
+            {
+                var (_, keyType) = GetPropertyType(keyProp);
+                var (_, valueType) = GetPropertyType(valueProp);
+                return IsResolvedType(keyType) && IsResolvedType(valueType) ? $"TMap<{keyType}, {valueType}>" : null;
+            }
+            case FArrayProperty { Inner: { } inner }:
+            {
+                var (_, innerType) = GetPropertyType(inner);
+                return IsResolvedType(innerType) ? $"TArray<{innerType}>" : null;
+            }
+            case FSetProperty { ElementProp: { } element }:
+            {
+                var (_, innerType) = GetPropertyType(element);
+                return IsResolvedType(innerType) ? $"TSet<{innerType}>" : null;
+            }
+            default:
+                return null;
+        }
+    }
+
+    private static bool IsResolvedType(string? type) => !string.IsNullOrEmpty(type) && !type.Contains("unknown");
+
+    public static string ReplaceUnknownContainer(string cppVariable, string resolvedType)
+    {
+        string? placeholder = null;
+        if (resolvedType.StartsWith("TMap<")) placeholder = "TMap<unknown, unknown>";
+        else if (resolvedType.StartsWith("TArray<")) placeholder = "TArray<unknown>";
+        else if (resolvedType.StartsWith("TSet<")) placeholder = "TSet<unknown>";
+        if (placeholder is null || !cppVariable.StartsWith(placeholder + " "))
+            return cppVariable;
+        return resolvedType + cppVariable[placeholder.Length..];
     }
 
     // Legacy UProperty Support
@@ -471,6 +677,31 @@ public static class BlueprintDecompilerUtils
 
         switch (property)
         {
+            case USoftClassProperty softClassProperty:
+            {
+                type += $"TSoftClassPtr<{GetClassWithPrefix(softClassProperty.MetaClass.Load<UStruct>())}>";
+                break;
+            }
+            case UClassProperty classProperty:
+            {
+                type += $"TSubclassOf<{GetClassWithPrefix(classProperty.MetaClass.Load<UStruct>())}>";
+                break;
+            }
+            case USoftObjectProperty softObjectProperty:
+            {
+                type += $"TSoftObjectPtr<{GetClassWithPrefix(softObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
+            case UWeakObjectProperty weakObjectProperty:
+            {
+                type += $"TWeakObjectPtr<{GetClassWithPrefix(weakObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
+            case ULazyObjectProperty lazyObjectProperty:
+            {
+                type += $"TLazyObjectPtr<{GetClassWithPrefix(lazyObjectProperty.PropertyClass.Load<UStruct>())}>";
+                break;
+            }
             case UObjectProperty objectProperty:
             {
                 // Looks bad and provides useless information.
@@ -495,19 +726,27 @@ public static class BlueprintDecompilerUtils
                 }
                 break;
             }
+            case USetProperty setProperty:
+            {
+                if (setProperty.ElementProp.Load() is UProperty elementProp)
+                {
+                    var (_, innerType) = GetPropertyType(elementProp);
+                    type += $"TSet<{innerType}>";
+                }
+                break;
+            }
             case UStructProperty structProperty:
             {
                 var structType = structProperty.Struct.Name;
 
                 type += $"struct F{structType}";
-                value = structProperty.Struct.ToString();
                 break;
             }
             case UNumericProperty:
             {
                 if (property is UByteProperty byteProperty && byteProperty.Enum.TryLoad(out var enumObj))
                 {
-                    type = enumObj.Name;
+                    type = $"TEnumAsByte<{enumObj.Name}>";
                 }
                 else
                 {
@@ -517,7 +756,7 @@ public static class BlueprintDecompilerUtils
             }
             case UInterfaceProperty interfaceProperty:
             {
-                type = $"F{interfaceProperty.InterfaceClass.Name}";
+                type = $"I{interfaceProperty.InterfaceClass.Name}";
                 break;
             }
             case UBoolProperty boolProperty:
@@ -542,12 +781,27 @@ public static class BlueprintDecompilerUtils
             }
             case UMapProperty mapProperty:
             {
-                if (mapProperty.KeyProp.Load() is UProperty innerProp && mapProperty.KeyProp.Load() is UProperty valueProp)
+                if (mapProperty.KeyProp.Load() is UProperty innerProp && mapProperty.ValueProp.Load() is UProperty valueProp)
                 {
                     var (_, keyinnerType) = GetPropertyType(innerProp);
                     var (_, valueinnerType) = GetPropertyType(valueProp);
                     type = $"TMap<{keyinnerType}, {valueinnerType}>";
                 }
+                break;
+            }
+            case UMulticastInlineDelegateProperty multicastInlineDelegateProperty:
+            {
+                type = $"F{multicastInlineDelegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
+            case UMulticastDelegateProperty multicastDelegateProperty:
+            {
+                type = $"F{multicastDelegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
+                break;
+            }
+            case UDelegateProperty delegateProperty:
+            {
+                type = $"F{delegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
                 break;
             }
             case UEnumProperty enumProperty:
@@ -562,10 +816,10 @@ public static class BlueprintDecompilerUtils
             }
         }
 
-        if (IsPointer(property))
+        if (IsPointer(property) && !type.Contains('<'))
             type += "*";
 
-        if (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+        if (propertyFlags.HasFlag(EPropertyFlags.ReferenceParm) || (propertyFlags.HasFlag(EPropertyFlags.OutParm) && !propertyFlags.HasFlag(EPropertyFlags.ReturnParm)))
             type += "&";
 
         return (value, type);
@@ -595,7 +849,7 @@ public static class BlueprintDecompilerUtils
                     var enumValue = name.ToString();
 
                     value = $"{enumValue}";
-                    type = $"enum {enumValue.SubstringBefore("::")}";
+                    type = enumValue.Contains("::") ? $"enum {enumValue.SubstringBefore("::")}" : propertyTag.TagData?.EnumName is { Length: > 0 } enumName ? $"enum {enumName}" : "enum";
                 }
                 else
                 {
@@ -642,7 +896,7 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.NameProperty:
             {
                 type = "FName";
-                value = $"FName(\"{propertyTag.GetGenericValueStr<FName>()}\")";
+                value = $"FName(\"{EscapeCpp(propertyTag.GetGenericValueStr<FName>())}\")";
                 break;
             }
             case EPropertyType.DoubleProperty:
@@ -654,7 +908,7 @@ public static class BlueprintDecompilerUtils
             case EPropertyType.ArrayProperty:
             {
                 var scriptArray = propertyTag.GetGenericValue<UScriptArray>();
-                if (scriptArray == null || scriptArray.Properties == null || scriptArray.InnerType == null || scriptArray.InnerTagData == null)
+                if (scriptArray?.Properties == null)
                 {
                     value = "{}";
                     type = "TArray<unknown>";
@@ -664,7 +918,7 @@ public static class BlueprintDecompilerUtils
                 if (scriptArray.Properties.Count == 0)
                 {
                     value = "{}";
-                    var innerType = GetTagTypes(scriptArray.InnerTagData);
+                    var innerType = scriptArray.InnerTagData != null ? GetTagTypes(scriptArray.InnerTagData) : "unknown";
 
                     type = $"TArray<{innerType}>";
                 }
@@ -675,15 +929,16 @@ public static class BlueprintDecompilerUtils
                     for (int i = 0; i < scriptArray.Properties.Count; i++)
                     {
                         var property = scriptArray.Properties[i];
+                        var elementType = !string.IsNullOrEmpty(scriptArray.InnerType) ? scriptArray.InnerType : property.GetType().Name;
                         if (!GetPropertyTagVariable(
-                                new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData),
+                                new FPropertyTag(new FName(elementType), property, scriptArray.InnerTagData),
                                 out type, out var innerValue))
                         {
-                            Log.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
+                            Log.Warning("Failed to get ArrayElement of type {type}", elementType);
                             continue;
                         }
 
-                        if (scriptArray.InnerType == "EnumProperty")
+                        if (elementType == "EnumProperty")
                         {
                             innerValue = innerValue.SubstringAfter("::");
                         }
@@ -711,19 +966,19 @@ public static class BlueprintDecompilerUtils
                     return false;
                 }
 
-                type = $"struct F{propertyTag.TagData?.StructType}";
+                type = propertyTag.TagData?.StructType is { Length: > 0 } structName ? $"struct F{structName}" : "struct";
                 break;
             }
             case EPropertyType.StrProperty:
             {
                 type = "FString";
-                value = $"\"{propertyTag.GetGenericValueStr<string>()}\"";
+                value = $"\"{EscapeCpp(propertyTag.GetGenericValueStr<string>())}\"";
                 break;
             }
             case EPropertyType.VerseStringProperty:
             {
                 type = "FString";
-                value = $"\"{propertyTag.GetGenericValueStr<string>()}\"";
+                value = $"\"{EscapeCpp(propertyTag.GetGenericValueStr<string>())}\"";
                 break;
             }
             case EPropertyType.MulticastDelegateProperty:
@@ -755,14 +1010,14 @@ public static class BlueprintDecompilerUtils
 
                 type = "FText";
                 value = genericValue.Flags == 0
-                    ? $"FText(\"{text}\")"
-                    : $"FText(\"{text}\", {flags})";
+                    ? $"FText(\"{EscapeCpp(text)}\")"
+                    : $"FText(\"{EscapeCpp(text)}\", {flags})";
 
                 break;
             }
             case EPropertyType.AssetObjectProperty: // AssetObjectProperty is the old name of SoftObjectProperty
             {
-                var softObjectPath = propertyTag.Tag.GenericValue;
+                var softObjectPath = propertyTag.Tag?.GenericValue;
 
                 type = "FSoftObjectPath";
                 value = $"FSoftObjectPath(\"{softObjectPath}\")";
@@ -835,7 +1090,8 @@ public static class BlueprintDecompilerUtils
                     foreach (var (mapKey, mapValue) in scriptMap.Properties)
                     {
                         var innerTypeData = propertyTag.TagData?.InnerTypeData;
-                        var keyProperty = new FPropertyTag(new FName(innerTypeData?.Type), mapKey, innerTypeData);
+                        var keyTypeName = !string.IsNullOrEmpty(innerTypeData?.Type) ? innerTypeData!.Type : mapKey.GetType().Name;
+                        var keyProperty = new FPropertyTag(new FName(keyTypeName), mapKey, innerTypeData);
 
                         if (!GetPropertyTagVariable(keyProperty, out keyType, out var keyValue))
                         {
@@ -844,12 +1100,13 @@ public static class BlueprintDecompilerUtils
                         }
 
                         var valueTypeData = propertyTag.TagData?.ValueTypeData;
-                        var valueProperty = new FPropertyTag(new FName(valueTypeData?.Type), mapValue, valueTypeData);
+                        var valueTypeName = !string.IsNullOrEmpty(valueTypeData?.Type) ? valueTypeData!.Type : mapValue?.GetType().Name;
+                        var valueProperty = new FPropertyTag(new FName(valueTypeName), mapValue, valueTypeData);
 
                         if (!GetPropertyTagVariable(valueProperty, out valueType, out var valueValue))
                         {
                             Log.Warning("Unable to get MapValue for UScriptMap of type: {type}",
-                                mapValue.GetType().Name);
+                                mapValue?.GetType().Name);
                         }
 
                         keyValueList.Add($"{{ {keyValue}, {valueValue} }}");
@@ -860,6 +1117,8 @@ public static class BlueprintDecompilerUtils
                     customStringBuilder.AppendLine($"{keyValueString}");
                     customStringBuilder.CloseBlock();
 
+                    if (string.IsNullOrEmpty(keyType)) keyType = GetTagTypes(propertyTag.TagData?.InnerTypeData);
+                    if (string.IsNullOrEmpty(valueType)) valueType = GetTagTypes(propertyTag.TagData?.ValueTypeData);
                     type = $"TMap<{keyType}, {valueType}>";
                     value = customStringBuilder.ToString();
                 }
@@ -876,8 +1135,8 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.EnumProperty:
             {
-                value = propertyTag.GetGenericValueStr<FName>(); // .SubstringAfter("::")
-                type = $"enum";//{propertyTag.TagData?.EnumName}
+                value = propertyTag.GetGenericValueStr<FName>();
+                type = value.Contains("::") ? $"enum {value.SubstringBefore("::")}" : propertyTag.TagData?.EnumName is { Length: > 0 } enumName ? $"enum {enumName}" : "enum";
                 break;
             }
             case EPropertyType.FieldPathProperty:
@@ -955,6 +1214,8 @@ public static class BlueprintDecompilerUtils
                     {
                         var property = fallback.Properties[i];
                         GetPropertyTagVariable(property, out string _, out string tagValue);
+                        if (string.IsNullOrWhiteSpace(tagValue))
+                            tagValue = "nullptr";
                         bool isLast = i == fallback.Properties.Count - 1;
                         stringBuilder.AppendLine($"\"{property.Name}\": {tagValue}{(isLast ? "" : ",")}");
                     }
@@ -1008,6 +1269,22 @@ public static class BlueprintDecompilerUtils
                 value = $"FIntPoint({x}, {y})";
                 break;
             }
+            case FIntVector intVector:
+            {
+                var x = intVector.X;
+                var y = intVector.Y;
+                var z = intVector.Z;
+                value = $"FIntVector({x}, {y}, {z})";
+                break;
+            }
+            case FUIntVector uintVector:
+            {
+                var x = uintVector.X;
+                var y = uintVector.Y;
+                var z = uintVector.Z;
+                value = $"FUIntVector({x}, {y}, {z})";
+                break;
+            }
             case TIntVector3<float> floatVector3:
             {
                 var x = floatVector3.X;
@@ -1021,7 +1298,8 @@ public static class BlueprintDecompilerUtils
                 var x = floatVector3.X;
                 var y = floatVector3.Y;
                 var z = floatVector3.Z;
-                value = $"TIntVector4<float>({x}, {y}, {z})";
+                var w = floatVector3.W;
+                value = $"TIntVector4<float>({x}, {y}, {z}, {w})";
                 break;
             }
             case FVector2D vector2d:
@@ -1051,11 +1329,11 @@ public static class BlueprintDecompilerUtils
                 value = $"FBox({min}, {max}, {isValid})";
                 break;
             }
-            case TBox2<FVector2D> box2D:
+            case TBox2<float> box2f:
             {
-                GetPropertyTagVariable(box2D.Min, out var min);
-                GetPropertyTagVariable(box2D.Max, out var max);
-                var isValid = box2D.bIsValid;
+                GetPropertyTagVariable(box2f.Min, out var min);
+                GetPropertyTagVariable(box2f.Max, out var max);
+                var isValid = box2f.bIsValid;
 
                 value = $"FBox2D({min}, {max}, {isValid})";
                 break;
@@ -1129,7 +1407,7 @@ public static class BlueprintDecompilerUtils
             }
             case FColor color:
             {
-                var r = color.B;
+                var r = color.R;
                 var g = color.G;
                 var b = color.B;
                 var a = color.A;
@@ -1152,9 +1430,17 @@ public static class BlueprintDecompilerUtils
                 value = $"FRichCurveKey({InterpMode}, {TangentMode}, {TangentWeightMode}, {Time}, {Value}, {ArriveTangent}, {ArriveTangentWeight}, {LeaveTangent}, {LeaveTangentWeight})";
                 break;
             }
+            case FInstancedStruct instancedStruct:
+            {
+                if (instancedStruct.NonConstIUSturct is { } inner)
+                    GetPropertyTagVariable(inner, out value);
+                else
+                    value = "{}";
+                break;
+            }
             default:
             {
-                value = uStruct.ToString() ?? string.Empty;
+                value = "{}";
                 Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct", uStruct.GetType().Name);
                 break;
             }
@@ -1163,18 +1449,20 @@ public static class BlueprintDecompilerUtils
         return !string.IsNullOrWhiteSpace(value);
     }
 
-    public static string GetLineExpression(KismetExpression expression)
+    public static string GetLineExpression(KismetExpression? expression)
     {
+        if (expression is null) return "";
+
         switch (expression)
         {
             case EX_VariableBase variableBase:
             {
-                return variableBase.Variable.ToString();
+                return SanitizeIdentifier(variableBase.Variable.ToString());
             }
             case EX_LetValueOnPersistentFrame persistent:
             {
                 var variableAssignment = GetLineExpression(persistent.AssignmentExpression);
-                var variableToBeAssigned = persistent.DestinationProperty.ToString();
+                var variableToBeAssigned = SanitizeIdentifier(persistent.DestinationProperty.ToString());
                 return $"{(variableToBeAssigned.Contains("K2Node_") ? "UberGraphFrame->" + variableToBeAssigned : variableToBeAssigned)} = {variableAssignment}";
             }
             case EX_LetBool letBool:
@@ -1200,8 +1488,8 @@ public static class BlueprintDecompilerUtils
             }
             case EX_Context context:
             {
-                var function = context?.ContextExpression is not null ? GetLineExpression(context?.ContextExpression).SubstringAfter("::") : "failedplaceholder";
-                var obj = context?.ObjectExpression is not null ? GetLineExpression(context?.ObjectExpression) : "failedplaceholder";
+                var function = context.ContextExpression is not null ? GetLineExpression(context.ContextExpression).SubstringAfter("::") : "failedplaceholder";
+                var obj = context.ObjectExpression is not null ? GetLineExpression(context.ObjectExpression) : "failedplaceholder";
 
                 var customStringBuilder = new CustomStringBuilder();
                 if (expression is EX_Context_FailSilent)
@@ -1235,13 +1523,20 @@ public static class BlueprintDecompilerUtils
 
                 var parameters = string.Join(", ", parametersList);
                 var stackNode = final.StackNode.ToString();
-                var functionName = stackNode.SubstringAfter(':').Trim('\'');
+                var functionName = SanitizeIdentifier(stackNode.SubstringAfter(':').Trim('\''));
                 var className = stackNode.SubstringAfter('.').SubstringBefore(':');
 
-                if (expression is EX_CallMath) return MathFunctionCleaner(className, functionName, parametersList, parameters);
-                if (expression is EX_LocalFinalFunction) return $"{(stackNode.Contains("/Script/") ? $"{GetPrefix(className)}{className}::{functionName}" : functionName)}({parameters})";
+                try
+                {
+                    if (expression is EX_CallMath) return MathFunctionCleaner(className, functionName, parametersList, parameters);
+                    if (expression is EX_LocalFinalFunction) return $"{(stackNode.Contains("/Script/") ? $"{GetPrefix(className)}{className}::{functionName}" : functionName)}({parameters})";
 
-                return FinalFunctionCleaner(className, functionName, parametersList, parameters);
+                    return FinalFunctionCleaner(className, functionName, parametersList, parameters);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    return $"{GetPrefix(className)}{className}::{functionName}({parameters})";
+                }
             }
             case EX_VirtualFunction virtualFunc:
             {
@@ -1252,7 +1547,7 @@ public static class BlueprintDecompilerUtils
                 }
 
                 var parameters = string.Join(", ", parametersList);
-                var functionName = virtualFunc.VirtualFunctionName.Text;
+                var functionName = SanitizeIdentifier(virtualFunc.VirtualFunctionName.Text);
 
                 return $"{functionName}({parameters})";
             }
@@ -1265,7 +1560,7 @@ public static class BlueprintDecompilerUtils
                 var target = GetLineExpression(setSet.SetProperty);
                 if (setSet.Elements.Length == 0)
                 {
-                    return $"{target} = TArray {{ }};";
+                    return $"{target} = TArray {{ }}";
                 }
 
                 var values = new List<string>(setSet.Elements.Length);
@@ -1275,13 +1570,13 @@ public static class BlueprintDecompilerUtils
                 }
 
                 var joined = string.Join(", ", values);
-                return $"{target} = TArray {{ {joined} }};";
+                return $"{target} = TArray {{ {joined} }}";
             }
             case EX_SetConst setConst:
             {
                 if (setConst.Elements.Length == 0)
                 {
-                    return "TArray { };";
+                    return "TArray { }";
                 }
 
                 var values = new List<string>(setConst.Elements.Length);
@@ -1291,7 +1586,7 @@ public static class BlueprintDecompilerUtils
                 }
 
                 var joined = string.Join(", ", values);
-                return $"TArray {{ {joined} }};";
+                return $"TArray {{ {joined} }}";
             }
             case EX_ArrayConst constArray:
             {
@@ -1301,11 +1596,17 @@ public static class BlueprintDecompilerUtils
                     values.Add(GetLineExpression(element));
                 }
 
-               // var arrayProp = constArray.InnerProperty.New.ResolvedOwner.Load<UArrayProperty>();
-               // var objProp = arrayProp.Inner.Load<UObjectProperty>();
-              //  return objProp.PropertyClass?.Name ?? "Unknown";
+                var innerType = constArray.InnerProperty.ToString();
+                if (constArray.InnerProperty.New is { ResolvedOwner: not null, Path.Length: > 0 } fieldPath &&
+                    fieldPath.ResolvedOwner.Load<UStruct>() is { } owner &&
+                    owner.GetProperty(fieldPath.Path[0], out var field) &&
+                    field is FArrayProperty { Inner: { } inner })
+                {
+                    var (_, resolvedType) = GetPropertyType(inner);
+                    if (!string.IsNullOrEmpty(resolvedType)) innerType = resolvedType;
+                }
 
-                return $"TArray<{constArray.InnerProperty}>({string.Join(", ", values)})";
+                return $"TArray<{innerType}>({string.Join(", ", values)})";
             }
             case EX_SetArray setArray:
             {
@@ -1377,7 +1678,7 @@ public static class BlueprintDecompilerUtils
             }
             case KismetExpression<string> stringConst:
             {
-                return $"\"{stringConst.Value.Replace("\r\n", "\\n").Replace("\n", "\\n")}\"";
+                return $"\"{EscapeCpp(stringConst.Value)}\"";
             }
             case EX_InstanceDelegate del:
             {
@@ -1406,16 +1707,14 @@ public static class BlueprintDecompilerUtils
             case EX_Cast cast:
             {
                 var target = GetLineExpression(cast.Target);
-                var conversionType = cast.ConversionType switch
+                return cast.ConversionType switch
                 {
-                    ECastToken.CST_ObjectToBool or ECastToken.CST_ObjectToBool2 or ECastToken.CST_InterfaceToBool or ECastToken.CST_InterfaceToBool2 => "bool",
-                    ECastToken.CST_DoubleToFloat => "float",
-                    ECastToken.CST_FloatToDouble => "double",
-                    ECastToken.CST_ObjectToInterface => "Interface",
-                    _ => throw new NotImplementedException($"ConversionType {cast.ConversionType} is currently not implemented")
+                    ECastToken.CST_ObjectToBool or ECastToken.CST_ObjectToBool2 or ECastToken.CST_InterfaceToBool or ECastToken.CST_InterfaceToBool2 => $"({target} != nullptr)",
+                    ECastToken.CST_DoubleToFloat => $"(float){target}",
+                    ECastToken.CST_FloatToDouble => $"(double){target}",
+                    ECastToken.CST_ObjectToInterface => target,
+                    _ => $"Cast<{cast.ConversionType}>({target})"
                 };
-
-                return $"Cast<{conversionType}>({target})";
             }
             case EX_PopExecutionFlowIfNot popExecutionFlowIfNot:
             {
@@ -1460,7 +1759,7 @@ public static class BlueprintDecompilerUtils
                 customStringBuilder.IncreaseIndentation();
                 var targetIndex = (int)jumpIfNot.CodeOffset;
                 targetIndex = Array.FindIndex(Function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
-                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && (Function.ScriptBytecode[targetIndex] is EX_Return || Function.ScriptBytecode[targetIndex++] is EX_Return))
+                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && Function.ScriptBytecode[targetIndex] is EX_Return)
                 {
                     customStringBuilder.Append($"return");
                 }
@@ -1471,11 +1770,19 @@ public static class BlueprintDecompilerUtils
 
                 return customStringBuilder.ToString();
             }
+            case EX_Assert assertExpr:
+            {
+                return $"assert({GetLineExpression(assertExpr.AssertExpression)})";
+            }
+            case EX_Skip skip:
+            {
+                return GetLineExpression(skip.SkipExpression);
+            }
             case EX_Jump jump:
             {
                 var targetIndex = (int)jump.CodeOffset;
                 targetIndex = Array.FindIndex(Function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
-                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && (Function.ScriptBytecode[targetIndex] is EX_Return || Function.ScriptBytecode[targetIndex++] is EX_Return))
+                if (targetIndex >= 0 && targetIndex < Function.ScriptBytecode.Length && Function.ScriptBytecode[targetIndex] is EX_Return)
                 {
                     return "return";
                 }
@@ -1563,7 +1870,7 @@ public static class BlueprintDecompilerUtils
                 var objectTerm = GetLineExpression(bindDelegate.ObjectTerm);
                 var functionName = $"FName(\"{bindDelegate.FunctionName.Text}\")";
 
-                return $"{delegateVar}->BindUFunction({objectTerm}, {functionName})";
+                return RaiseIdioms && _foldedDelegateBinds.Contains(bindDelegate) ? "" : $"{delegateVar}->BindUFunction({objectTerm}, {functionName})";
             }
             case EX_StructConst structConst:
             {
@@ -1573,24 +1880,26 @@ public static class BlueprintDecompilerUtils
                     properties.Add(GetLineExpression(property));
                 }
 
-                if (structConst.Struct.Name == "LatentActionInfo") return properties[0]; // used for cleaning code output.
+                if (structConst.Struct.Name == "LatentActionInfo") return properties.Count > 0 ? properties[0] : ""; // used for cleaning code output.
 
                 return $"F{structConst.Struct.Name}({string.Join(", ", properties)})";
             }
             case EX_FloatConst floatConst:
             {
-                return floatConst.Value.ToString(CultureInfo.CurrentCulture);
+                return floatConst.Value.ToString(CultureInfo.InvariantCulture);
             }
             case EX_DoubleConst doubleConst:
             {
-                return doubleConst.Value.ToString(CultureInfo.CurrentCulture);
+                return doubleConst.Value.ToString(CultureInfo.InvariantCulture);
             }
             case EX_AddMulticastDelegate multicastDelegate:
             {
                 var delegatee = GetLineExpression(multicastDelegate.Delegate);
                 var delegateToAdd = GetLineExpression(multicastDelegate.DelegateToAdd);
 
-                return $"{delegatee}->Add({delegateToAdd})";
+                if (!RaiseIdioms)
+                    return $"{delegatee}->Add({delegateToAdd})";
+                return _foldedDelegateTargets.TryGetValue(multicastDelegate, out var addTarget) ? $"{delegatee} += {addTarget}" : $"{delegatee} += {delegateToAdd}";
             }
             case EX_RotationConst rotationConst:
             {
@@ -1598,7 +1907,7 @@ public static class BlueprintDecompilerUtils
                 var roll = rotationConst.Value.Roll;
                 var yaw = rotationConst.Value.Yaw;
 
-                return $"FRotator({pitch}, {roll}, {yaw})";
+                return $"FRotator({pitch}, {yaw}, {roll})";
             }
             case EX_SetMap setMap:
             {
@@ -1617,7 +1926,7 @@ public static class BlueprintDecompilerUtils
 
                 var elements = setMap.Elements;
 
-                for (int i = 0; i < elements.Length; i += 2)
+                for (int i = 0; i + 1 < elements.Length; i += 2)
                 {
                     var keyText = GetLineExpression(elements[i]);
                     var valueText = GetLineExpression(elements[i + 1]);
@@ -1643,7 +1952,7 @@ public static class BlueprintDecompilerUtils
 
                 var elements = mapConst.Elements;
 
-                for (int i = 0; i < elements.Length; i += 2)
+                for (int i = 0; i + 1 < elements.Length; i += 2)
                 {
                     var keyText = GetLineExpression(elements[i]);
                     var valueText = GetLineExpression(elements[i + 1]);
@@ -1659,45 +1968,19 @@ public static class BlueprintDecompilerUtils
             }
             case EX_SwitchValue switchValue:
             {
-                if (switchValue.Cases.Length == 2)
+                var indexTerm = GetLineExpression(switchValue.IndexTerm);
+                var result = GetLineExpression(switchValue.DefaultTerm);
+                for (int i = switchValue.Cases.Length - 1; i >= 0; i--)
                 {
-                    var indexTerm = GetLineExpression(switchValue.IndexTerm);
-
-                    var case0 = GetLineExpression(switchValue.Cases[0].CaseTerm);
-                    var case1 = GetLineExpression(switchValue.Cases[1].CaseTerm);
-
-                    return $"{indexTerm} ? {case1} : {case0}";
+                    var caseIndex = GetLineExpression(switchValue.Cases[i].CaseIndexValueTerm);
+                    var caseTerm = GetLineExpression(switchValue.Cases[i].CaseTerm);
+                    result = $"{indexTerm} == {caseIndex} ? {caseTerm} : {result}";
                 }
-
-                var stringBuilder = new CustomStringBuilder();
-                stringBuilder.AppendLine($"switch ({GetLineExpression(switchValue.IndexTerm)})");
-                stringBuilder.OpenBlock();
-
-                foreach (var caseItem in switchValue.Cases)
-                {
-                    stringBuilder.AppendLine($"case {GetLineExpression(caseItem.CaseIndexValueTerm)}:");
-                    stringBuilder.OpenBlock();
-
-                    stringBuilder.AppendLine($"return {GetLineExpression(caseItem.CaseTerm)};");
-                    stringBuilder.AppendLine("break;");
-
-                    stringBuilder.CloseBlock("}\n");
-                }
-
-                stringBuilder.AppendLine("default:");
-                stringBuilder.OpenBlock();
-
-                stringBuilder.AppendLine($"return {GetLineExpression(switchValue.DefaultTerm)};");
-                stringBuilder.AppendLine("break;");
-
-                stringBuilder.CloseBlock("}\n");
-                stringBuilder.CloseBlock();
-
-                return stringBuilder.ToString();
+                return switchValue.Cases.Length > 0 ? $"({result})" : result;
             }
             case EX_StructMemberContext structMemberContext:
             {
-                var property = structMemberContext.Property.ToString();
+                var property = SanitizeIdentifier(structMemberContext.Property.ToString());
                 var structExpression = GetLineExpression(structMemberContext.StructExpression);
 
                 return $"{structExpression}.{property}";
@@ -1723,7 +2006,9 @@ public static class BlueprintDecompilerUtils
 
                 var separator = delegateExpr.Token == EExprToken.EX_Context ? "->" : ".";
 
-                return $"{delegateTarget}{separator}RemoveDelegate({delegateToRemove})";
+                if (!RaiseIdioms)
+                    return $"{delegateTarget}{separator}RemoveDelegate({delegateToRemove})";
+                return _foldedDelegateTargets.TryGetValue(removeMulticastDelegate, out var removeTarget) ? $"{delegateTarget} -= {removeTarget}" : $"{delegateTarget} -= {delegateToRemove}";
             }
             case EX_ClearMulticastDelegate clearMulticastDelegate:
             {
@@ -1732,7 +2017,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_PropertyConst propertyConst:
             {
-                return propertyConst.Property.ToString();
+                return SanitizeIdentifier(propertyConst.Property.ToString());
             }
             case EX_WireTracepoint:
             case EX_Tracepoint:
@@ -1790,7 +2075,8 @@ public static class BlueprintDecompilerUtils
                 EExprToken.EX_ClassContext it's like EX_Context
             */
             default:
-                throw new NotImplementedException($"KismetExpression '{expression.GetType().Name}' is currently not supported");
+                Log.Warning($"KismetExpression '{expression.GetType().Name}' is currently not supported");
+                return "";
         }
     }
 }

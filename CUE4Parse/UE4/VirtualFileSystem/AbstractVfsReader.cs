@@ -137,7 +137,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             if (mountPointLength < 0)
             {
                 // UTF16
-                reader.Seek(-(mountPointLength - 1) * 2, SeekOrigin.Current);
+                reader.Seek((-mountPointLength - 1) * 2, SeekOrigin.Current);
                 return reader.Read<short>() == 0;
             }
 
