@@ -113,7 +113,7 @@ namespace CUE4Parse.UE4.Pak
                     case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                         return ABIExtract(reader, pakEntry);
                     case EGame.GAME_eBaseballProSpirit:
-                        return ProSpiExtract(reader, pakEntry, alignment, header);
+                        return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
                 }
 
                 var compressionBlockSize = (int) pakEntry.CompressionBlockSize;
@@ -191,7 +191,7 @@ namespace CUE4Parse.UE4.Pak
                 case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                     return ABIExtract(reader, pakEntry);
                 case EGame.GAME_eBaseballProSpirit:
-                    return ProSpiExtract(reader, pakEntry, alignment, header);
+                    return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
             }
 
             // Pak Entry is written before the file data,
