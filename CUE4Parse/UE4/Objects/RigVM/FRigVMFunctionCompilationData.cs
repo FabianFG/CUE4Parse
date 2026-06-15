@@ -39,10 +39,10 @@ public class FRigVMFunctionCompilationData
 
         ExternalRegisterIndexToVariable = Ar.ReadMap(Ar.Read<int>, Ar.ReadFName);
         Operands = Ar.ReadMap(Ar.ReadFString, Ar.Read<FRigVMOperand>);
-        //if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.RigVMCallables)
-        //{
-        //    InterfaceOperands = Ar.ReadMap(Ar.ReadFName, Ar.Read<FRigVMOperand>);
-        //}
+        if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.RigVMCallables)
+        {
+            InterfaceOperands = Ar.ReadMap(Ar.ReadFName, Ar.Read<FRigVMOperand>);
+        }
         Hash = Ar.Read<uint>();
         bEncounteredSurpressedErrors = false;
 
