@@ -39,7 +39,7 @@ public static class ZlibHelper
     {
         if (Instance is not null) return;
 
-        var dllPath = string.IsNullOrWhiteSpace(path) ? DllName : path;
+        var dllPath = Path.GetFullPath(string.IsNullOrWhiteSpace(path) ? DllName : path);
         if (!await DownloadDllAsync(dllPath, null, cancellationToken).ConfigureAwait(false))
         {
             Log.Warning("Zlib decompression failed: unable to download zlib-ng dll");
