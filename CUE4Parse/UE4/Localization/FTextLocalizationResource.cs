@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse.GameTypes.CodeVein2.Encryption;
+using CUE4Parse.GameTypes.EOTU.Encryption;
 using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.i18N;
@@ -123,8 +124,9 @@ public class FTextLocalizationResource
             Ar.Position = localizedStringArrayOffset;
             var localizedStringArray = Ar.Game switch
             {
-                EGame.GAME_CodeVein2 when Ar.Name.Contains("CodeVein2/Content/Localization/") =>
-                    Ar.ReadArray(() => new FTextLocalizationResourceString(CodeVein2StringEncryption.CodeVein2EncryptedFString(Ar, ECV2DecryptionMode.Locres), Ar.Read<int>())),
+                EGame.GAME_CodeVein2 when Ar.Name.Contains("CodeVein2/Content/Localization/") => Ar.ReadArray(() =>
+                    new FTextLocalizationResourceString(CodeVein2StringEncryption.CodeVein2EncryptedFString(Ar, ECV2DecryptionMode.Locres), Ar.Read<int>())),
+                EGame.GAME_EmbersofTheUncrowned => Ar.ReadArray(() => new FTextLocalizationResourceString(EOTUStringEncryption.DecryptString(Ar), Ar.Read<int>())),
                 _ => Ar.ReadArray(() => new FTextLocalizationResourceString(Ar, versionNumber))
             };
             Ar.Position = currentFileOffset;
