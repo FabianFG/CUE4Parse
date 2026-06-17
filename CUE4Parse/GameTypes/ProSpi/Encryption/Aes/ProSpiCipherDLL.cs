@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -90,15 +91,17 @@ public static partial class ProSpiEncryption
 
         try
         {
-            using var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"CUE4Parse.Resources.{ProSpiDecryptorDllName}.dll");
+            using var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"CUE4Parse.Resources.{ProSpiDecryptorDllName}.dll.gz");
             if (resourceStream == null)
             {
                 loadedPath = "";
                 return false;
             }
 
+            using var gzipStream = new GZipStream(resourceStream, CompressionMode.Decompress);
             using var memory = new MemoryStream();
-            resourceStream.CopyTo(memory);
+
+            gzipStream.CopyTo(memory);
             var dllBytes = memory.ToArray();
 
             var cacheDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CUE4Parse", "Native", ProSpiDecryptorDllName);

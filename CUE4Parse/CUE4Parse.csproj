@@ -35,7 +35,7 @@
     <None Remove="Resources\BL4SoundTagsMap.json" />
     <EmbeddedResource Include="Resources\BL4SoundTagsMap.json" />
     <None Remove="Resources\ProSpiDecryptor.dll" />
-    <EmbeddedResource Include="Resources\ProSpiDecryptor.dll" />
+    <EmbeddedResource Include="Resources\ProSpiDecryptor.dll.gz" />
   </ItemGroup>
 
   <PropertyGroup>

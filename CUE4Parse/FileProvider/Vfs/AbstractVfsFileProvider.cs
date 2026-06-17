@@ -1,12 +1,6 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
@@ -91,8 +85,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_TonyHawkProSkater12 or EGame.GAME_TonyHawkProSkater34 => THPS12Aes.THPS12Decrypt,
                 EGame.GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
                 EGame.GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
-                EGame.GAME_Splitgate2 => Aes1047Games.Decrypt1047Games,
-                EGame.GAME_Empulse => Aes1047Games.Decrypt1047Games,
+                EGame.GAME_Splitgate2 or EGame.GAME_Empulse => Aes1047Games.Decrypt1047Games,
                 EGame.GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
                 EGame.GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
                 EGame.GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
