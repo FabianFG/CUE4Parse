@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.UE4.Localization;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
@@ -16,6 +19,17 @@ public class FAion2L10NFile
     {
         var data = file.SafeRead();
         ArgumentNullException.ThrowIfNull(data);
+
+        if (provider.Versions.Game is EGame.GAME_Aion2 && data.Length >= 0x18 && BitConverter.ToUInt32(data, 0) == 2)
+        {
+            var keyManifest = provider.Files.FirstOrDefault(x =>
+                x.Key.EndsWith("/key_manifest.dat", StringComparison.OrdinalIgnoreCase)).Value?.SafeRead();
+            ArgumentNullException.ThrowIfNull(keyManifest);
+
+            Namespace = "AION2";
+            Entries = Aion2TextLocalizationResource.Read(data, keyManifest);
+            return;
+        }
 
         using var Ar = new FAion2DatFileArchive(data, provider.Versions);
 

@@ -71,10 +71,10 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
 
     internal void ChangeCulture(string culture, IReadOnlyDictionary<string, GameFile> files)
     {
-        if (!TryGetCulture(culture, out var validated))
+        if (!TryGetCulture(culture, out var validated) && !HasAion2Dat(culture, files))
             throw new KeyNotFoundException($"'{culture}' is not a valid culture.");
 
-        Culture = validated;
+        Culture = validated ?? culture;
         Clear();
 
         const string exclusion = "(?!Engine).+/";
@@ -88,6 +88,7 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
         // else
         {
             LoadByPattern($"^{exclusion}.+/{Culture}/.+.locres$", files);
+            LoadAion2Dat(Culture, files);
         }
     }
 
@@ -133,6 +134,43 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
             }
         });
     }
+
+    private void LoadAion2Dat(string culture, IReadOnlyDictionary<string, GameFile> files)
+    {
+        var keyManifest = files.FirstOrDefault(x =>
+            IsAion2Path(x.Key) &&
+            x.Key.EndsWith("/key_manifest.dat", System.StringComparison.OrdinalIgnoreCase)).Value?.SafeRead();
+        if (keyManifest is null) return;
+
+        foreach (var file in files.Where(x =>
+                     IsAion2Path(x.Key) &&
+                     x.Key.EndsWith("/L10NString.dat", System.StringComparison.OrdinalIgnoreCase) &&
+                     x.Key.Contains($"/{culture}/", System.StringComparison.OrdinalIgnoreCase)))
+        {
+            var data = file.Value.SafeRead();
+            if (data is null) continue;
+
+            var entries = Aion2TextLocalizationResource.Read(data, keyManifest);
+            var dictionary = (Dictionary<string, string>) _collection.GetOrAdd("AION2", _ => new Dictionary<string, string>());
+            lock (dictionary)
+            {
+                foreach (var entry in entries)
+                {
+                    dictionary[entry.Key] = entry.Value;
+                }
+            }
+        }
+    }
+
+    private static bool HasAion2Dat(string culture, IReadOnlyDictionary<string, GameFile> files) =>
+        files.Keys.Any(x =>
+            IsAion2Path(x) &&
+            x.EndsWith("/L10NString.dat", System.StringComparison.OrdinalIgnoreCase) &&
+            x.Contains($"/{culture}/", System.StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsAion2Path(string path) =>
+        path.Contains("Aion2/Content/", System.StringComparison.OrdinalIgnoreCase) ||
+        path.Contains("Aion2\\Content\\", System.StringComparison.OrdinalIgnoreCase);
 
     public void Override(IDictionary<string, IDictionary<string, string>> dictionary)
     {
