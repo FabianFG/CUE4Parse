@@ -11,6 +11,7 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
 using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.GameTypes.PUBG.UE4.Lua;
+using CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
@@ -112,6 +113,8 @@ namespace CUE4Parse.UE4.Pak
                         return CenturyExtract(reader, pakEntry);
                     case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                         return ABIExtract(reader, pakEntry);
+                    case EGame.GAME_eBaseballProSpirit:
+                        return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
                 }
 
                 var compressionBlockSize = (int) pakEntry.CompressionBlockSize;
@@ -188,6 +191,8 @@ namespace CUE4Parse.UE4.Pak
                     return DQXIExtract(reader, pakEntry);
                 case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                     return ABIExtract(reader, pakEntry);
+                case EGame.GAME_eBaseballProSpirit:
+                    return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
             }
 
             // Pak Entry is written before the file data,
