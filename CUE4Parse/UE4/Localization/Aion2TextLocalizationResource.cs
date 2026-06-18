@@ -49,7 +49,6 @@ public static class Aion2TextLocalizationResource
         return result;
     }
 
-<<<<<<< HEAD
     public static byte[] ReadDataTable(byte[] dat, byte[] keyManifest)
     {
         if (dat.Length < 0x1C || ReadU32(dat, 0) != 13)
@@ -90,8 +89,6 @@ public static class Aion2TextLocalizationResource
         return output;
     }
 
-=======
->>>>>>> 5db765d4f047277832d79654f23a3b9931c8a477
     private static byte[] FindContentKey(byte[] keyManifest, ulong seed)
     {
         if (keyManifest.Length < 12) throw new ParserException("AION2 key_manifest.dat is too small");
