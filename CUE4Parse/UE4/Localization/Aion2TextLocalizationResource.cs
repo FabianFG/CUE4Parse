@@ -82,26 +82,28 @@ public static class Aion2TextLocalizationResource
         for (var offset = 0; offset < output.Length; offset += 16)
         {
             encryptor.TransformBlock(counter, 0, 16, stream, 0);
-            var count = Math.Min(16, output.Length - offset);
-            for (var i = 0; i < count; i++) output[offset + i] = (byte) (dat[0x1C + offset + i] ^ stream[i]);
+            var blockSize = Math.Min(16, output.Length - offset);
+            for (var i = 0; i < blockSize; i++) output[offset + i] = (byte) (dat[0x1C + offset + i] ^ stream[i]);
             for (var i = 8; i < 16 && ++counter[i] == 0; i++) { }
         }
         return output;
     }
 
+    public static Dictionary<string, string> ReadKeyManifest(byte[] keyManifest)
+    {
+        var records = DecryptKeyManifest(keyManifest, out var count);
+        var result = new Dictionary<string, string>(count);
+        for (var i = 0; i < count; i++)
+        {
+            var offset = i * 0x30;
+            result[$"0x{BitConverter.ToUInt64(records, offset):X16}"] = Convert.ToHexString(records, offset + 8, 32);
+        }
+        return result;
+    }
+
     private static byte[] FindContentKey(byte[] keyManifest, ulong seed)
     {
-        if (keyManifest.Length < 12) throw new ParserException("AION2 key_manifest.dat is too small");
-        var version = ReadU32(keyManifest, 0);
-        var count = checked((int) ReadU32(keyManifest, 4));
-        var payloadSize = checked((int) ReadU32(keyManifest, 8));
-        if (version != 2 || payloadSize != count * 0x30 || 12 + payloadSize > keyManifest.Length)
-            throw new ParserException("Invalid AION2 key_manifest.dat header");
-
-        using var hasher = Blake3.Hasher.New();
-        hasher.Update(KeyManifestMaterial);
-        var manifestKey = hasher.Finalize().AsSpan().ToArray();
-        var records = AesEcb(keyManifest.AsSpan(12, payloadSize), manifestKey);
+        var records = DecryptKeyManifest(keyManifest, out var count);
         for (var i = 0; i < count; i++)
         {
             var off = i * 0x30;
@@ -109,6 +111,21 @@ public static class Aion2TextLocalizationResource
                 return records.AsSpan(off + 8, 32).ToArray();
         }
         throw new ParserException($"AION2 content key not found for hash {seed}");
+    }
+
+    private static byte[] DecryptKeyManifest(byte[] keyManifest, out int count)
+    {
+        if (keyManifest.Length < 12) throw new ParserException("AION2 key_manifest.dat is too small");
+        var version = ReadU32(keyManifest, 0);
+        count = checked((int) ReadU32(keyManifest, 4));
+        var payloadSize = checked((int) ReadU32(keyManifest, 8));
+        if (version != 2 || payloadSize != count * 0x30 || 12 + payloadSize > keyManifest.Length)
+            throw new ParserException("Invalid AION2 key_manifest.dat header");
+
+        using var hasher = Blake3.Hasher.New();
+        hasher.Update(KeyManifestMaterial);
+        var manifestKey = hasher.Finalize().AsSpan().ToArray();
+        return AesEcb(keyManifest.AsSpan(12, payloadSize), manifestKey);
     }
 
     private static byte[] AesEcb(ReadOnlySpan<byte> data, byte[] key)
