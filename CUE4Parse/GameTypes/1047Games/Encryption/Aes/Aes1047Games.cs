@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.VirtualFileSystem;
 using static System.Runtime.Intrinsics.Vector128;
@@ -10,7 +9,9 @@ namespace CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
 /// <summary>
 /// Reversed by Spiritovod
 /// </summary>
-public static class Splitgate2Aes
+///
+/// Used by Splitgate 2 and Empulse games
+public static class Aes1047Games
 {
     private static void DecryptWithRoundKeys(byte[] input, int index, Vector128<byte>[] roundKeys)
     {
@@ -26,7 +27,7 @@ public static class Splitgate2Aes
         state.CopyTo(input, index);
     }
 
-    public static byte[] Splitgate2Decrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] Decrypt1047Games(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

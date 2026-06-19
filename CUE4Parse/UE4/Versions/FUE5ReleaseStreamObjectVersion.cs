@@ -178,22 +178,43 @@ public static class FUE5ReleaseStreamObjectVersion
 
         // Fixed the missing bounds for cloth assets that don't have them serialized
         RecalculateClothAssetSerializedBounds,
-        
+
         // Composite plugin now uses its own derived scene capture components
         CompositePluginDerivedSceneCaptures,
-        
+
         // Add option to output attributes on the PCG Duplicate Cross Section node on the Data domain
         ExtraOutputAttributesOnDataDomainPCG,
 
         // Media Profile: Changed storage of capture cameras list from lazy to soft pointers
         MediaProfilePluginCaptureCameraSoftPtr,
-        
+
         // Reparameterize Spline in SplineComponent based on SplineCurves parameterization
         SplineComponentReparameterizeOnLoad,
-        
+
         // Add solver and fabric property support to the schema based Cloth USD importer
         AddSimulationPropertySupportToClothUSDImportNodeV2,
-        
+
+        // Audio section: add bRepeating property alongside legacy bLooping
+        AudioSectionRepeating,
+
+        // mesh_part: Serialize body/shape associations separately, new Verse interface serialization, enforce unique shape names
+        MeshPartAssetUserDataBodyShapeSeparateAndInterfaceFNameAndUniqueShapeNames,
+
+        // USkeleton no longer serializes the FSmartNameContainer legacy payload; drained only for assets older than this version
+        RemovedSmartNameContainerPayload,
+
+        // Composite plugin: UCompositeDepthMeshComponent's default StaticMesh is no longer set on the CDO
+        CompositeDepthMeshDefaultRemovedFromCDO,
+
+        // Add RotationBlendSpace enum to FAnimNode_BlendProfileLayeredBlend, replacing bMeshSpaceRotationBlend
+        BlendProfileLayeredBlendRotationSpace,
+
+        // Add guarding against negative blend times in AlphaBlends
+        AlphaBlendNegativeBlendTimeGuard,
+
+        // Audio section: add bPlayUntilFinished property and stop using CompletionMode for play/stop decisions
+        AudioSectionPlayUntilFinished,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1
@@ -216,6 +237,8 @@ public static class FUE5ReleaseStreamObjectVersion
             < EGame.GAME_UE5_3 => Type.LinkedAnimGraphMemberReference,
             < EGame.GAME_UE5_4 => Type.OpenColorIODisabledDisplayConfigurationDefault,
             < EGame.GAME_UE5_6 => Type.OrthographicAutoNearFarPlane,
+            < EGame.GAME_UE5_7 => Type.RecalculateClothAssetSerializedBounds,
+            < EGame.GAME_UE5_8 => Type.AudioSectionPlayUntilFinished,
             _ => Type.LatestVersion
         };
     }

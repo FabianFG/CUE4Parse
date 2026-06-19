@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace CUE4Parse.MappingsProvider;
+namespace CUE4Parse.MappingsProvider.Usmap;
 
 public class FileUsmapTypeMappingsProvider : UsmapTypeMappingsProvider
 {
