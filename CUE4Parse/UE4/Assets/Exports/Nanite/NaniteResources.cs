@@ -1,7 +1,4 @@
-using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -94,7 +91,10 @@ public class FNaniteResources
             if (Ar.Game >= EGame.GAME_UE5_2) NormalPrecision = Ar.Read<int>();
             NumInputTriangles = Ar.Read<uint>();
 #if DEBUG
-            Log.Information("Nanite mesh has {NumInputTriangles} triangles", NumInputTriangles);
+            if (NumInputTriangles > 0)
+            {
+                Log.Debug("Nanite mesh has {NumInputTriangles} triangles", NumInputTriangles);
+            }
 #endif
             NumInputVertices = Ar.Read<uint>();
             if (Ar.Game < EGame.GAME_UE5_6)
