@@ -446,6 +446,15 @@ namespace CUE4Parse.UE4.Readers
             Position += strlength;
         }
 
+        public virtual ReadOnlySpan<byte> ReadSpan(int length)
+        {
+            CheckReadSize(length);
+
+            var result = new byte[length];
+            Read(result, 0, length);
+            return result;
+        }
+
         public virtual string ReadFString()
         {
             // > 0 for ANSICHAR, < 0 for UCS2CHAR serialization
@@ -513,7 +522,17 @@ namespace CUE4Parse.UE4.Readers
             if (length < 0) throw new ParserException($"Negative Utf8String length '{length}'");
             if (length > Length - Position) throw new ParserException($"Invalid Utf8String length '{length}'");
             
-            return Encoding.UTF8.GetString(ReadBytes(length));
+            return Encoding.UTF8.GetString(ReadSpan(length));
+        }
+
+        public string ReadFAnsiString() => ReadFAnsiString(Read<int>());
+        public virtual string ReadFAnsiString(int length)
+        {
+            if (length == 0) return string.Empty;
+            if (length < 0) throw new ParserException($"Negative AnsiString length '{length}'");
+            if (length > Length - Position) throw new ParserException($"Invalid AnsiString length '{length}'");
+
+            return Encoding.Latin1.GetString(ReadSpan(length));
         }
 
         public float ReadFReal() => Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES ? (float)Read<double>() : Read<float>();
@@ -525,7 +544,7 @@ namespace CUE4Parse.UE4.Readers
             throw new InvalidOperationException("Generic FArchive can't read UObject's");
         }
 
-        public void SerializeCompressedNew(byte[] dest, int length, string compressionFormatToDecodeOldV1Files, ECompressionFlags flags, bool bTreatBufferAsFileReader, out long outPartialReadLength)
+        public void SerializeCompressedNew(Span<byte> dest, int length, string compressionFormatToDecodeOldV1Files, ECompressionFlags flags, bool bTreatBufferAsFileReader, out long outPartialReadLength)
         {
             // CompressionFormatToEncode can be changed freely without breaking loading of old files
             // CompressionFormatToDecodeOldV1Files must match what was used to encode old files, cannot change
@@ -667,7 +686,7 @@ namespace CUE4Parse.UE4.Readers
                 // Decompress into dest pointer directly.
                 try
                 {
-                    Decompress(compressedBuffer, 0, (int) chunk.CompressedSize, dest, destPos, (int) chunk.UncompressedSize, compressionFormat);
+                    Decompress(compressedBuffer.AsSpan(0, (int) chunk.CompressedSize), dest[destPos..(destPos + (int) chunk.UncompressedSize)], compressionFormat);
                 }
                 catch (Exception e)
                 {
