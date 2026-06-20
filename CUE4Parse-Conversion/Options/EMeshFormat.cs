@@ -8,8 +8,9 @@ public enum EMeshFormat
     ActorX,
     [Description("glTF 2.0 (binary)")]
     Gltf2,
+    // 2 is free, use it
     [Description("UEFormat (uemodel)")]
-    UEFormat,
+    UEFormat = 3,
     [Description("Universal Scene Description (usda)")]
-    USD
+    USD = 4
 }
