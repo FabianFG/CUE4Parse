@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text.Json.Nodes;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Animation;
@@ -75,7 +76,7 @@ public class Gltf
             }
 
             targetNames += "]}";
-            meshBuilder.Extras = (JsonContent) targetNames;
+            meshBuilder.Extras = JsonNode.Parse(targetNames);
         }
 
         Model = sceneBuilder.ToGltf2();
