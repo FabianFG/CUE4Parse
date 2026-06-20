@@ -228,6 +228,7 @@ public enum EGame : uint
         GAME_Subnautica2 = GAME_UE5_6 + 7,
         GAME_LEGOBatmanLegacyoftheDarkKnight = GAME_UE5_6 + 8,
         GAME_Fatekeeper = GAME_UE5_6 + 9,
+        GAME_Enginefall = GAME_UE5_6 + 10,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
         GAME_TitanQuest2 = GAME_UE5_7 + 1,
         GAME_Squad = GAME_UE5_7 + 2,

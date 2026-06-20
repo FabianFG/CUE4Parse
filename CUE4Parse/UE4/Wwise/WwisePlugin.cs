@@ -97,6 +97,7 @@ public class WwisePlugin
                 EAkPluginId.AkMotionSink => new CAkDefaultSinkParams(),
 
                 EAkPluginId.AkSystemOutputMeta => new CAkSystemOutputParams(Ar),
+                EAkPluginId.AkChannelRouterMeta => new CAkChannelRouterMetaParams(Ar),
 
                 EAkPluginId.atmokyEars => new CAtmokyEarsFXParams(Ar),
 
