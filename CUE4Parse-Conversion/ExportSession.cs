@@ -82,7 +82,6 @@ public sealed class ExportSession : INotifyPropertyChanged
         _options = options;
 
         var completed = 0;
-        var total = _totalQueued;
         var allResults = new ConcurrentBag<ExportResult>();
 
         try
@@ -105,7 +104,7 @@ public sealed class ExportSession : INotifyPropertyChanged
         finally // just in case cancellation is requested, we still need to clear things up
         {
             Clear();
-            progress?.Report(new ExportProgress(completed, total)); // this ensure the last progress reports the actual numbers
+            progress?.Report(new ExportProgress(completed, completed + _totalQueued)); // this ensure the last progress reports the actual numbers
 
             _baseDirectory = null;
             _options = null;
@@ -125,7 +124,7 @@ public sealed class ExportSession : INotifyPropertyChanged
                 allResults.Add(result);
 
                 var c = Interlocked.Increment(ref completed);
-                progress?.Report(new ExportProgress(c, total, result));
+                progress?.Report(new ExportProgress(c, completed + _totalQueued, result));
             }
         }
     }
