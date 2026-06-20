@@ -8,8 +8,6 @@ public enum EMeshFormat
     ActorX,
     [Description("glTF 2.0 (binary)")]
     Gltf2,
-    [Description("Wavefront OBJ (Not Implemented)")]
-    OBJ,
     [Description("UEFormat (uemodel)")]
     UEFormat,
     [Description("Universal Scene Description (usda)")]

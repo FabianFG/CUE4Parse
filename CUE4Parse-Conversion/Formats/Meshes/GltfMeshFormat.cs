@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse_Conversion.Dto;
+﻿using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers.Gltf;
 using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Formats.Meshes;
 
-public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
+public sealed class GltfMeshFormat : IMeshExportFormat
 {
-    public string DisplayName => isObj ? "Wavefront OBJ" : "glTF 2.0 (binary)";
-
-    private readonly EMeshFormat _legacyFormat = isObj ? EMeshFormat.OBJ : EMeshFormat.Gltf2;
-    private readonly string _extension = isObj ? "obj" : "glb";
+    public string DisplayName => "glTF 2.0 (binary)";
 
     public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
@@ -22,10 +17,10 @@ public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
         for (var i = start; i < end; i++)
         {
             using var ar = new FArchiveWriter();
-            new Gltf(objectName, dto, i, options.ExportMorphTargets).Save(_legacyFormat, ar);
+            new Gltf(objectName, dto, i, options.ExportMorphTargets).Save(ar);
 
             var suffix = i == 0 ? "" : $"_LOD{i}";
-            results.Add(new ExportFile(_extension, ar.GetBuffer(), suffix));
+            results.Add(new ExportFile("glb", ar.GetBuffer(), suffix));
         }
 
         return results;
@@ -39,10 +34,10 @@ public sealed class GltfMeshFormat(bool isObj = false) : IMeshExportFormat
         for (var i = start; i < end; i++)
         {
             using var ar = new FArchiveWriter();
-            new Gltf(objectName, dto, i).Save(_legacyFormat, ar);
+            new Gltf(objectName, dto, i).Save(ar);
 
             var suffix = i == 0 ? "" : $"_LOD{i}";
-            results.Add(new ExportFile(_extension, ar.GetBuffer(), suffix));
+            results.Add(new ExportFile("glb", ar.GetBuffer(), suffix));
         }
 
         return results;

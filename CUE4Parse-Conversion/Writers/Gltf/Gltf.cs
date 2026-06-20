@@ -91,24 +91,9 @@ public class Gltf
         return -1;
     }
 
-    public ArraySegment<byte> SaveAsWavefront()
+    public void Save(FArchiveWriter Ar)
     {
-        throw new NotImplementedException();
-    }
-
-    public void Save(EMeshFormat meshFormat, FArchiveWriter Ar)
-    {
-        switch (meshFormat)
-        {
-            case EMeshFormat.Gltf2:
-                Ar.Write(Model.WriteGLB());
-                break;
-            case EMeshFormat.OBJ:
-                Ar.Write(SaveAsWavefront()); // this can be supported after new release of SharpGltf
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(meshFormat), meshFormat, null);
-        }
+        Ar.Write(Model.WriteGLB());
     }
 
     public static NodeBuilder[] CreateGltfSkeleton(IReadOnlyList<MeshBoneDto> bones, NodeBuilder armatureNode)

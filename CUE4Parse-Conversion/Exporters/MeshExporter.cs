@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse_Conversion.Dto;
+﻿using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Formats.Meshes;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports;
@@ -46,8 +44,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
     private IMeshExportFormat GetMeshFormat(EMeshFormat format) => format switch
     {
         EMeshFormat.ActorX => new ActorXMeshFormat(),
-        EMeshFormat.Gltf2 => new GltfMeshFormat(isObj: false),
-        EMeshFormat.OBJ => new GltfMeshFormat(isObj: true),
+        EMeshFormat.Gltf2 => new GltfMeshFormat(),
         EMeshFormat.UEFormat => new UEFormatMeshFormat(),
         EMeshFormat.USD => new UsdMeshFormat(),
         _ => throw new NotSupportedException($"Mesh export does not support format {format}. Available formats: {string.Join(", ", Enum.GetNames<EMeshFormat>())}")
