@@ -1,6 +1,4 @@
-using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -91,7 +89,7 @@ public class FVirtualTextureBuiltData
 
     public FVirtualTextureBuiltData(FAssetArchive Ar, int firstMip)
     {
-        //var bStripMips = firstMip > 0 && Ar.Game != EGame.GAME_NobodyWantsToDie;
+        //var bStripMips = firstMip > 0;
         var bCooked = Ar.ReadBoolean();
 
         NumLayers = Ar.Read<uint>();

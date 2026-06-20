@@ -142,6 +142,8 @@ public enum EGame : uint
         GAME_ChasingKaleidoRIDER = GAME_UE4_27 + 32,
         GAME_Lego2KDrive = GAME_UE4_27 + 33,
         GAME_CenturyAgeofAshes = GAME_UE4_27 + 34,
+        GAME_EmbersofTheUncrowned = GAME_UE4_27 + 35,
+        GAME_eBaseballProSpirit = GAME_UE4_27 + 36,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -229,6 +231,7 @@ public enum EGame : uint
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
         GAME_TitanQuest2 = GAME_UE5_7 + 1,
         GAME_Squad = GAME_UE5_7 + 2,
+        GAME_Empulse = GAME_UE5_7 + 3,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
         GAME_WutheringWavesFastGeo = GAME_UE5_8 + 1,
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
