@@ -34,17 +34,7 @@ namespace CUE4Parse.UE4.Versions
             }
         }
 
-        private ETexturePlatform _platform;
-        public ETexturePlatform Platform
-        {
-            get => _platform;
-            set
-            {
-                _platform = value;
-                InitOptions();
-                InitMapStructTypes();
-            }
-        }
+        public ETexturePlatform Platform { get; set; }
 
         public bool bExplicitVer { get; private set; }
 
@@ -68,7 +58,7 @@ namespace CUE4Parse.UE4.Versions
 
         private void InitOptions()
         {
-            Options.Clear();
+            // Options.Clear();
 
             // objects
             Options["MorphTarget"] = true;
@@ -114,7 +104,7 @@ namespace CUE4Parse.UE4.Versions
 
         private void InitMapStructTypes()
         {
-            MapStructTypes.Clear();
+            // MapStructTypes.Clear();
             MapStructTypes["BindingIdToReferences"] = new KeyValuePair<string, string>("Guid", null);
             MapStructTypes["UserParameterRedirects"] = new KeyValuePair<string, string>("NiagaraVariable", "NiagaraVariable");
             MapStructTypes["Tracks"] = new KeyValuePair<string, string>("MovieSceneTrackIdentifier", null);
