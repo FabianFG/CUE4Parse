@@ -83,7 +83,7 @@ namespace CUE4Parse.UE4.Versions
             Options["SkeletalMesh.HasRayTracingData"] = Game is >= GAME_UE4_27 or GAME_UE4_25_Plus;
             Options["StaticMesh.HasLODsShareStaticLighting"] = Game is < GAME_UE4_15 or >= GAME_UE4_16; // Exists in all engine versions except UE4.15
             Options["StaticMesh.HasRayTracingGeometry"] = Game >= GAME_UE4_25;
-            Options["StaticMesh.HasVisibleInRayTracing"] = Game >= GAME_UE4_26;
+            Options["StaticMesh.HasVisibleInRayTracing"] = Game >= GAME_UE4_26 || Game is GAME_Back4Blood;
             Options["StaticMesh.UseNewCookedFormat"] = Game >= GAME_UE4_23;
             Options["VirtualTextures"] = Game >= GAME_UE4_23;
             Options["SoundWave.UseAudioStreaming"] = Game >= GAME_UE4_25 && OverrideUseAudioStreaming(); // A lot of games use this, but some don't, which causes issues.
