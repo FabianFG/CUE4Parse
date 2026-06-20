@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -34,7 +32,7 @@ namespace CUE4Parse_Conversion.Animations
                 UAnimSequence animSequence => skeleton.ConvertAnims(animSequence),
                 UAnimMontage animMontage => skeleton.ConvertAnims(animMontage),
                 UAnimComposite animComposite => skeleton.ConvertAnims(animComposite),
-                _ => throw new ArgumentException("Unknown animation type")
+                _ => throw new NotSupportedException($"Animation asset type '{asset.GetType().Name}' is not supported for conversion")
             };
         }
 

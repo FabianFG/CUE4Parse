@@ -72,7 +72,7 @@ public abstract class ExporterBase : IExporter
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            Log.Error(ex, "Failed: {Message}", ex.Message);
+            Log.Error(ex, "Failed to export");
             return [ExportResult.Failure(ObjectPath, ex)];
         }
     }
