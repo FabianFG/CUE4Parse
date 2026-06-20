@@ -53,8 +53,6 @@ public class UStaticMesh : UObject
             }
         }
 
-        if (Ar.Game == EGame.GAME_Valorant) Ar.Position += 4;
-
         LightingGuid = Ar.Read<FGuid>(); // LocalLightingGuid
         Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
 
