@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection
 {
@@ -79,6 +80,12 @@ namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection
             var bHasMeshData = Ar.ReadBoolean();
             var bHasNaniteData  = Ar.ReadBoolean();
 
+            if (Ar.Game == EGame.GAME_MarvelRivals)
+            {
+                (bHasMeshData, bHasNaniteData) = (bHasNaniteData, bHasMeshData); // maybe?
+                var something = Ar.Read<int>(); // ?
+            }
+            
             if (bHasMeshData)
             {
                 MeshResources = new FGeometryCollectionMeshResources(Ar);

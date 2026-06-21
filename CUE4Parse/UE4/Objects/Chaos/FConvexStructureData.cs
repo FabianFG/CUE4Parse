@@ -65,8 +65,6 @@ public class TConvexHalfEdgeStructureData<T> where T : struct
         HalfEdges = Ar.ReadArray<FHalfEdgeData>();
         Vertices = Ar.ReadArray<FVertexData>();
 
-        // const bool bHasUniqueEdgeList = Ar.CustomVer(FPhysicsObjectVersion::GUID) >= FPhysicsObjectVersion::ChaosConvexHasUniqueEdgeSet;
-
         var bHasUniqueEdgeList = FPhysicsObjectVersion.Get(Ar) >= FPhysicsObjectVersion.Type.ChaosConvexHasUniqueEdgeSet;
         if (bHasUniqueEdgeList)
             Edges = Ar.ReadArray<T>();

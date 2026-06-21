@@ -2,6 +2,7 @@
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -41,10 +42,20 @@ namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection
                 SerializeOldNaniteData(Ar);
             }
 
-            // Ar.Position += 406;
             // marvel rival's doing some shit here
             if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.GeometryCollectionNaniteTransient)
             {
+                // if (Ar.Game == EGame.GAME_MarvelRivals)
+                // {
+                //     var gi = (GeometryCollection?.GroupInfo).FirstOrDefault(x => x.Key.PlainText == "Transform");
+                //     if (!gi.Key.IsNone)
+                //     {
+                //         var num = gi.Value.Size; // num * 24?
+                //         Ar.Position += (8 * 3) * num;
+                //     }
+                //     // more data
+                // }
+
                 var bCooked = Ar.ReadBoolean();
                 if (bCooked)
                 {
@@ -71,23 +82,12 @@ namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection
                 if (!stripFlags.IsAudioVisualDataStripped())
                 {
                     bool bLZCompressed;
-                    // TArray< uint8 >						RootClusterPage;
-                    // FByteBulkData						StreamableClusterPages;
-                    // TArray< uint16 >					ImposterAtlas;
-                    // TArray< FPackedHierarchyNode_Old >	HierarchyNodes;
-                    // TArray< FPageStreamingState_Old >	PageStreamingStates;
-                    // TArray< uint32 >					PageDependencies;
-
+                    
                     bLZCompressed = Ar.ReadBoolean();
                     var RootClusterPage = Ar.ReadArray<byte>();
                     var StreamableClusterPages = new FByteBulkData(Ar);
                     var PageStreamingStates = new FPageStreamingState(Ar);
-                    //
-                    // Ar << HierarchyNodes;
-                    // Ar << PageDependencies;
-                    // Ar << ImposterAtlas;
-                    var HierarchyNodes = new FPackedHierarchyNode(Ar); // ???
-                    
+                    var HierarchyNodes = new FPackedHierarchyNode(Ar);
                     var PageDependencies = Ar.ReadArray<uint>();
                     var ImposterAtlas = Ar.ReadArray<ushort>();
                 }

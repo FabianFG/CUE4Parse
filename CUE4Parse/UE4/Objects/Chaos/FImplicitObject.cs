@@ -70,14 +70,7 @@ public class FImplicitObject: ISerializationFactory
     public bool bIsConvex;
     public bool bDoCollide;
     public bool bHasBoundingBox;
-#if TRACK_CHAOS_GEOMETRY
-	bool bIsTracked;
-#else
-#if DISALLOW_FIMPLICIT_OBJECT_TAIL_PADDING
-	// The purpose of this padding is just to make it easier to calculate PadBytes below.
-	bool bPad;
-#endif // DISALLOW_FIMPLICIT_OBJECT_TAIL_PADDING
-#endif
+
 
     public EImplicitObjectType Type;
     public EImplicitObjectType CollisionType;
@@ -108,69 +101,6 @@ public class FImplicitObject: ISerializationFactory
         return this;
     }
 
-    /*
-     FImplicitObject* FImplicitObject::SerializationFactory(FChaosArchive& Ar, FImplicitObject* Obj)
-	{
-		int8 ObjectType = Ar.IsLoading() ? 0 : (int8)Obj->Type;
-		Ar << ObjectType;
-
-		Ar.UsingCustomVersion(FExternalPhysicsCustomObjectVersion::GUID);
-		if(Ar.CustomVer(FExternalPhysicsCustomObjectVersion::GUID) >= FExternalPhysicsCustomObjectVersion::ScaledGeometryIsConcrete)
-		{
-			if(IsScaled(ObjectType))
-			{
-				EImplicitObjectType InnerType = GetInnerType(ObjectType);
-				switch(InnerType)
-				{
-				case ImplicitObjectType::Convex: if(Ar.IsLoading()){ return new TImplicitObjectScaled<FConvex>(); } break;
-				case ImplicitObjectType::TriangleMesh: if(Ar.IsLoading()){ return new TImplicitObjectScaled<FTriangleMeshImplicitObject>(); } break;
-				default: check(false);
-				}
-
-				return nullptr;
-			}
-		}
-
-		if(IsInstanced(ObjectType))
-		{
-			EImplicitObjectType InnerType = GetInnerType(ObjectType);
-			switch(InnerType)
-			{
-			case ImplicitObjectType::Convex: if(Ar.IsLoading()) { return new TImplicitObjectInstanced<FConvex>(); } break;
-			case ImplicitObjectType::TriangleMesh: if(Ar.IsLoading()) { return new TImplicitObjectInstanced<FTriangleMeshImplicitObject>(); } break;
-			default: check(false);
-			}
-
-			return nullptr;
-		}
-
-		switch((EImplicitObjectType)ObjectType)
-		{
-		case ImplicitObjectType::Sphere: if(Ar.IsLoading()) { return new TSphere<FReal, 3>(); } break;
-		case ImplicitObjectType::Box: if(Ar.IsLoading()) { return new TBox<FReal, 3>(); } break;
-		case ImplicitObjectType::Plane: if(Ar.IsLoading()) { return new TPlane<FReal, 3>(); } break;
-		case ImplicitObjectType::Capsule: if(Ar.IsLoading()) { return new FCapsule(); } break;
-		case ImplicitObjectType::Transformed: if(Ar.IsLoading()) { return new TImplicitObjectTransformed<FReal, 3>(); } break;
-		case ImplicitObjectType::Union: if(Ar.IsLoading()) { return new FImplicitObjectUnion(); } break;
-		case ImplicitObjectType::UnionClustered: if(Ar.IsLoading()) { return new FImplicitObjectUnionClustered(); } break;
-		case ImplicitObjectType::LevelSet: if(Ar.IsLoading()) { return new FLevelSet(); } break;
-		case ImplicitObjectType::Convex: if(Ar.IsLoading()) { return new FConvex(); } break;
-		case ImplicitObjectType::TaperedCylinder: if(Ar.IsLoading()) { return new FTaperedCylinder(); } break;
-		case ImplicitObjectType::TaperedCapsule: if(Ar.IsLoading()) { return new FTaperedCapsule(); } break;
-		case ImplicitObjectType::TriangleMesh: if(Ar.IsLoading()) { return new FTriangleMeshImplicitObject(); } break;
-		case ImplicitObjectType::DEPRECATED_Scaled:
-		{
-			ensure(Ar.IsLoading() && (Ar.CustomVer(FExternalPhysicsCustomObjectVersion::GUID) < FExternalPhysicsCustomObjectVersion::ScaledGeometryIsConcrete));
-			return new TImplicitObjectScaledGeneric<FReal, 3>();
-		}
-		case ImplicitObjectType::HeightField: if(Ar.IsLoading()) { return new FHeightField(); } break;
-		case ImplicitObjectType::Cylinder: if(Ar.IsLoading()) { return new FCylinder(); } break;
-		default:
-			check(false);
-		}
-		return nullptr;
-	}
-     */
     public virtual ISerializationFactory SerializationFactory(FChaosArchive Ar) 
     {
         EImplicitObjectType objectType = Ar.Read<EImplicitObjectType>(); // because Ar.Loading

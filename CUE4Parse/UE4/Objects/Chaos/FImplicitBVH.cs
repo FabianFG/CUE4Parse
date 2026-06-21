@@ -27,11 +27,6 @@ public class FImplicitBVHObject
 
 public class TBVHNode<T> where T: struct
 {
-    // TVector<T, d> MMin, MMax;
-    // int32 MAxis;
-    // TArray<int32> MChildren;
-    // int32 LeafIndex;
-
     public TVector<T> MMin;
     public TVector<T> MMax;
     public int MAxis;
@@ -40,7 +35,6 @@ public class TBVHNode<T> where T: struct
 
     public TBVHNode(FChaosArchive Ar, int d)
     {
-        // return Ar << LeafNode.LeafIndex << LeafNode.MAxis << LeafNode.MChildren << LeafNode.MMax << LeafNode.MMin;
         LeafIndex = Ar.Read<int>();
         MAxis = Ar.Read<int>();
         MChildren = Ar.ReadArray<int>();
@@ -77,9 +71,7 @@ public class FImplicitBVH
 {
     public FObjects Objects;
     public int[] NodeObjectIndicesArray;
-    // TArray<FImplicitBVHNode> Nodes;
-    // int32 TreeDepth;
-    
+
     public FImplicitBVH(FChaosArchive Ar)
     {
         Objects = Ar.ReadArray(() => new FImplicitBVHObject(Ar));

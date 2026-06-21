@@ -37,16 +37,10 @@ public class TManangedArray : FManagedArrayBase
                 Serialize<FVector4>(Ar);
                 break;
             case EManagedArrayType.FVectorType:
-                // if (Ar.Game == EGame.GAME_MarvelRivals)
-                    SerializeAsBulk<FVector>(Ar);
-                // else
-                //     Serialize<FVector>(Ar);
+                SerializeAsBulk<FVector>(Ar);
                 break;
             case EManagedArrayType.FVector2DType:
-                // if (Ar.Game == EGame.GAME_MarvelRivals)
-                    SerializeAsBulk<FVector2D>(Ar);
-                // else
-                //     Serialize<FVector2D>(Ar);
+                SerializeAsBulk<FVector2D>(Ar);
                 break;
             case EManagedArrayType.FIntVectorType:
                 SerializeAsBulk<FIntVector>(Ar);
@@ -60,36 +54,23 @@ public class TManangedArray : FManagedArrayBase
             case EManagedArrayType.FIntArrayType:
                 // Int[][]
                 // Data = 
-                // can't serialized as bulk
+                // not serialized as bulk
                 SerializeAsArray(Ar, Ar.ReadArray<int>); //here broken!
                 break;
             case EManagedArrayType.FInt32Type:
-                // if (Ar.Game == EGame.GAME_MarvelRivals)
-                    SerializeAsBulk<int>(Ar);
-                // else
-                //     Serialize<int>(Ar);
+                SerializeAsBulk<int>(Ar);
+                
                 break;
             case EManagedArrayType.FFloatType:
-                if (Ar.Game == EGame.GAME_MarvelRivals)
-                    SerializeAsBulk<float>(Ar);
-                else
-                    SerializeAsBulk<float>(Ar);
-
+                SerializeAsBulk<float>(Ar);
                 break;
             case EManagedArrayType.FBoolType:
-                // if (Ar.Game == EGame.GAME_MarvelRivals)
-                //     Serialize<bool>(Ar, Ar.ReadBoolean);
-                // else
-                    // Serialize<bool>(Ar, Ar.ReadBoolean);
-                    // //
                     SerializeAsBulk<bool>(Ar);
                 break;
             case EManagedArrayType.FBoxType:
                 if (Ar.Game == EGame.GAME_MarvelRivals)
                     Serialize<FBox>(Ar);
                 else
-                    // Serialize<bool>(Ar, Ar.ReadBoolean);
-                    // //
                     Serialize(Ar, () => new FBox(Ar));
                 break;
             case EManagedArrayType.FMeshSectionType:
@@ -100,10 +81,10 @@ public class TManangedArray : FManagedArrayBase
             case EManagedArrayType.FFImplicitObject3ThreadSafeSharedPointerType:
             case EManagedArrayType.FFConvexUniquePtrType:
             case EManagedArrayType.FConvexRefCountedPtrType:
-                SerializeBulkManagedPtrArray(Ar, () => new FImplicitObject()); // .Serialize(Ar)
+                SerializeBulkManagedPtrArray(Ar, () => new FImplicitObject());
                 break;
             case EManagedArrayType.FFBVHParticlesFloat3UniquePointerType:
-                SerializeBulkManagedPtrArray(Ar, () => new FBVHParticles()); // .Serialize(Ar)
+                SerializeBulkManagedPtrArray(Ar, () => new FBVHParticles());
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(ArrayType));
