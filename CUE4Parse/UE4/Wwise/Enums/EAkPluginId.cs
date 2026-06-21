@@ -98,6 +98,7 @@ public enum EAkPluginId : uint
     AkMotionSink                         = 0x01FB0007,
 
     AkSystemOutputMeta                   = 0x03840009,
+    AkChannelRouterMeta                  = 0x03870009,
 
     // Third-party plugins
     atmokyEars                           = 0x000112c3,
@@ -131,6 +132,10 @@ public enum EAkPluginId : uint
     McDSPLimiterFX                       = 0x00671003,
     McDSPFutzBoxFX                       = 0x006E1003,
 
+    // 1666: Amsterdam and Outer Worlds 2
+    TritonAcousticsSpatializer = 0x00041133,
+    TritonAcousticsSpread                = 0x00051133,
+    TritonAcousticsReverb                = 0x00031139,
     MsSpatialSink                        = 0x00aa1137,
 
     // MetaXRAudio
