@@ -321,6 +321,20 @@ namespace CUE4Parse.FileProvider
                     ELanguage.Chinese => "zh-Hans",
                     _ => "en"
                 },
+                "aion2" => language switch
+                {
+                    ELanguage.English => "en-US",
+                    ELanguage.Korean => "ko-KR",
+                    ELanguage.Japanese => "ja-JP",
+                    ELanguage.TraditionalChinese => "zh-TW",
+                    ELanguage.Chinese => "zh-CN",
+                    ELanguage.German => "de-DE",
+                    ELanguage.French => "fr-FR",
+                    ELanguage.Spanish => "es-ES",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru-RU",
+                    _ => "en-US"
+                },
                 _ => language switch // https://www.alchemysoftware.com/livedocs/ezscript/Topics/Catalyst/Language.htm
                 {
                     ELanguage.English => "en",
@@ -433,7 +447,7 @@ namespace CUE4Parse.FileProvider
                 }
                 gameAr?.Dispose();
 
-                Internationalization.InitFromIni(DefaultGame);
+                Internationalization.InitFromIni(DefaultGame, this);
             }
             if (TryGetGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine))
             {
