@@ -3,7 +3,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
@@ -111,6 +110,14 @@ namespace CUE4Parse.UE4.Readers
             var size = Unsafe.SizeOf<T>();
             var result = Unsafe.ReadUnaligned<T>(ref _data[Position]);
             Position += size;
+            return result;
+        }
+
+        public sealed override ReadOnlySpan<byte> ReadSpan(int length)
+        {
+            CheckReadSize(length);
+            var result = _data.AsSpan((int)Position, length);
+            Position += length;
             return result;
         }
 

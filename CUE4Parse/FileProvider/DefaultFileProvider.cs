@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.IO;
@@ -16,6 +11,8 @@ namespace CUE4Parse.FileProvider
         protected readonly DirectoryInfo _workingDirectory;
         protected readonly DirectoryInfo[] _extraDirectories;
         protected readonly SearchOption _searchOption;
+
+        private readonly record struct LooseFileDiscovery(Dictionary<string, GameFile> Files, int FilesCount);
 
         [Obsolete("Use the other constructors with explicit StringComparer")]
         public DefaultFileProvider(string directory, SearchOption searchOption, bool isCaseInsensitive = false, VersionContainer? versions = null)
@@ -57,7 +54,7 @@ namespace CUE4Parse.FileProvider
             if (!_workingDirectory.Exists)
                 throw new DirectoryNotFoundException("The game directory could not be found.");
 
-            var availableFiles = new List<Dictionary<string, GameFile>> {IterateFiles(_workingDirectory, _searchOption)};
+            var availableFiles = new List<LooseFileDiscovery> {IterateFiles(_workingDirectory, _searchOption)};
             if (_extraDirectories is {Length: > 0})
             {
                 availableFiles.AddRange(_extraDirectories.Select(directory => IterateFiles(directory, _searchOption)));
@@ -65,14 +62,17 @@ namespace CUE4Parse.FileProvider
 
             foreach (var osFiles in availableFiles)
             {
-                Files.AddFiles(osFiles);
+                Files.AddFiles(osFiles.Files);
+                LooseFileCount += osFiles.FilesCount;
             }
         }
 
-        private Dictionary<string, GameFile> IterateFiles(DirectoryInfo directory, SearchOption option)
+        private LooseFileDiscovery IterateFiles(DirectoryInfo directory, SearchOption option)
         {
+            var packageCount = 0;
             var osFiles = new Dictionary<string, GameFile>(PathComparer);
-            if (!directory.Exists) return osFiles;
+
+            if (!directory.Exists) return new LooseFileDiscovery(osFiles, packageCount);
 
             // Look for .uproject file to get the correct mount point
             var uproject = directory.GetFiles("*.uproject", SearchOption.TopDirectoryOnly).FirstOrDefault();
@@ -118,12 +118,14 @@ namespace CUE4Parse.FileProvider
                 // Register local file only if it has a known extension, we don't need every file
                 if (!GameFile.UeKnownExtensions.Contains(upperExt, StringComparer.OrdinalIgnoreCase))
                     continue;
+                if (!GameFile.UePackagePayloadExtensionsSet.Contains(upperExt, StringComparer.OrdinalIgnoreCase))
+                    packageCount++;
 
                 var osFile = new OsGameFile(_workingDirectory, file, mountPoint, Versions);
                 osFiles[osFile.Path] = osFile;
             }
 
-            return osFiles;
+            return new LooseFileDiscovery(osFiles, packageCount);
         }
     }
 }

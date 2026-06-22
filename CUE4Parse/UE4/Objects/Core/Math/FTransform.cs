@@ -447,4 +447,45 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return this.MemberwiseClone();
         }
     }
+    
+    public struct TTransform<T> where T : struct, IEquatable<T>, IFormattable
+    {
+        public TIntVector4<T> Rotation;
+        public TIntVector3<T> Translation;
+        public TIntVector3<T> Scale3D;
+
+        
+        public TTransform(TIntVector4<T> rotation, TIntVector3<T> translation, TIntVector3<T> scale3D)
+        {
+            Rotation = rotation;
+            Translation = translation;
+            Scale3D = scale3D;
+        }
+
+        public static implicit operator FTransform(TTransform<T> t)
+        {
+            return new FTransform
+            {
+                Rotation = new FQuat(
+                    Convert.ToSingle(t.Rotation.X),
+                    Convert.ToSingle(t.Rotation.Y),
+                    Convert.ToSingle(t.Rotation.Z),
+                    Convert.ToSingle(t.Rotation.W)),
+                Translation = new FVector(
+                    Convert.ToSingle(t.Translation.X),
+                    Convert.ToSingle(t.Translation.Y),
+                    Convert.ToSingle(t.Translation.Z)),
+                Scale3D = new FVector(
+                    Convert.ToSingle(t.Scale3D.X),
+                    Convert.ToSingle(t.Scale3D.Y),
+                    Convert.ToSingle(t.Scale3D.Z))
+            };
+        }
+            
+        
+        public override string ToString()
+        {
+            return $"{{T:{Translation} R:{Rotation} S:{Scale3D}}}";
+        }
+    } 
 }

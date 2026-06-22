@@ -149,7 +149,15 @@ public partial class USkeletalMesh : UObject
             Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap
         }
 
-        _ = Ar.ReadArray(() => new FPackageIndex(Ar)); // dummyObjs
+        switch (Ar.Game)
+        {
+            case EGame.GAME_Back4Blood:
+                Ar.Position += 8;
+                break;
+            default:
+                _ = Ar.ReadArray(() => new FPackageIndex(Ar)); // dummyObjs
+                break;
+        }
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
         {
