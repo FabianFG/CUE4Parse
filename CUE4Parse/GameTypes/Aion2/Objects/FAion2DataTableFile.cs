@@ -1,8 +1,12 @@
 using System;
+using System.Linq;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Localization;
 using Serilog;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
@@ -15,6 +19,12 @@ public class FAion2DataTableFile : FAion2DataFile
         ArgumentNullException.ThrowIfNull(data);
 
         if (!file.Directory.EndsWith("Data/Table", StringComparison.OrdinalIgnoreCase)) return;
+
+        if (data.Length >= 8 && BitConverter.ToUInt32(data, 0) == 13 && BitConverter.ToUInt32(data, 4) is 2 or 3)
+        {
+            Aion2DatFileAes.Initialize(provider);
+            data = Aion2DatFileAes.DecryptDataTable(data);
+        }
 
         using var Ar = new FAion2DatFileArchive(data, provider.Versions);
         Version = Ar.Read<int>();

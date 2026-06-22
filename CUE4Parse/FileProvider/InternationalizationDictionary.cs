@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -7,13 +7,17 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.GameTypes.Aion2.Objects;
 using CUE4Parse.UE4.Localization;
+using CUE4Parse.UE4.Versions;
 using UE4Config.Parsing;
 
 namespace CUE4Parse.FileProvider;
 
 public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>
 {
+    private IFileProvider? _provider;
+
     private readonly IEqualityComparer<string>? _comparer;
     private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> _collection = new();
 
@@ -34,8 +38,9 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
         _cultureMappings = new Dictionary<string, string>(_comparer);
     }
 
-    internal void InitFromIni(CustomConfigIni ini)
+    internal void InitFromIni(CustomConfigIni ini, IFileProvider? provider = null)
     {
+        _provider = provider;
         _availableCultures.Clear();
         _cultureMappings.Clear();
         _localizationPaths.Clear();
@@ -74,7 +79,7 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
         if (!TryGetCulture(culture, out var validated))
             throw new KeyNotFoundException($"'{culture}' is not a valid culture.");
 
-        Culture = validated;
+        Culture = validated ?? culture;
         Clear();
 
         const string exclusion = "(?!Engine).+/";
@@ -88,6 +93,8 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
         // else
         {
             LoadByPattern($"^{exclusion}.+/{Culture}/.+.locres$", files);
+            if (_provider?.Versions.Game is EGame.GAME_Aion2)
+                LoadAion2L10NDatFiles(Culture);
         }
     }
 
@@ -132,6 +139,26 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
                 }
             }
         });
+    }
+
+    private void LoadAion2L10NDatFiles(string culture)
+    {
+        if (_provider is null) return;
+        foreach (var file in _provider.Files.Where(x =>
+                     x.Key.EndsWith("/L10NString.dat", StringComparison.OrdinalIgnoreCase) &&
+                     x.Key.Contains($"/{culture}/", StringComparison.OrdinalIgnoreCase)))
+        {
+
+            var locfile = new FAion2L10NFile(file.Value, _provider);
+            var dictionary = (Dictionary<string, string>) _collection.GetOrAdd(locfile.Namespace, _ => new Dictionary<string, string>());
+            lock (dictionary)
+            {
+                foreach (var entry in locfile.Entries)
+                {
+                    dictionary[entry.Key] = entry.Value;
+                }
+            }
+        }
     }
 
     public void Override(IDictionary<string, IDictionary<string, string>> dictionary)
