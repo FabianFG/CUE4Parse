@@ -29,6 +29,7 @@ using GenericReader;
 using OffiUtils;
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Pak.Objects.EPakFileVersion;
+using CUE4Parse.GameTypes.NFS.Mobile.Lua;
 
 namespace CUE4Parse.UE4.Pak
 {
@@ -168,6 +169,8 @@ namespace CUE4Parse.UE4.Pak
                     case EGame.GAME_Strinova when pakEntry.Extension is "lua":
                         uncompressed = StrinovaLua.DecryptLuaBytecode(uncompressed);
                         break;
+                    case EGame.GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
+                        return NFSLua.RestoreLuaBytecode(pakEntry.Path, uncompressed);
                     default:
                         break;
                 }
@@ -219,6 +222,8 @@ namespace CUE4Parse.UE4.Pak
                 case EGame.GAME_Strinova when pakEntry.Extension is "lua":
                     data = StrinovaLua.DecryptLuaBytecode(data);
                     break;
+                case EGame.GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
+                    return NFSLua.RestoreLuaBytecode(pakEntry.Path, data);
                 default:
                     break;
             }
