@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -24,6 +21,7 @@ public enum EPakFileVersion
     PakFile_Version_PathHashIndex = 10,
     PakFile_Version_Fnv64BugFix = 11,
     PakFile_Version_Utf8PakDirectory = 12,
+    PakFile_Version_SortedDirectoryIndex = 13, // FullDirectoryIndex stored as a flat FPakFlatDirectoryIndex.
 
     PakFile_Version_Last,
     PakFile_Version_Invalid,
@@ -366,7 +364,7 @@ public partial class FPakInfo
                         continue;
                     if (!Enum.TryParse(name, true, out CompressionMethod method))
                     {
-                        Log.Warning($"Unknown compression method '{name}' in {Ar.Name}");
+                        Log.Warning("Unknown compression method '{CompressionMethod}' in {ArchiveName}", name, Ar.Name);
                         method = CompressionMethod.Unknown;
                     }
                     CompressionMethods.Add(method);
@@ -381,7 +379,7 @@ public partial class FPakInfo
         // Reset new fields to their default states when seralizing older pak format.
         if (Version < EPakFileVersion.PakFile_Version_IndexEncryption)
         {
-            EncryptedIndex = default;
+            EncryptedIndex = false;
         }
 
         if (Version < EPakFileVersion.PakFile_Version_EncryptionKeyGuid)
@@ -477,7 +475,7 @@ public partial class FPakInfo
 
             foreach (var offset in offsetsToTry)
             {
-                if ((long)offset > maxOffset) continue;
+                if ((long) offset > maxOffset) continue;
 
                 reader.Seek(-(long) offset, SeekOrigin.End);
                 FPakInfo info;
