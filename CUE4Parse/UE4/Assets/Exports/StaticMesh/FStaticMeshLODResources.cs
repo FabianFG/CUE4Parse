@@ -60,6 +60,12 @@ public class FStaticMeshLODResources
         }
 
         if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 4;
+        if (Ar.Game == EGame.GAME_NeedForSpeedMobile)
+        {
+            Ar.SkipFixedArray(36);
+            Ar.SkipFixedArray(28);
+            Ar.Position += 8;
+        }
 
         if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
         {
@@ -141,6 +147,7 @@ public class FStaticMeshLODResources
                 Ar.Position += Ar.Game switch
                 {
                     >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
+                    EGame.GAME_NeedForSpeedMobile => 32,
                     EGame.GAME_SuicideSquad => 29,
                     EGame.GAME_ArenaBreakoutInfinite => 16,
                     EGame.GAME_TheFinals or EGame.GAME_ArcRaiders => 12,
@@ -156,7 +163,7 @@ public class FStaticMeshLODResources
             // uint32 ReversedIBsSize       = 0;
             Ar.Position += 12;
 
-            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders or EGame.GAME_NeedForSpeedMobile) Ar.Position += 4;
         }
     }
 
