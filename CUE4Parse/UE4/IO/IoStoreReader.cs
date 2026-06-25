@@ -24,7 +24,8 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
     public readonly FIoStoreTocResource TocResource;
     public readonly Dictionary<FIoChunkId, FIoOffsetAndLength>? TocImperfectHashMapFallback;
-    public FIoContainerHeader? ContainerHeader { get; private set; }
+    private Lazy<FIoContainerHeader?> _containerHeader;
+    public FIoContainerHeader? ContainerHeader => _containerHeader.Value;
     public Dictionary<FPackageId, GameFile> PackageIdIndex { get; private set; } = [];
 
     public override string MountPoint { get; protected set; }
@@ -409,7 +410,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         watch.Start();
 
         ProcessIndex(pathComparer);
-        ContainerHeader = ReadContainerHeader();
+        _containerHeader = new Lazy<FIoContainerHeader?>(ReadContainerHeader);
 
         if (Globals.LogVfsMounts)
         {
