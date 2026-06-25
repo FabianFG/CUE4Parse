@@ -1,6 +1,8 @@
 using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Buffers;
 
@@ -9,7 +11,7 @@ public class FMeshBufferSet
     public uint ElementCount;
     public FMeshBuffer[] Buffers;
     public EMeshBufferSetFlags Flags;
-    
+
     public FMeshBufferSet(FMutableArchive Ar)
     {
         ElementCount = Ar.Read<uint>();
@@ -20,6 +22,7 @@ public class FMeshBufferSet
 }
 
 [Flags]
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EMeshBufferSetFlags : uint
 {
     None = 0,
