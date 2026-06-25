@@ -56,5 +56,33 @@ public class FPerPlatformFString : TPerPlatformProperty<string>
     public FPerPlatformFString(FAssetArchive Ar) : base(Ar, Ar.ReadFString) { }
 }
 
+public enum ERigLogicFloatingPointType : byte
+{
+    Float,
+    HalfFloat,
+    Auto
+};
+
+public class FPerPlatformERigLogicFloatingPointType : TPerPlatformProperty<ERigLogicFloatingPointType>
+{
+    public FPerPlatformERigLogicFloatingPointType() { }
+    public FPerPlatformERigLogicFloatingPointType(FAssetArchive Ar) : base(Ar, () => (ERigLogicFloatingPointType) Ar.Read<int>()) { }
+}
+
+public enum ERigLogicCalculationType : byte
+{
+    Scalar,
+    SSE,
+    AVX,
+    NEON,
+    AnyVector
+};
+
+public class FPerPlatformERigLogicCalculationType : TPerPlatformProperty<ERigLogicCalculationType>
+{
+    public FPerPlatformERigLogicCalculationType() { }
+    public FPerPlatformERigLogicCalculationType(FAssetArchive Ar) : base(Ar, () => (ERigLogicCalculationType) Ar.Read<int>()) { }
+}
+
 //FFreezablePerPlatformInt
 //FFreezablePerPlatformFloat
