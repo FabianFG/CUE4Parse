@@ -1,3 +1,4 @@
+using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -55,7 +56,7 @@ public class UReflectionCaptureComponent : USceneComponent
                             var uncompressedSize = byteAr.Read<int>();
                             var compressedSize = byteAr.Read<int>();
 
-                            LegacyMapBuildData.FullHDRCapturedData = Compression.Compression.Decompress(byteAr.ReadArray<byte>(compressedSize), uncompressedSize, Compression.CompressionMethod.Zlib);
+                            LegacyMapBuildData.FullHDRCapturedData = Compression.Compression.Decompress(byteAr.ReadArray<byte>(compressedSize), uncompressedSize, CompressionMethod.Zlib);
                         }
 
                         LegacyMapBuildData.AverageBrightness = AverageBrightness;

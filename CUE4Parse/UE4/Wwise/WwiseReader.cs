@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Objects;

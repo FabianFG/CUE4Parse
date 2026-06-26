@@ -1,5 +1,4 @@
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Writers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Harmonix;

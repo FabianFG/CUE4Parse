@@ -1,5 +1,4 @@
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
-using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;

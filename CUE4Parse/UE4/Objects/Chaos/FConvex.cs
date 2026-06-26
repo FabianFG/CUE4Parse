@@ -3,7 +3,6 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-
 using FVec3 = CUE4Parse.UE4.Objects.Core.Math.TIntVector3<double>;
 using FRotation3 = CUE4Parse.UE4.Objects.Core.Math.TIntVector4<double>;
 

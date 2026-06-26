@@ -1,6 +1,5 @@
-using CUE4Parse.UE4.FMod.Enums;
-using System.Collections.Generic;
 using System.Text;
+using CUE4Parse.UE4.FMod.Enums;
 
 namespace CUE4Parse.UE4.FMod.Objects;
 

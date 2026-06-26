@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Layout;
 
@@ -19,13 +20,13 @@ public readonly struct FLayoutBlock
 
     public FLayoutBlock(FMutableArchive Ar, int version = 6)
     {
-        if (Ar.Game < Versions.EGame.GAME_UE5_5)
+        if (Ar.Game < EGame.GAME_UE5_5)
         {
             var min = Ar.Read<TIntVector2<ushort>>();
             Min = new FIntVector2(min.X, min.Y);
             var size = Ar.Read<TIntVector2<ushort>>();
             Size = new FIntVector2(size.X, size.Y);
-            if (Ar.Game is Versions.EGame.GAME_Gothic1Remake) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_Gothic1Remake) Ar.Position += 4;
             Id = Ar.Read<uint>();
         }
         else
@@ -38,7 +39,7 @@ public readonly struct FLayoutBlock
         Priority = Ar.Read<int>();
 
         if (version >= 6)
-            Packed = Ar.Game <= Versions.EGame.GAME_UE5_5 ? Ar.Read<ushort>() : Ar.Read<uint>();
+            Packed = Ar.Game <= EGame.GAME_UE5_5 ? Ar.Read<ushort>() : Ar.Read<uint>();
         else if (version == 5)
             Packed = Ar.Read<byte>();
     }

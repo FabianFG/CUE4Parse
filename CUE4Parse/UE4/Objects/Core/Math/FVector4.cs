@@ -2,8 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
-using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse.UE4.Objects.Core.Math;
 

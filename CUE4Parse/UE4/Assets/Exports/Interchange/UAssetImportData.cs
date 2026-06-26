@@ -2,7 +2,6 @@
 using CUE4Parse.UE4.Objects.Engine.EditorFramework;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace CUE4Parse.UE4.Assets.Exports.Interchange;
 

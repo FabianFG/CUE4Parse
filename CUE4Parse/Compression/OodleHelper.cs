@@ -1,5 +1,5 @@
-using System.IO.Compression;
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 
 using CUE4Parse.UE4.Exceptions;
