@@ -11,6 +11,8 @@ namespace CUE4Parse_Conversion.Meshes
         [Description("Wavefront OBJ (Not Implemented)")]
         OBJ,
         [Description("UEFormat (uemodel)")]
-        UEFormat
+        UEFormat,
+        [Description("Autodesk FBX 7.4 (ASCII)")]
+        FBX
     }
 }
