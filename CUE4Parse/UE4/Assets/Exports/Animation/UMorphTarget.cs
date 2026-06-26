@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;

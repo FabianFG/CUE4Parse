@@ -1,6 +1,4 @@
-﻿using System;
-using System.Buffers.Binary;
-using System.IO;
+﻿using System.Buffers.Binary;
 
 namespace CUE4Parse.UE4.Writers;
 
@@ -13,7 +11,7 @@ public class FArchiveWriter : BinaryWriter
     {
         _memoryData = new MemoryStream {Position = 0};
         OutStream = _memoryData;
-            
+
         bUseBigEndian = useBigEndian;
     }
 
@@ -57,7 +55,7 @@ public class FArchiveWriter : BinaryWriter
         if (bUseBigEndian) value = BinaryPrimitives.ReverseEndianness(value);
         base.Write(value);
     }
-    
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);

@@ -1,4 +1,3 @@
-using System;
 using System.Buffers.Binary;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Objects;

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.GameTypes.LegoBatman.Assets;
 
 namespace CUE4Parse.UE4.Wwise;

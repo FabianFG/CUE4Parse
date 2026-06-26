@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
@@ -38,7 +37,7 @@ public class FControlRigOverrideValue
                     propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
 
                 var propInfo = propMappings?.Properties.FirstOrDefault(x => x.Value.Name.Equals(property.Property.Path[0].Text));
-                
+
                 if (propInfo != null)
                 {
                     var propType = propInfo.Value.Value;
@@ -59,7 +58,7 @@ public class FControlRigOverrideValue
                     Log.Warning("Failed to find property {Property} in struct {Struct} via mappings", property.Property, struc.Name);
                 }
             }
-            
+
         }
         catch (Exception e)
         {

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.Objects.Core.Math;

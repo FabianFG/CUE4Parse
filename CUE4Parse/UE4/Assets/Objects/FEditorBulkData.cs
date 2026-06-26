@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Compression;
 using Serilog;
@@ -82,12 +81,12 @@ public class FEditorBulkData
         {
             Ar.Position = OffsetInFile;
             Payload = new FCompressedBuffer(Ar);
-        } 
-        catch (Exception e) 
-        { 
-            Log.Error(e, "Failed to read to EditorBulkData payload at offset {OffsetInFile}", OffsetInFile); 
-            Payload = new FCompressedBuffer(); 
-            return; 
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to read to EditorBulkData payload at offset {OffsetInFile}", OffsetInFile);
+            Payload = new FCompressedBuffer();
+            return;
         }
         finally
         {

@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace CUE4Parse.Utils;
 
 internal static class StringComparerUtils

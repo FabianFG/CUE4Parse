@@ -1,4 +1,3 @@
-using System.IO;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -25,7 +24,7 @@ public class FNaniteStreamableData
     public FNaniteStreamableData(FByteArchive Ar, FNaniteResources resources, uint pageIndex)
     {
         FixupChunk = new FFixupChunk(Ar);
-        
+
         // origin of all the offsets in the page cluster header
         PageDiskHeaderOffset = Ar.Position;
         PageDiskHeader = new FPageDiskHeader(Ar);

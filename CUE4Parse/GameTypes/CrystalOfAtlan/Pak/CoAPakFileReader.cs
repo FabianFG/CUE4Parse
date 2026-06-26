@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using CUE4Parse.FileProvider.Objects;
@@ -95,7 +91,7 @@ public static class CoAPlugins
         { "TraceSourceFilters" , "Engine/Plugins/Developer/TraceSourceFiltering" },
         { "SeriaAssetUpdate" , "Seria/Plugins/SeriaAssetUpdate" },
         { "PythonUtils" , "Seria/Plugins/PythonUtils" },
-    }; 
+    };
 }
 
 public partial class PakFileReader

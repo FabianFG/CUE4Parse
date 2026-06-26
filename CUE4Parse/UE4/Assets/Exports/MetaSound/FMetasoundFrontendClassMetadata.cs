@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Objects;
+﻿using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 
 namespace CUE4Parse.UE4.Assets.Exports.MetaSound;
@@ -11,7 +10,7 @@ public class FMetasoundFrontendClassMetadata
     public FMetasoundFrontendVersionNumber Version;
     public EMetasoundFrontendClassType Type;
     public EMetasoundFrontendClassAccessFlags AccessFlags;
-    
+
     public FMetasoundFrontendClassMetadata(FStructFallback fallback)
     {
         ClassName = fallback.GetOrDefault<FMetasoundFrontendClassName>(nameof(ClassName));
@@ -61,7 +60,7 @@ public enum EMetasoundFrontendClassType : byte
 public enum EMetasoundFrontendClassAccessFlags : ushort
 {
     None = 0,
-    
+
     // Class is marked as deprecated when referenced by
     // MetaSounds in the editor.
     Deprecated = 1 << 0,
@@ -69,6 +68,6 @@ public enum EMetasoundFrontendClassAccessFlags : ushort
     // If set, MetaSound can be referenced by other MetaSounds in either
     // editor or by builder Blueprint API.
     Referenceable = 1 << 1,
-    
+
     Default = Referenceable,
 }

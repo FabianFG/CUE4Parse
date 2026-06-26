@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using CUE4Parse.UE4.Assets.Exports.Chaos;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -9,7 +8,7 @@ public class TParticles<T> : ISerializationFactory where T : struct
 {
     public int d { get; init; }
     public TVector<T>[] MX;
-    
+
     public TParticles(int dimension)
     {
         d = dimension;
@@ -21,14 +20,14 @@ public class TParticles<T> : ISerializationFactory where T : struct
         MX = mx;
         d = dimension;
     }
-    
+
     public TParticles(FChaosArchive Ar, int dimension)
     {
         d = dimension;
         MX = [];
         // Serialize(Ar);
     }
-    
+
     public virtual ISerializationFactory Serialize(FChaosArchive Ar)
     {
         var bSerialize = Ar.ReadBoolean();
@@ -54,10 +53,10 @@ public class FParticles : TParticles<float> // actually double TVector is going 
 
 public class FBVHParticles : FParticles
 {
-    
+
     // TBoundingVolumeHierarchy<FParticles, TArray<int32>, FReal, 3>* MBVH;
     public FBVHParticles() { }
-    
+
     // public FBVHParticles(TVector<FReal>[] mx) : base(mx) { }
 
     public FBVHParticles(FChaosArchive Ar) : base(Ar) { }
@@ -71,7 +70,7 @@ public class FBVHParticles : FParticles
 
         return this;
     }
-    
+
     public override ISerializationFactory SerializationFactory(FChaosArchive Ar)
     {
         return this;

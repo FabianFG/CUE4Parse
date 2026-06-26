@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 
 using CUE4Parse.UE4.Assets.Exports.Chaos;
@@ -46,7 +45,7 @@ public class FManagedArrayCollection
         Map = new Dictionary<FKeyType, FValueType>(mapLength);
         for (int i = 0; i < mapLength; i++)
         {
-            var key = new FKeyType(Ar); 
+            var key = new FKeyType(Ar);
             Map[key] = new FValueType(Ar, Version);
         }
     }
@@ -54,21 +53,21 @@ public class FManagedArrayCollection
 
 public class FManagedArrayCollectionConverter : JsonConverter<FManagedArrayCollection>
 {
-  
+
     public override void WriteJson(JsonWriter writer, FManagedArrayCollection? value, JsonSerializer serializer)
     {        if (value == null)
         {
             writer.WriteNull();
             return;
         }
-        
+
         writer.WriteStartObject();
         writer.WritePropertyName(nameof(FManagedArrayCollection.Version));
         writer.WriteValue(value.Version);
-        
+
         writer.WritePropertyName(nameof(FManagedArrayCollection.GroupInfo));
         serializer.Serialize(writer, value.GroupInfo);
-        
+
         writer.WritePropertyName(nameof(FManagedArrayCollection.Map));
         writer.WriteStartArray();
         // Key: {}, Value: {}
@@ -82,7 +81,7 @@ public class FManagedArrayCollectionConverter : JsonConverter<FManagedArrayColle
             writer.WriteEndObject();
         }
         writer.WriteEndArray();
-        
+
         writer.WriteEndObject();
     }
     public override FManagedArrayCollection? ReadJson(JsonReader reader, Type objectType, FManagedArrayCollection? existingValue, bool hasExistingValue, JsonSerializer serializer)

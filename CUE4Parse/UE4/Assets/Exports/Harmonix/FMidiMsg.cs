@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Writers;
 using Newtonsoft.Json;

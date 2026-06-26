@@ -1,10 +1,5 @@
-using System;
-using System.IO;
 using System.IO.Compression;
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;

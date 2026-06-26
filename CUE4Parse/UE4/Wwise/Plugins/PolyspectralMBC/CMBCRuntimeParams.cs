@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using CommunityToolkit.HighPerformance;
 using Newtonsoft.Json;
@@ -23,7 +22,7 @@ public class CMBCRuntimeParams : IAkPluginParam
 
     public CMBCRuntimeParams(FWwiseArchive Ar, int size)
     {
-        var start = Ar.Position; 
+        var start = Ar.Position;
         var value = Ar.Read<float>();
         var mode = 0;
         if (value != -42.0f)

@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Exports.Chaos;
+﻿using CUE4Parse.UE4.Assets.Exports.Chaos;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -44,7 +43,7 @@ public class TPlane<T>: FImplicitObject where T: struct
 // FRealType = FRealSingle = float
 public class FConvex: FImplicitObject
 {
-    
+
     // FRealType FRealSingle float
     // TPlaneConcrete<FRealType, 3>
     public TPlaneConcrete<float>[] Planes;
@@ -56,7 +55,7 @@ public class FConvex: FImplicitObject
     public FConvexStructureData StructureData;
     public FVec3 UnitMassInertiaTensor;
     FRotation3 RotationOfMass;
-    
+
     public FConvex()
     {}
 
@@ -75,7 +74,7 @@ public class FConvex: FImplicitObject
         {
             Planes = Ar.ReadArray(() => new TPlaneConcrete<float>(Ar));
         }
-        
+
         bool bConvexVerticesNewFormatUE4 = FPhysicsObjectVersion.Get(Ar) >= FPhysicsObjectVersion.Type.ConvexUsesVerticesArray;
         bool bConvexVerticesNewFormatUE5 = FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.ConvexUsesVerticesArray;
         bool bConvexVerticesNewFormatFn = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.ChaosConvexVariableStructureDataAndVerticesArray;
@@ -91,13 +90,13 @@ public class FConvex: FImplicitObject
         {
             Vertices = Ar.ReadArray<TIntVector3<float>>();
         }
-        
+
         LocalBoundingBox = TBox<float>.SerializeAsAABB(Ar, 3);
-        
+
         if (FExternalPhysicsCustomObjectVersion.Get(Ar) >= FExternalPhysicsCustomObjectVersion.Type.AddConvexCenterOfMassAndVolume)
         {
             Volume = Ar.Read<float>();
-            
+
             CenterOfMass = Ar.Read<TIntVector3<float>>();
         }
 
@@ -105,19 +104,19 @@ public class FConvex: FImplicitObject
         {
             Margin = Ar.Read<float>(); // FRealSingle
         }
-    
+
         if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.StructureDataAddedToConvex)
         {
-            
+
             StructureData = new FConvexStructureData(Ar);
         }
 
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.AddedInertiaTensorAndRotationOfMassAddedToConvex)
         {
-            
+
             var temp = Ar.Read<TIntVector3<float>>(); // Ar.Read<FVec3>(); says it's double but serializer serialises as float /s
             UnitMassInertiaTensor =  new FVec3(temp.X, temp.Y, temp.Z);
-            
+
             RotationOfMass = Ar.Read<FRotation3>();
         }
 

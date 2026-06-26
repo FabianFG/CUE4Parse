@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
@@ -67,7 +66,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             M20 = inZ.X; M21 = inZ.Y; M22 = inZ.Z; M23 = 0.0f;
             M30 = inW.X; M31 = inW.Y; M32 = inW.Z; M33 = 1.0f;
         }
-        
+
         public FMatrix(FArchive Ar) : this(Ar, Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES) { }
 
         public FMatrix(FArchive Ar, bool readDouble)

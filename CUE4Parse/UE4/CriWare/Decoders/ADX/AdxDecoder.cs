@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using VGAudio.Codecs.CriAdx;
 using VGAudio.Containers.Adx;
 using VGAudio.Containers.Wave;

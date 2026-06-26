@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.Objects.Core.Math;

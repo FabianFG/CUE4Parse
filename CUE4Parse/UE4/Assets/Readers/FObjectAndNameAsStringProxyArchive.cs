@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;

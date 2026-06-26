@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Serilog;
 
 namespace CUE4Parse.UE4.Lua.unluac;

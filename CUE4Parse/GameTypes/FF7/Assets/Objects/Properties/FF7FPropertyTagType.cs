@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using CUE4Parse.GameTypes.FF7.Assets.Exports;
 using CUE4Parse.GameTypes.FF7.Objects;

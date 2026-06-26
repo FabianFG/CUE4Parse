@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;

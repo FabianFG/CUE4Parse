@@ -1,7 +1,5 @@
 // ReSharper disable CheckNamespace
 
-using System;
-using System.Linq;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
@@ -48,7 +46,7 @@ public partial class PakFileReader
             var firstBlockIndex = offset / compressionBlockSize;
             var lastBlockIndex = (offset + requestedSize - 1) / compressionBlockSize;
             var lastBlock = pakEntry.CompressionBlocks.Length - 1;
-            
+
             for (var i = 0; i < firstBlockIndex; i++)
             {
                 if (limit > 0)

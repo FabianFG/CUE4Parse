@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace CUE4Parse.UE4.Assets.Exports.Animation;
 
 public class FDwordBitReader(uint[] buffer, uint offset = 0) : IDisposable
@@ -11,13 +10,13 @@ public class FDwordBitReader(uint[] buffer, uint offset = 0) : IDisposable
     {
         if (numBits > 32)
             throw new InvalidOperationException("NumBits > 32");
-        
+
         if (_offset + numBits > _buffer.Length * 32)
             throw new InvalidOperationException("_offset + numBits > _buffer.Length * 32");
 
         if (numBits == 0)
             return 0;
-            
+
         var baseIndex = _offset >> 5;
         var bitOffset = _offset & 31;
 
