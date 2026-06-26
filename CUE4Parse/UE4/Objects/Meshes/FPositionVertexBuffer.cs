@@ -108,10 +108,22 @@ public class FPositionVertexBuffer
             var bounds = new FBoxSphereBounds(Ar);
             if (!bUseFullPrecisionPositions)
             {
-                var vertsHalf = Ar.ReadBulkArray<FVector3SignedShortScale>();
-                Verts = new FVector[vertsHalf.Length];
-                for (int i = 0; i < vertsHalf.Length; i++)
-                    Verts[i] = vertsHalf[i] * bounds.BoxExtent + bounds.Origin;
+                switch (Stride)
+                {
+                    case 8:
+                    {
+                        var vertsHalf = Ar.ReadBulkArray<FVector3SignedShortScale>();
+                        Verts = new FVector[vertsHalf.Length];
+                        for (var i = 0; i < vertsHalf.Length; i++)
+                            Verts[i] = vertsHalf[i] * bounds.BoxExtent + bounds.Origin;
+                        break;
+                    }
+                    case 12 when Ar.Game is EGame.GAME_NeedForSpeedMobile:
+                        Verts = Ar.ReadBulkArray<FVector>();
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException($"Unknown stride {Stride} for FPositionVertexBuffer");
+                }
                 return;
             }
         }
