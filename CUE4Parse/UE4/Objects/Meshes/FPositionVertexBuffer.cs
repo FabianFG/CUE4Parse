@@ -173,6 +173,23 @@ public class FPositionVertexBuffer
         }
         if (Ar.Game == EGame.GAME_Gollum) Ar.Position += 25;
 
+        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite && Stride == 8)
+        {
+            var bounds = new FBoxSphereBounds(Ar);
+            var packedVerts = Ar.ReadBulkArray<FVector3SignedShortScale>();
+            Verts = new FVector[packedVerts.Length];
+            for (var i = 0; i < packedVerts.Length; i++)
+            {
+                var packed = packedVerts[i];
+                var scale = packed.W == 0 ? 1.0f : packed.W;
+                Verts[i] = new FVector(
+                    bounds.Origin.X + bounds.BoxExtent.X * packed.X / scale,
+                    bounds.Origin.Y + bounds.BoxExtent.Y * packed.Y / scale,
+                    bounds.Origin.Z + bounds.BoxExtent.Z * packed.Z / scale);
+            }
+            return;
+        }
+
         Verts = Ar.ReadBulkArray<FVector>();
     }
 }
