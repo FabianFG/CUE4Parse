@@ -1,0 +1,14 @@
+using CUE4Parse.UE4.Objects.PhysicsEngine;
+using CUE4Parse.UE4.Writers;
+
+namespace CUE4Parse_Conversion.Writers.UEFormat.Structs.Collision;
+
+public readonly struct FConvexMeshCollision(FKConvexElem ConvexElem) : ISerializable
+{
+    public void Serialize(FArchiveWriter Ar)
+    {
+        Ar.WriteFString(ConvexElem.Name.Text);
+        Ar.WriteArray(ConvexElem.VertexData, (writer, vector) => vector.Serialize(writer));
+        Ar.WriteArray(ConvexElem.IndexData, (writer, index) => writer.Write(index));
+    }
+}

@@ -78,7 +78,7 @@ public class UMaterialInterface : UUnrealMaterial
         parameters.MobileSpecularMask = MobileSpecularMask;
     }
 
-    public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
+    public override void GetParams(CMaterialParams2 parameters, EMaterialDepth depth)
     {
         for (int i = 0; i < TextureStreamingData.Length; i++)
         {

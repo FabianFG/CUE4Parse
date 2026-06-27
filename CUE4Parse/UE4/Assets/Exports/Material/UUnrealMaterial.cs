@@ -5,7 +5,7 @@
         public virtual bool IsTextureCube { get; } = false;
 
         public abstract void GetParams(CMaterialParams parameters);
-        public abstract void GetParams(CMaterialParams2 parameters, EMaterialFormat format);
+        public abstract void GetParams(CMaterialParams2 parameters, EMaterialDepth depth);
 
         public virtual void AppendReferencedTextures(IList<UUnrealMaterial> outTextures, bool onlyRendered)
         {
