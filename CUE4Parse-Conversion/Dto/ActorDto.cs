@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Exports;
+﻿using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -9,11 +7,16 @@ namespace CUE4Parse_Conversion.Dto;
 
 public class ActorDto : ObjectDto
 {
-    public readonly SceneComponentDto? RootComponent;
-    public readonly List<UWorld>? AdditionalWorlds;
-    public readonly bool IsVisible = true;
+    public SceneComponentDto? RootComponent { get; protected init; }
+    public List<StreamingLevel>? StreamingLevels { get; protected init; }
+    public bool IsVisible { get; } = true;
 
-    internal ActorDto(UObject actor, WorldParseContext ctx) : base(actor, actor is AActor a && !string.IsNullOrWhiteSpace(a.ActorLabel) ? a.ActorLabel : null)
+    protected ActorDto(UObject actor) : base(actor, actor is AActor a && !string.IsNullOrWhiteSpace(a.ActorLabel) ? a.ActorLabel : null)
+    {
+
+    }
+
+    private ActorDto(UObject actor, WorldParseContext ctx) : this(actor)
     {
         foreach (var component in FindComponents(actor))
         {
@@ -33,14 +36,20 @@ public class ActorDto : ObjectDto
 
         if (actor.TryGetValue(out FSoftObjectPath[] additionalWorlds, "AdditionalWorlds"))
         {
-            AdditionalWorlds = [];
+            StreamingLevels = [];
             foreach (var additionalWorld in additionalWorlds)
             {
                 if (!additionalWorld.TryLoad<UWorld>(out var w)) continue;
-                AdditionalWorlds.Add(w);
+                StreamingLevels.Add(new StreamingLevel(w, true));
             }
         }
     }
+
+    internal static ActorDto Create(UObject actor, WorldParseContext ctx) => actor switch
+    {
+        AWorldSettings ws => new WorldSettingsDto(ws),
+        _ => new ActorDto(actor, ctx)
+    };
 
     private IEnumerable<FPackageIndex?> FindComponents(UObject actor)
     {

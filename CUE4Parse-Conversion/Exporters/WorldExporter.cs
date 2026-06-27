@@ -41,14 +41,12 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
         foreach (var actor in actors)
         {
             ct.ThrowIfCancellationRequested();
-            if (actor.AdditionalWorlds is { Count: > 0 })
+            if (actor.StreamingLevels is { Count: > 0 })
             {
-                foreach (var w in actor.AdditionalWorlds)
+                foreach (var level in actor.StreamingLevels)
                 {
-                    if (paths.Worlds.TryAdd(w.Name, Resolve(w, Extension)))
-                    {
-                        Session.Add(w);
-                    }
+                    if (!paths.Worlds.TryAdd(level.World.GetPathName(), Resolve(level.World, Extension))) continue;
+                    if (level.IsPersistent) Session.Add(level.World);
                 }
             }
 
@@ -109,6 +107,12 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
         {
             ct.ThrowIfCancellationRequested();
             CollectFromComponent(child, paths, ct);
+        }
+
+        foreach (var actor in comp.AttachedActors)
+        {
+            ct.ThrowIfCancellationRequested();
+            CollectFromActor([actor], paths, ct);
         }
     }
 

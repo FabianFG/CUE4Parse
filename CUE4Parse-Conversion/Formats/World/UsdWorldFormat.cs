@@ -41,12 +41,12 @@ public class UsdWorldFormat : IWorldExportFormat
             var rootPrim = BuildComponentPrim(root, paths);
             BuildChildrenComponent(root, rootPrim, paths);
 
-            if (actor.AdditionalWorlds is { Count: > 0 } additionalWorlds)
+            if (actor.StreamingLevels is { Count: > 0 } levels)
             {
-                foreach (var world in additionalWorlds)
+                foreach (var level in levels)
                 {
-                    if (!paths.Worlds.TryGetValue(world.Name, out var worldPath)) continue;
-                    var worldRef = UsdPrim.Def("Xform", world.Name);
+                    if (!paths.Worlds.TryGetValue(level.World.GetPathName(), out var worldPath)) continue;
+                    var worldRef = UsdPrim.Def("Xform", level.World.Name);
                     worldRef.SetReference(new UsdReferenceList([new UsdReference(worldPath)]));
                     rootPrim.Add(worldRef);
                 }
@@ -171,16 +171,14 @@ public class UsdWorldFormat : IWorldExportFormat
     {
         foreach (var child in component.Children)
         {
-            // a different actor is attached to this component, write it down
-            if (child.Owner != component.Owner && child.Owner.RootComponent == child)
-            {
-                parentPrim.Add(BuildActorPrim(child.Owner, paths));
-                continue;
-            }
-
             var childPrim = BuildComponentPrim(child, paths);
             BuildChildrenComponent(child, childPrim, paths);
             parentPrim.Add(childPrim);
+        }
+
+        foreach (var actor in component.AttachedActors)
+        {
+            parentPrim.Add(BuildActorPrim(actor, paths));
         }
     }
 

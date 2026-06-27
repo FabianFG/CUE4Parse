@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using CUE4Parse_Conversion.Formats.Materials;
+﻿using CUE4Parse_Conversion.Formats.Materials;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -17,7 +16,7 @@ public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase
         var files = new List<ExportFile> { new JsonMaterialFormat().Build(ObjectName, parameters) };
         if (Session.Options.MeshFormat == EMeshFormat.USD)
         {
-            files.Add(new UsdMaterialFormat().Build(ObjectName, parameters, PackageDirectory));
+            files.Add(new UsdMaterialFormat().Build(ObjectName, parameters, SaveDirectory));
         }
 
         foreach (var texture in parameters.Textures.Values)

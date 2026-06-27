@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Exports;
+﻿using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
@@ -14,9 +12,19 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Dto;
 
-public class ComponentDto(UObject component, ActorDto owner) : ObjectDto(component)
+public class ComponentDto : LightObjectDto
 {
-    public readonly ActorDto Owner = owner;
+    public readonly ActorDto Owner;
+
+    public ComponentDto(string name, ActorDto owner) : base(name)
+    {
+        Owner = owner;
+    }
+
+    public ComponentDto(UObject component, ActorDto owner) : base(component)
+    {
+        Owner = owner;
+    }
 
     public override void Dispose()
     {
@@ -28,11 +36,24 @@ public class SceneComponentDto : ComponentDto
 {
     internal readonly FPackageIndex? _attachParent;
 
-    public readonly List<SceneComponentDto> Children = []; // this list of children can be owned by different actors
+    public readonly List<SceneComponentDto> Children = []; // same actor components only
+    public readonly List<ActorDto> AttachedActors = []; // actors whose root is attached here
+
     public readonly FTransform Transform;
     public readonly string? AttachSocketName; // TODO: use it
 
-    internal void AddChildComponent(SceneComponentDto child) => Children.Add(child);
+    internal void AddChildComponent(SceneComponentDto child)
+    {
+        if (child.Owner != Owner)
+            AttachedActors.Add(child.Owner);
+        else
+            Children.Add(child);
+    }
+
+    public SceneComponentDto(FTransform transform, string name, ActorDto owner) : base(name, owner)
+    {
+        Transform = transform;
+    }
 
     public SceneComponentDto(USceneComponent component, ActorDto owner) : base(component, owner)
     {

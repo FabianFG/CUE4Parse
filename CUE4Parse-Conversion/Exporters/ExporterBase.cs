@@ -21,6 +21,8 @@ public abstract class ExporterBase : IExporter
 {
     public string PackagePath { get; }
     public string PackageDirectory { get; }
+    public string SavePath { get; }
+    public string SaveDirectory { get; }
     public string ObjectName { get; }
     public string ObjectPath { get; }
     public string ClassName { get; }
@@ -34,6 +36,11 @@ public abstract class ExporterBase : IExporter
     {
         PackagePath = packagePath;
         PackageDirectory = PackagePath.Contains('/') ? PackagePath.SubstringBeforeLast('/') : string.Empty;
+
+        var leaf = PackagePath.SubstringAfterLast('/');
+        SavePath = (leaf.Equals(objectName, StringComparison.OrdinalIgnoreCase) ? PackagePath : PackagePath + '/' + objectName).TrimStart('/');
+        SaveDirectory = SavePath.Contains('/') ? SavePath.SubstringBeforeLast('/') : string.Empty;
+
         ObjectName = objectName;
         ObjectPath = PackagePath + '.' + ObjectName;
         ClassName = className;
@@ -90,23 +97,15 @@ public abstract class ExporterBase : IExporter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected virtual (string, string) ResolveOutputPath(ExportFile file)
     {
-        return ($"{ObjectName}{file.NameSuffix}.{file.Extension}", Session.ResolveOutputPath(GetSavePath(), file.Extension, file.NameSuffix));
+        return ($"{ObjectName}{file.NameSuffix}.{file.Extension}", Session.ResolveOutputPath(SavePath, file.Extension, file.NameSuffix));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private string GetSavePath()
-    {
-        var leaf = PackagePath.SubstringAfterLast('/');
-        var path = leaf.Equals(ObjectName, StringComparison.OrdinalIgnoreCase) ? PackagePath : PackagePath + '/' + ObjectName;
-        return path.TrimStart('/');
-    }
-
-    protected string Resolve(UObject obj, string extension) => Resolve(obj, PackageDirectory, extension);
+    protected string Resolve(UObject obj, string extension) => Resolve(obj, SaveDirectory, extension);
     internal static string Resolve(UObject obj, string fromDirectory, string extension)
     {
         var packagePath = BuildPackagePath(obj);
 
-        // replicate GetSavePath()
+        // replicate SavePath
         if (!packagePath.SubstringAfterLast('/').Equals(obj.Name, StringComparison.OrdinalIgnoreCase))
             packagePath += '/' + obj.Name;
 

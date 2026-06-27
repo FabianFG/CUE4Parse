@@ -26,7 +26,7 @@ public class WorldDto : ObjectDto
             if (ptr == null || !ptr.TryLoad<UObject>(out var data))
                 continue;
 
-            var actor = new ActorDto(data, ctx);
+            var actor = ActorDto.Create(data, ctx);
             if (actor.RootComponent?._attachParent == null)
             {
                 Actors.Add(actor);
@@ -40,7 +40,7 @@ public class WorldDto : ObjectDto
             {
                 case ULevelStreaming { WorldAsset: { } worldAsset } streaming when worldAsset.TryLoad<UWorld>(out var w):
                 {
-                    StreamingLevels.Add(new StreamingLevel(w, streaming is ULevelStreamingAlwaysLoaded or ULevelStreamingPersistent));
+                    StreamingLevels.Add(new StreamingLevel(w, streaming));
                     break;
                 }
             }
@@ -64,4 +64,9 @@ public class StreamingLevel(UWorld world, bool isPersistent)
 {
     public readonly UWorld World = world;
     public readonly bool IsPersistent = isPersistent; // non-persistent levels will be referenced but not automatically exported
+
+    public StreamingLevel(UWorld world, ULevelStreaming streaming) : this(world, streaming is ULevelStreamingAlwaysLoaded or ULevelStreamingPersistent)
+    {
+
+    }
 }
