@@ -33,6 +33,7 @@ namespace CUE4Parse_Conversion
         public bool ExportMorphTargets;
         public bool ExportMaterials;
         public bool ExportHdrTexturesAsHdr;
+        public int TextureQuality;
 
         public ExporterOptions()
         {
@@ -40,6 +41,7 @@ namespace CUE4Parse_Conversion
             MeshFormat = EMeshFormat.ActorX;
             NaniteMeshFormat = ENaniteMeshFormat.OnlyNaniteLOD;
             AnimFormat = EAnimFormat.ActorX;
+            PoseFormat = EPoseFormat.UEFormat;
             MaterialFormat = EMaterialFormat.AllLayersNoRef;
             TextureFormat = ETextureFormat.Png;
             CompressionFormat = EFileCompressionFormat.None;
@@ -48,6 +50,7 @@ namespace CUE4Parse_Conversion
             ExportMorphTargets = true;
             ExportMaterials = true;
             ExportHdrTexturesAsHdr = true;
+            TextureQuality = 100;
         }
     }
 
