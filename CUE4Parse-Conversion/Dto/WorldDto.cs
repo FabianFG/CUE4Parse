@@ -63,7 +63,7 @@ public class WorldDto : ObjectDto
 public class StreamingLevel(UWorld world, bool isPersistent)
 {
     public readonly UWorld World = world;
-    public readonly bool IsPersistent = isPersistent; // non-persistent levels will be referenced but not automatically exported
+    public bool IsPersistent = isPersistent; // non-persistent levels will be referenced but not automatically exported
 
     public StreamingLevel(UWorld world, ULevelStreaming streaming) : this(world, streaming is ULevelStreamingAlwaysLoaded or ULevelStreamingPersistent)
     {

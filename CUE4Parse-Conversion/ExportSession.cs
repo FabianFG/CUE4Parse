@@ -18,8 +18,11 @@ using CUE4Parse.UE4.Objects.Engine.Animation;
 
 namespace CUE4Parse_Conversion;
 
-public sealed class ExportSession : INotifyPropertyChanged
+public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationToken>? streamingLevelFilter = null) : INotifyPropertyChanged
 {
+    internal readonly Action<StreamingLevelFilterArgs, CancellationToken>? _streamingLevelFilter = streamingLevelFilter;
+    internal readonly SemaphoreSlim _streamingLevelFilterLock = new(1, 1);
+
     public int MaxDegreeOfParallelism { get; init; } = Environment.ProcessorCount;
 
     private DirectoryInfo? _baseDirectory;

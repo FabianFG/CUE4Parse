@@ -23,6 +23,24 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
             throw new Exception("World is empty, nothing to export");
         }
 
+        if (Session._streamingLevelFilter is { } filter)
+        {
+            var filteredActors = world.Actors.Where(x => x.HasStreamingLevels()).ToList();
+            if (filteredActors.Count > 0 || world.StreamingLevels.Count > 0)
+            {
+                var args = new StreamingLevelFilterArgs(world.Name, filteredActors, world.StreamingLevels);
+                Session._streamingLevelFilterLock.Wait(ct);
+                try
+                {
+                    filter(args, ct);
+                }
+                finally
+                {
+                    Session._streamingLevelFilterLock.Release();
+                }
+            }
+        }
+
         var paths = new WorldAssetPaths();
 
         foreach (var level in world.StreamingLevels)

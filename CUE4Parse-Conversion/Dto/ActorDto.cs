@@ -51,6 +51,12 @@ public class ActorDto : ObjectDto
         _ => new ActorDto(actor, ctx)
     };
 
+    public bool HasStreamingLevels()
+    {
+        if (StreamingLevels is { Count: > 0 }) return true;
+        return RootComponent?.HasStreamingLevels() ?? false;
+    }
+
     private IEnumerable<FPackageIndex?> FindComponents(UObject actor)
     {
         yield return actor.GetOrDefault<FPackageIndex?>("RootComponent");

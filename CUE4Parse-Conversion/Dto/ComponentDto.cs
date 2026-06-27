@@ -75,6 +75,19 @@ public class SceneComponentDto : ComponentDto
         }
     }
 
+    public bool HasStreamingLevels()
+    {
+        foreach (var actor in AttachedActors)
+            if (actor.HasStreamingLevels())
+                return true;
+
+        foreach (var component in Children)
+            if (component.HasStreamingLevels())
+                return true;
+
+        return false;
+    }
+
     public override void Dispose()
     {
         base.Dispose();
