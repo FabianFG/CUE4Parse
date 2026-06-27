@@ -61,6 +61,8 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public IReadOnlyDictionary<FPackageId, GameFile> FilesById => Files.ById;
 
+        public int LooseFileCount { get; protected set; }
+
         public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
         public event EventHandler<int>? VfsRegistered;
         public event EventHandler<int>? VfsMounted;

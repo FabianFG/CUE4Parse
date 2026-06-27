@@ -16,7 +16,7 @@ public class FLayout
     public EReductionMethod ReductionMethod;
     public FLayoutBlock[] Blocks;
     public FImage[] Masks = [];
-    
+
     public FLayout(FMutableArchive Ar)
     {
         if (Ar.Game >= EGame.GAME_UE5_7)
@@ -42,6 +42,10 @@ public class FLayout
             var size = Ar.Read<TIntVector2<ushort>>();
             Size = new FIntVector2(size.X, size.Y);
             Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar, Version));
+            if (Ar.Game is EGame.GAME_LordsoftheFallen && Blocks.Length != 0)
+            {
+                Ar.Position +=4;
+            }
             var maxSize = Ar.Read<TIntVector2<ushort>>();
             MaxSize = new FIntVector2(maxSize.X, maxSize.Y);
             Strategy = Ar.Read<EPackStrategy>();
@@ -69,5 +73,5 @@ public enum EPackStrategy : uint
 public enum EReductionMethod : uint
 {
     Halve,	// Divide axis by 2
-    Unitary	// Reduces 1 block the axis 
+    Unitary	// Reduces 1 block the axis
 }

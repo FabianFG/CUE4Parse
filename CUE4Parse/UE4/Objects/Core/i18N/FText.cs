@@ -197,6 +197,10 @@ public abstract class FTextHistory : IUStruct
             Namespace = Ar.ReadFString();
             Key = Ar.ReadFString();
             SourceString = Ar.ReadFString();
+            if (!Ar.IsFilterEditorOnly && FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.AddDevNotesToFText)
+            {
+                Ar.SkipFString(); // dev notes
+            }
             var strNamespace = Namespace;
 
             switch (Ar.Game)

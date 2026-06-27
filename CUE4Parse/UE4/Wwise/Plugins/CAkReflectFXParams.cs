@@ -59,7 +59,7 @@ public struct AkReflectFXParams
         if (Ar.Version >= 145)
         {
             DecorrParams = new AkDecorrParams(Ar);
-            FadeTime = Ar.Read<float>();
+            FadeTime = Ar.Version >= 154 ? Ar.Read<float>() : 0.0f;
         }
         if (Ar.Version >= 172)
         {
@@ -98,5 +98,5 @@ public struct AkDecorrParams(FWwiseArchive Ar)
     public bool StereoDecorrelation = Ar.Read<byte>() != 0;
     public float DecorrWindowWidth = Ar.Read<float>();
     public bool DecorrHardwareAcceleration = Ar.Read<byte>() != 0;
-    public uint MaterialFilteringSelect = Ar.Read<uint>();
+    public uint MaterialFilteringSelect = Ar.Version >= 154 ? Ar.Read<uint>() : 0;
 }

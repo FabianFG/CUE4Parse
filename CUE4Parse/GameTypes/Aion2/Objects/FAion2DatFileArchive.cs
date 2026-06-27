@@ -44,10 +44,13 @@ public sealed class FAion2DatFileArchive(byte[] data, VersionContainer versions)
         }
         else
         {
-            if (xorKey is null) DecryptData(strBuffer, _xorKeyLong);
+            if (xorKey is null)
+                DecryptData(strBuffer, _xorKeyLong);
             return Encoding.Unicode.GetString(strBuffer[..^2]);
         }
     }
+
+    public string ReadUnencryptedFString() => base.ReadFString();
 
     public string ReadL10NString() => ReadAion2String(_xorKeyShort);
     public override string ReadFString() => ReadAion2String();

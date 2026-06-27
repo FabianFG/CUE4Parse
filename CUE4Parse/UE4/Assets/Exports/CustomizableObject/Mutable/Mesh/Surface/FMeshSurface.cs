@@ -10,6 +10,8 @@ public class FMeshSurface
     public uint BoneMapIndex;
     public uint BoneMapCount;
     public uint Id;
+    public bool bCastShadow;
+    public bool bRecomputeTangent;
 
     public FMeshSurfaceLegacy Surface_Deprecated;
 
@@ -17,10 +19,15 @@ public class FMeshSurface
     {
         if (Ar.Game >= EGame.GAME_UE5_5)
         {
-            SubMeshes = Ar.ReadArray<FSurfaceSubMesh>();
+            SubMeshes = Ar.ReadArray(() => new FSurfaceSubMesh(Ar));
             BoneMapIndex = Ar.Read<uint>();
             BoneMapCount = Ar.Read<uint>();
             Id = Ar.Read<uint>();
+            if (Ar.Game >= EGame.GAME_UE5_8)
+            {
+                bCastShadow = Ar.ReadFlag();
+                bRecomputeTangent = Ar.ReadFlag();
+            }
         }
         else
         {
