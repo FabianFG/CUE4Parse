@@ -82,6 +82,7 @@ public abstract class AbstractUePackage : UObject, IPackage
         var validPos = serialOffset + serialSize;
         try
         {
+            if (validPos == Ar.Position) return; // Empty Export
             obj.Deserialize(Ar, validPos);
 #if DEBUG
             var remaining = validPos - Ar.Position;

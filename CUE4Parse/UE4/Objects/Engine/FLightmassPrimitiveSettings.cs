@@ -13,20 +13,37 @@ namespace CUE4Parse.UE4.Objects.Engine
         public readonly float EmissiveLightExplicitInfluenceRadius;
         public readonly float EmissiveBoost;
         public readonly float DiffuseBoost;
+        public readonly float SpecularBoost;
         public readonly float FullyOccludedSamplesFraction;
 
         public FLightmassPrimitiveSettings(FArchive Ar)
         {
-            bUseTwoSidedLighting = Ar.ReadBoolean();
-            bShadowIndirectOnly = Ar.ReadBoolean();
-            if (Ar.Game is EGame.GAME_OutlastTrials) Ar.Position += 4;
-            FullyOccludedSamplesFraction = Ar.Read<float>();
-            bUseEmissiveForStaticLighting = Ar.ReadBoolean();
-            bUseVertexNormalForHemisphereGather = Ar.Ver >= EUnrealEngineObjectUE4Version.NEW_LIGHTMASS_PRIMITIVE_SETTING && Ar.ReadBoolean();
-            EmissiveLightFalloffExponent = Ar.Read<float>();
-            EmissiveLightExplicitInfluenceRadius = Ar.Read<float>();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.SHADOW_INDIRECT_ONLY_OPTION)
+            {
+                bUseTwoSidedLighting = Ar.ReadBoolean();
+                bShadowIndirectOnly = Ar.ReadBoolean();
+                if (Ar.Game is EGame.GAME_OutlastTrials) Ar.Position += 4;
+                FullyOccludedSamplesFraction = Ar.Read<float>();
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.INTEGRATED_LIGHTMASS)
+            {
+                bUseEmissiveForStaticLighting = Ar.ReadBoolean();
+                bUseVertexNormalForHemisphereGather = Ar.Ver >= EUnrealEngineObjectUE4Version.NEW_LIGHTMASS_PRIMITIVE_SETTING && Ar.ReadBoolean();
+                EmissiveLightFalloffExponent = Ar.Read<float>();
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDDED_EXPLICIT_EMISSIVE_LIGHT_RADIUS)
+            {
+                EmissiveLightExplicitInfluenceRadius = Ar.Read<float>();
+            }
+
             EmissiveBoost = Ar.Read<float>();
             DiffuseBoost = Ar.Read<float>();
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVED_SPECULAR_BOOST)
+            {
+                SpecularBoost = Ar.Read<float>();
+            }
         }
     }
 }

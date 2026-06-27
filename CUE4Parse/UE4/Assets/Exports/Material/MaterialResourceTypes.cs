@@ -1495,7 +1495,7 @@ public class FMaterialShaderMapId
                 Ar.Position += 16;
             }
         }
-        else
+        else if (Ar.Ver > EUnrealEngineObjectUE4Version.MATERIAL_QUALITY_LEVEL_SWITCH)
         {
             var legacyQualityLevel = (EMaterialQualityLevel) Ar.Read<byte>(); // Is it enum?
         }

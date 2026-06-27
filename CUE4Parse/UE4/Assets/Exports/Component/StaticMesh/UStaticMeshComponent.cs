@@ -38,6 +38,11 @@ public class UStaticMeshComponent : UMeshComponent
             if (bSerializeAsCookedData)
                 MeshPaintTextureCooked = new FPackageIndex(Ar);
         }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRESERVE_SMC_VERT_COLORS && Ar.Ver < EUnrealEngineObjectUE3Version.WIIU_COMPRESSED_SOUNDS)
+        {
+            Ar.Read<int>(); // Dummy
+        }
     }
 
     public virtual FPackageIndex GetStaticMesh()

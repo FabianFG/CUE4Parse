@@ -14,7 +14,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material.Parameters
         {
             Value = Ar.ReadBoolean();
             bOverride = Ar.ReadBoolean();
-            ExpressionGuid = Ar.Read<FGuid>();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.MATERIAL_FALLBACKS)
+            {
+                ExpressionGuid = Ar.Read<FGuid>();
+            }
         }
 
         public FStaticSwitchParameter(FStructFallback fallback) : base(fallback)

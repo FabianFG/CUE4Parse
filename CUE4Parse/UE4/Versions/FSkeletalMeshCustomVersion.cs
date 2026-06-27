@@ -54,7 +54,7 @@ public static class FSkeletalMeshCustomVersion
         SkinWeightProfiles = 17, // TODO: FSkeletalMeshLODModel::Serialize (editor mesh)
         // UE4.26 = 18
         // Remove uninitialized/deprecated enable cloth LOD flag
-        RemoveEnableClothLOD = 18, // TODO
+        RemoveEnableClothLOD = 18,
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,

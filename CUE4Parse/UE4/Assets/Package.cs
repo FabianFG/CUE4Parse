@@ -205,7 +205,6 @@ namespace CUE4Parse.UE4.Assets
                         var Ar = (FAssetArchive) uexpAr.Clone();
                         Ar.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
                         DeserializeObject(obj, Ar, export.SerialSize);
-                        // TODO right place ???
                         obj.Flags |= EObjectFlags.RF_LoadCompleted;
                         obj.PostLoad();
                         return obj;
@@ -493,7 +492,6 @@ namespace CUE4Parse.UE4.Assets
                 var Ar = (FAssetArchive) _archive.Clone();
                 Ar.SeekAbsolute(_export.SerialOffset, SeekOrigin.Begin);
                 _package.DeserializeObject(_object, Ar, _export.SerialSize);
-                // TODO right place ???
                 _object.Flags |= EObjectFlags.RF_LoadCompleted;
                 _object.PostLoad();
             }

@@ -143,7 +143,7 @@ public partial class USkeletalMesh : UObject
             }
         }
 
-        if (Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_SKELMESH_NAMEINDEXMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
         {
             var length = Ar.Read<int>();
             Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap
