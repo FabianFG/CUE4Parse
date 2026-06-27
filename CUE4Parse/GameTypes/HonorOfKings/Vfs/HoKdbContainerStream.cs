@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Hashing;
-using System.Linq;
+﻿using System.IO.Hashing;
 using System.Runtime.CompilerServices;
 using CUE4Parse.GameTypes.HonorOfKings.FileProvider;
 using CUE4Parse.GameTypes.HonorOfKings.Vfs.Objects;

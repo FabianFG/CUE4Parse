@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
@@ -41,7 +40,7 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
             var backupKey = AesKey;
             AesKey = key;
             try { result = CustomEncryption(bytes, 0, bytes.Length, true, this); }
-            finally { AesKey = backupKey; } 
+            finally { AesKey = backupKey; }
         }
         else
         {

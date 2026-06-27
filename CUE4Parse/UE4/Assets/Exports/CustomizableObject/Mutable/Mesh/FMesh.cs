@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Buffers;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Layout;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Physics;
@@ -43,7 +41,7 @@ public class FMesh
 
     public FMesh(FMutableArchive Ar)
     {
-        if (Ar.Game < Versions.EGame.GAME_UE5_6) Version = Ar.Read<int>();
+        if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
 
         IndexBuffers = new FMeshBufferSet(Ar);
         VertexBuffers = new FMeshBufferSet(Ar);

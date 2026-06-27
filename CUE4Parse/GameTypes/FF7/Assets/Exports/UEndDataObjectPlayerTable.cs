@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.GameTypes.FF7.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;

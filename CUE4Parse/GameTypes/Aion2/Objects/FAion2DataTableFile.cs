@@ -1,12 +1,8 @@
-using System;
-using System.Linq;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Localization;
 using Serilog;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;

@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Wwise.Objects;
 
 namespace CUE4Parse.UE4.Wwise.Plugins;
@@ -14,7 +13,7 @@ public struct AkMotionGeneratorParams
     public float m_fPeriodMultiplier;
     public float m_fDuration;
     public float m_fAttackTime;
-    public float m_fDecayTime; 
+    public float m_fDecayTime;
     public float m_fSustainTime;
     public float m_fReleaseTime;
     public float m_fSustainLevel;

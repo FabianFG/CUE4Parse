@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Animations.PSA

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
@@ -81,7 +80,7 @@ public class FAssetRegistryReader : FAssetRegistryArchive
     {
         if (Header.Version < FAssetRegistryVersionType.MemoryMappedTagDataStore)
             return;
-        
+
         baseArchive.Position = baseArchive.Position.Align(16);
     }
 

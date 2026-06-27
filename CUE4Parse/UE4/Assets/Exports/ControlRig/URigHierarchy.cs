@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.ControlRig.Rigs;
 using CUE4Parse.UE4.Assets.Readers;

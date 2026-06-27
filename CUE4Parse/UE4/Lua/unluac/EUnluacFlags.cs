@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CUE4Parse.UE4.Lua.unluac;
+﻿namespace CUE4Parse.UE4.Lua.unluac;
 
 // match custom unluac native flags
 [Flags]

@@ -1,3 +1,4 @@
+using CUE4Parse.Compression;
 using CUE4Parse.GameTypes.Century.Encryption;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
@@ -17,7 +18,7 @@ public partial class PakFileReader
             var compressed = ReadAndDecryptAt(block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
             CenturyDecryptPWC.CenturyDecrypt(compressed);
             var uncompressedSize = (int) Math.Min(pakEntry.CompressionBlockSize, pakEntry.UncompressedSize - uncompressedOff);
-            Decompress(compressed, 0, srcSize, uncompressed, uncompressedOff, uncompressedSize,  Compression.CompressionMethod.LZ4);
+            Decompress(compressed, 0, srcSize, uncompressed, uncompressedOff, uncompressedSize,  CompressionMethod.LZ4);
             uncompressedOff += (int) pakEntry.CompressionBlockSize;
         }
 

@@ -1,10 +1,8 @@
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Shaders;
 

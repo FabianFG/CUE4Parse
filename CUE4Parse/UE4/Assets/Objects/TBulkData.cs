@@ -1,7 +1,5 @@
-using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Readers;
@@ -93,7 +91,7 @@ public abstract class TBulkData<T> where T: struct
             dataAr.SerializeCompressedNew(uncompressedData, size, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
             Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref data[0]), ref uncompressedData[0], (uint) size);
 
-            // To-Do rewrite once SerializeCompressedNew/Decompress works with span  
+            // To-Do rewrite once SerializeCompressedNew/Decompress works with span
             // var dest = MemoryMarshal.AsBytes(data.AsSpan());
             // dataAr.SerializeCompressedNew(dest, size, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }

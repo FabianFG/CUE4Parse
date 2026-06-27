@@ -1,7 +1,4 @@
 using CUE4Parse.UE4.CriWare.Readers.Common;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace CUE4Parse.UE4.CriWare.Readers;
 

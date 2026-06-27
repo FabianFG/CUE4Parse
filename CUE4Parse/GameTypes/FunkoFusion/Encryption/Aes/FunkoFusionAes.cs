@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.VirtualFileSystem;
 using static System.Runtime.Intrinsics.X86.Aes;

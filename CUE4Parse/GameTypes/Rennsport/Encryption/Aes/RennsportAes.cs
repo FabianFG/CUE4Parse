@@ -1,4 +1,3 @@
-using System;
 using System.Security.Cryptography;
 using CUE4Parse.UE4.VirtualFileSystem;
 using Org.BouncyCastle.Crypto.Engines;

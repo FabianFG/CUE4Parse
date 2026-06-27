@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using Fmod5Sharp;
 using Fmod5Sharp.FmodTypes;
 using Fmod5Sharp.Util;

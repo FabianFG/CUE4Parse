@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using CUE4Parse_Conversion.UEFormat;
-using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Writers;
 

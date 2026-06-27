@@ -1,4 +1,3 @@
-using System;
 using System.Buffers.Binary;
 using CUE4Parse.UE4.VirtualFileSystem;
 using AesProvider = CUE4Parse.Encryption.Aes.Aes;

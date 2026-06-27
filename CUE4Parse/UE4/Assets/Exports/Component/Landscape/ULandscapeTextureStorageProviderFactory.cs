@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Exports.Texture;
+﻿using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -66,7 +65,7 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
     private FVector2D CalculatePremultU16(int mipIndex, FVector gridScale)
     {
         int mipScale = 1 << mipIndex;
-        
+
         float scaleFactor = -LANDSCAPE_ZSCALE / (gridScale.X * gridScale.Y * mipScale);
 
         var x = gridScale.Z * gridScale.Y * scaleFactor;
@@ -88,10 +87,10 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
         int height = mip.SizeY;
         int totalPixels = width * height;
         int borderPixels = (width + height) * 2 - 4;
-        
-        if (sourceDataBytes != (totalPixels + borderPixels) * 2) 
+
+        if (sourceDataBytes != (totalPixels + borderPixels) * 2)
             throw new InvalidOperationException("Invalid source data size");
-        if (destDataBytes != totalPixels * 4) 
+        if (destDataBytes != totalPixels * 4)
             throw new InvalidOperationException("Invalid destination data size");
 
         // Save some multiplying by premultiplying the grid scales, mip scale and ZScale
@@ -162,7 +161,7 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
 
                         // 2) Write Height at CC (normals get written during processing of the next line)
                         *dstColorPtr = new FColor((byte)(CC >> 8), (byte)(CC & 0xff), 128, 128);
-                        
+
                         // 3) Compute local normals N0/N1 for the current quad (CC/TT/TL/LL)
                         FVector N0 = ComputeGridNormalFromDeltaHeightsPremultU16(CC - LL, LL - TL, premultU16);
                         FVector N1 = ComputeGridNormalFromDeltaHeightsPremultU16(TT - TL, CC - TT, premultU16);
@@ -208,7 +207,7 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
                         dst[destOffset + 3] = lastNormalY;
                         src += 2;
                     }
-                    
+
                     for (int x = 0; x < width; x++)      // [0 ... Width-1], 0
                     {
                         DecodeNormal(x, 0, dstPtr);
@@ -240,7 +239,7 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
             dhdy * premultU16.Y,
             1.0f
         );
-        
+
         // Normalize (optimized)
         float squareSum = normal.X * normal.X + normal.Y * normal.Y + 1.0f;
         if (squareSum > UnrealMath.SmallNumber)
@@ -256,10 +255,10 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
             normal.Y = 0.0f;
             normal.Z = 1.0f;
         }
-        
+
         return normal;
     }
-    
+
     private static unsafe ushort DecodeHeightU16(FColor* pixel)
     {
         ushort heightData = (ushort)(pixel->R * 256 + pixel->G);

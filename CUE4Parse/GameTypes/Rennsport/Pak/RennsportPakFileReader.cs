@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;

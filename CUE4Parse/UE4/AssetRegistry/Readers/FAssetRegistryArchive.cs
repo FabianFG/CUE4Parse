@@ -1,4 +1,3 @@
-using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.Objects.UObject;
@@ -16,7 +15,7 @@ public abstract class FAssetRegistryArchive : FArchive
 
     public abstract void SkipFName();
     public abstract void SkipTagsAndBundles();
-    public abstract void SerializeTagsAndBundles(FAssetData assetData);    
+    public abstract void SerializeTagsAndBundles(FAssetData assetData);
 
     public FAssetRegistryArchive(FArchive Ar, FAssetRegistryHeader header) : base(Ar.Versions)
     {

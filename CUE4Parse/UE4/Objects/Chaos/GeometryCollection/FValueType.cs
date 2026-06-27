@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics;
 using CUE4Parse.UE4.Assets.Exports.Chaos;
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection

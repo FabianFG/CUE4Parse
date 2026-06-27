@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports.Animation.ACL;

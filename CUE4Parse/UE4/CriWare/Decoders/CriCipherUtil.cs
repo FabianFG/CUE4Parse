@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 
 namespace CUE4Parse.UE4.CriWare.Decoders;
 

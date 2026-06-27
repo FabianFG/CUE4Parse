@@ -1,4 +1,3 @@
-using System;
 using System.Reflection;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.VirtualFileSystem;

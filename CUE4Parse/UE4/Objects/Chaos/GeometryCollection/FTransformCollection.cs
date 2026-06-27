@@ -1,5 +1,4 @@
 ﻿using CUE4Parse.UE4.Assets.Exports.Chaos;
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
 namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection
