@@ -78,6 +78,7 @@ public enum EGame : uint
         GAME_SuicideSquad = GAME_UE4_25 + 11,
         GAME_HellLetLoose = GAME_UE4_25 + 12,
         GAME_AliensFireteamElite = GAME_UE4_25 + 13,
+        GAME_Back4Blood = GAME_UE4_25 + 14,
     GAME_UE4_26 = GameUtils.GameUe4Base + (26 << 16),
         GAME_GTATheTrilogyDefinitiveEdition = GAME_UE4_26 + 1,
         GAME_ReadyOrNot = GAME_UE4_26 + 2,
@@ -162,6 +163,7 @@ public enum EGame : uint
         GAME_SilentHill2Remake = GAME_UE5_1 + 4,
         GAME_Dauntless = GAME_UE5_1 + 5,
         GAME_WorldofJadeDynasty = GAME_UE5_1 + 6,
+        GAME_LordsoftheFallen = GAME_UE5_1 + 7,
     GAME_UE5_2 = GameUtils.GameUe5Base + (2 << 16),
         GAME_Placeholder5 = GAME_UE5_2 + 1,
         GAME_PaxDei = GAME_UE5_2 + 2,
@@ -237,7 +239,13 @@ public enum EGame : uint
         GAME_WutheringWavesFastGeo = GAME_UE5_8 + 1,
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 
-    GAME_UE5_LATEST = GAME_UE5_8
+    GAME_UE5_LATEST = GAME_UE5_9,
+
+    // TODO: May have similar situation to UE5-EA, unknown just yet
+    // Initial UE6 Integration commit is: https://github.com/EpicGames/UnrealEngine/commit/99fa46e69402e077880c43fc7c99d697c236b29b
+    GAME_UE6_0 = GameUtils.GameUe6Base + (0 << 16),
+
+    GAME_UE6_LATEST = GAME_UE6_0
 }
 
 public static class GameUtils
@@ -245,6 +253,7 @@ public static class GameUtils
     public const int GameUe3Base = 0x3000000;
     public const int GameUe4Base = 0x4000000;
     public const int GameUe5Base = 0x5000000;
+    public const int GameUe6Base = 0x6000000;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GAME_UE4(int x)

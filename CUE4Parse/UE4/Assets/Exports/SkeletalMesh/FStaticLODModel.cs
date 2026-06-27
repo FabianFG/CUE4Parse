@@ -318,6 +318,7 @@ public class FStaticLODModel
         var bInlined = Ar.ReadBoolean();
 
         RequiredBones = Ar.ReadArray<short>();
+        if (Ar.Game is EGame.GAME_NeedForSpeedMobile) Ar.Position += 4;
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
             Sections = new FSkelMeshSection[Ar.Read<int>()];
@@ -398,7 +399,7 @@ public class FStaticLODModel
         }
 
         if (Ar.Game is EGame.GAME_ReadyOrNot or EGame.GAME_HellLetLoose or EGame.GAME_DarkPicturesAnthologyManofMedan or
-            EGame.GAME_DarkPicturesAnthologyTheDevilinMe or EGame.GAME_AliensFireteamElite) Ar.Position += 4;
+            EGame.GAME_DarkPicturesAnthologyTheDevilinMe or EGame.GAME_AliensFireteamElite or EGame.GAME_Back4Blood) Ar.Position += 4;
         if (Ar.Game is EGame.GAME_DarkPicturesAnthologyLittleHope && !bIsLODCookedOut) Ar.Position += 4;
     }
 
@@ -567,6 +568,7 @@ public class FStaticLODModel
         Ar.Position += bytesToSkip;
 
         if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
+        if (Ar.Game == EGame.GAME_NeedForSpeedMobile) Ar.Position += 32;
         if (HasClothData())
         {
             // FSkeletalMeshVertexClothBuffer::SerializeMetaData

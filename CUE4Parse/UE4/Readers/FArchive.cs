@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -717,7 +718,43 @@ namespace CUE4Parse.UE4.Readers
                 throw new VersionException(this, "Read size is bigger than remaining archive length.");
             }
         }
+        
+        public void DumpBytesToHex(int size, int maxBytesPerLine = 16) {
+#if DEBUG
+            var savePos = Position;
+            var bytes = ReadBytes(size);
+            Position = savePos;
+            
+            var sb = new StringBuilder();
+            for (var i = 0; i < bytes.Length; i++) {
+                if (i % maxBytesPerLine == 0) {
+                    sb.Append($"{i+Position:X8} ");
+                }
+                sb.Append($"{bytes[i]:X2} ");
+                if (i % maxBytesPerLine == maxBytesPerLine - 1) {
+                    sb.AppendLine();
+                }
+            }
+            Console.Write(sb.ToString()+"\n");
+#endif
+        }
+        
+        public void DumpBytesToFile(int size) {
+#if DEBUG
+            var savePos = Position;
+            var bytes = ReadBytes(int.Min(size, (int) (Length - Position)));
+            Position = savePos;
+            var f = new FileInfo(Path.GetTempPath() + $"cue4parse_temp/{Name}_s{savePos}_size_{bytes.Length}.bin");
+            f.Directory.Create();
 
+            using var fs = f.OpenWrite();
+            fs.Write(bytes, 0, bytes.Length);
+            fs.Close();
+            Log.Information("Dumped {Name} to {Path}", Name, f.FullName);
+            Process.Start("explorer.exe", $"/select,\"{f.FullName}\"");
+#endif
+        }
+        
         public abstract object Clone();
 
         public struct FCompressedChunkInfo

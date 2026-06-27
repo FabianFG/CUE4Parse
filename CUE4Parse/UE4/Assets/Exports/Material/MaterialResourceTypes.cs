@@ -1162,7 +1162,7 @@ public class FRHIUniformBufferLayoutInitializer
 
     public FRHIUniformBufferLayoutInitializer(FMemoryImageArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE5_0)
+        if (Ar.Game is >= EGame.GAME_UE5_0 or EGame.GAME_NeedForSpeedMobile)
         {
             Name = Ar.ReadFString();
             Resources = Ar.ReadArray<FRHIUniformBufferResource>();

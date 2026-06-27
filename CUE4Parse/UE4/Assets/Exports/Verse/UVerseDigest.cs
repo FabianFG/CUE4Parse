@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using CUE4Parse.UE4.Assets.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Verse
 {
@@ -17,15 +18,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Verse
     {
         public string ProjectName { get; private set; }
         public EVerseDigestVariant Variant { get; private set; }
-        public string ReadableCode { get; private set; }
+        public string ReadableCode => Encoding.UTF8.GetString(GetOrDefault<byte[]>("DigestCode"));
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
             ProjectName = GetOrDefault<string>(nameof(ProjectName));
             Variant = GetOrDefault<EVerseDigestVariant>(nameof(Variant));
-
-            ReadableCode = Encoding.UTF8.GetString(GetOrDefault<byte[]>("DigestCode"));
         }
     }
 }

@@ -7,3 +7,8 @@ public class FGameplayEventFunction(FAssetArchive Ar) : FStructFallback(Ar, "Gam
 {
     public FStructFallback[] Functions = Ar.ReadArray(() => new FStructFallback(Ar, "GameplayEventHandlerFunctions"));
 }
+
+public class FGameplayEventDescriptor(FAssetArchive Ar) :  FStructFallback(Ar, "GameplayEventDescriptor")
+{
+    public FStructFallback[] Functions = Ar.ReadArray(() => new FStructFallback(Ar, "GameplayEventDefinition"));
+}
