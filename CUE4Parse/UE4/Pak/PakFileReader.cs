@@ -3,15 +3,16 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
+using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
-using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
+using CUE4Parse.GameTypes.ABI.Encryption.Aes;
+using CUE4Parse.GameTypes.NFS.Mobile.Lua;
+using CUE4Parse.GameTypes.NTE.Encryption;
+using CUE4Parse.GameTypes.PUBG.UE4.Lua;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
-using CUE4Parse.GameTypes.ABI.Encryption.Aes;
-using CUE4Parse.GameTypes.NTE.Encryption;
-using CUE4Parse.GameTypes.NFS.Mobile.Lua;
-using CUE4Parse.GameTypes.PUBG.UE4.Lua;
+using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
 using CUE4Parse.GameTypes.Strinova.Lua;
 using CUE4Parse.GameTypes.UDWN.Lua;
 using CUE4Parse.UE4.Assets.Objects;
@@ -106,7 +107,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                     return RennsportCompressedExtract(reader, pakEntry);
                 case EGame.GAME_DragonQuestXI:
                     return DQXIExtract(reader, pakEntry);
-                case EGame.GAME_CenturyAgeofAshes when pakEntry.CompressionMethod is Compression.CompressionMethod.PWC:
+                case EGame.GAME_CenturyAgeofAshes when pakEntry.CompressionMethod is CompressionMethod.PWC:
                     return CenturyExtract(reader, pakEntry);
                 case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                     return ABIExtract(reader, pakEntry);

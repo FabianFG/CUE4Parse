@@ -1,4 +1,4 @@
-using Fmod5Sharp.FmodTypes;
+using System.Text;
 using CUE4Parse.UE4.FMod.Enums;
 using CUE4Parse.UE4.FMod.Metadata;
 using CUE4Parse.UE4.FMod.Nodes;
@@ -7,14 +7,10 @@ using CUE4Parse.UE4.FMod.Nodes.Effects;
 using CUE4Parse.UE4.FMod.Nodes.Instruments;
 using CUE4Parse.UE4.FMod.Nodes.Transitions;
 using CUE4Parse.UE4.FMod.Objects;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System;
-using System.Linq;
-using Serilog;
-using Newtonsoft.Json;
 using CUE4Parse.UE4.FMod.Utils;
+using Fmod5Sharp.FmodTypes;
+using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.FMod;
 

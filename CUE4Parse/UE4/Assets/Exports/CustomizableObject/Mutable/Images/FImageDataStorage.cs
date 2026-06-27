@@ -1,5 +1,4 @@
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using FImageArray = byte[];

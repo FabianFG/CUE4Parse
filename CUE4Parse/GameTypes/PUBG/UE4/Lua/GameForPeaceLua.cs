@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
@@ -87,7 +86,7 @@ public class GameForPeaceLua
             LuacNum = Ar.ReadBytes(8)
         };
 
-        header.Format = FLuaReader.LUAC_FORMAT; // 1 -> 0 
+        header.Format = FLuaReader.LUAC_FORMAT; // 1 -> 0
 
         return header;
     }

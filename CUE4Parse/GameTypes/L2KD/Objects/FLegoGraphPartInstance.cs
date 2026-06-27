@@ -1,6 +1,6 @@
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Readers;
-using System.Runtime.InteropServices;
 
 namespace CUE4Parse.GameTypes.L2KD.Objects
 {

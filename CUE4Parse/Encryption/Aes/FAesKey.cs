@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 namespace CUE4Parse.Encryption.Aes;
 
 public class FAesKey

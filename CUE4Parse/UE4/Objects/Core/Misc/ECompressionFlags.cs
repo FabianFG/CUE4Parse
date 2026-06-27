@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace CUE4Parse.UE4.Objects.Core.Misc
 {
     [Flags]

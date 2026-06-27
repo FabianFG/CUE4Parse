@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;

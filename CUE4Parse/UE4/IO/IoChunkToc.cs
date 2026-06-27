@@ -1,12 +1,7 @@
-using System;
-using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.IO.Objects.OnDemand;
-using CUE4Parse.UE4.IO.Objects.OnDemand.V2;
+using CUE4Parse.UE4.IO.Objects.OnDemand.V1;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -24,7 +19,7 @@ public class IoChunkToc
         var bIsLegacy = Ar.Read<ulong>() == 0x6f6e64656d616e64;
         Ar.Position = 0;
 
-        OnDemandToc = bIsLegacy ? new Objects.OnDemand.V1.FOnDemandToc(Ar) : new FOnDemandToc(Ar);
+        OnDemandToc = bIsLegacy ? new FOnDemandToc(Ar) : new Objects.OnDemand.V2.FOnDemandToc(Ar);
     }
 }
 

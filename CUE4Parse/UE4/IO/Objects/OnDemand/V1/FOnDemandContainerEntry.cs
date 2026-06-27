@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Objects.Core.Misc;
+﻿using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using FIoBlockHash = uint;
 

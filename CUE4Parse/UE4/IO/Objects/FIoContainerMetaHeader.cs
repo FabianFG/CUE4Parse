@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using CUE4Parse.UE4.Exceptions;
+﻿using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects;

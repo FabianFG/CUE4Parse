@@ -1,12 +1,9 @@
-using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-
 using CUE4Parse.UE4.Objects.Core.Math;
-
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Core.Misc

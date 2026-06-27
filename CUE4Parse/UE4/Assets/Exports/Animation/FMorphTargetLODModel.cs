@@ -1,4 +1,3 @@
-using System.Linq;
 using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -154,9 +153,9 @@ public class FMorphTargetLODModel
     {
         SectionIndices = sectionIndices;
         bGeneratedByEngine = false;
-        
+
         var numDeltas = batchHeaders.Sum(header => (int)header.NumElements);
-        
+
         Vertices = new FMorphTargetDelta[numDeltas];
         NumBaseMeshVerts = numDeltas;
 
@@ -188,7 +187,7 @@ public class FMorphTargetLODModel
                 ((int)reader.GetBits((uint)header.TangentZBits.Y) + header.TangentZMin.Y) * tangentZPrecision,
                 ((int)reader.GetBits((uint)header.TangentZBits.Z) + header.TangentZMin.Z) * tangentZPrecision);
         }
-        
+
         return new FMorphTargetDelta(positionDelta, tangentZDelta, sourceIdx);
     }
 }

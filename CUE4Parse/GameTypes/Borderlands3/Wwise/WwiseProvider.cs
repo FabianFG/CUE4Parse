@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
 using CUE4Parse.GameTypes.Borderlands3.Assets.Exports;
 
 namespace CUE4Parse.UE4.Wwise;

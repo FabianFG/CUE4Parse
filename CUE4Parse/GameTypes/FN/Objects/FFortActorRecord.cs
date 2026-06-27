@@ -3,7 +3,6 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -33,7 +32,7 @@ public class FFortActorRecord : IUStruct
     public FFortActorRecord(FAssetArchive Ar)
     {
         ActorGuid = Ar.Read<FGuid>();
-        
+
         ActorState = (EFortBuildingPersistentState)Ar.Read<byte>();
 
         // ActorClass is sometimes saved as FPackageIndex

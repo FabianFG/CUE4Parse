@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;

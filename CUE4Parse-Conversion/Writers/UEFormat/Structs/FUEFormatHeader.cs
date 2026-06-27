@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using CUE4Parse_Conversion.Writers.UEFormat.Enums;
 using CUE4Parse.UE4.Writers;

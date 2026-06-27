@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CUE4Parse.ACL
+﻿namespace CUE4Parse.ACL
 {
     public class ACLException : Exception
     {

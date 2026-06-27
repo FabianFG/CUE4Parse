@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Plugins;
 using CUE4Parse.UE4.Wwise.Plugins.atmoky;
@@ -108,7 +107,7 @@ public class WwisePlugin
 
                 // EAkPluginId.bnsRadio
 
-                EAkPluginId.CrankcaseAudioREVModelPlayer => new CREVSourceModelPlayerParams(Ar, (int)size),                
+                EAkPluginId.CrankcaseAudioREVModelPlayer => new CREVSourceModelPlayerParams(Ar, (int)size),
 
                 EAkPluginId.iZHybridReverbFX => new CiZHybridReverbFXParams(Ar),
                 EAkPluginId.iZTrashDistortionFX => new CiZTrashDistortionFXParams(Ar),

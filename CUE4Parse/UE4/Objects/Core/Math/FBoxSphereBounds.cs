@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using static System.MathF;
 

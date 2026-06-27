@@ -1,10 +1,7 @@
-using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
-using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse.UE4.Objects.Core.Math;
 
@@ -23,7 +20,7 @@ public struct FVector4 : IUStruct, IEquatable<FVector4>
     public static readonly FVector4 ZeroVector = new(0, 0, 0, 0);
     public static readonly FVector4 OneVector = new(1, 1, 1, 1);
 
-    public FVector4(float x, float y, float z, float w) 
+    public FVector4(float x, float y, float z, float w)
     {
         X = x;
         Y = y;
@@ -31,7 +28,7 @@ public struct FVector4 : IUStruct, IEquatable<FVector4>
         W = w;
     }
 
-    public FVector4(float x) : this(x, x, x, x) 
+    public FVector4(float x) : this(x, x, x, x)
     {
     }
 

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -159,7 +158,7 @@ public class FTexturePlatformData
             }
         }
 
-        if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.ReadBoolean()) Ar.Position += 112; 
+        if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.ReadBoolean()) Ar.Position += 112;
 
         if (Mips.Length > 0)
         {

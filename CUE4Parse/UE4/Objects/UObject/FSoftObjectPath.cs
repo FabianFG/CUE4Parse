@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.GameTypes.OuterWorlds2.Readers;

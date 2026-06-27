@@ -1,5 +1,3 @@
-using System.IO;
-
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Versions;

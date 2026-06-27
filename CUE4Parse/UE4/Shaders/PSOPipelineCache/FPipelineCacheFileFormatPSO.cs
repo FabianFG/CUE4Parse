@@ -1,8 +1,8 @@
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.RHI;
 using CUE4Parse.UE4.Readers;
-using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 

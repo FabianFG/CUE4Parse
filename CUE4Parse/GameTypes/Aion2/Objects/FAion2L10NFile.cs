@@ -1,13 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;

@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.GameTypes.CodeVein2.Encryption;
 using CUE4Parse.GameTypes.EOTU.Encryption;
 using CUE4Parse.GameTypes.NTE.Encryption;

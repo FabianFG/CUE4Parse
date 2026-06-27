@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.GameTypes.OuterWorlds2.Objects;
 using CUE4Parse.GameTypes.OuterWorlds2.Readers;
 using CUE4Parse.UE4.Assets.Objects;
