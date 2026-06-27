@@ -1,13 +1,6 @@
-using System;
-using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.HighPerformance;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -15,11 +8,8 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-
 using OffiUtils;
-
 using Serilog;
-
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 using static CUE4Parse.UE4.Objects.UObject.FPackageFileSummary;
@@ -577,7 +567,7 @@ namespace CUE4Parse.UE4.Readers
             if (length == 0) return string.Empty;
             if (length < 0) throw new ParserException($"Negative Utf8String length '{length}'");
             if (length > Length - Position) throw new ParserException($"Invalid Utf8String length '{length}'");
-            
+
             return Encoding.UTF8.GetString(ReadSpan(length));
         }
 
@@ -789,13 +779,13 @@ namespace CUE4Parse.UE4.Readers
                 throw new VersionException(this, "Read size is bigger than remaining archive length.");
             }
         }
-        
+
         public void DumpBytesToHex(int size, int maxBytesPerLine = 16) {
 #if DEBUG
             var savePos = Position;
             var bytes = ReadBytes(size);
             Position = savePos;
-            
+
             var sb = new StringBuilder();
             for (var i = 0; i < bytes.Length; i++) {
                 if (i % maxBytesPerLine == 0) {
@@ -809,7 +799,7 @@ namespace CUE4Parse.UE4.Readers
             Console.Write(sb.ToString()+"\n");
 #endif
         }
-        
+
         public void DumpBytesToFile(int size) {
 #if DEBUG
             var savePos = Position;
@@ -825,7 +815,7 @@ namespace CUE4Parse.UE4.Readers
             Process.Start("explorer.exe", $"/select,\"{f.FullName}\"");
 #endif
         }
-        
+
         public abstract object Clone();
 
         public struct FCompressedChunkInfo

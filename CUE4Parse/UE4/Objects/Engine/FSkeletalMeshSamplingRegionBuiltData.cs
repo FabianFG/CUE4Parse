@@ -1,11 +1,10 @@
-﻿using System;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
     /** Built data for sampling a single region of a skeletal mesh. */
-    public readonly struct FSkeletalMeshSamplingRegionBuiltData : IUStruct 
+    public readonly struct FSkeletalMeshSamplingRegionBuiltData : IUStruct
     {
         /** Triangles included in this region. */
         public readonly int[] TriangleIndices;

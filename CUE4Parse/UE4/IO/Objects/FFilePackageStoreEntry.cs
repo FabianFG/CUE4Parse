@@ -1,7 +1,6 @@
-using System;
 using System.Runtime.CompilerServices;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -33,6 +32,7 @@ namespace CUE4Parse.UE4.IO.Objects
                 ExportBundleCount = Ar.Read<int>();
                 Ar.Position += 8; // LoadOrder + Pad
                 ImportedPackages = ReadCArrayView<FPackageId>(Ar);
+                if (Ar.Game is EGame.GAME_NeedForSpeedMobile) Ar.Position += 8;
             }
         }
 

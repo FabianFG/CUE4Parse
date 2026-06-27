@@ -12,8 +12,9 @@ public class FImageDataStorage
     public EImageFormat ImageFormat;
     [JsonIgnore] public byte NumLODs;
     public FImageArray[] Buffers;
+    public int NumTailOffsets;
     public ushort[] CompactedTailOffsets;
-    
+
     public FImageDataStorage(FMutableArchive Ar, int version)
     {
         Size = Ar.Read<FImageSize>();
@@ -28,8 +29,8 @@ public class FImageDataStorage
         else
         {
             ImageFormat = Ar.Read<EImageFormat>();
+            Ar.Position += 3;
             NumLODs = Ar.Read<byte>();
-            Ar.Position += 3; // NumLODs ia an uint?
 
             var buffersNum = Ar.Read<int>();
             Buffers = new FImageArray[buffersNum];

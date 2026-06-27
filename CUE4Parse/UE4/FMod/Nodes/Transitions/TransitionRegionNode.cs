@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using CUE4Parse.UE4.FMod.Objects;
 using Newtonsoft.Json;
 

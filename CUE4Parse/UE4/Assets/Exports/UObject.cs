@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.MappingsProvider;
@@ -142,9 +139,17 @@ public class UObject : AbstractPropertyHolder
             DeserializePropertiesTagged(Properties = [], Ar, false);
         }
 
-        if (Ar.Game >= EGame.GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) && Ar.ReadBoolean() && Ar.Position + 16 <= validPos)
+        if (Ar.Game >= EGame.GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
         {
-            ObjectGuid = Ar.Read<FGuid>();
+            var hasGuid = Ar.ReadBoolean();
+
+            if (hasGuid)
+            {
+                if (Ar.Position + 16 > validPos)
+                    throw new ParserException(Ar, "Unexpected EOF in ObjectGuid");
+
+                ObjectGuid = Ar.Read<FGuid>();
+            }
         }
 
         if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SparseClassDataStructSerialization || !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))

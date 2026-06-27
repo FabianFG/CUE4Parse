@@ -1,14 +1,10 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
-using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.Core.Misc;
-using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
@@ -21,7 +17,7 @@ public enum ESplineMeshAxis : int
     Z,
 };
 
-public class USplineMeshComponent : UStaticMeshComponent 
+public class USplineMeshComponent : UStaticMeshComponent
 {
     private FSplineMeshParams? _splineParams;
     public FSplineMeshParams SplineParams {
@@ -39,8 +35,8 @@ public class USplineMeshComponent : UStaticMeshComponent
             return _forwardAxis.Value;
         }
     }
-    
-    
+
+
     private FVector? _splineUpDir;
     public FVector SplineUpDir {
         get {
@@ -49,7 +45,7 @@ public class USplineMeshComponent : UStaticMeshComponent
             return _splineUpDir.Value;
         }
     }
-    
+
     private float? _splineBoundaryMin;
     public float SplineBoundaryMin {
         get {
@@ -76,10 +72,10 @@ public class USplineMeshComponent : UStaticMeshComponent
             return _smoothInterpRollScale;
         }
     }
-    
-    public override void Deserialize(FAssetArchive Ar, long validPos) 
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        base.Deserialize(Ar, validPos);    
+        base.Deserialize(Ar, validPos);
         if (Ar.Ver < EUnrealEngineObjectUE4Version.SPLINE_MESH_ORIENTATION) {
             PropertyUtil.Set(this, "ForwardAxis", new EnumProperty("Z"));
             var splineParams = SplineParams;
@@ -92,7 +88,7 @@ public class USplineMeshComponent : UStaticMeshComponent
         }
     }
 
-    public string GetMeshId() 
+    public string GetMeshId()
     {
         // var mesh = GetStaticMesh().Load<UStaticMesh>();
         // if (mesh == null) throw new ObjectNotFoundException("Mesh is null");
@@ -100,8 +96,8 @@ public class USplineMeshComponent : UStaticMeshComponent
 
         return SplineParams.GetSHAHash();
     }
-    
-    public FTransform CalcSliceTransform(float distanceAlong) 
+
+    public FTransform CalcSliceTransform(float distanceAlong)
     {
         var alpha = ComputeRatioAlongSpline(distanceAlong);
 
@@ -111,29 +107,29 @@ public class USplineMeshComponent : UStaticMeshComponent
         return CalcSliceTransformAtSplineOffset(alpha, MinT, MaxT);
     }
 
-    FTransform CalcSliceTransformAtSplineOffset(float alpha, float minT, float maxT) 
+    FTransform CalcSliceTransformAtSplineOffset(float alpha, float minT, float maxT)
     {
         var hermiteAlpha = bSmoothInterpRollScale ? SmoothStep(0.0f, 1.0f, alpha) : alpha;
-        
+
         var splineParams = SplineParams;
-        
+
         FVector splinePos;
         FVector splineDir;
 
 
-        if (alpha < minT) 
+        if (alpha < minT)
         {
             var startTangent = splineParams.SplineEvalTangent(minT);
             splinePos = splineParams.SplineEvalPos(minT) + (startTangent * (alpha - minT));
             splineDir = startTangent.GetSafeNormal();
         }
-        else if (alpha > maxT) 
+        else if (alpha > maxT)
         {
             var endTangent = splineParams.SplineEvalTangent(maxT);
             splinePos = splineParams.SplineEvalPos(maxT) + (endTangent * (alpha - maxT));
             splineDir = endTangent.GetSafeNormal();
         }
-        else 
+        else
         {
             splinePos = splineParams.SplineEvalPos(alpha);
             splineDir = splineParams.SplineEvalDir(alpha);
@@ -147,7 +143,7 @@ public class USplineMeshComponent : UStaticMeshComponent
         var sliceOffset = UnrealMath.Lerp(splineParams.StartOffset, splineParams.EndOffset, hermiteAlpha);
         splinePos += sliceOffset.X * baseXVec;
         splinePos += sliceOffset.Y * baseYVec;
-    
+
         // Apply Roll
         var useRoll = UnrealMath.Lerp(splineParams.StartRoll, splineParams.EndRoll, hermiteAlpha);
         var cosAng = MathF.Cos(useRoll);
@@ -188,10 +184,10 @@ public class USplineMeshComponent : UStaticMeshComponent
             var meshBounds = GetStaticMesh().Load<UStaticMesh>()!.RenderData!.Bounds!;
             var boundMin = GetAxisValueRef(meshBounds.Origin - meshBounds.BoxExtent, ForwardAxis);
             var boundMax = GetAxisValueRef(meshBounds.Origin + meshBounds.BoxExtent, ForwardAxis);
-            
+
             var boundMinT = (boundMin - SplineBoundaryMin) / (SplineBoundaryMax - SplineBoundaryMin);
             var boundMaxT = (boundMax - SplineBoundaryMin) / (SplineBoundaryMax - SplineBoundaryMin);
-            
+
             const float MaxSplineExtrapolation = 4.0f;
             minT = MathF.Max(-MaxSplineExtrapolation, boundMinT);
             maxT = MathF.Min(boundMaxT, MaxSplineExtrapolation);
@@ -227,7 +223,7 @@ public class USplineMeshComponent : UStaticMeshComponent
 
         return alpha;
     }
-    
+
     public static float GetAxisValueRef(ref FVector vector, ESplineMeshAxis axis)
     {
         return axis switch
@@ -238,7 +234,7 @@ public class USplineMeshComponent : UStaticMeshComponent
             _ => 0 // should never happen
         };
     }
-    
+
     public static float GetAxisValueRef(FVector vector, ESplineMeshAxis axis)
     {
         return axis switch
@@ -249,7 +245,7 @@ public class USplineMeshComponent : UStaticMeshComponent
             _ => 0 // should never happen
         };
     }
-    
+
     public static void SetAxisValueRef(ref FVector vector, ESplineMeshAxis axis, float value)
     {
         switch (axis)

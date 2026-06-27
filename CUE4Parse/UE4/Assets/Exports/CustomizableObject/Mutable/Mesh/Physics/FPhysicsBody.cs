@@ -15,7 +15,7 @@ public class FPhysicsBody
     public string[] BonesNames_Deprecated = [];
     public int[] BodiesCustomIds;
     public bool bBodiesModified;
-    
+
     public FPhysicsBody(FMutableArchive Ar)
     {
         if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
@@ -35,8 +35,8 @@ public class FPhysicsBody
         {
             BonesNames_Deprecated = Ar.ReadArray(Ar.ReadString);
         }
-            
-        BodiesCustomIds = Ar.ReadArray<int>();
+
+        BodiesCustomIds = Ar.Game >= EGame.GAME_UE5_8 ? [] : Ar.ReadArray<int>();
         if (Version >= 1)
             bBodiesModified = Ar.ReadFlag();
     }

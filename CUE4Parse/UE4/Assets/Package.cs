@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.ACE7.Encryption;
 using CUE4Parse.UE4.Assets.Exports;

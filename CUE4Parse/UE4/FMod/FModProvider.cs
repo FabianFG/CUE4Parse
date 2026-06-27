@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using CUE4Parse.FileProvider;
@@ -275,7 +271,7 @@ public class FModProvider
         => ExtractAudioSamples(fmodReader.ExtractSoundTableTracks(), fmodReader.BankName);
     public List<FModExtractedSound> ExtractBankSounds(FModReader fmodReader)
        => ExtractAudioSamples(fmodReader.ExtractTracks(), fmodReader.BankName);
-    
+
     private List<FModExtractedSound> ExtractAudioSamples(List<FmodSample> samples, string fallbackSampleName)
     {
         var extracted = new List<FModExtractedSound>(samples.Count);

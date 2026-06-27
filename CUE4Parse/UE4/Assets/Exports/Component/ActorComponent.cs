@@ -1,6 +1,5 @@
 using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
-using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Sound;

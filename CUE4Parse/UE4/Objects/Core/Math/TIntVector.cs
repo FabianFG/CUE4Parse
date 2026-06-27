@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
@@ -95,7 +94,7 @@ public class TVector<T> where T : struct
             _values[i] = initialValue;
         }
     }
-    
+
     // serializeReal vector.h
     public TVector(FArchive Ar, int dimension)
     {
@@ -105,7 +104,7 @@ public class TVector<T> where T : struct
             _values[i] = Ar.Read<T>();
         }
     }
-    
+
     public TVector(params T[] values)
     {
         _values = new T[values.Length];

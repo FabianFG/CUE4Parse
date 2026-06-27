@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System;
-using SevenZip;
+﻿using SevenZip;
 using SevenZip.Compression.LZMA;
 
 // https://gist.github.com/ststeiger/cb9750664952f775a341#gistcomment-2912797

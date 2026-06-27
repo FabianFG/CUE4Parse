@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.VirtualFileSystem;

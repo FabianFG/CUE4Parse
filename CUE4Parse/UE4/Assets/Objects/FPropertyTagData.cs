@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Readers;

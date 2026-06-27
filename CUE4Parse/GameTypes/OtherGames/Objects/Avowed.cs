@@ -1,10 +1,8 @@
-using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4;
-using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Assets.Objects;
-using System.Reflection.Metadata.Ecma335;
-using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.GameTypes.OtherGames.Objects;
 

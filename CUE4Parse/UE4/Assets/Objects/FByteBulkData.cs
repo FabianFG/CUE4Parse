@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;

@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.IO.Objects.OnDemand;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;

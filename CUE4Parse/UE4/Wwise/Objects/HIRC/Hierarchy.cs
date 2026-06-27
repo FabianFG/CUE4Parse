@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;

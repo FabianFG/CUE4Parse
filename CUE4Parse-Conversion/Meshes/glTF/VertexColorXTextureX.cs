@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
+﻿using System.Numerics;
 using SharpGLTF.Geometry.VertexTypes;
 using SharpGLTF.Schema2;
 

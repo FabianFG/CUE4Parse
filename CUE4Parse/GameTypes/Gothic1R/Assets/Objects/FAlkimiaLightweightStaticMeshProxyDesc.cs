@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 
@@ -9,6 +10,6 @@ public class FAlkimiaLightweightStaticMeshProxyDesc : FStructFallback
     public FAlkimiaLightweightStaticMeshProxyDesc(FAssetArchive Ar) : base()
     {
         Ar.Position += 96;
-        Properties.AddRange(new FStructFallback(Ar, "AlkimiaLightweightStaticMeshProxyDesc", FRawHeader.FullRead, UE4.Assets.Objects.Properties.ReadType.RAW).Properties);
+        Properties.AddRange(new FStructFallback(Ar, "AlkimiaLightweightStaticMeshProxyDesc", FRawHeader.FullRead, ReadType.RAW).Properties);
     }
 }

@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable;
 
@@ -13,7 +13,7 @@ public class FState
 
     public FState(FMutableArchive Ar)
     {
-        Name = Ar.ReadFString();
+        Name = Ar.Game >= EGame.GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString();
         Root = Ar.Read<uint>();
         RuntimeParameters = Ar.ReadArray<int>();
         UpdateCache = Ar.ReadArray<uint>();

@@ -1,7 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.UE4.Assets.Exports.Material;

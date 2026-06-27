@@ -1,5 +1,3 @@
-using System;
-
 namespace CUE4Parse.UE4.Lua.Readers;
 
 public class LuaBytecode
@@ -87,6 +85,7 @@ public class LuaUpvalueName
 public static class FLuaReader
 {
     // Static data in the header
+    public static readonly byte[] LUA_SIGNATURE = [0x1B, 0x4C, 0x75, 0x61]; // "\x1BLua"
     public static readonly byte[] LUAC_DATA = [0x19, 0x93, 0x0D, 0x0A, 0x1A, 0x0A];
     public static readonly byte[] LUAC_INT = [0x78, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
     public static readonly byte[] LUAC_NUM = BitConverter.GetBytes(370.5);

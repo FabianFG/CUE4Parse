@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;

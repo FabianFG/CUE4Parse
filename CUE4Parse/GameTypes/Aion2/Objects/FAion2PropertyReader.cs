@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
 

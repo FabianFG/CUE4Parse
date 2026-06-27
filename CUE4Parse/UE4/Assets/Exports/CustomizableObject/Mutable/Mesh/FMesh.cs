@@ -1,12 +1,13 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Buffers;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Layout;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Physics;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Skeleton;
 using CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Surface;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh;
 
@@ -28,6 +29,10 @@ public class FMesh
     public FBoneName[] BoneMap;
     public FPhysicsBody[] AdditionalPhysicsBodies;
     public uint MeshIDPrefix;
+    public FCloth[] ClothSections;
+    public FMeshMorph Morph;
+    public uint[] MorphDataBuffer;
+    public FSkinWeightProfile[] SkinWeightProfiles;
 
     public FMeshBufferSet? FaceBuffers;
     public FACE_GROUP_DEPRECATED[] FaceGroups = [];
@@ -36,7 +41,7 @@ public class FMesh
 
     public FMesh(FMutableArchive Ar)
     {
-        if (Ar.Game < Versions.EGame.GAME_UE5_6) Version = Ar.Read<int>();
+        if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
 
         IndexBuffers = new FMeshBufferSet(Ar);
         VertexBuffers = new FMeshBufferSet(Ar);
@@ -46,11 +51,11 @@ public class FMesh
         }
         AdditionalBuffers = Ar.ReadArray(() => new KeyValuePair<EMeshBufferType, FMeshBufferSet>(Ar.Read<EMeshBufferType>(), new FMeshBufferSet(Ar)));
         Layouts = Ar.ReadPtrArray(() => new FLayout(Ar));
-        if (Version >= 14)
+        if (Version >= 14 && Ar.Game < EGame.GAME_UE5_8)
         {
             SkeletonIDs = Ar.ReadArray<uint>();
         }
-        Skeleton = Ar.ReadPtr(() => new FSkeleton(Ar));
+        if (Ar.Game < EGame.GAME_UE5_8) Skeleton = Ar.ReadPtr(() => new FSkeleton(Ar));
         if (Version >= 12)
         {
             PhysicsBody = Ar.ReadPtr(() => new FPhysicsBody(Ar));
@@ -72,13 +77,12 @@ public class FMesh
 
         if (Version <= 16)
             Tags = Ar.ReadArray(Ar.ReadString);
-        else
+        else if (Ar.Game < EGame.GAME_UE5_8)
             Tags = Ar.ReadArray(Ar.ReadFString);
 
-        if (Version >= 18)
+        if (Version >= 18 && Ar.Game < EGame.GAME_UE5_8)
             StreamedResources = Ar.ReadArray<ulong>();
-        if (Version >= 13)
-            BonePoses = Ar.ReadArray(() => new FBonePose(Ar));
+        if (Version >= 13) BonePoses = Ar.ReadArray(() => new FBonePose(Ar));
         else if (Skeleton is not null)
         {
             // can populate from skeleton
@@ -107,15 +111,32 @@ public class FMesh
             //}
         }
 
-        if (Version >= 15)
-            AdditionalPhysicsBodies = Ar.ReadArray(() => new FPhysicsBody(Ar));
-        if (Ar.Game >= Versions.EGame.GAME_UE5_5)
-            MeshIDPrefix = Ar.Read<uint>();
-        if (Ar.Game < Versions.EGame.GAME_UE5_6)
-            ReferenceID = Ar.Read<uint>();
+        if (Version >= 15) AdditionalPhysicsBodies = Ar.ReadArray(() => new FPhysicsBody(Ar));
+        if (Ar.Game >= EGame.GAME_UE5_5) MeshIDPrefix = Ar.Read<uint>();
+        if (Ar.Game < EGame.GAME_UE5_6) ReferenceID = Ar.Read<uint>();
+        if (Ar.Game >= EGame.GAME_UE5_8)
+        {
+            ClothSections = Ar.ReadArray(() => new FCloth(Ar));
+            Morph = new FMeshMorph(Ar);
+            MorphDataBuffer = Ar.ReadArray<uint>();
+            SkinWeightProfiles = Ar.ReadArray(() => new FSkinWeightProfile(Ar));
+        }
     }
 }
 
+public class FCloth
+{
+    public int AssetLODIndex = - 1;
+    public FMeshToMeshVertData[] Data;
+
+    public FCloth(FMutableArchive Ar)
+    {
+        AssetLODIndex = Ar.Read<int>();
+        Data = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
+    }
+}
+
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EMeshBufferType
 {
     None,
@@ -129,6 +150,7 @@ public enum EMeshBufferType
 }
 
 [Flags]
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EMeshFlags : uint
 {
     None = 0,

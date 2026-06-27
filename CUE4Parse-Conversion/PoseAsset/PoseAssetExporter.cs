@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using CUE4Parse_Conversion.PoseAsset.UEFormat;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Writers;
@@ -18,7 +16,7 @@ public class PoseAssetExporter : ExporterBase
             Log.Warning($"PoseAsset '{ExportName}' failed to convert");
             return;
         }
-        
+
         using var Ar = new FArchiveWriter();
         string ext;
         switch (Options.PoseFormat)
@@ -33,7 +31,7 @@ public class PoseAssetExporter : ExporterBase
 
         PoseAsset = new PoseAsset($"{GetExportSavePath()}.{ext}", Ar.GetBuffer());
     }
-    
+
     public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
     {
         throw new NotImplementedException();

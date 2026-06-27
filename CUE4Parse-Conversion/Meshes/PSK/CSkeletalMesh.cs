@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse.UE4.Objects.Core.Math;
+﻿using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {
@@ -8,7 +6,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
     {
         public readonly List<CSkelMeshLod> LODs = [];
         public readonly List<CSkelMeshBone> RefSkeleton = [];
-        
+
         public FBox BoundingBox;
         public FSphere BoundingSphere;
 
@@ -27,7 +25,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         {
             foreach (var lod in LODs)
                 lod.Dispose();
-            
+
             LODs.Clear();
             RefSkeleton.Clear();
         }

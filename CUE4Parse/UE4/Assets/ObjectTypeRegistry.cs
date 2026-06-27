@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Reflection;
 using CUE4Parse.UE4.Assets.Exports;
 

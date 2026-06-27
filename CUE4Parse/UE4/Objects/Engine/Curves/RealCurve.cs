@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Objects;
+﻿using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;

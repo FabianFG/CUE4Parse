@@ -1,4 +1,3 @@
-using System;
 
 namespace CUE4Parse.Utils
 {

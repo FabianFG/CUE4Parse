@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.UE4.AssetRegistry;
@@ -45,6 +42,7 @@ using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.Utils;
 using Fmod5Sharp.FmodTypes;
 using Newtonsoft.Json;
+
 #pragma warning disable CS8765
 
 namespace CUE4Parse;
@@ -3439,7 +3437,7 @@ public class FModConverter : JsonConverter<FModReader>
         writer.WriteEndObject();
     }
 
-    public override FModReader ReadJson(JsonReader reader, System.Type objectType, FModReader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override FModReader ReadJson(JsonReader reader, Type objectType, FModReader existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

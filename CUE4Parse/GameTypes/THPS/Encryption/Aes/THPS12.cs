@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.VirtualFileSystem;
 using static CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes.MarvelAes;
 

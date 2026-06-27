@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Utils;
@@ -53,8 +52,8 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Lerp<T>(T a, T b, float alpha) where T : 
-            IMultiplyOperators<T,float,T>, IMultiplyOperators<T,T,T>, 
+        public static T Lerp<T>(T a, T b, float alpha) where T :
+            IMultiplyOperators<T,float,T>, IMultiplyOperators<T,T,T>,
             ISubtractionOperators<T,T,T>, IAdditionOperators<T,T,T> // welp
         {
             return a + (b - a) * alpha;

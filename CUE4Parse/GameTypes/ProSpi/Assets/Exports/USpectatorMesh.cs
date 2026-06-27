@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.GameTypes.ProSpi.Assets.Exports;
 
+// Todo: not just UObject but custom mesh
 public class USpectatorMesh : UObject
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -15,4 +16,4 @@ public class USpectatorMesh : UObject
     {
         base.WriteJson(writer, serializer);
     }
-}
+};

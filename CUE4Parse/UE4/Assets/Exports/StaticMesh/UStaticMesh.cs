@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -103,6 +102,9 @@ public class UStaticMesh : UObject
                             Ar.SkipMultipleBulkArrayData(2);
                         break;
                     }
+                    case EGame.GAME_NeedForSpeedMobile:
+                        Ar.SkipMultipleBulkArrayData(4);
+                        break;
                     case EGame.GAME_HonorofKingsWorld:
                         Ar.SkipBulkArrayData();
                         break;

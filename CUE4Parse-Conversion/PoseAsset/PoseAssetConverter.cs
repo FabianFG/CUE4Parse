@@ -1,4 +1,3 @@
-using System.Linq;
 using CUE4Parse_Conversion.PoseAsset.Conversion;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 
@@ -11,19 +10,19 @@ public static class PoseAssetConverter
         convertedPoseAsset = new CPoseAsset();
 
         if (!poseAsset.bAdditivePose) return false;
-        
+
         var poseContainer = poseAsset.PoseContainer;
         var poseDatas = poseContainer.Poses;
         if (poseDatas is null || poseDatas.Length == 0) return false;
-        
+
         var poseNames = poseContainer.GetPoseNames().ToArray();
         if (poseNames.Length == 0) return false;
-        
+
         var boneTrackNames = poseContainer.Tracks;
         if (boneTrackNames.Length == 0) return false;
 
         convertedPoseAsset.CurveNames = [..poseAsset.PoseContainer.Curves.Select(curve => curve.CurveName.Text)];
-        
+
         // create initial poses
         for (var poseIndex = 0; poseIndex < poseDatas.Length; poseIndex++)
         {
@@ -34,7 +33,7 @@ public static class PoseAssetConverter
                 CurveData = poseData.CurveData
             });
         }
-        
+
         if (poseContainer.TrackPoseInfluenceIndices is { } trackBoneInfluences)
         {
             if (boneTrackNames.Length != trackBoneInfluences.Length) return false;
@@ -49,7 +48,7 @@ public static class PoseAssetConverter
                 {
                     var targetTransform = poseDatas[influence.PoseIndex].LocalSpacePose[influence.BoneTransformIndex];
                     if (!targetTransform.Rotation.IsNormalized) targetTransform.Rotation.Normalize();
-                    
+
                     var targetPose = convertedPoseAsset.Poses[influence.PoseIndex];
                     targetPose.Keys.Add(new CPoseKey(
                         boneName.Text,
@@ -81,7 +80,7 @@ public static class PoseAssetConverter
                 }
             }
         }
-        
+
         return true;
     }
 }

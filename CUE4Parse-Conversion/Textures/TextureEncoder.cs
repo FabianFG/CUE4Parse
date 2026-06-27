@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;

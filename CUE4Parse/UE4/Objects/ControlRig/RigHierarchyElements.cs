@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.ControlRig;
 using CUE4Parse.UE4.Assets.Exports.ControlRig.Rigs.Elements;
 using CUE4Parse.UE4.Objects.Core.Math;

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.GameTypes.MK1.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -329,6 +327,7 @@ public class FStaticLODModel
         var bInlined = Ar.ReadBoolean();
 
         RequiredBones = Ar.ReadArray<short>();
+        if (Ar.Game is EGame.GAME_NeedForSpeedMobile) Ar.Position += 4;
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
             Sections = new FSkelMeshSection[Ar.Read<int>()];
@@ -578,7 +577,7 @@ public class FStaticLODModel
 
     private void SerializeAvailabilityInfo(FArchive Ar, bool bAdjacencyData)
     {
-        var bytesToSkip = 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32 
+        var bytesToSkip = 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && bAdjacencyData)
             bytesToSkip += 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
 
@@ -590,6 +589,7 @@ public class FStaticLODModel
         Ar.Position += bytesToSkip;
 
         if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 4;
+        if (Ar.Game == EGame.GAME_NeedForSpeedMobile) Ar.Position += 32;
         if (HasClothData())
         {
             // FSkeletalMeshVertexClothBuffer::SerializeMetaData

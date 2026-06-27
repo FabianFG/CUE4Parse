@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 namespace CUE4Parse.UE4.Objects.Core.Math

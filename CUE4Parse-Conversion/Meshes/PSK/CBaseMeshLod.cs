@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse_Conversion.Materials;
+﻿using CUE4Parse_Conversion.Materials;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;

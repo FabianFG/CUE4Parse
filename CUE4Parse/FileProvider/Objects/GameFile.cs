@@ -1,10 +1,6 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Readers;

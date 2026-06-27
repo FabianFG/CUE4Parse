@@ -1,8 +1,4 @@
-using System;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers

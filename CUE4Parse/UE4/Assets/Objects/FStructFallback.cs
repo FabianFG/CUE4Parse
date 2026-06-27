@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;

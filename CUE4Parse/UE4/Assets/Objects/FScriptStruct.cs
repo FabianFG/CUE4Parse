@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.GameTypes._2XKO.Assets.Exports;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Brickadia.Objects;
@@ -101,6 +100,8 @@ public class FScriptStruct
             "PerPlatformInt" => type == ReadType.ZERO ? new FPerPlatformInt() : new FPerPlatformInt(Ar),
             "PerPlatformFrameRate" => type == ReadType.ZERO ? new FPerPlatformFrameRate() : new FPerPlatformFrameRate(Ar),
             "PerPlatformFString" => type == ReadType.ZERO ? new FPerPlatformFString() : new FPerPlatformFString(Ar),
+            "PerPlatformERigLogicFloatingPointType" => type == ReadType.ZERO ? new FPerPlatformERigLogicFloatingPointType() : new FPerPlatformERigLogicFloatingPointType(Ar),
+            "PerPlatformERigLogicCalculationType" => type == ReadType.ZERO ? new FPerPlatformERigLogicCalculationType() : new FPerPlatformERigLogicCalculationType(Ar),
             "PerQualityLevelInt" => type == ReadType.ZERO ? new FPerQualityLevelInt() : new FPerQualityLevelInt(Ar),
             "PerQualityLevelFloat" => type == ReadType.ZERO ? new FPerQualityLevelFloat() : new FPerQualityLevelFloat(Ar),
             "PannerDetails" => new FPannerDetails(Ar),
@@ -220,6 +221,7 @@ public class FScriptStruct
             "ConnectivityCube" => new FConnectivityCube(Ar),
             "FortActorRecord" => new FFortActorRecord(Ar),
             "GameplayEventFunction" => new FGameplayEventFunction(Ar),
+            "GameplayEventDescriptor" => new FGameplayEventDescriptor(Ar),
 
             // Train Sim World
             "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),

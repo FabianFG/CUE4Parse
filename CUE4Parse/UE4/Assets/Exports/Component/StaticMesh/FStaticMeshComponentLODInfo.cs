@@ -74,12 +74,15 @@ public class FStaticMeshComponentLODInfo
             }
             else
             {
-                MapBuildDataId = Ar.Read<FGuid>();
-            }
-
-            if (Ar.Game >= EGame.GAME_UE5_5)
-            {
-                OriginalMapBuildDataId = Ar.Read<FGuid>();
+                if (Ar.Game >= EGame.GAME_UE5_5)
+                {
+                    if (Ar.IsLoadingFromCookedPackage) MapBuildDataId = Ar.Read<FGuid>();
+                    OriginalMapBuildDataId = Ar.Read<FGuid>();
+                }
+                else
+                {
+                    MapBuildDataId = Ar.Read<FGuid>();
+                }
             }
         }
 

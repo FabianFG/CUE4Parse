@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.GameTypes.DaysGone.Assets;
 using CUE4Parse.GameTypes.SOD2.Assets;

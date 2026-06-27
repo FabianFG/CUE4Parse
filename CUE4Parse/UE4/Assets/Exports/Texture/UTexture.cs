@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Material;

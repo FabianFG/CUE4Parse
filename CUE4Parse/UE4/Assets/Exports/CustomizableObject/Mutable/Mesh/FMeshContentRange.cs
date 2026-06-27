@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -10,8 +9,8 @@ public struct FMeshContentRange
 {
     private const int FirstIndexMaxBits   = 24;
     private const int ContentFlagsMaxBits = 32 - FirstIndexMaxBits;
-    private const int FirstIndexBitMask   = (1 << FirstIndexMaxBits) - 1; 
-        
+    private const int FirstIndexBitMask   = (1 << FirstIndexMaxBits) - 1;
+
     private uint FirstIndex_ContentFlags;
     public uint MeshIDPrefix;
 

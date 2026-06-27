@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
@@ -53,6 +52,7 @@ public class UScriptSet
                 EGame.GAME_HonorofKingsWorld when tagData.Name is "WaterPhysicalMaterials" => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_HonorofKingsWorld when tagData.Name is "InstanceIdsNotToHide" => new FPropertyTagData("Guid"),
                 EGame.GAME_ChasingKaleidoRIDER when tagData.Name is "DialogueEntityInstances" => new FPropertyTagData("Guid"),
+                EGame.GAME_NeedForSpeedMobile when tagData.Name is "ReferencedAssetsPath" or "ReferencedMeshMergeAssets" => new FPropertyTagData("SoftObjectPath"),
                 EGame.GAME_DuneAwakening => DAStructs.ResolveSetPropertyInnerTypeData(tagData),
                 _ => tagData.InnerTypeData
             };

@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects.Properties;
 using CUE4Parse.GameTypes.FN.Assets.Exports;
@@ -85,10 +83,28 @@ public abstract class FPropertyTagType
                 var idx = Array.FindIndex(values, it => it == search);
                 return idx == -1 ? null : type.GetEnumValues().GetValue(idx);
             //TODO There are also Enums stored as ByteProperty but UModel uses them nowhere besides in UE2
-            //TODO Maybe Maps?
+            case FPropertyTagType<UScriptMap> mapProp when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>):
+                return CreateDictionary(type, mapProp.Value!.Properties);
             default:
                 return null;
         }
+    }
+
+    private IDictionary CreateDictionary(Type type, Dictionary<FPropertyTagType, FPropertyTagType?> properties)
+    {
+        var typeArgs = type.GetGenericArguments();
+        var keyType = typeArgs[0];
+        var valueType = typeArgs[1];
+        var dictType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
+        var result = (IDictionary) Activator.CreateInstance(dictType, properties.Count)!;
+        foreach (var kv in properties)
+        {
+            var key = kv.Key.GetValue(keyType);
+            if (key == null) continue;
+            var value = kv.Value?.GetValue(valueType);
+            result[key] = value;
+        }
+        return result;
     }
 
     private Array CreateArray(Type type, List<FPropertyTagType> properties)
@@ -168,8 +184,9 @@ public abstract class FPropertyTagType
             "UInt64Property" => new UInt64Property(Ar, type),
             "WeakObjectProperty" => new WeakObjectProperty(Ar, type),
             "OptionalProperty" => new OptionalProperty(Ar, tagData, type),
+            "ReferenceProperty" => new SoftObjectProperty(Ar, type),
             "VerseStringProperty" => new VerseStringProperty(Ar, type),
-            "VerseFunctionProperty" => new ObjectProperty(Ar, type),
+            "VerseFunctionProperty" => new DelegateProperty(Ar, type),
             "VerseDynamicProperty" => new ObjectProperty(Ar, type), // idk, but for now read as ObjectProperty
             "VerseClassProperty" => new VerseClassProperty(Ar, type),
 
