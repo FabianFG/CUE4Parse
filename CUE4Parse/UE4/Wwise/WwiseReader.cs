@@ -85,6 +85,11 @@ public class WwiseReader
                         var bank = new WwiseReader(Ar, _source, entry.Size) { Path = entry.AudioPath };
                         LoadedSize += bank.LoadedSize;
                         AKPKBankEntries.Add(bank);
+
+                        foreach (var embeddedWem in bank.WwiseEncodedMedias)
+                        {
+                            WwiseEncodedMedias[embeddedWem.Key] = embeddedWem.Value;
+                        }
                     }
 
                     foreach (var entry in AKPKWemEntries)
