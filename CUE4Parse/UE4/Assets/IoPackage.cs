@@ -372,6 +372,7 @@ public sealed class IoPackage : AbstractUePackage
 
     private FPackageId[] LoadGraphData(FArchive Ar)
     {
+        if (Ar.Game is EGame.GAME_NeedForSpeedMobile && Ar.ReadBoolean()) Ar.Position += 8;
         var packageCount = Ar.Read<int>();
         if (packageCount == 0) return [];
 
