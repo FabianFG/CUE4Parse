@@ -21,8 +21,9 @@ public class HierarchyMusicTrack : AbstractHierarchy
     public readonly int LookAheadTime;
 
     // CAkMusicTrack::SetInitialValues
-    public HierarchyMusicTrack(FWwiseArchive Ar) : base(Ar)
+    public HierarchyMusicTrack(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         if (Ar.Version > 89 && Ar.Version <= 112)
         {
             MusicFlags = Ar.Read<EMusicFlags>();
@@ -60,7 +61,6 @@ public class HierarchyMusicTrack : AbstractHierarchy
             ClipAutomations = Ar.ReadArray(() => new AkClipAutomation(Ar));
         }
 
-        Ar.Position -= 4; // Step back so AbstractHierarchy starts reading correctly, since ID is read twice
         BaseParams = new BaseHierarchy(Ar);
 
         if (Ar.Version <= 56)

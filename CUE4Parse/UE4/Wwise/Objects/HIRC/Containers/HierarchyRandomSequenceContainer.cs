@@ -4,8 +4,9 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 
-public class HierarchyRandomSequenceContainer : BaseHierarchy
+public class HierarchyRandomSequenceContainer : AbstractHierarchy
 {
+    public readonly BaseHierarchy BaseParams;
     public readonly ushort LoopCount;
     public readonly ushort? LoopModMin;
     public readonly ushort? LoopModMax;
@@ -21,8 +22,10 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     public readonly AkPlayListItem[] Playlist;
 
     // CAkRanSeqCntr::SetInitialValues
-    public HierarchyRandomSequenceContainer(FWwiseArchive Ar) : base(Ar)
+    public HierarchyRandomSequenceContainer(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
+        BaseParams = new BaseHierarchy(Ar);
         LoopCount = Ar.Read<ushort>();
 
         if (Ar.Version > 72)
@@ -66,7 +69,10 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     {
         writer.WriteStartObject();
 
-        base.WriteJson(writer, serializer);
+        writer.WritePropertyName(nameof(BaseParams));
+        writer.WriteStartObject();
+        BaseParams.WriteJson(writer, serializer);
+        writer.WriteEndObject();
 
         writer.WritePropertyName(nameof(LoopCount));
         writer.WriteValue(LoopCount);

@@ -31,7 +31,7 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly AkRtpc[] RtpcList;
 
     // CAkParameterNodeBase::SetNodeBaseParams
-    public BaseHierarchy(FWwiseArchive Ar) : base(Ar)
+    public BaseHierarchy(FWwiseArchive Ar) : base()
     {
         OverrideFx = Ar.Read<byte>() != 0;
         FxParams = new AkFxParams(Ar);

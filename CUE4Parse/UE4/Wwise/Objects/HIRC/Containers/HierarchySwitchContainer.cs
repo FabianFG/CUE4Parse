@@ -4,8 +4,9 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 
 // CAkSwitchCntr
-public class HierarchySwitchContainer : BaseHierarchy
+public class HierarchySwitchContainer : AbstractHierarchy
 {
+    public readonly BaseHierarchy BaseParams;
     public readonly EAkGroupType GroupType;
     public readonly uint GroupId;
     public readonly uint DefaultSwitch;
@@ -15,8 +16,10 @@ public class HierarchySwitchContainer : BaseHierarchy
     public readonly AkSwitchParams[] SwitchParams;
 
     // CAkSwitchCntr::SetInitialValues
-    public HierarchySwitchContainer(FWwiseArchive Ar) : base(Ar)
+    public HierarchySwitchContainer(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
+        BaseParams = new BaseHierarchy(Ar);
         GroupType = Ar.Read<EAkGroupType>();
         GroupId = Ar.Read<uint>();
         DefaultSwitch = Ar.Read<uint>();
@@ -30,7 +33,10 @@ public class HierarchySwitchContainer : BaseHierarchy
     {
         writer.WriteStartObject();
 
-        base.WriteJson(writer, serializer);
+        writer.WritePropertyName(nameof(BaseParams));
+        writer.WriteStartObject();
+        BaseParams.WriteJson(writer, serializer);
+        writer.WriteEndObject();
 
         writer.WritePropertyName(nameof(GroupType));
         writer.WriteValue(GroupType);

@@ -7,8 +7,9 @@ public class HierarchySidechainMix : AbstractHierarchy
     public readonly AkChannelConfig ChannelConfig;
 
     // CAkSidechainMixIndexable::SetInitialValues
-    public HierarchySidechainMix(FWwiseArchive Ar) : base(Ar)
+    public HierarchySidechainMix(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         ChannelConfig = new AkChannelConfig(Ar);
     }
 

@@ -25,8 +25,9 @@ public class BaseHierarchyBus : AbstractHierarchy
     public readonly AkStateGroup[] StateGroups;
 
     // CAkBus::SetInitialValues
-    public BaseHierarchyBus(FWwiseArchive Ar) : base(Ar)
+    public BaseHierarchyBus(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         OverrideBusId = Ar.Read<uint>();
         if (Ar.Version > 126 && OverrideBusId == 0)
         {

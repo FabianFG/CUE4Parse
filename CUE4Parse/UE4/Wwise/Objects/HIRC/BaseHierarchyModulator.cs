@@ -10,8 +10,9 @@ public class BaseHierarchyModulator : AbstractHierarchy
     public readonly AkRtpc[] RtpcCurves;
 
     // CAkModulator::SetInitialValues
-    public BaseHierarchyModulator(FWwiseArchive Ar) : base(Ar)
+    public BaseHierarchyModulator(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         Props = AkPropBundle.ReadSequentialAkProp(Ar);
         PropRanges = AkPropBundle.ReadSequentialAkPropRange(Ar);
         RtpcCurves = AkRtpc.ReadArray(Ar);
