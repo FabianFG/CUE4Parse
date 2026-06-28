@@ -408,7 +408,7 @@ public class FLegacyLightMap1D : FLightMap
     {
         new FPackageIndex(Ar); // Owner
         new FIntBulkData(Ar); // DirectionalSamples
-        if (Ar.Ver <= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128 && Ar.Game is not EGame.GAME_RocketLeague)
+        if (Ar.Ver <= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128)
         {
             for (int elementIndex = 0; elementIndex < 3; elementIndex++)
             {

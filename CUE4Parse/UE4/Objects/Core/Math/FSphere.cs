@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
