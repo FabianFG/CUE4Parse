@@ -101,6 +101,7 @@ public class WwiseReader
                     Header = new AkBankHeader(Ar, sectionLength);
 
                     Ar.Version = Header.Version;
+                    Ar.HasFeedback = Header.FeedbackInBank;
 
                     if (!Ar.IsSupported())
                         Log.Warning($"Wwise version {Ar.Version} is not supported");

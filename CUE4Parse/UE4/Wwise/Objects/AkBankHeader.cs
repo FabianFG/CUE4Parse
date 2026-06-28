@@ -13,7 +13,7 @@ public readonly struct AkBankHeader
     public readonly uint SoundBankId;
     public readonly uint LanguageId;
     public readonly bool FeedbackInBank;
-    public readonly EAltValues AltValues;
+    public readonly EAltValuesFlags AltValues;
     public readonly uint ProjectId;
     public readonly EAkBankTypeEnum SoundBankType;
     public readonly byte[] BankHash = [];
@@ -41,11 +41,11 @@ public readonly struct AkBankHeader
         }
         else if (Version <= 134)
         {
-            AltValues = Ar.Read<EAltValues>();
+            AltValues = Ar.Read<EAltValuesFlags>();
         }
         else
         {
-            AltValues = Ar.Read<EAltValues>();
+            AltValues = Ar.Read<EAltValuesFlags>();
         }
 
         if (Version > 76)

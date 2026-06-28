@@ -24,13 +24,14 @@ public class HierarchyMusicTrack : AbstractHierarchy
     public HierarchyMusicTrack(FWwiseArchive Ar) : base()
     {
         Id = Ar.Read<uint>();
-        if (Ar.Version > 89 && Ar.Version <= 112)
+        switch (Ar.Version)
         {
-            MusicFlags = Ar.Read<EMusicFlags>();
-        }
-        else if (Ar.Version <= 152)
-        {
-            MusicFlags = Ar.Read<EMusicFlags>();
+            case > 89 and <= 112:
+                MusicFlags = Ar.Read<EMusicFlags>();
+                break;
+            case > 112 and <= 152:
+                MusicFlags = Ar.Read<EMusicFlags>();
+                break;
         }
 
         var numSources = (int)Ar.Read<uint>();

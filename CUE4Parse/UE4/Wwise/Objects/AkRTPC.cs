@@ -43,7 +43,7 @@ public readonly struct AkRtpc
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkRtpcAccum RtpcAccum;
     //AkRTPC_ParameterID
-    public readonly int ParamId;
+    public readonly uint ParamId;
     public readonly uint RtpcCurveId;
     public readonly CAkConversionTable ConversionTable;
 
@@ -59,9 +59,9 @@ public readonly struct AkRtpc
 
         ParamId = Ar.Version switch
         {
-            <= 89 => Ar.Read<int>(),
+            <= 89 => Ar.Read<uint>(),
             <= 113 => Ar.Read<byte>(),
-            _ => Ar.Read7BitEncodedIntBE()
+            _ => (uint) Ar.Read7BitEncodedIntBE()
         };
 
         RtpcCurveId = Ar.Read<uint>();

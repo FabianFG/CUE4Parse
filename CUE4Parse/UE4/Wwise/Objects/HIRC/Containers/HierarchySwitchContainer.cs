@@ -20,7 +20,14 @@ public class HierarchySwitchContainer : AbstractHierarchy
     {
         Id = Ar.Read<uint>();
         BaseParams = new BaseHierarchy(Ar);
-        GroupType = Ar.Read<EAkGroupType>();
+        if (Ar.Version <= 89)
+        {
+            GroupType = (EAkGroupType) Ar.Read<uint>();
+        }
+        else
+        {
+            GroupType = Ar.Read<EAkGroupType>();
+        }
         GroupId = Ar.Read<uint>();
         DefaultSwitch = Ar.Read<uint>();
         IsContinuousValidation = Ar.Read<byte>() is not 0;

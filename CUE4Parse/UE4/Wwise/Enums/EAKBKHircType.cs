@@ -25,7 +25,11 @@ public enum EAKBKHircType : byte
     Envelope,
     AudioDevice,
     TimeMod,
-    SidechainMix // >= 168
+    SidechainMix, // >= 168
+
+    // Legacy hierarchies
+    FeedbackBus = 0x80,
+    FeedbackNode = 0x81
 }
 
 // Versions <= 125
@@ -89,6 +93,8 @@ public static class EHierarchyObjectTypeExtensions
             EAKBKHircType_v125.MusicRandomSequenceContainer => EAKBKHircType.MusicRandomSequenceContainer,
             EAKBKHircType_v125.Attenuation => EAKBKHircType.Attenuation,
             EAKBKHircType_v125.DialogueEvent => EAKBKHircType.DialogueEvent,
+            EAKBKHircType_v125.FeedbackBus => EAKBKHircType.FeedbackBus,
+            EAKBKHircType_v125.FeedbackNode => EAKBKHircType.FeedbackNode,
             EAKBKHircType_v125.FxShareSet => EAKBKHircType.FxShareSet,
             EAKBKHircType_v125.FxCustom => EAKBKHircType.FxCustom,
             EAKBKHircType_v125.AuxiliaryBus => EAKBKHircType.AuxiliaryBus,

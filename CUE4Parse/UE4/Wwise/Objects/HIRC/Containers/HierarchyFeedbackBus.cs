@@ -2,8 +2,8 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 
-// CAkBankMgr::ReadBus
-public class HierarchyAudioBus(FWwiseArchive Ar) : BaseHierarchyBus(Ar)
+// Legacy HIRC <= 125
+public class HierarchyFeedbackBus(FWwiseArchive Ar) : BaseHierarchyBus(Ar)
 {
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {

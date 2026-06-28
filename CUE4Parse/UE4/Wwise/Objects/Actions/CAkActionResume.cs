@@ -8,7 +8,7 @@ public class CAkActionResume
 {
     public readonly CAkActionParams ActionParams;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly EResumeOptions ResumeOptions;
+    public readonly EResumeOptionsFlags ResumeOptions;
     public readonly CAkActionExcept ExceptParams;
 
     // CAkActionResume::SetActionActiveParams
@@ -26,7 +26,7 @@ public class CAkActionResume
         }
         else
         {
-            ResumeOptions = Ar.Read<EResumeOptions>();
+            ResumeOptions = Ar.Read<EResumeOptionsFlags>();
         }
 
         ExceptParams = new CAkActionExcept(Ar);

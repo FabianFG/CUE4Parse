@@ -12,6 +12,11 @@ public sealed class FWwiseArchive(FArchive archive) : FArchive(archive.Versions)
     /// </summary>
     public uint Version;
 
+    /// <summary>
+    /// Read from BankHeader section of the .bnk file
+    /// </summary>
+    public bool HasFeedback;
+
     public FWwiseArchive(string name, byte[] data, VersionContainer? versions = null) : this(new FByteArchive(name, data, versions)) { }
 
     public override int Read(byte[] buffer, int offset, int count) => archive.Read(buffer, offset, count);
