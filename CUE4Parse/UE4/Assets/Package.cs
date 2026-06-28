@@ -75,6 +75,15 @@ namespace CUE4Parse.UE4.Assets
             }
             else uassetAr = new FAssetArchive(uasset, this);
 
+            // The package has been stored in a separate endianness than the linker expected so we need to force
+            // endian conversion. Latent handling allows the PC version to retrieve information about cooked packages.
+            var Tag = uassetAr.Read<uint>();
+            if (Tag == FPackageFileSummary.PACKAGE_FILE_TAG_SWAPPED)
+            {
+                uassetAr = new FAssetArchive(new FArchiveBigEndian(uasset), this);
+            }
+            uassetAr.Position -= 4;
+            
             Summary = new FPackageFileSummary(uassetAr);
 
             uassetAr.SeekAbsolute(Summary.NameOffset, SeekOrigin.Begin);
