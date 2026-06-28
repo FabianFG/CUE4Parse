@@ -12,8 +12,9 @@ public class HierarchyAttenuation : AbstractHierarchy
     public readonly AkRtpc[] RTPCs;
 
     // CAkAttenuation::SetInitialValues
-    public HierarchyAttenuation(FWwiseArchive Ar) : base(Ar)
+    public HierarchyAttenuation(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         if (Ar.Version > 136)
         {
             IsHeightSpreadEnabled = Ar.Read<byte>() != 0;

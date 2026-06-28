@@ -132,6 +132,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             }
 
             if (Ar.Game is EGame.GAME_AssaultFireFuture) Ar.SkipBulkArrayData();
+            if (Ar.Game is EGame.GAME_NeedForSpeedMobile) Ar.SkipMultipleBulkArrayData(2);
 
             var renderDataSizeBytes = Ar.Read<ulong>();
             Ar.Position += (long) renderDataSizeBytes;

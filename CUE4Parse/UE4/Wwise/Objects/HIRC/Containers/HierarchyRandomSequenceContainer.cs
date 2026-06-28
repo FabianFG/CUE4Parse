@@ -1,11 +1,13 @@
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
+using OggVorbisEncoder.Setup;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 
-public class HierarchyRandomSequenceContainer : BaseHierarchy
+public class HierarchyRandomSequenceContainer : AbstractHierarchy
 {
+    public readonly BaseHierarchy BaseParams;
     public readonly ushort LoopCount;
     public readonly ushort? LoopModMin;
     public readonly ushort? LoopModMax;
@@ -21,8 +23,10 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     public readonly AkPlayListItem[] Playlist;
 
     // CAkRanSeqCntr::SetInitialValues
-    public HierarchyRandomSequenceContainer(FWwiseArchive Ar) : base(Ar)
+    public HierarchyRandomSequenceContainer(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
+        BaseParams = new BaseHierarchy(Ar);
         LoopCount = Ar.Read<ushort>();
 
         if (Ar.Version > 72)
@@ -53,7 +57,28 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
             Mode = Ar.Read<EAkContainerMode>();
         }
 
-        if (Ar.Version > 89)
+        if (Ar.Version <= 89)
+        {
+            var isUsingWeight = Ar.Read<byte>() != 0;
+            var resetPlayListAtEachPlay = Ar.Read<byte>() != 0;
+            var isRestartBackward = Ar.Read<byte>() != 0;
+            var isContinuous = Ar.Read<byte>() != 0;
+            var isGlobal = Ar.Read<byte>() != 0;
+
+            PlaylistFlags = EPlayListFlags.None;
+
+            if (isUsingWeight)
+                PlaylistFlags |= EPlayListFlags.IsUsingWeight;
+            if (resetPlayListAtEachPlay)
+                PlaylistFlags |= EPlayListFlags.ResetPlayListAtEachPlay;
+            if (isRestartBackward)
+                PlaylistFlags |= EPlayListFlags.IsRestartBackward;
+            if (isContinuous)
+                PlaylistFlags |= EPlayListFlags.IsContinuous;
+            if (isGlobal)
+                PlaylistFlags |= EPlayListFlags.IsGlobal;
+        }
+        else
         {
             PlaylistFlags = Ar.Read<EPlayListFlags>();
         }
@@ -66,7 +91,10 @@ public class HierarchyRandomSequenceContainer : BaseHierarchy
     {
         writer.WriteStartObject();
 
-        base.WriteJson(writer, serializer);
+        writer.WritePropertyName(nameof(BaseParams));
+        writer.WriteStartObject();
+        BaseParams.WriteJson(writer, serializer);
+        writer.WriteEndObject();
 
         writer.WritePropertyName(nameof(LoopCount));
         writer.WriteValue(LoopCount);

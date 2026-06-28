@@ -13,8 +13,9 @@ public class HierarchyDialogueEvent : AbstractHierarchy
     public readonly AkPropBundle PropBundle;
 
     // CAkDialogueEvent::SetInitialValues
-    public HierarchyDialogueEvent(FWwiseArchive Ar) : base(Ar)
+    public HierarchyDialogueEvent(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         if (Ar.Version > 72)
             Probability = Ar.Read<byte>();
 

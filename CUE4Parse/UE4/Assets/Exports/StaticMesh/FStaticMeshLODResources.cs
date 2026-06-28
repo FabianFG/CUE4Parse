@@ -161,7 +161,12 @@ public class FStaticMeshLODResources
             // uint32 ReversedIBsSize       = 0;
             Ar.Position += 12;
 
-            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders or EGame.GAME_NeedForSpeedMobile) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_NeedForSpeedMobile && Ar.ReadBoolean())
+            {
+                Ar.Position += 4;
+                Ar.SkipMultipleFixedArrays(2, 4);
+            }
         }
     }
 

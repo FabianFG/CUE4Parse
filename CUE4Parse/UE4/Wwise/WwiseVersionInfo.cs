@@ -6,6 +6,7 @@ public static class WwiseVersionInfo
     // Should be noted that Wwise added support for Unreal Engine around version 100, so we can safely ignore older ones
     public static readonly uint[] SupportedVersions =
     [
+        65,     // Dishonored 1
         88,     // Assasin Creed Unity
         112,    // Dead by Daylight (old)
         113,    // Dead by Daylight (old), Styx: Shards of Drakness, Abzu

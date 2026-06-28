@@ -15,12 +15,16 @@ public class HierarchyEventAction : AbstractHierarchy
     public readonly AkPropBundle PropBundle;
     public readonly object? ActionData;
 
-    public HierarchyEventAction(FWwiseArchive Ar) : base(Ar)
+    public HierarchyEventAction(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         EventActionScope = Ar.Read<EAkActionScope>();
         EventActionType = Ar.Read<EAkActionType>();
         ReferencedId = Ar.Read<uint>();
-        IsBus = Ar.Read<byte>();
+        if (Ar.Version > 65)
+        {
+            IsBus = Ar.Read<byte>();
+        }
 
         PropBundle = new AkPropBundle(Ar);
 

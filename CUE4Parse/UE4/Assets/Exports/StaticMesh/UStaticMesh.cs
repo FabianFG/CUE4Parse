@@ -103,7 +103,13 @@ public class UStaticMesh : UObject
                         break;
                     }
                     case EGame.GAME_NeedForSpeedMobile:
-                        Ar.SkipMultipleBulkArrayData(4);
+                        Ar.SkipMultipleBulkArrayData(3);
+                        Ar.Position += 4;
+                        if (Ar.ReadBoolean())
+                        {
+                            Ar.Position += 4;
+                            Ar.SkipMultipleFixedArrays(2, 4);
+                        }
                         break;
                     case EGame.GAME_HonorofKingsWorld:
                         Ar.SkipBulkArrayData();
