@@ -21,7 +21,10 @@ public class HierarchyEventAction : AbstractHierarchy
         EventActionScope = Ar.Read<EAkActionScope>();
         EventActionType = Ar.Read<EAkActionType>();
         ReferencedId = Ar.Read<uint>();
-        IsBus = Ar.Read<byte>();
+        if (Ar.Version > 65)
+        {
+            IsBus = Ar.Read<byte>();
+        }
 
         PropBundle = new AkPropBundle(Ar);
 
