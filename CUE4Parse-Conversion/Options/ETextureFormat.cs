@@ -10,8 +10,6 @@ public enum ETextureFormat
     Jpeg,
     [Description("TGA")]
     Tga,
-    [Description("DDS (Not Implemented)")]
-    Dds,
     [Description("WebP")]
     Webp,
 }
