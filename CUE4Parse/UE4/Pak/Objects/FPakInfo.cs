@@ -246,6 +246,15 @@ public partial class FPakInfo
 
         afterMagic:
         Version = hottaVersion >= 2 ? (EPakFileVersion) (Ar.Read<int>() ^ 2) : Ar.Read<EPakFileVersion>();
+        if (Ar.Game == EGame.GAME_LordOfMysteries && ((uint) Version & 0x80000000) != 0)
+        {
+            Version = (EPakFileVersion) ((uint) Version & 0x7FFFFFFF);
+            IndexHash = new FSHAHash(Ar);
+            IndexOffset = Ar.Read<long>();
+            IndexSize = Ar.Read<long>() >> 1;
+            goto beforeCompression;
+        }
+        
         if (Ar.Game == EGame.GAME_StateOfDecay2)
         {
             // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
