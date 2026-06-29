@@ -20,7 +20,7 @@ public class HierarchyLayerContainer : AbstractHierarchy
 
         if (Ar.Version > 118)
         {
-            IsContinuousValidation = Ar.Read<byte>() is not 0;
+            IsContinuousValidation = Ar.ReadBool();
         }
     }
 

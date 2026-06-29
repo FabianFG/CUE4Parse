@@ -21,31 +21,24 @@ public readonly struct AkBankHeader
     // CAkBankMgr::ProcessBankHeader
     public AkBankHeader(FWwiseArchive Ar, int sectionLength)
     {
-        Version = Ar.Read<uint>(); // If version is less than 26 there's two params before this read, support for versions < 100 isn't needed anyway
+        Version = Ar.Read<uint>(); // If version is less than 26 there's two params before this read
         SoundBankId = Ar.Read<uint>();
         LanguageId = Ar.Read<uint>();
 
-        FeedbackInBank = false;
-        AltValues = 0;
-        ProjectId = 0;
-        SoundBankType = 0;
-        BankHash = [];
-
-        if (Version <= 26)
+        switch (Version)
         {
-            Ar.Read<ulong>(); // timestamp
-        }
-        else if (Version <= 126)
-        {
-            FeedbackInBank = (Ar.Read<uint>() & 1) != 0;
-        }
-        else if (Version <= 134)
-        {
-            AltValues = Ar.Read<EAltValuesFlags>();
-        }
-        else
-        {
-            AltValues = Ar.Read<EAltValuesFlags>();
+            case <= 26:
+                Ar.Read<ulong>(); // timestamp
+                break;
+            case <= 126:
+                FeedbackInBank = (Ar.Read<uint>() & 1) != 0;
+                break;
+            case <= 134:
+                AltValues = Ar.Read<EAltValuesFlags>();
+                break;
+            default:
+                AltValues = Ar.Read<EAltValuesFlags>();
+                break;
         }
 
         if (Version > 76)
