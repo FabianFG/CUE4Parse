@@ -401,40 +401,39 @@ public class FLightMap(FAssetArchive Ar)
 
 public class FLegacyLightMap1D : FLightMap
 {
-    private int NUM_DIRECTIONAL_LIGHTMAP_COEF = 2;
-    private int NUM_GATHERED_LIGHTMAP_COEF = 4;
-    
+    public FPackageIndex Owner;
+
     public FLegacyLightMap1D(FAssetArchive Ar) : base(Ar)
     {
-        new FPackageIndex(Ar); // Owner
-        new FIntBulkData(Ar); // DirectionalSamples
-        if (Ar.Ver <= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128)
-        {
-            for (int elementIndex = 0; elementIndex < 3; elementIndex++)
-            {
-                Ar.Read<FVector>();
-            }
-        }
-        else if (Ar.Ver < EUnrealEngineObjectUE3Version.MAXCOMPONENT_LIGHTMAP_ENCODING)
-        {
-            for (int elementIndex = 0; elementIndex < 4; elementIndex++)
-            {
-                Ar.Read<FVector>();
-            }
-        }
-        else
-        {
-            for (int elementIndex = 0; elementIndex < 3; elementIndex++)
-            {
-                Ar.Read<FVector>();
-            }
-        }
+        Owner = new FPackageIndex(Ar);
+        if (Ar.Game < EGame.GAME_UE4_0)
+            new FIntBulkData(Ar);
+        else    
+            new FQuantizedDirectionalLightSample(Ar); // DirectionalSamples
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SIMPLE_LIGHTING)
+        int skipNum;
+        if (Ar.Ver <= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128)
+            skipNum = 3;
+        else if (Ar.Ver < EUnrealEngineObjectUE3Version.MAXCOMPONENT_LIGHTMAP_ENCODING)
+            skipNum = 4;
+        else if (Ar.Ver < EUnrealEngineObjectUE4Version.SH_LIGHTMAPS)
+            skipNum = 3;
+        else
+            skipNum = 5;
+
+        Ar.Position += skipNum * sizeof(float) * 3; // FVector[]
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SIMPLE_LIGHTING && Ar.Ver < EUnrealEngineObjectUE4Version.SH_LIGHTMAPS)
         {
             new FIntBulkData(Ar); // SimpleSamples
         }
+        else if (Ar.Ver >= EUnrealEngineObjectUE4Version.SH_LIGHTMAPS)
+        {
+            new FQuantizedDirectionalLightSample(Ar); // basically the same FColor Coefficients[2]
+        }
     }
+
+    public class FQuantizedDirectionalLightSample(FAssetArchive Ar) : TBulkData<TIntVector2<FColor>>(Ar);
 }
 
 [JsonConverter(typeof(FLightMap2DConverter))]
