@@ -121,11 +121,12 @@ public class FText : IUStruct
     {
         if (Ar.Ver < EUnrealEngineObjectUE4Version.FTEXT_HISTORY)
         {
-            Ar.ReadFString(); // SourceStringToImplantIntoHistory
+            var SourceStringToImplantIntoHistory = Ar.ReadFString(); // 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADDED_NAMESPACE_AND_KEY_DATA_TO_FTEXT)
             {
-                Ar.ReadFString(); // Namespace
-                Ar.ReadFString(); // Key
+                var @namespace = Ar.ReadFString();
+                var key = Ar.ReadFString();
+                TextHistory = new FTextHistory.Base(@namespace, key, SourceStringToImplantIntoHistory);
             }
         }
 
