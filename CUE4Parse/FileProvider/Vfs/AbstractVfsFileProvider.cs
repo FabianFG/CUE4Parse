@@ -139,6 +139,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 switch (archive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
+                    case "UPAK" when archive.Game is EGame.GAME_LordOfMysteries:
                         reader = new PakFileReader(archive);
                         break;
                     case "UTOC":
@@ -173,6 +174,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 switch (pakOrUtocArchive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
+                    case "UPAK" when pakOrUtocArchive.Game is EGame.GAME_LordOfMysteries:
                         reader = new PakFileReader(pakOrUtocArchive);
                         break;
                     case "UTOC":
@@ -205,6 +207,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 switch (pakOrUtocArchive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
+                    case "UPAK" when pakOrUtocArchive.Game is EGame.GAME_LordOfMysteries:
                         reader = new PakFileReader(pakOrUtocArchive);
                         break;
                     case "UTOC":
