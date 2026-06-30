@@ -102,7 +102,7 @@ public class FPositionVertexBuffer
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
 
-        if (Ar.Game is EGame.GAME_Valorant_PRE_11_2 or EGame.GAME_NeedForSpeedMobile or EGame.GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is EGame.GAME_Valorant_PRE_11_2 or EGame.GAME_NeedForSpeedMobile || (Ar.Game is EGame.GAME_ArenaBreakoutInfinite && Stride == 8))
         {
             bool bUseFullPrecisionPositions = Ar.Game is EGame.GAME_ArenaBreakoutInfinite ? false : Ar.ReadBoolean();
             var bounds = new FBoxSphereBounds(Ar);
