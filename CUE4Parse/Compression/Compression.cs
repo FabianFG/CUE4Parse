@@ -9,6 +9,7 @@ using OodleDotNet;
 
 using OodleSharp;
 
+using SharpLzo;
 using ZlibngDotNet;
 
 using ZstdSharpMethods = ZstdSharp.Unsafe.Methods;
@@ -42,6 +43,11 @@ public static class Compression
                 return true;
             }
         }, replace: true)
+        .Add(CompressionAlgorithm.LZO, static (source, destination, out written) =>
+        {
+            var result = Lzo.TryDecompress(source, source.Length, destination, out written);
+            return result == LzoResult.OK;
+        })
         .Build();
 
     public static void UseNativeOodle(Oodle oodle)
@@ -94,6 +100,7 @@ public static class Compression
             CompressionMethod.Gzip => CompressionAlgorithm.Gzip,
             CompressionMethod.Oodle => CompressionAlgorithm.Oodle,
             CompressionMethod.LZ4 => CompressionAlgorithm.LZ4,
+            CompressionMethod.LZO => CompressionAlgorithm.LZO,
             CompressionMethod.Brotli => CompressionAlgorithm.Brotli,
             CompressionMethod.Zstd => CompressionAlgorithm.Zstd,
             _ when reader is not null => throw new UnknownCompressionMethodException(reader, $"Compression method \"{method}\" is unknown"),
