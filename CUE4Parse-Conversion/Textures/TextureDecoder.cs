@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Runtime.InteropServices;
 using AssetRipper.TextureDecoder.Bc;
+using AssetRipper.TextureDecoder.Pvrtc;
 using AssetRipper.TextureDecoder.Rgb.Formats;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
@@ -425,6 +426,17 @@ public static class TextureDecoder
             case EPixelFormat.PF_ETC2_RGBA:
                 data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
                 colorType = EPixelFormat.PF_B8G8R8A8;
+                break;
+
+            // Uses AssetRipper since depth data doesn't exist
+            // If this format is used in any UE4/UE5, then switch to the different decoder
+            case EPixelFormat.PF_PVRTC2:
+                PvrtcDecoder.DecompressPVRTC<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, true, out data);
+                colorType = EPixelFormat.PF_R8G8B8A8;
+                break;
+            case EPixelFormat.PF_PVRTC4:
+                PvrtcDecoder.DecompressPVRTC<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, false, out data);
+                colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
 
             //SECTION: raw formats. Do nothing, we return original format and data

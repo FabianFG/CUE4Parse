@@ -39,8 +39,8 @@ public class FUserPinInfo
         }
         else
         {
-            var bIsArray = Ar.ReadBoolean();
-            var bIsReference = Ar.ReadBoolean();
+            var bIsArray = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_PINTYPE_ARRAY && Ar.ReadBoolean();
+            var bIsReference = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_PINTYPE_BYREF && Ar.ReadBoolean();
             var PinCategoryStr = Ar.ReadFString();
             var PinSubCategoryStr = Ar.ReadFString();
 

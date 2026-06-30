@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
@@ -401,10 +401,39 @@ public class FLightMap(FAssetArchive Ar)
 
 public class FLegacyLightMap1D : FLightMap
 {
+    public FPackageIndex Owner;
+
     public FLegacyLightMap1D(FAssetArchive Ar) : base(Ar)
     {
-        throw new ParserException("Unsupported: FLegacyLightMap1D");
+        Owner = new FPackageIndex(Ar);
+        if (Ar.Game < EGame.GAME_UE4_0)
+            new FIntBulkData(Ar);
+        else    
+            new FQuantizedDirectionalLightSample(Ar); // DirectionalSamples
+
+        int skipNum;
+        if (Ar.Ver <= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128)
+            skipNum = 3;
+        else if (Ar.Ver < EUnrealEngineObjectUE3Version.MAXCOMPONENT_LIGHTMAP_ENCODING)
+            skipNum = 4;
+        else if (Ar.Ver < EUnrealEngineObjectUE4Version.SH_LIGHTMAPS)
+            skipNum = 3;
+        else
+            skipNum = 5;
+
+        Ar.Position += skipNum * sizeof(float) * 3; // FVector[]
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SIMPLE_LIGHTING && Ar.Ver < EUnrealEngineObjectUE4Version.SH_LIGHTMAPS)
+        {
+            new FIntBulkData(Ar); // SimpleSamples
+        }
+        else if (Ar.Ver >= EUnrealEngineObjectUE4Version.SH_LIGHTMAPS)
+        {
+            new FQuantizedDirectionalLightSample(Ar); // basically the same FColor Coefficients[2]
+        }
     }
+
+    public class FQuantizedDirectionalLightSample(FAssetArchive Ar) : TBulkData<TIntVector2<FColor>>(Ar);
 }
 
 [JsonConverter(typeof(FLightMap2DConverter))]
