@@ -55,6 +55,8 @@ public partial class USkeletalMesh : UObject
             Materials[i] = SkeletalMaterials[i].Material;
         }
 
+        if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 4;
+
         ReferenceSkeleton = new FReferenceSkeleton(Ar);
 
         if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
