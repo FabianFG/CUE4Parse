@@ -50,16 +50,10 @@ public class FArchiveBigEndian : FArchive
         Span<byte> span = stackalloc byte[size];
         Read(span);
 
-        var layout = Layouts.GetOrAdd(typeof(T), BuildLayout);
+        var layout = Layouts.GetOrAdd(typeof(T), BuildLayout(typeof(T)));
         foreach (var field in layout)
         {
-            int start = field.Offset;
-            for (var i = 0; i < field.Count; i++)
-            {
-                var end = start + field.Size;
-                span[start..end].Reverse();
-                start = end;
-            }
+            ReverseEndian(span.Slice(field.Offset, field.Size * field.Count), field.Size);
         }
         return Unsafe.ReadUnaligned<T>(ref span[0]);
     }
@@ -89,31 +83,44 @@ public class FArchiveBigEndian : FArchive
         return result1;
     }
 
-    static void ReverseEndian(byte[] span, int size)
+    static void ReverseEndian(Span<byte> span, int size)
     {
-        if (size == 2)
+        switch (size)
         {
-            var span2 = span.AsSpan().Cast<byte, ushort>();
-            for (int i = 0; i < span.Length; i++)
+            case 1:
+                return;
+            case 2:
             {
-                span2[i] = BinaryPrimitives.ReverseEndianness(span2[i]);
+                var span2 = span.Cast<byte, ushort>();
+                for (int i = 0; i < span2.Length; i++)
+                {
+                    span2[i] = BinaryPrimitives.ReverseEndianness(span2[i]);
+                }
+
+                break;
             }
-        }
-        else if (size == 4)
-        {
-            var span4 = span.AsSpan().Cast<byte, uint>();
-            for (int i = 0; i < span.Length; i++)
+            case 4:
             {
-                span4[i] = BinaryPrimitives.ReverseEndianness(span4[i]);
+                var span4 = span.Cast<byte, uint>();
+                for (int i = 0; i < span4.Length; i++)
+                {
+                    span4[i] = BinaryPrimitives.ReverseEndianness(span4[i]);
+                }
+
+                break;
             }
-        }
-        else if (size == 8)
-        {
-            var span8 = span.AsSpan().Cast<byte, ulong>();
-            for (int i = 0; i < span.Length; i++)
+            case 8:
             {
-                span8[i] = BinaryPrimitives.ReverseEndianness(span8[i]);
+                var span8 = span.Cast<byte, ulong>();
+                for (int i = 0; i < span8.Length; i++)
+                {
+                    span8[i] = BinaryPrimitives.ReverseEndianness(span8[i]);
+                }
+
+                break;
             }
+            default:
+                throw new NotSupportedException($"Unsupported size {size} for reversing endianness");
         }
     }
 
@@ -137,10 +144,39 @@ public class FArchiveBigEndian : FArchive
 
         if (PrimitiveTypes.TryGetValue(type, out int primitiveSize))
         {
+            if (primitiveSize == 1) return [];
             return [new LayoutFixup(0, (ushort)primitiveSize, 1)];
         }
 
         List<LayoutFixup> layoutFixups = [];
+        var inline = type.GetCustomAttribute<InlineArrayAttribute>();
+        if (inline != null)
+        {
+            var element = type.GetFields(FieldFlags).Single().FieldType;
+
+            if (PrimitiveTypes.TryGetValue(element, out var elemsize))
+            {
+                if (primitiveSize == 1) return [];
+                return [new LayoutFixup(0, (ushort) elemsize, (ushort) inline.Length)];
+            }
+            else
+            {
+                var temp = Layouts.GetOrAdd(element, BuildLayout(element));
+                var tempOffset = 0;
+                var tempsize = Marshal.SizeOf(element);
+                for (var i = 0; i < inline.Length; i++)
+                {
+                    foreach (var fix in temp)
+                    {
+                        layoutFixups.Add(fix with { Offset = (ushort)(fix.Offset + tempOffset) });
+                    }
+                    tempOffset += tempsize;
+                }
+            }
+
+            return CompactLayout(layoutFixups);
+        }
+
         foreach (var field in type.GetFields(FieldFlags).OrderBy(x => x.MetadataToken))
         {
             int offset = (int)Marshal.OffsetOf(type, field.Name);
@@ -148,35 +184,9 @@ public class FArchiveBigEndian : FArchive
             if (!fieldType.IsValueType)
                 throw new ParserException($"FArchiveBigEndian can't read reference type {fieldType} in {type}");
 
-            var inline = fieldType.GetCustomAttribute<InlineArrayAttribute>();
-            if (inline != null)
-            {
-                var element = fieldType.GetFields(FieldFlags).Single().FieldType;
-
-                if (PrimitiveTypes.TryGetValue(element, out var size1))
-                {
-                    layoutFixups.Add(new LayoutFixup((ushort) offset, (ushort) size1, (ushort) inline.Length));
-                }
-                else
-                {
-                    var temp = Layouts.GetOrAdd(fieldType, BuildLayout(fieldType));
-                    var tempOffset = offset;
-                    var tempsize = Marshal.SizeOf(fieldType);
-                    for (var i = 0; i < inline.Length; i++)
-                    {
-                        foreach (var fix in temp)
-                        {
-                            layoutFixups.Add(fix with { Offset = (ushort)(fix.Offset + tempOffset) });
-                        }
-                        tempOffset += tempsize;
-                    }
-                }
-
-                continue;
-            }
-
             if (PrimitiveTypes.TryGetValue(fieldType, out int size))
             {
+                if (size == 1) continue;
                 layoutFixups.Add(new LayoutFixup((ushort)offset, (ushort)size, 1));
             }
             else
