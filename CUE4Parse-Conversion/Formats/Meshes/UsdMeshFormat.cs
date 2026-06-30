@@ -1,0 +1,306 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using CUE4Parse_Conversion.Dto;
+using CUE4Parse_Conversion.Options;
+using CUE4Parse_Conversion.Writers.USD;
+using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
+using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
+
+namespace CUE4Parse_Conversion.Formats.Meshes;
+
+public class UsdMeshFormat : IMeshExportFormat
+{
+    public string DisplayName => "USD Mesh (.usda)";
+
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    {
+        var results = new List<ExportFile>();
+        var root = dto.ToSkelRoot();
+
+        var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
+        if (sockets is not null) root.Add(sockets);
+
+        var materials = CreateMaterials(dto.Materials, materialPaths);
+        if (materials is not null) root.Add(materials);
+
+        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
+        for (var i = start; i < end; i++)
+        {
+            var suffix = i == 0 ? null : $"_LOD{i}";
+            var lodPrim = CreateLod(dto.LODs[i], suffix, materials);
+            lodPrim.Add(new UsdRelationship("skel:skeleton", root.Children[0]));
+            if (options.ExportMorphTargets && dto.MorphTargets is { Length: > 0 } morphTargets)
+            {
+                AddBlendShapes(lodPrim, morphTargets, dto.LODs[i].SourceLodIndex);
+            }
+            root.Add(lodPrim);
+
+            var stage = new UsdStage(root);
+            results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));
+
+            root.Children.RemoveAt(root.Children.Count - 1);
+        }
+
+        return results;
+    }
+
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    {
+        var results = new List<ExportFile>();
+
+        var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
+        var materials = CreateMaterials(dto.Materials, materialPaths);
+
+        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
+        for (var i = start; i < end; i++)
+        {
+            var suffix = i == 0 ? null : $"_LOD{i}";
+            var root = CreateLod(dto.LODs[i], suffix, materials);
+            if (sockets is not null) root.Add(sockets);
+            if (materials is not null) root.Add(materials);
+
+            var stage = new UsdStage(root);
+            results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));
+
+            root.Children.RemoveAt(root.Children.Count - 1);
+        }
+
+        return results;
+    }
+
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, SkeletonDto dto)
+    {
+        var root = dto.ToSkelRoot();
+
+        var sockets = options.SocketFormat != ESocketFormat.None ? CreateSockets(dto.Sockets) : null;
+        if (sockets is not null) root.Add(sockets);
+
+        var stage = new UsdStage(root);
+        return [new ExportFile("usda", stage.SerializeToBinary())];
+    }
+
+    private UsdPrim? CreateSockets(FPackageIndex[]? sockets, ESocketFormat format = ESocketFormat.None)
+    {
+        if (sockets is not { Length: > 0 } || format == ESocketFormat.None) return null;
+
+        var scope = UsdPrim.Def("Scope", "Sockets");
+        foreach (var ptr in sockets)
+        {
+            switch (ptr.Load())
+            {
+                case USkeletalMeshSocket sk:
+                {
+                    var socketPrim = UsdPrim.Def("Xform", sk.SocketName.Text);
+                    // TODO: compute matrix relative to bone
+                    socketPrim.Add(new FTransform(sk.RelativeRotation, sk.RelativeLocation, sk.RelativeScale).ToMatrixAttributes());
+                    socketPrim.Add(UsdAttribute.CustomUniform("string", "unrealBoneName", sk.BoneName.Text));
+                    scope.Add(socketPrim);
+                    break;
+                }
+                case UStaticMeshSocket st:
+                {
+                    var socketPrim = UsdPrim.Def("Xform", st.SocketName.Text);
+                    socketPrim.Add(new FTransform(st.RelativeRotation, st.RelativeLocation, st.RelativeScale).ToMatrixAttributes());
+                    scope.Add(socketPrim);
+                    break;
+                }
+            }
+        }
+        return scope;
+    }
+    private UsdPrim? CreateMaterials(MeshMaterialDto[] materials, IReadOnlyDictionary<string, string>? materialPaths)
+    {
+        if (materials is not { Length: > 0 }) return null;
+
+        var seen = new HashSet<string>();
+        var scope = UsdPrim.Def("Scope", "Materials");
+        foreach (var material in materials)
+        {
+            var name = material.SlotName;
+            if (!seen.Add(name)) continue;
+
+            var materialPrim = UsdPrim.Def("Material", name);
+            if (materialPaths?.TryGetValue(name, out var path) == true)
+            {
+                materialPrim.SetReference(new UsdReferenceList([new UsdReference(path)]));
+            }
+            scope.Add(materialPrim);
+        }
+        return scope;
+    }
+
+    private void AddBlendShapes(UsdPrim meshPrim, FPackageIndex[] morphTargets, uint sourceLodIndex)
+    {
+        var blendShapeNames = new List<UsdValue>();
+        var blendShapeTargetPrims = new List<UsdPrim>();
+        var blendShapesScope = UsdPrim.Def("Scope", "BlendShapes");
+
+        foreach (var ptr in morphTargets)
+        {
+            var morph = ptr.Load<UMorphTarget>();
+            if (morph?.MorphLODModels is null || sourceLodIndex >= morph.MorphLODModels.Length) continue;
+
+            var morphLod = morph.MorphLODModels[sourceLodIndex];
+            if (morphLod.Vertices is not { Length: > 0 } vertices) continue;
+
+            var blendShape = UsdPrim.Def("BlendShape", morph.Name);
+
+            var offsets = new UsdValue[vertices.Length];
+            var normalOffsets = new UsdValue[vertices.Length];
+            var pointIndices = new UsdValue[vertices.Length];
+
+            for (var j = 0; j < vertices.Length; j++)
+            {
+                var pos = vertices[j].PositionDelta;
+                offsets[j] = UsdValue.Tuple(pos.X, -pos.Y, pos.Z); // MIRROR_MESH
+
+                var tan = vertices[j].TangentZDelta;
+                normalOffsets[j] = UsdValue.Tuple(tan.X, -tan.Y, tan.Z); // MIRROR_MESH
+
+                pointIndices[j] = UsdValue.Int((int) vertices[j].SourceIdx);
+            }
+
+            blendShape.Add(new UsdAttribute("point3f[]", "offsets", UsdValue.Array(offsets)));
+            blendShape.Add(new UsdAttribute("int[]", "pointIndices", UsdValue.Array(pointIndices)));
+            blendShape.Add(new UsdAttribute("vector3f[]", "normalOffsets", UsdValue.Array(normalOffsets)));
+
+            blendShapesScope.Add(blendShape);
+            blendShapeNames.Add(UsdValue.Token(morph.Name));
+            blendShapeTargetPrims.Add(blendShape);
+        }
+
+        if (blendShapeNames.Count == 0) return;
+
+        meshPrim.Add(blendShapesScope);
+        meshPrim.Add(new UsdAttribute("token[]", "skel:blendShapes", UsdValue.Array(blendShapeNames)));
+        meshPrim.Add(new UsdRelationship("skel:blendShapeTargets", blendShapeTargetPrims.ToArray()));
+    }
+
+    private UsdPrim CreateLod(MeshLodDto<MeshVertex> meshLod, string? suffix = null, UsdPrim? materials = null) => CreateLod<MeshVertex>(meshLod, suffix, materials);
+    private UsdPrim CreateLod(MeshLodDto<SkinnedMeshVertex> meshLod, string? suffix = null, UsdPrim? materials = null)
+    {
+        var lodPrim = CreateLod<SkinnedMeshVertex>(meshLod, suffix, materials);
+        lodPrim.AddMetadata("prepend apiSchemas", UsdValue.Array(UsdValue.Token("SkelBindingAPI")));
+
+        var elementSize = meshLod.Vertices.Max(v => v.Influences.Length);
+        var indices = new UsdValue[meshLod.Vertices.Length * elementSize];
+        var weights = new UsdValue[indices.Length];
+        for (var i = 0; i < meshLod.Vertices.Length; i++)
+        {
+            var influence = meshLod.Vertices[i].Influences;
+            for (var j = 0; j < elementSize; j++)
+            {
+                var bone = 0;
+                var weight = 0f;
+                if (j < influence.Length)
+                {
+                    bone = influence[j].Bone;
+                    weight = influence[j].Weight;
+                }
+
+                indices[i * elementSize + j] = UsdValue.Int(bone);
+                weights[i * elementSize + j] = UsdValue.Float(weight);
+            }
+        }
+
+        var metadata = new UsdMetadata("elementSize", elementSize);
+        lodPrim.AddPrimvar("int[]", "primvars:skel:jointIndices", UsdValue.Array(indices), "vertex", metadata);
+        lodPrim.AddPrimvar("float[]", "primvars:skel:jointWeights", UsdValue.Array(weights), "vertex", metadata);
+
+        return lodPrim;
+    }
+    private UsdPrim CreateLod<TVertex>(MeshLodDto<TVertex> meshLod, string? suffix = null, UsdPrim? materials = null) where TVertex : struct, IMeshVertex
+    {
+        var lodPrim = UsdPrim.Def("Mesh", $"{meshLod.Owner.Name}{suffix}");
+        lodPrim.Add(UsdAttribute.Uniform("token", "subdivisionScheme", "none"));
+        lodPrim.Add(UsdAttribute.Uniform("bool", "doubleSided", meshLod.IsTwoSided));
+
+        var bounds = meshLod.Owner.Bounds;
+        lodPrim.Add(new UsdAttribute("float3[]", "extent", UsdValue.Array(
+            UsdValue.Tuple(bounds.Min.X, bounds.Min.Y, bounds.Min.Z),
+            UsdValue.Tuple(bounds.Max.X, bounds.Max.Y, bounds.Max.Z))));
+
+        var points = new UsdValue[meshLod.Vertices.Length];
+        var normals = new UsdValue[points.Length];
+        var tangents = new UsdValue[points.Length];
+        var uv = new UsdValue[points.Length];
+        for (var i = 0; i < points.Length; i++)
+        {
+            var position = meshLod.Vertices[i].Position;
+            points[i] = UsdValue.Tuple(position.X, -position.Y, position.Z); // MIRROR_MESH
+
+            var normal = (FVector) meshLod.Vertices[i].Normal;
+            normal /= MathF.Sqrt(normal | normal);
+            normals[i] = UsdValue.Tuple(normal.X, -normal.Y, normal.Z); // MIRROR_MESH
+
+            var tangent = (FVector) meshLod.Vertices[i].Tangent;
+            tangents[i] = UsdValue.Tuple(tangent.X, -tangent.Y, tangent.Z); // MIRROR_MESH
+
+            uv[i] = UsdValue.Tuple(meshLod.Vertices[i].Uv.U, -meshLod.Vertices[i].Uv.V); // MIRROR_MESH
+        }
+
+        var indices = new UsdValue[meshLod.Indices.Length];
+        for (var i = 0; i < indices.Length; i++)
+        {
+            indices[i] = UsdValue.Int((int) meshLod.Indices[i]);
+        }
+
+        lodPrim.Add(new UsdAttribute("point3f[]", "points", UsdValue.Array(points)));
+        lodPrim.Add(new UsdAttribute("int[]", "faceVertexCounts", UsdValue.Array(Enumerable.Repeat(3, indices.Length / 3))));
+        lodPrim.Add(new UsdAttribute("int[]", "faceVertexIndices", UsdValue.Array(indices)));
+
+        lodPrim.AddPrimvar("normal3f[]", "normals", UsdValue.Array(normals), "vertex");
+        lodPrim.AddPrimvar("float3[]", "primvars:tangents", UsdValue.Array(tangents), "vertex");
+        lodPrim.AddPrimvar("texCoord2f[]", "primvars:st", UsdValue.Array(uv), "vertex");
+
+        for (var i = 0; i < meshLod.ExtraUvs.Length; i++)
+        {
+            var extraUv = new UsdValue[meshLod.ExtraUvs[i].Length];
+            for (var j = 0; j < extraUv.Length; j++)
+            {
+                extraUv[j] = UsdValue.Tuple(meshLod.ExtraUvs[i][j].U, meshLod.ExtraUvs[i][j].V);
+            }
+            lodPrim.AddPrimvar("texCoord2f[]", $"primvars:st{i + 1}", UsdValue.Array(extraUv), "vertex");
+        }
+
+        if (meshLod.VertexColors is { Length: > 0 } && meshLod.VertexColors[0].Colors is { Length: > 0 } vertexColors)
+        {
+            var colors = new UsdValue[vertexColors.Length];
+            var opacities = new UsdValue[colors.Length];
+            for (var i = 0; i < colors.Length; i++)
+            {
+                var color = vertexColors[i];
+                colors[i] = UsdValue.Tuple(color.R / 255f, color.G / 255f, color.B / 255f);
+                opacities[i] = UsdValue.Float(color.A / 255f);
+            }
+
+            lodPrim.AddPrimvar("color3f[]", "primvars:displayColor", UsdValue.Array(colors), "vertex");
+            lodPrim.AddPrimvar("float[]", "primvars:displayOpacity", UsdValue.Array(opacities), "vertex");
+        }
+
+        for (var i = 0; i < meshLod.Sections.Length; i++)
+        {
+            var subset = UsdPrim.Def("GeomSubset", $"Section_{i}");
+            subset.Add(UsdAttribute.Uniform("token", "elementType", "face"));
+            subset.Add(UsdAttribute.Uniform("token", "familyName", "materialBind"));
+
+            var section = meshLod.Sections[i];
+            subset.Add(new UsdAttribute("int[]", "indices", UsdValue.Array(Enumerable.Range(section.FirstIndex / 3, section.NumFaces))));
+            subset.Add(UsdAttribute.CustomUniform("int", "unrealMaterialIndex", section.MaterialIndex));
+            subset.Add(UsdAttribute.CustomUniform("bool", "unrealCastShadow", section.CastShadow));
+
+            if (materials is not null && section.MaterialIndex >= 0 && section.MaterialIndex < materials.Children.Count)
+            {
+                subset.AddMetadata("prepend apiSchemas", UsdValue.Array(UsdValue.Token("MaterialBindingAPI")));
+                subset.Add(new UsdRelationship("material:binding", materials.Children[section.MaterialIndex]));
+            }
+            lodPrim.Add(subset);
+        }
+
+        return lodPrim;
+    }
+}

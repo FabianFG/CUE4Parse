@@ -9,16 +9,16 @@ public class FSoftVertex : FSkelMeshVertexBase
 {
     private const int MAX_SKELETAL_UV_SETS_UE4 = 4;
 
-    public FMeshUVFloat[] UV;
+    public sealed override FMeshUVFloat[] UVs { get; }
     public FColor Color;
 
     public FSoftVertex(FArchive Ar, bool isRigid = false)
     {
         SerializeForEditor(Ar);
 
-        UV = new FMeshUVFloat[MAX_SKELETAL_UV_SETS_UE4];
-        for (var i = 0; i < UV.Length; i++)
-            UV[i] = Ar.Read<FMeshUVFloat>();
+        UVs = new FMeshUVFloat[MAX_SKELETAL_UV_SETS_UE4];
+        for (var i = 0; i < UVs.Length; i++)
+            UVs[i] = Ar.Read<FMeshUVFloat>();
 
         Color = Ar.Read<FColor>();
         Infs = !isRigid ?

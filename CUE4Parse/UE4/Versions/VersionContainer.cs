@@ -29,20 +29,11 @@ namespace CUE4Parse.UE4.Versions
             {
                 bExplicitVer = value.FileVersionUE3 != 0 || value.FileVersionUE4 != 0 || value.FileVersionUE5 != 0;
                 _ver = bExplicitVer ? value : _game.GetVersion();
+                InitOptions();
             }
         }
 
-        private ETexturePlatform _platform;
-        public ETexturePlatform Platform
-        {
-            get => _platform;
-            set
-            {
-                _platform = value;
-                InitOptions();
-                InitMapStructTypes();
-            }
-        }
+        public ETexturePlatform Platform { get; set; }
 
         public bool bExplicitVer { get; private set; }
 
@@ -58,10 +49,12 @@ namespace CUE4Parse.UE4.Versions
             _optionOverrides = optionOverrides;
             _mapStructTypesOverrides = mapStructTypesOverrides;
 
-            Game = game;
-            Ver = ver;
+            _game = game; // bypass InitOptions + InitMapStructTypes
+            Ver = ver; // triggers InitOptions for the first time and uses the updated _game.GetVersion()
             Platform = platform;
             CustomVersions = customVersions;
+
+            InitMapStructTypes(); // because it was not triggered by any setter
         }
 
         private void InitOptions()
