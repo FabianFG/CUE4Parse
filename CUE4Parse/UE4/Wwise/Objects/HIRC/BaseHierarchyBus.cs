@@ -56,9 +56,9 @@ public class BaseHierarchyBus : AbstractHierarchy
                 Ar.Read<float>(); // PitchMain
                 Ar.Read<float>(); // LPFMain
 
-                var killNewest = Ar.Read<byte>() != 0;
+                var killNewest = Ar.ReadBool();
                 MaxNumInstance = Ar.Read<ushort>();
-                var isMaxNumInstOverrideParent = Ar.Read<byte>() != 0;
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
 
                 if (Ar.Version > 48)
                     ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
@@ -67,7 +67,7 @@ public class BaseHierarchyBus : AbstractHierarchy
                 Ar.Read<byte>();
 
                 if (Ar.Version > 48)
-                    _ = Ar.Read<byte>() != 0; // IsEnvironmental
+                    _ = Ar.ReadBool(); // IsEnvironmental
 
                 AdvSettingsParams = EAdvSettingsFlags.None;
                 if (killNewest)
@@ -83,17 +83,17 @@ public class BaseHierarchyBus : AbstractHierarchy
                 Ar.Read<float>(); // PitchMain
                 Ar.Read<float>(); // LPFMain
 
-                var killNewest = Ar.Read<byte>() != 0;
-                var useVirtualBehavior = Ar.Read<byte>() != 0;
+                var killNewest = Ar.ReadBool();
+                var useVirtualBehavior = Ar.ReadBool();
                 MaxNumInstance = Ar.Read<ushort>();
-                var isMaxNumInstOverrideParent = Ar.Read<byte>() != 0;
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
 
                 ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
 
                 Ar.Read<byte>();
                 Ar.Read<byte>();
 
-                _ = Ar.Read<byte>() != 0; // bIsEnvBus
+                _ = Ar.ReadBool(); // bIsEnvBus
 
                 AdvSettingsParams = EAdvSettingsFlags.None;
                 if (killNewest)
@@ -106,17 +106,17 @@ public class BaseHierarchyBus : AbstractHierarchy
             }
             case <= 65:
             {
-                var killNewest = Ar.Read<byte>() != 0;
-                var useVirtualBehavior = Ar.Read<byte>() != 0;
+                var killNewest = Ar.ReadBool();
+                var useVirtualBehavior = Ar.ReadBool();
                 MaxNumInstance = Ar.Read<ushort>();
-                var isMaxNumInstOverrideParent = Ar.Read<byte>() != 0;
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
 
                 ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
 
                 Ar.Read<byte>();
                 Ar.Read<byte>();
 
-                _ = Ar.Read<byte>() != 0; // bIsEnvBus
+                _ = Ar.ReadBool(); // bIsEnvBus
 
                 AdvSettingsParams = EAdvSettingsFlags.None;
                 if (killNewest)
@@ -129,10 +129,10 @@ public class BaseHierarchyBus : AbstractHierarchy
             }
             case <= 77:
             {
-                var killNewest = Ar.Read<byte>() != 0;
-                var useVirtualBehavior = Ar.Read<byte>() != 0;
+                var killNewest = Ar.ReadBool();
+                var useVirtualBehavior = Ar.ReadBool();
                 MaxNumInstance = Ar.Read<ushort>();
-                var isMaxNumInstOverrideParent = Ar.Read<byte>() != 0;
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
 
                 ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
 
@@ -154,18 +154,18 @@ public class BaseHierarchyBus : AbstractHierarchy
                 Ar.Read<byte>(); // PositioningEnabled
                 Ar.Read<byte>(); // PositioningEnablePanner
 
-                var killNewest = Ar.Read<byte>() != 0;
-                var useVirtualBehavior = Ar.Read<byte>() != 0;
+                var killNewest = Ar.ReadBool();
+                var useVirtualBehavior = Ar.ReadBool();
                 MaxNumInstance = Ar.Read<ushort>();
-                var isMaxNumInstOverrideParent = Ar.Read<byte>() != 0;
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
 
                 ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
 
                 Ar.Read<byte>();
                 Ar.Read<byte>();
 
-                var isHdrBus = Ar.Read<byte>() != 0;
-                var hdrReleaseModeExponential = Ar.Read<byte>() != 0;
+                var isHdrBus = Ar.ReadBool();
+                var hdrReleaseModeExponential = Ar.ReadBool();
 
                 AdvSettingsParams = EAdvSettingsFlags.None;
                 if (killNewest)

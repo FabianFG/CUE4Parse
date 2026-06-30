@@ -18,8 +18,8 @@ public readonly struct AkFx
             case <= 145:
                 FXIndex = Ar.Read<byte>();
                 FXId = Ar.Read<uint>();
-                IsShareSet = Ar.Read<byte>() != 0;
-                IsRendered = Ar.Read<byte>() != 0;
+                IsShareSet = Ar.ReadBool();
+                IsRendered = Ar.ReadBool();
                 break;
             default: // Version > 145
                 FXIndex = Ar.Read<byte>();
@@ -56,10 +56,10 @@ public readonly struct AkFxParams
                 case <= 26:
                     break;
                 case <= 145:
-                    BypassAll = Ar.Read<byte>() != 0;
+                    BypassAll = Ar.ReadBool();
                     break;
                 default:
-                    BypassAll = Ar.Read<byte>() != 0;
+                    BypassAll = Ar.ReadBool();
                     break;
             }
 
@@ -151,7 +151,7 @@ public class AkFxBus
         if (Ar.Version > 89 && Ar.Version <= 145)
         {
             FxId0 = Ar.Read<uint>();
-            IsShareSet0 = Ar.Read<byte>() != 0;
+            IsShareSet0 = Ar.ReadBool();
         }
     }
 }

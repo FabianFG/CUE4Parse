@@ -32,7 +32,7 @@ public readonly struct WwiseObjectIDext
 
         if (Ar.Version > 65)
         {
-            IsBus = Ar.Read<byte>() is not 0;
+            IsBus = Ar.ReadBool();
         }
     }
 }

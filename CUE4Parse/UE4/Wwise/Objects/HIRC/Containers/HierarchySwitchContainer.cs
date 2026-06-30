@@ -30,7 +30,7 @@ public class HierarchySwitchContainer : AbstractHierarchy
         }
         GroupId = Ar.Read<uint>();
         DefaultSwitch = Ar.Read<uint>();
-        IsContinuousValidation = Ar.Read<byte>() is not 0;
+        IsContinuousValidation = Ar.ReadBool();
         ChildIds = new AkChildren(Ar).ChildIds;
         SwitchPackages = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkSwitchPackage(Ar));
         SwitchParams = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkSwitchParams(Ar));

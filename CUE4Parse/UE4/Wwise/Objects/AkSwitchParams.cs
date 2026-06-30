@@ -17,7 +17,6 @@ public readonly struct AkSwitchParams
     public AkSwitchParams(FWwiseArchive Ar)
     {
         NodeId = Ar.Read<uint>();
-
         switch (Ar.Version)
         {
             case <= 89:

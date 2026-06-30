@@ -1,7 +1,6 @@
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
-using OggVorbisEncoder.Setup;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 
@@ -59,23 +58,16 @@ public class HierarchyRandomSequenceContainer : AbstractHierarchy
 
         if (Ar.Version <= 89)
         {
-            var isUsingWeight = Ar.Read<byte>() != 0;
-            var resetPlayListAtEachPlay = Ar.Read<byte>() != 0;
-            var isRestartBackward = Ar.Read<byte>() != 0;
-            var isContinuous = Ar.Read<byte>() != 0;
-            var isGlobal = Ar.Read<byte>() != 0;
-
             PlaylistFlags = EPlayListFlags.None;
-
-            if (isUsingWeight)
+            if (Ar.ReadBool())
                 PlaylistFlags |= EPlayListFlags.IsUsingWeight;
-            if (resetPlayListAtEachPlay)
+            if (Ar.ReadBool())
                 PlaylistFlags |= EPlayListFlags.ResetPlayListAtEachPlay;
-            if (isRestartBackward)
+            if (Ar.ReadBool())
                 PlaylistFlags |= EPlayListFlags.IsRestartBackward;
-            if (isContinuous)
+            if (Ar.ReadBool())
                 PlaylistFlags |= EPlayListFlags.IsContinuous;
-            if (isGlobal)
+            if (Ar.ReadBool())
                 PlaylistFlags |= EPlayListFlags.IsGlobal;
         }
         else

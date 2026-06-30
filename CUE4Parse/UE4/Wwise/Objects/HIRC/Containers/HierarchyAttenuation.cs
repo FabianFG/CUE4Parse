@@ -17,7 +17,7 @@ public class HierarchyAttenuation : AbstractHierarchy
         Id = Ar.Read<uint>();
         if (Ar.Version > 136)
         {
-            IsHeightSpreadEnabled = Ar.Read<byte>() != 0;
+            IsHeightSpreadEnabled = Ar.ReadBool();
         }
 
         IsConeEnabled = (Ar.Read<byte>() & 1) != 0;
