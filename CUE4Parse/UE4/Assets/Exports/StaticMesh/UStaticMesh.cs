@@ -105,7 +105,8 @@ public class UStaticMesh : UObject
                     case EGame.GAME_NeedForSpeedMobile:
                         Ar.SkipMultipleBulkArrayData(3);
                         Ar.Position += 4;
-                        if (Ar.ReadBoolean())
+                        var count1 = Ar.Read<int>();
+                        for (var i = 0; i < count1; i++)
                         {
                             Ar.Position += 4;
                             Ar.SkipMultipleFixedArrays(2, 4);

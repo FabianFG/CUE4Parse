@@ -162,10 +162,14 @@ public class FStaticMeshLODResources
             Ar.Position += 12;
 
             if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders) Ar.Position += 4;
-            if (Ar.Game is EGame.GAME_NeedForSpeedMobile && Ar.ReadBoolean())
+            if (Ar.Game is EGame.GAME_NeedForSpeedMobile)
             {
-                Ar.Position += 4;
-                Ar.SkipMultipleFixedArrays(2, 4);
+                var count = Ar.Read<int>();
+                for (var i = 0; i < count; i++)
+                {
+                    Ar.Position += 4;
+                    Ar.SkipMultipleFixedArrays(2, 4);
+                }
             }
         }
     }
