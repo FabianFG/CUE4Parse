@@ -83,6 +83,7 @@ public class FStaticMeshLODResources
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
             if (Ar.Game >= EGame.GAME_UE5_5 || Ar.Game == EGame.GAME_MetalGearSolidDelta) Ar.Position += 4; // bHasRayTracingGeometry
+            if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 4;
 
             if (bInlined)
             {
