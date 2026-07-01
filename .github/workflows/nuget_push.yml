@@ -7,7 +7,7 @@ on:
     - cron: '0 9 1 * *' # At 09:00 on day-of-month 1
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 env:
@@ -60,12 +60,12 @@ jobs:
             -p:PackageVersion=${{ steps.ver.outputs.packageVersion }} `
             --output "${{ github.workspace }}\nuget-packages"
 
-#      - name: Push NuGet Package(s) to nuget.org
-#        run: |
-#          dotnet nuget push "${{ github.workspace }}\nuget-packages\*.nupkg" `
-#            --source https://api.nuget.org/v3/index.json `
-#            --api-key ${{ secrets.NUGET_API_KEY }} `
-#            --skip-duplicate
+      - name: Push NuGet Package(s) to nuget.org
+        run: |
+          dotnet nuget push "${{ github.workspace }}\nuget-packages\*.nupkg" `
+            --source https://api.nuget.org/v3/index.json `
+            --api-key ${{ secrets.NUGET_API_KEY }} `
+            --skip-duplicate
 
       - name: Add GitHub Packages source
         run: |
@@ -82,3 +82,69 @@ jobs:
             --source github `
             --api-key ${{ secrets.GITHUB_TOKEN }} `
             --skip-duplicate
+
+      - name: Check if GitHub release already exists for this month
+        id: release_check
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ steps.ver.outputs.packageVersion }}"
+          $exists = gh release view $tag --repo ${{ github.repository }} 2>&1
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $tag already exists, skipping."
+            "skip=true" >> $env:GITHUB_OUTPUT
+          } else {
+            "skip=false" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Collect DLL artifacts
+        if: steps.release_check.outputs.skip == 'false'
+        shell: pwsh
+        run: |
+          $outDir = "${{ github.workspace }}\release-artifacts"
+          New-Item -ItemType Directory -Force $outDir | Out-Null
+
+          # Grab DLLs only for projects that were actually packed (respects IsPackable=false)
+          Get-ChildItem "${{ github.workspace }}\nuget-packages\*.nupkg" | ForEach-Object {
+            $name = $_.BaseName -replace '\.\d+\.\d+\.\d+\.\d+$', ''
+            Get-ChildItem "${{ github.workspace }}" -Recurse -Filter "$name.dll" |
+              Where-Object { $_.FullName -match "\\bin\\Release\\" } |
+              Select-Object -First 1
+          } | Copy-Item -Destination $outDir -Force
+
+          # Also grab nupkgs
+          Copy-Item "${{ github.workspace }}\nuget-packages\*.nupkg" $outDir -Force
+
+          Write-Host "Release artifacts:"
+          Get-ChildItem $outDir | Select-Object -ExpandProperty Name
+
+      - name: Create GitHub Release
+        if: steps.release_check.outputs.skip == 'false'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag     = "${{ steps.ver.outputs.packageVersion }}"
+          $repo    = "${{ github.repository }}"
+
+          # Find the previous release tag to build a compare link
+          $prevTag = gh release list --repo $repo --limit 1 --json tagName --jq '.[0].tagName' 2>$null
+          if ($prevTag) {
+            $compareUrl = "https://github.com/$repo/compare/$prevTag...$tag"
+            $compareSection = "**Full Changelog**: $compareUrl"
+          } else {
+            $compareSection = ""
+          }
+
+          $packageName = $repo.Split('/')[-1]
+
+          $body = "Automated monthly release.`nPackages are available on [NuGet](https://www.nuget.org/packages/$packageName) and [GitHub Packages](https://github.com/$repo/packages).`n`n${compareSection}"
+
+          $artifacts = Get-ChildItem "${{ github.workspace }}\release-artifacts" | Select-Object -ExpandProperty FullName
+
+          gh release create $tag `
+            --repo $repo `
+            --title "CUE4Parse $tag" `
+            --notes $body `
+            @artifacts
