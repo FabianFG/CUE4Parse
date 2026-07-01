@@ -98,8 +98,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $tag = "${{ steps.ver.outputs.packageVersion }}"
-          $exists = gh release view $tag --repo ${{ github.repository }} 2>&1
-          if ($LASTEXITCODE -eq 0) {
+          $tags = gh release list --repo ${{ github.repository }} --json tagName --jq '.[].tagName'
+          if ($tags -contains $tag) {
             Write-Host "Release $tag already exists, skipping."
             "skip=true" >> $env:GITHUB_OUTPUT
           } else {
