@@ -15,7 +15,6 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// <summary>
     /// Revision data for an Unreal package file.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
     public readonly struct FGenerationInfo
     {
         /**
@@ -27,6 +26,22 @@ namespace CUE4Parse.UE4.Objects.UObject
          * Number of names in the linker's NameMap for this generation.
          */
         public readonly int NameCount;
+
+        /**
+         * Number of net serializable objects in the package for this generation.
+         */
+        public readonly int NetObjectCount;
+
+        public FGenerationInfo(FArchive Ar)
+        {
+            ExportCount = Ar.Read<int>();
+            NameCount = Ar.Read<int>();
+
+            if (Ar.Ver > EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
+            {
+                NetObjectCount = Ar.Read<int>();
+            }
+        }
     }
 
     [JsonConverter(typeof(FPackageFileSummaryConverter))]
@@ -37,6 +52,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public const uint PACKAGE_FILE_TAG_ACE7 = 0x37454341U; // ACE7
         private const uint PACKAGE_FILE_TAG_ONE = 0x00656E6FU; // SOD2
         private const uint PACKAGE_FILE_TAG_AE = 0x56DE5ECA; // AshEchoes
+        public const uint PACKAGE_FILE_TAG_LOS = 0x180477E3; // LineOfSight
 
         public readonly uint Tag;
         public FPackageFileVersion FileVersionUE;
@@ -135,7 +151,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 goto afterPackageFlags;
             }
 
-            if (Tag == PACKAGE_FILE_TAG_AE) Tag = PACKAGE_FILE_TAG;
+            if (Tag == PACKAGE_FILE_TAG_AE || Tag == PACKAGE_FILE_TAG_LOS) Tag = PACKAGE_FILE_TAG;
 
             if (Tag != PACKAGE_FILE_TAG && Tag != PACKAGE_FILE_TAG_SWAPPED)
             {
@@ -215,12 +231,15 @@ namespace CUE4Parse.UE4.Objects.UObject
                 throw new ParserException("Can't load legacy UE3 file");
             }
 
-            if (FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
+            if (FileVersionUE >= EUnrealEngineObjectUE3Version.MOVED_EXPORTIMPORTMAPS_ADDED_TOTALHEADERSIZE && FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
             {
                 TotalHeaderSize = Ar.Read<int>();
             }
 
-            PackageName = Ar.ReadFString(); // PackageGroup
+            if (FileVersionUE >= EUnrealEngineObjectUE3Version.FOLDER_ADDED)
+            {
+                PackageName = Ar.ReadFString();
+            }
             PackageFlags = Ar.Read<EPackageFlags>();
 
             /*if (PackageFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly))
@@ -290,7 +309,10 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SearchableNamesOffset = Ar.Read<int>();
             }
 
-            ThumbnailTableOffset = Ar.Read<int>();
+            if (FileVersionUE >= EUnrealEngineObjectUE3Version.ASSET_THUMBNAILS_IN_PACKAGES)
+            {
+                ThumbnailTableOffset = Ar.Read<int>();
+            }
 
             if (FileVersionUE >= EUnrealEngineObjectUE5Version.IMPORT_TYPE_HIERARCHIES || Ar.Game is EGame.GAME_DeltaForce)
             {
@@ -336,13 +358,25 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SavedByEngineVersion = new FEngineVersion(Ar);
                 FixCorruptEngineVersion(FileVersionUE, SavedByEngineVersion);
             }
-            else
+            else if (Ar.Game >= EGame.GAME_UE4_0)
             {
                 var engineChangelist = Ar.Read<int>();
 
                 if (engineChangelist != 0)
                 {
                     SavedByEngineVersion = new FEngineVersion(4, 0, 0, (uint) engineChangelist, string.Empty);
+                }
+            }
+            else
+            {
+                if (FileVersionUE >= EUnrealEngineObjectUE3Version.PACKAGEFILESUMMARY_CHANGE)
+                {
+                    Ar.Read<int>(); // EngineVersion
+                }
+
+                if (FileVersionUE >= EUnrealEngineObjectUE3Version.PACKAGEFILESUMMARY_CHANGE_COOK_VER_ADDED)
+                {
+                    Ar.Read<int>(); // CookerVersion
                 }
             }
 
@@ -376,7 +410,11 @@ namespace CUE4Parse.UE4.Objects.UObject
                 throw new ParserException("Package level compression is enabled");
             }
 
-            PackageSource = Ar.Read<int>();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedPackageSource)
+            {
+                // Value that is used to determine if the package was saved by Epic (or licensee) or by a modder, etc
+                PackageSource = Ar.Read<int>();
+            }
 
             if (Ar.Game == EGame.GAME_ArkSurvivalEvolved && (int) FileVersionLicenseeUE >= 10)
             {
@@ -385,7 +423,10 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             // No longer used: List of additional packages that are needed to be cooked for this package (ie streaming levels)
             // Keeping the serialization code for backwards compatibility without bumping the package version
-            var additionalPackagesToCook = Ar.ReadArray(Ar.ReadFString);
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDITIONAL_COOK_PACKAGE_SUMMARY)
+            {
+                var additionalPackagesToCook = Ar.ReadArray(Ar.ReadFString);
+            }
 
             if (legacyFileVersion > -7)
             {

@@ -238,7 +238,6 @@ public partial class IoStoreReader : AbstractAesVfsReader
         var uncompressedBuffer = Array.Empty<byte>();
 
         FArchive?[]? clonedReaders = null;
-        long size = 0;
         for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
         {
             ref var compressionBlock = ref TocResource.CompressionBlocks[blockIndex];
@@ -249,7 +248,6 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 rawSize = (compressionBlock.CompressedSize + ProSpiEncryption.EncryptionDataTrailerSize).Align(Aes.ALIGN);
             }
 
-            size += rawSize;
             if (compressedBuffer.Length < rawSize)
             {
                 //Console.WriteLine($"{chunkId}: block {blockIndex} CompressedBuffer size: {rawSize} - Had to create copy");

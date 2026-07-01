@@ -212,9 +212,20 @@ public class FVolumeLightingSample
     {
         Position = Ar.Read<FVector>();
         Radius = Ar.Read<float>();
-        Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(order*order));
-        PackedSkyBentNormal = Ar.Read<FColor>();
-        DirectionalLightShadowing = Ar.Read<float>();
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.CHANGED_VOLUME_SAMPLE_FORMAT)
+        {
+            Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(order*order));
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKY_BENT_NORMAL)
+        {
+            PackedSkyBentNormal = Ar.Read<FColor>();
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.VOLUME_SAMPLE_LOW_QUALITY_SUPPORT)
+        {
+            DirectionalLightShadowing = Ar.Read<float>();
+        }
         if (Ar.Game is EGame.GAME_RocoKingdomWorld) Ar.Position += 116;
     }
 }
@@ -408,7 +419,7 @@ public class FLegacyLightMap1D : FLightMap
         Owner = new FPackageIndex(Ar);
         if (Ar.Game < EGame.GAME_UE4_0)
             new FIntBulkData(Ar);
-        else    
+        else
             new FQuantizedDirectionalLightSample(Ar); // DirectionalSamples
 
         int skipNum;

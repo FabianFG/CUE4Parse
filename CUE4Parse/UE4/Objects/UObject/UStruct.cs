@@ -19,7 +19,20 @@ public class UStruct : UField
     {
         base.Deserialize(Ar, validPos);
 
-        SuperStruct = new FPackageIndex(Ar);
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.MOVED_SUPERFIELD_TO_USTRUCT)
+        {
+            SuperStruct = new FPackageIndex(Ar);
+        }
+        else
+        {
+            SuperStruct = SuperField;
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.CONSOLIDATE_HEADER_PARSER_ONLY_PROPERTIES)
+        {
+            new FPackageIndex(Ar); // ScriptText
+        }
+
         if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.RemoveUField_Next)
         {
             var firstChild = new FPackageIndex(Ar);

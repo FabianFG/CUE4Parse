@@ -28,8 +28,11 @@ public class FStaticMeshSection
         NumTriangles = Ar.Read<int>();
         MinVertexIndex = Ar.Read<int>();
         MaxVertexIndex = Ar.Read<int>();
-        bEnableCollision = Ar.ReadBoolean();
-        bCastShadow = Ar.ReadBoolean();
+        if (Ar.Game >= EGame.GAME_UE4_0)
+        {
+            bEnableCollision = Ar.ReadBoolean();
+            bCastShadow = Ar.ReadBoolean();
+        }
         if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds) Ar.Position += 5; // byte + int
         if (Ar.Game == EGame.GAME_NeedForSpeedMobile) CustomData = Ar.Read<int>();
         if (Ar.Game is EGame.GAME_AssaultFireFuture) return;
