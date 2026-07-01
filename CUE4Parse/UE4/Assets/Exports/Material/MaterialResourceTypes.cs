@@ -193,7 +193,7 @@ public class FShader
     public int ResourceIndex;
     public uint NumInstructions;
     public uint SortKey;
-    public FShaderCode Code;
+    // public FShaderCode Code;
 
     public FShader(FMemoryImageArchive Ar)
     {
