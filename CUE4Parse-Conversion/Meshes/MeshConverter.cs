@@ -78,12 +78,8 @@ public static class MeshConverter
             renderData.Bounds.Origin - renderData.Bounds.BoxExtent,
             renderData.Bounds.Origin + renderData.Bounds.BoxExtent);
 
-        if (naniteFormat == ENaniteMeshFormat.OnlyNaniteLOD) goto Nanite;
-
         var lods = renderData.LODs!;
-        var lastLod = lodFormat == ELodFormat.FirstLod ? Math.Min(1, lods.Length) : lods.Length;
-        
-        for (var i = 0; i < lastLod; i++)
+        for (var i = 0; i < lods.Length; i++)
         {
             var srcLod = lods[i];
             if (srcLod.SkipLod) continue;
@@ -176,29 +172,35 @@ public static class MeshConverter
             }
 
             convertedMesh.LODs.Add(staticMeshLod);
+
+            if (lodFormat == ELodFormat.FirstLod) break;
         }
 
-        Nanite:
-            var lodsCount = convertedMesh.LODs.Count;
-            if ((lodsCount == 0 || naniteFormat != ENaniteMeshFormat.OnlyNormalLODs)
-                && TryConvertNaniteMesh(originalMesh, out CStaticMeshLod? naniteMesh) && naniteMesh is not null)
+        var lodsCount = convertedMesh.LODs.Count;
+        if ((lodsCount == 0 || naniteFormat != ENaniteMeshFormat.OnlyNormalLODs)
+            && TryConvertNaniteMesh(originalMesh, out CStaticMeshLod? naniteMesh) && naniteMesh is not null)
+        {
+            switch (naniteFormat)
             {
-                switch (naniteFormat)
-                {
-                    case ENaniteMeshFormat.OnlyNaniteLOD:
-                        convertedMesh.LODs.Add(naniteMesh);
-                        break;
-                    case ENaniteMeshFormat.AllLayersNaniteFirst:
-                        convertedMesh.LODs.Insert(0, naniteMesh);
-                        break;
-                    case ENaniteMeshFormat.AllLayersNaniteLast:
-                        convertedMesh.LODs.Add(naniteMesh);
-                        break;
-                    case ENaniteMeshFormat.OnlyNormalLODs when lodsCount == 0:
-                        convertedMesh.LODs.Add(naniteMesh);
-                        break;
-                }
+                case ENaniteMeshFormat.OnlyNaniteLOD:
+                    foreach (var lod in convertedMesh.LODs) lod.Dispose();
+                    convertedMesh.LODs.Clear();
+                    convertedMesh.LODs.Add(naniteMesh);
+                    break;
+                case ENaniteMeshFormat.AllLayersNaniteFirst:
+                    convertedMesh.LODs.Insert(0, naniteMesh);
+                    break;
+                case ENaniteMeshFormat.AllLayersNaniteLast:
+                    convertedMesh.LODs.Add(naniteMesh);
+                    break;
+                case ENaniteMeshFormat.OnlyNormalLODs when lodsCount == 0:
+                    convertedMesh.LODs.Add(naniteMesh);
+                    break;
             }
+        }
+
+        // if (lodFormat == ELodFormat.FirstLod && convertedMesh.LODs.Count > 1)
+        //     convertedMesh.LODs.RemoveRange(1, convertedMesh.LODs.Count - 1);
 
         convertedMesh.FinalizeMesh();
         return true;
