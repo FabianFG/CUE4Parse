@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.RHI;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -41,13 +42,13 @@ public sealed class FPipelineCacheFileFormatPSO
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct ComputeDescriptor(FArchive Ar)
 {
-    public readonly FSHAHash ComputeShader = new FSHAHash(Ar);
+    public readonly FSHAHash ComputeShader = new FSHAHash(Ar, Ar.Game >= EGame.GAME_UE5_8 ? 8 : FSHAHash.SIZE);
 };
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct FPipelineFileCacheRayTracingDesc(FArchive Ar)
 {
-    public readonly FSHAHash ShaderHash = new(Ar);
+    public readonly FSHAHash ShaderHash = new FSHAHash(Ar, Ar.Game >= EGame.GAME_UE5_8 ? 8 : FSHAHash.SIZE);
     public readonly uint MaxPayloadSizeInBytes = Ar.Read<uint>();
     //public readonly EShaderFrequency Frequency;
     public readonly uint Frequency = Ar.Read<uint>();
@@ -94,9 +95,9 @@ public readonly struct GraphicsDescriptor
 
     public GraphicsDescriptor(FArchive Ar, EPipelineCacheFileFormatVersions version)
     {
-        VertexShader = new FSHAHash(Ar);
-        FragmentShader = new FSHAHash(Ar);
-        GeometryShader = new FSHAHash(Ar);
+        VertexShader = new FSHAHash(Ar, Ar.Game >= EGame.GAME_UE5_8 ? 8 : FSHAHash.SIZE);
+        FragmentShader = new FSHAHash(Ar, Ar.Game >= EGame.GAME_UE5_8 ? 8 : FSHAHash.SIZE);
+        GeometryShader = new FSHAHash(Ar, Ar.Game >= EGame.GAME_UE5_8 ? 8 : FSHAHash.SIZE);
 
         if (version < EPipelineCacheFileFormatVersions.RemovingTessellationShaders)
         {
@@ -105,8 +106,8 @@ public readonly struct GraphicsDescriptor
         }
         if (version >= EPipelineCacheFileFormatVersions.AddingMeshShaders)
         {
-            MeshShader = new FSHAHash(Ar);
-            AmplificationShader = new FSHAHash(Ar);
+            MeshShader = new FSHAHash(Ar, Ar.Game >= EGame.GAME_UE5_8 ? 8 : FSHAHash.SIZE);
+            AmplificationShader = new FSHAHash(Ar, Ar.Game >= EGame.GAME_UE5_8 ? 8 : FSHAHash.SIZE);
         }
         if (version == EPipelineCacheFileFormatVersions.LibraryID)
         {
