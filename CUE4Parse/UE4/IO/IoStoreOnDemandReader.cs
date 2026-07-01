@@ -42,7 +42,7 @@ public class IoStoreOnDemandReader : IoStoreReader
     private byte[] Read(FOnDemandFileEntry fileEntry, long offset, long length)
     {
         var hash = fileEntry.FileEntryHash.ToString().ToLower();
-        var reader = _downloader.Download($"{ChunkToc.OnDemandToc.ChunksDirectory}/chunks/{hash[..2]}/{hash}.{fileEntry.ChunkExt}", fileEntry.PartitionOffset).GetAwaiter().GetResult();
+        using var reader = _downloader.Download($"{ChunkToc.OnDemandToc.ChunksDirectory}/chunks/{hash[..2]}/{hash}.{fileEntry.ChunkExt}", fileEntry.PartitionOffset).GetAwaiter().GetResult();
 
         var compressionBlockSize = TocResource.Header.CompressionBlockSize;
         var dst = new byte[length];

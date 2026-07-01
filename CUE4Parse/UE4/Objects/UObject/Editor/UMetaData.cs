@@ -11,7 +11,7 @@ public class UMetaData : Assets.Exports.UObject
 {
     private Dictionary<FPackageIndex, Dictionary<FName, string>> ObjectMetaDataMap;
     private Dictionary<FName, string>? RootMetaDataMap;
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
@@ -34,7 +34,7 @@ public class UMetaData : Assets.Exports.UObject
             serializer.Serialize(writer, ObjectMetaDataMap);
         }
 
-        if (RootMetaDataMap?.Count > 0)
+        if (RootMetaDataMap is { Count: > 0 })
         {
             writer.WritePropertyName("RootMetaDataMap");
             serializer.Serialize(writer, RootMetaDataMap);
