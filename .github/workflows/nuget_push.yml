@@ -154,6 +154,6 @@ jobs:
 
           gh release create $tag `
             --repo $repo `
-            --title "CUE4Parse $tag" `
+            --title "v$tag" `
             --notes $body `
             @artifacts
