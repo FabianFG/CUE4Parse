@@ -268,6 +268,18 @@ public class AOnlineBeaconClient : AOnlineBeacon;
 public class AOnlineBeaconHost : AOnlineBeacon;
 public class AOnlineBeaconHostObject : AActor;
 public class APackedLevelActor : ALevelInstance;
+
+public class APrefabInstance : AActor
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        Ar.ReadMap(() => new FPackageIndex(Ar), () => new FPackageIndex(Ar)); // ArchetypeToInstanceMap
+        Ar.ReadMap(() => new FPackageIndex(Ar), Ar.Read<int>); // PI_ObjectMap
+    }
+}
+
 public class APackedLevelInstance : APackedLevelActor;
 public class APainCausingVolume : APhysicsVolume;
 public class APaperCharacter : ACharacter;

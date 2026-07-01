@@ -14,4 +14,3 @@ public class HierarchyAudioBus(FWwiseArchive Ar) : BaseHierarchyBus(Ar)
         writer.WriteEndObject();
     }
 }
-

@@ -26,7 +26,7 @@ public class CAkEnvironmentsMgr
         {
             for (int j = 0; j < maxY; j++)
             {
-                var CurveEnabled = Ar.Read<byte>();
+                Ar.Read<byte>(); // CurveEnabled
                 ConversionTable[i, j] = new CAkConversionTable(Ar);
             }
         }

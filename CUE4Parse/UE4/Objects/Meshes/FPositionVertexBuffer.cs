@@ -101,9 +101,10 @@ public class FPositionVertexBuffer
 
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
-        if (Ar.Game is EGame.GAME_Valorant_PRE_11_2 or EGame.GAME_NeedForSpeedMobile)
+
+        if (Ar.Game is EGame.GAME_Valorant_PRE_11_2 or EGame.GAME_NeedForSpeedMobile || (Ar.Game is EGame.GAME_ArenaBreakoutInfinite && Stride == 8))
         {
-            bool bUseFullPrecisionPositions = Ar.ReadBoolean();
+            bool bUseFullPrecisionPositions = Ar.Game is EGame.GAME_ArenaBreakoutInfinite ? false : Ar.ReadBoolean();
             var bounds = new FBoxSphereBounds(Ar);
             if (!bUseFullPrecisionPositions)
             {
@@ -117,7 +118,7 @@ public class FPositionVertexBuffer
                             Verts[i] = vertsHalf[i] * bounds.BoxExtent + bounds.Origin;
                         break;
                     }
-                    case 12 when Ar.Game is EGame.GAME_NeedForSpeedMobile:
+                    case 12:
                         Verts = Ar.ReadBulkArray<FVector>();
                         break;
                     default:

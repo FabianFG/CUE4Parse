@@ -20,7 +20,7 @@ public partial class PakFileReader
 
             if (len > 0)
             {
-                Span<byte> span = stackalloc byte[len];
+                Span<byte> span = len < 512 ? stackalloc byte[len] : new byte[len];
                 Ar.ReadExactly(span);
                 var xorKey = span[^1];
                 for (var i = 0; i < len; i++)
@@ -30,7 +30,7 @@ public partial class PakFileReader
             
             {
                 len = -len;
-                Span<char> span = stackalloc char[len];
+                Span<char> span = len < 512 ? stackalloc char[len] : new char[len];
                 Ar.ReadExactly(span.Cast<char, byte>());
                 var xorKey = span[^1];
                 for (var i = 0; i < len; i++)

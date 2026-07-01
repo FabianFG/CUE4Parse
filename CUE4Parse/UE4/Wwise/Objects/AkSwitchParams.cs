@@ -17,27 +17,32 @@ public readonly struct AkSwitchParams
     public AkSwitchParams(FWwiseArchive Ar)
     {
         NodeId = Ar.Read<uint>();
-
-        if (Ar.Version <= 89)
+        switch (Ar.Version)
         {
-            IsFirstOnly = Ar.Read<byte>() != 0;
-            ContinuePlayback = Ar.Read<byte>() != 0;
-            var onSwitchModeBitVector = Ar.Read<byte>();
-            OnSwitchMode = (EOnSwitchMode) (onSwitchModeBitVector & 0b00000001);
-        }
-        else if (Ar.Version <= 150)
-        {
-            var bitVector = Ar.Read<byte>();
-            IsFirstOnly = (bitVector & 0b00000001) != 0;
-            ContinuePlayback = (bitVector & 0b00000010) != 0;
-            var onSwitchModeBitVector = Ar.Read<byte>();
-            OnSwitchMode = (EOnSwitchMode) (onSwitchModeBitVector & 0b00000001);
-        }
-        else
-        {
-            var bitVector = Ar.Read<byte>();
-            IsFirstOnly = (bitVector & 0b00000001) != 0;
-            ContinuePlayback = (bitVector & 0b00000010) != 0;
+            case <= 89:
+            {
+                IsFirstOnly = Ar.Read<byte>() != 0;
+                ContinuePlayback = Ar.Read<byte>() != 0;
+                var onSwitchModeBitVector = Ar.Read<uint>();
+                OnSwitchMode = (EOnSwitchMode) (onSwitchModeBitVector & 0b00000001);
+                break;
+            }
+            case <= 150:
+            {
+                var bitVector = Ar.Read<byte>();
+                IsFirstOnly = (bitVector & 0b00000001) != 0;
+                ContinuePlayback = (bitVector & 0b00000010) != 0;
+                var onSwitchModeBitVector = Ar.Read<byte>();
+                OnSwitchMode = (EOnSwitchMode) (onSwitchModeBitVector & 0b00000001);
+                break;
+            }
+            default:
+            {
+                var bitVector = Ar.Read<byte>();
+                IsFirstOnly = (bitVector & 0b00000001) != 0;
+                ContinuePlayback = (bitVector & 0b00000010) != 0;
+                break;
+            }
         }
 
         FadeOutTime = Ar.Read<int>();

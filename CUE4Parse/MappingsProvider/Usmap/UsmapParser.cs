@@ -1,3 +1,4 @@
+using System.Text;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
@@ -82,7 +83,7 @@ public class UsmapParser
         for (var i = 0; i < nameSize; i++)
         {
             var nameLength = Ar.Version >= EUsmapVersion.LongFName ? Ar.Read<ushort>() : Ar.Read<byte>();
-            nameLut.Add(Ar.ReadStringUnsafe(nameLength));
+            nameLut.Add(Encoding.UTF8.GetString(Ar.ReadBytes(nameLength)));
         }
 
         var enumCount = Ar.Read<uint>();

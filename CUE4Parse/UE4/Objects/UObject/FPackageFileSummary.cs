@@ -142,16 +142,6 @@ namespace CUE4Parse.UE4.Objects.UObject
                 throw new ParserException($"Invalid uasset magic: 0x{Tag:X8} != 0x{PACKAGE_FILE_TAG:X8}");
             }
 
-            // The package has been stored in a separate endianness than the linker expected so we need to force
-            // endian conversion. Latent handling allows the PC version to retrieve information about cooked packages.
-            if (Tag == PACKAGE_FILE_TAG_SWAPPED)
-            {
-                // Set proper tag.
-                //Tag = PACKAGE_FILE_TAG;
-                // Toggle forced byte swapping.
-                throw new ParserException("Byte swapping for packages not supported");
-            }
-
             legacyFileVersion = Ar.Read<int>();
             if (Ar.Game == EGame.GAME_DeltaForce) legacyFileVersion /= 659;
 

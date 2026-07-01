@@ -97,37 +97,25 @@ public class FIoStoreShaderCodeArchiveConverter : JsonConverter<FIoStoreShaderCo
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("ShaderMapHashes");
-        writer.WriteStartArray();
-        foreach (var shaderMapHash in value.ShaderMapHashes)
-        {
-            serializer.Serialize(writer, shaderMapHash.Hash);
-        }
+        writer.WritePropertyName(nameof(value.ShaderMapHashes));
+        serializer.Serialize(writer, value.ShaderMapHashes);
 
-        writer.WriteEndArray();
+        writer.WritePropertyName(nameof(value.ShaderHashes));
+        serializer.Serialize(writer, value.ShaderHashes);
 
-        writer.WritePropertyName("ShaderHashes");
-        writer.WriteStartArray();
-        foreach (var shaderHash in value.ShaderHashes)
-        {
-            serializer.Serialize(writer, shaderHash.Hash);
-        }
-
-        writer.WriteEndArray();
-
-        writer.WritePropertyName("ShaderGroupIoHashes");
+        writer.WritePropertyName(nameof(value.ShaderGroupIoHashes));
         serializer.Serialize(writer, value.ShaderGroupIoHashes);
 
-        writer.WritePropertyName("ShaderMapEntries");
+        writer.WritePropertyName(nameof(value.ShaderMapEntries));
         serializer.Serialize(writer, value.ShaderMapEntries);
 
-        writer.WritePropertyName("ShaderEntries");
+        writer.WritePropertyName(nameof(value.ShaderEntries));
         serializer.Serialize(writer, value.ShaderEntries);
 
-        writer.WritePropertyName("ShaderGroupEntries");
+        writer.WritePropertyName(nameof(value.ShaderGroupEntries));
         serializer.Serialize(writer, value.ShaderGroupEntries);
 
-        writer.WritePropertyName("ShaderIndices");
+        writer.WritePropertyName(nameof(value.ShaderIndices));
         serializer.Serialize(writer, value.ShaderIndices);
 
         writer.WriteEndObject();
@@ -168,34 +156,22 @@ public class FSerializedShaderArchiveConverter : JsonConverter<FSerializedShader
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("ShaderMapHashes");
-        writer.WriteStartArray();
-        foreach (var shaderMapHash in value.ShaderMapHashes)
-        {
-            serializer.Serialize(writer, shaderMapHash.Hash);
-        }
+        writer.WritePropertyName(nameof(value.ShaderMapHashes));
+        serializer.Serialize(writer, value.ShaderMapHashes);
 
-        writer.WriteEndArray();
+        writer.WritePropertyName(nameof(value.ShaderHashes));
+        serializer.Serialize(writer, value.ShaderHashes);
 
-        writer.WritePropertyName("ShaderHashes");
-        writer.WriteStartArray();
-        foreach (var shaderHash in value.ShaderHashes)
-        {
-            serializer.Serialize(writer, shaderHash.Hash);
-        }
-
-        writer.WriteEndArray();
-
-        writer.WritePropertyName("ShaderMapEntries");
+        writer.WritePropertyName(nameof(value.ShaderMapEntries));
         serializer.Serialize(writer, value.ShaderMapEntries);
 
-        writer.WritePropertyName("ShaderEntries");
+        writer.WritePropertyName(nameof(value.ShaderEntries));
         serializer.Serialize(writer, value.ShaderEntries);
 
-        writer.WritePropertyName("PreloadEntries");
+        writer.WritePropertyName(nameof(value.PreloadEntries));
         serializer.Serialize(writer, value.PreloadEntries);
 
-        writer.WritePropertyName("ShaderIndices");
+        writer.WritePropertyName(nameof(value.ShaderIndices));
         serializer.Serialize(writer, value.ShaderIndices);
 
         writer.WriteEndObject();

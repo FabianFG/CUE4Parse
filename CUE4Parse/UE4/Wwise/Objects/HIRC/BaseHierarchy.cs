@@ -22,52 +22,52 @@ public class BaseHierarchy : AbstractHierarchy
     public readonly AkPropBundle PropBundle;
     public readonly AkPositioningParams PositioningParams;
     public readonly AkAuxParams? AuxParams;
-    public readonly EAdvSettings AdvSettingsParams;
+    public readonly AkAdvSettingsParams AdvSettingsParams;
     public readonly EAkVirtualQueueBehavior VirtualQueueBehavior;
     public readonly ushort MaxNumInstance;
     public readonly EAkBelowThresholdBehavior BelowThresholdBehavior;
     public readonly EHdrEnvelopeFlags HdrEnvelopeFlags;
     public readonly AkStateGroup[] StateGroups;
     public readonly AkRtpc[] RtpcList;
+    public readonly AkFeedbackInfo? FeedbackInfo;
 
     // CAkParameterNodeBase::SetNodeBaseParams
-    public BaseHierarchy(FWwiseArchive Ar) : base(Ar)
+    public BaseHierarchy(FWwiseArchive Ar) : base()
     {
-        OverrideFx = Ar.Read<byte>() != 0;
+        OverrideFx = Ar.ReadBool();
         FxParams = new AkFxParams(Ar);
 
         if (Ar.Version > 136)
         {
-            OverrideParentMetadataFlag = Ar.Read<byte>() != 0;
+            OverrideParentMetadataFlag = Ar.ReadBool();
             FxChunks = Ar.ReadArray(Ar.Read<byte>(), () => new AkFxChunk(Ar));
         }
 
         if (Ar.Version > 89 && Ar.Version <= 145)
         {
-            OverrideAttachmentParams = Ar.Read<byte>() != 0;
+            OverrideAttachmentParams = Ar.ReadBool();
         }
 
         OverrideBusId = Ar.Read<uint>();
         DirectParentId = Ar.Read<uint>();
 
-        if (Ar.Version <= 56)
+        switch (Ar.Version)
         {
-            Priority = Ar.Read<byte>() != 0;
-            PriorityOverrideParent = Ar.Read<byte>() != 0;
-            PriorityApplyDistFactor = Ar.Read<byte>() != 0;
-            DistOffset = Ar.Read<sbyte>();
-        }
-        else if (Ar.Version <= 89)
-        {
-            PriorityOverrideParent = Ar.Read<byte>() != 0;
-            PriorityApplyDistFactor = Ar.Read<byte>() != 0;
-        }
-        else
-        {
-            MidiBehaviorFlags = Ar.Read<EMidiBehaviorFlags>();
-
-            PriorityOverrideParent = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityOverrideParent ? 1 : 0) != 0;
-            PriorityApplyDistFactor = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityApplyDistFactor ? 1 : 0) != 0;
+            case <= 56:
+                Priority = Ar.ReadBool();
+                PriorityOverrideParent = Ar.ReadBool();
+                PriorityApplyDistFactor = Ar.ReadBool();
+                DistOffset = Ar.Read<sbyte>();
+                break;
+            case <= 89:
+                PriorityOverrideParent = Ar.ReadBool();
+                PriorityApplyDistFactor = Ar.ReadBool();
+                break;
+            default:
+                MidiBehaviorFlags = Ar.Read<EMidiBehaviorFlags>();
+                PriorityOverrideParent = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityOverrideParent ? 1 : 0) != 0;
+                PriorityApplyDistFactor = (byte) (MidiBehaviorFlags == EMidiBehaviorFlags.PriorityApplyDistFactor ? 1 : 0) != 0;
+                break;
         }
 
         PropBundle = new AkPropBundle(Ar);
@@ -79,11 +79,7 @@ public class BaseHierarchy : AbstractHierarchy
             AuxParams = new AkAuxParams(Ar);
         }
 
-        AdvSettingsParams = Ar.Read<EAdvSettings>();
-        VirtualQueueBehavior = Ar.Read<EAkVirtualQueueBehavior>();
-        MaxNumInstance = Ar.Read<ushort>();
-        BelowThresholdBehavior = Ar.Read<EAkBelowThresholdBehavior>();
-        HdrEnvelopeFlags = Ar.Read<EHdrEnvelopeFlags>();
+        AdvSettingsParams = new AkAdvSettingsParams(Ar);
 
         if (Ar.Version <= 52)
         {
@@ -100,6 +96,11 @@ public class BaseHierarchy : AbstractHierarchy
         }
 
         RtpcList = AkRtpc.ReadArray(Ar);
+
+        if (Ar.Version <= 126 && Ar.HasFeedback)
+        {
+            FeedbackInfo = new AkFeedbackInfo(Ar);
+        }
     }
 
     // WriteStartEndObjects are handled by derived classes!
@@ -153,11 +154,14 @@ public class BaseHierarchy : AbstractHierarchy
         writer.WritePropertyName(nameof(PositioningParams));
         serializer.Serialize(writer, PositioningParams);
 
-        writer.WritePropertyName(nameof(AuxParams));
-        serializer.Serialize(writer, AuxParams);
+        if (WwiseConverter.WwiseVersion.Value > 65)
+        {
+            writer.WritePropertyName(nameof(AuxParams));
+            serializer.Serialize(writer, AuxParams);
+        }
 
         writer.WritePropertyName(nameof(AdvSettingsParams));
-        writer.WriteValue(AdvSettingsParams.ToString());
+        serializer.Serialize(writer, AdvSettingsParams);
 
         writer.WritePropertyName(nameof(VirtualQueueBehavior));
         writer.WriteValue(VirtualQueueBehavior.ToString());
@@ -176,5 +180,11 @@ public class BaseHierarchy : AbstractHierarchy
 
         writer.WritePropertyName(nameof(RtpcList));
         serializer.Serialize(writer, RtpcList);
+
+        if (WwiseConverter.WwiseVersion.Value <= 126)
+        {
+            writer.WritePropertyName(nameof(FeedbackInfo));
+            serializer.Serialize(writer, FeedbackInfo);
+        }
     }
 }

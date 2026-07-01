@@ -55,6 +55,6 @@ public static class FAssetRegistryVersion
     public static void TrySerializeVersion(FArchive Ar, out FAssetRegistryVersionType version)
     {
         var guid = Ar.Read<FGuid>();
-        version = guid == GUID ? Ar.Read<FAssetRegistryVersionType>() : FAssetRegistryVersionType.LatestVersion;
+        version = guid == GUID ? Ar.Read<FAssetRegistryVersionType>() : FAssetRegistryVersionType.PreVersioning;
     }
 }

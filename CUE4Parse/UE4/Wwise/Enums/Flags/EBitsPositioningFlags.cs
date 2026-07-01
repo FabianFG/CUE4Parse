@@ -2,7 +2,7 @@
 namespace CUE4Parse.UE4.Wwise.Enums.Flags;
 
 [Flags]
-public enum EBitsPositioning : byte
+public enum EBitsPositioningFlags : byte
 {
     PositioningInfoOverrideParent = 1 << 0,
     HasListenerRelativeRouting = 1 << 1,

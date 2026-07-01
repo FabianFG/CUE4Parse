@@ -41,7 +41,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             return;
         }
 
-        var bHasSkipSerializationPropertiesData = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
+        var bHasSkipSerializationPropertiesData = Ar.Ver >= EUnrealEngineObjectUE3Version.BULKSERIALIZE_INSTANCE_DATA && FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
         if (Ar.Game is EGame.GAME_HonorofKingsWorld)
         {
             CustomGameData = Ar.ReadBoolean();
@@ -132,6 +132,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             }
 
             if (Ar.Game is EGame.GAME_AssaultFireFuture) Ar.SkipBulkArrayData();
+            if (Ar.Game is EGame.GAME_NeedForSpeedMobile) Ar.SkipMultipleBulkArrayData(2);
 
             var renderDataSizeBytes = Ar.Read<ulong>();
             Ar.Position += (long) renderDataSizeBytes;

@@ -65,6 +65,5 @@ public class UUserDefinedStruct : UStruct
             serializer.Serialize(writer, property.Tag);
         }
         writer.WriteEndObject();
-
     }
 }

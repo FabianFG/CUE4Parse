@@ -18,7 +18,7 @@ public class UFunction : UStruct
         if (Ar.Game is EGame.GAME_AshesOfCreation) Ar.Position += 4;
 
         // Replication info
-        if ((FunctionFlags & EFunctionFlags.FUNC_Net) != 0)
+        if (FunctionFlags.HasFlag(EFunctionFlags.FUNC_Net))
         {
             // Unused.
             var repOffset = Ar.Read<short>();

@@ -83,6 +83,7 @@ public class FStaticMeshLODResources
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
             if (Ar.Game >= EGame.GAME_UE5_5 || Ar.Game == EGame.GAME_MetalGearSolidDelta) Ar.Position += 4; // bHasRayTracingGeometry
+            if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 4;
 
             if (bInlined)
             {
@@ -161,7 +162,16 @@ public class FStaticMeshLODResources
             // uint32 ReversedIBsSize       = 0;
             Ar.Position += 12;
 
-            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders or EGame.GAME_NeedForSpeedMobile) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_NeedForSpeedMobile)
+            {
+                var count = Ar.Read<int>();
+                for (var i = 0; i < count; i++)
+                {
+                    Ar.Position += 4;
+                    Ar.SkipMultipleFixedArrays(2, 4);
+                }
+            }
         }
     }
 
