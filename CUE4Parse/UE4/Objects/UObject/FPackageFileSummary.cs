@@ -15,7 +15,6 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// <summary>
     /// Revision data for an Unreal package file.
     /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
     public readonly struct FGenerationInfo
     {
         /**
@@ -27,6 +26,22 @@ namespace CUE4Parse.UE4.Objects.UObject
          * Number of names in the linker's NameMap for this generation.
          */
         public readonly int NameCount;
+
+        /**
+         * Number of net serializable objects in the package for this generation.
+         */
+        public readonly int NetObjectCount;
+
+        public FGenerationInfo(FArchive Ar)
+        {
+            ExportCount = Ar.Read<int>();
+            NameCount = Ar.Read<int>();
+
+            if (Ar.Ver > EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
+            {
+                NetObjectCount = Ar.Read<int>();
+            }
+        }
     }
 
     [JsonConverter(typeof(FPackageFileSummaryConverter))]
@@ -37,6 +52,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public const uint PACKAGE_FILE_TAG_ACE7 = 0x37454341U; // ACE7
         private const uint PACKAGE_FILE_TAG_ONE = 0x00656E6FU; // SOD2
         private const uint PACKAGE_FILE_TAG_AE = 0x56DE5ECA; // AshEchoes
+        public const uint PACKAGE_FILE_TAG_LOS = 0x180477E3; // LineOfSight
 
         public readonly uint Tag;
         public FPackageFileVersion FileVersionUE;
@@ -135,7 +151,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 goto afterPackageFlags;
             }
 
-            if (Tag == PACKAGE_FILE_TAG_AE) Tag = PACKAGE_FILE_TAG;
+            if (Tag == PACKAGE_FILE_TAG_AE || Tag == PACKAGE_FILE_TAG_LOS) Tag = PACKAGE_FILE_TAG;
 
             if (Tag != PACKAGE_FILE_TAG && Tag != PACKAGE_FILE_TAG_SWAPPED)
             {
@@ -336,7 +352,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SavedByEngineVersion = new FEngineVersion(Ar);
                 FixCorruptEngineVersion(FileVersionUE, SavedByEngineVersion);
             }
-            else
+            else if (Ar.Game >= EGame.GAME_UE4_0)
             {
                 var engineChangelist = Ar.Read<int>();
 
