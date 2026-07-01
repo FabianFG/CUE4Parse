@@ -19,11 +19,4 @@ public static class UsmapArchiveExtensions
     {
         return Ar.Read<int>();
     }
-
-    public static unsafe string ReadStringUnsafe(this FArchive Ar, int nameLength)
-    {
-        var nameBytes = stackalloc byte[nameLength];
-        Ar.Serialize(nameBytes, nameLength);
-        return new string((sbyte*) nameBytes, 0, nameLength);
-    }
 }
