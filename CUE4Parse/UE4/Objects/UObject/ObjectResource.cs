@@ -241,7 +241,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ClassIndex = new FPackageIndex(Ar);
             SuperIndex = new FPackageIndex(Ar);
             TemplateIndex = Ar.Ver >= EUnrealEngineObjectUE4Version.TemplateIndex_IN_COOKED_EXPORTS ? new FPackageIndex(Ar) : new FPackageIndex();
-            OuterIndex = new FPackageIndex(Ar);
+            OuterIndex = Ar.Ver >= EUnrealEngineObjectUE3Version.Release50 ? new FPackageIndex(Ar) : new FPackageIndex();
             ObjectName = Ar.ReadFName();
             ObjectFlags = Ar.Read<uint>();
 
