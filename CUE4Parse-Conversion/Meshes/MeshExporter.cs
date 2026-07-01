@@ -58,7 +58,7 @@ namespace CUE4Parse_Conversion.Meshes
         {
             MeshLods = new List<Mesh>();
 
-            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, options.NaniteMeshFormat) || convertedMesh.LODs.Count == 0)
+            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, options.NaniteMeshFormat, options.LodFormat) || convertedMesh.LODs.Count == 0)
             {
                 Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
                 return;

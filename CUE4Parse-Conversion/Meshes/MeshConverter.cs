@@ -49,7 +49,7 @@ public static class MeshConverter
         return true;
     }
 
-    public static bool TryConvert(this USplineMeshComponent? spline, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
+    public static bool TryConvert(this USplineMeshComponent? spline, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs,  ELodFormat lodFormat = ELodFormat.AllLods)
     {
         var originalMesh = spline?.GetStaticMesh().Load<UStaticMesh>();
         if (originalMesh == null)
@@ -57,29 +57,35 @@ public static class MeshConverter
             convertedMesh = new CStaticMesh();
             return false;
         }
-        return TryConvert(originalMesh, spline, out convertedMesh, naniteFormat);
+        return TryConvert(originalMesh, spline, out convertedMesh, naniteFormat, lodFormat);
     }
 
-    public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
+    public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs, ELodFormat lodFormat = ELodFormat.AllLods)
     {
-        return TryConvert(originalMesh, null, out convertedMesh, naniteFormat);
+        return TryConvert(originalMesh, null, out convertedMesh, naniteFormat, lodFormat);
     }
 
     public static bool TryConvert(this UStaticMesh originalMesh, USplineMeshComponent? spline,
-        out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
+        out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs, ELodFormat lodFormat = ELodFormat.AllLods)
     {
         convertedMesh = new CStaticMesh();
-        if (originalMesh.RenderData?.Bounds == null || originalMesh.RenderData?.LODs is null)
+        var renderData = originalMesh.RenderData;
+        if (renderData == null || originalMesh.RenderData?.Bounds == null || originalMesh.RenderData?.LODs is null)
             return false;
 
-        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, originalMesh.RenderData.Bounds.SphereRadius / 2);
+        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, renderData.Bounds!.SphereRadius / 2);
         convertedMesh.BoundingBox = new FBox(
-            originalMesh.RenderData.Bounds.Origin - originalMesh.RenderData.Bounds.BoxExtent,
-            originalMesh.RenderData.Bounds.Origin + originalMesh.RenderData.Bounds.BoxExtent);
+            renderData.Bounds.Origin - renderData.Bounds.BoxExtent,
+            renderData.Bounds.Origin + renderData.Bounds.BoxExtent);
 
-        for (var i = 0; i < originalMesh.RenderData.LODs.Length; i++)
+        if (naniteFormat == ENaniteMeshFormat.OnlyNaniteLOD) goto Nanite;
+
+        var lods = renderData.LODs!;
+        var lastLod = lodFormat == ELodFormat.FirstLod ? Math.Min(1, lods.Length) : lods.Length;
+        
+        for (var i = 0; i < lastLod; i++)
         {
-            var srcLod = originalMesh.RenderData.LODs[i];
+            var srcLod = lods[i];
             if (srcLod.SkipLod) continue;
 
             var numTexCoords = srcLod.VertexBuffer!.NumTexCoords;
@@ -172,28 +178,27 @@ public static class MeshConverter
             convertedMesh.LODs.Add(staticMeshLod);
         }
 
-        var lodsCount = convertedMesh.LODs.Count;
-        if ((lodsCount == 0 || naniteFormat != ENaniteMeshFormat.OnlyNormalLODs)
-            && TryConvertNaniteMesh(originalMesh, out CStaticMeshLod? naniteMesh) && naniteMesh is not null)
-        {
-            switch (naniteFormat)
+        Nanite:
+            var lodsCount = convertedMesh.LODs.Count;
+            if ((lodsCount == 0 || naniteFormat != ENaniteMeshFormat.OnlyNormalLODs)
+                && TryConvertNaniteMesh(originalMesh, out CStaticMeshLod? naniteMesh) && naniteMesh is not null)
             {
-                case ENaniteMeshFormat.OnlyNaniteLOD:
-                    foreach (var lod in convertedMesh.LODs) lod.Dispose();
-                    convertedMesh.LODs.Clear();
-                    convertedMesh.LODs.Add(naniteMesh);
-                    break;
-                case ENaniteMeshFormat.AllLayersNaniteFirst:
-                    convertedMesh.LODs.Insert(0, naniteMesh);
-                    break;
-                case ENaniteMeshFormat.AllLayersNaniteLast:
-                    convertedMesh.LODs.Add(naniteMesh);
-                    break;
-                case ENaniteMeshFormat.OnlyNormalLODs when lodsCount == 0:
-                    convertedMesh.LODs.Add(naniteMesh);
-                    break;
+                switch (naniteFormat)
+                {
+                    case ENaniteMeshFormat.OnlyNaniteLOD:
+                        convertedMesh.LODs.Add(naniteMesh);
+                        break;
+                    case ENaniteMeshFormat.AllLayersNaniteFirst:
+                        convertedMesh.LODs.Insert(0, naniteMesh);
+                        break;
+                    case ENaniteMeshFormat.AllLayersNaniteLast:
+                        convertedMesh.LODs.Add(naniteMesh);
+                        break;
+                    case ENaniteMeshFormat.OnlyNormalLODs when lodsCount == 0:
+                        convertedMesh.LODs.Add(naniteMesh);
+                        break;
+                }
             }
-        }
 
         convertedMesh.FinalizeMesh();
         return true;
