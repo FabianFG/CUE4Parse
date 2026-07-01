@@ -9,9 +9,11 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write
 
 env:
   OWNER: "FabianFG"
+  NUGET_OWNER: "GMatrixGames"
 
 jobs:
   build:
@@ -60,11 +62,17 @@ jobs:
             -p:PackageVersion=${{ steps.ver.outputs.packageVersion }} `
             --output "${{ github.workspace }}\nuget-packages"
 
+      - name: NuGet login
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ env.NUGET_OWNER }}
+
       - name: Push NuGet Package(s) to nuget.org
         run: |
           dotnet nuget push "${{ github.workspace }}\nuget-packages\*.nupkg" `
             --source https://api.nuget.org/v3/index.json `
-            --api-key ${{ secrets.NUGET_API_KEY }} `
+            --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} `
             --skip-duplicate
 
       - name: Add GitHub Packages source
