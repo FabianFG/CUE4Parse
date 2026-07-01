@@ -110,8 +110,6 @@ public static class BlueprintDecompilerUtils
     {
         if (className.StartsWith("SolarisMathLibrary_") || className == "KismetMathLibrary")
         {
-            if (functionName.StartsWith("EqualEqual_ByteByte")) return $"((!{parametersList[0]}) == (!{parametersList[1]}))";
-            if (functionName.StartsWith("NotEqual_ByteByte")) return $"((!{parametersList[0]}) != (!{parametersList[1]}))";
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
             if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
             if (functionName.StartsWith("NotEqualExactly_")) return $"({parametersList[0]} != {parametersList[1]})";
@@ -229,7 +227,7 @@ public static class BlueprintDecompilerUtils
             if (functionName.StartsWith("JoinStringArray")) return $"{parametersList[0]}.Join({parametersList[1]})";
             if (functionName.StartsWith("Replace")) return $"{parametersList[0]}.Replace({parametersList[1]}, {parametersList[2]}, /* SearchCase = */ {parametersList[3]})";
             if (functionName.StartsWith("StartsWith")) return $"{parametersList[0]}.StartsWith({parametersList[1]}, /* SearchCase = */ {parametersList[2]})";
-            if (functionName.StartsWith("Contains")) return $"{parametersList[0]}.Contains({parametersList[1]}, /* bUseCase = */ {parametersList[2]}, /* bSearchFromEnd = */ {parametersList[3]})";
+            // if (functionName.StartsWith("Contains")) return $"{parametersList[0]}.Contains({parametersList[1]}, /* bUseCase = */ {parametersList[2]}, /* bSearchFromEnd = */ {parametersList[3]})";
             if (functionName.StartsWith("IsNumeric")) return $"{parametersList[0]}.IsNumeric()";
             if (functionName.StartsWith("Len")) return $"{parametersList[0]}.Length";
         }
