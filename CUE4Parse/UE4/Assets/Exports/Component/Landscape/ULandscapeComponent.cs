@@ -99,7 +99,27 @@ public class ULandscapeComponent : UPrimitiveComponent
             if (bCookedMobileData)
             {
                 PlatformData = new FLandscapeComponentDerivedData(Ar);
+
+                /*
+                // untested
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_ES2_TEXTURES)
+                {
+                    new FPackageIndex(Ar); // MobileMaterialInterface
+                    new FPackageIndex(Ar); // MobileWeightNormalmapTexture
+                }
+                */
             }
+
+            /*
+            // untested
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.LANDSCAPE_GRASS_COOKING && Ar.Ver < EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA)
+            {
+                var NumChannels = Ar.Read<int>();
+                if (NumChannels > 0)
+                {
+                    Ar.ReadArray(() => new FByteBulkData(Ar)); // OldData (cooked FGrassMap data)
+                }
+            }*/
         }
     }
 

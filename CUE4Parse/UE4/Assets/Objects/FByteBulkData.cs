@@ -111,6 +111,14 @@ public sealed class FByteBulkData : TBulkData<byte>
             dataAr.SerializeCompressedNew(uncompressedData, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
             data = uncompressedData;
         }
+        
+        if (BulkDataFlags.HasFlag(BULKDATA_CompressedLZO))
+        {
+            var uncompressedData = new byte[Header.ElementCount];
+            using var dataAr = new FByteArchive("", data, _savedAr?.Versions);
+            dataAr.SerializeCompressedNew(uncompressedData, GetDataSize(), "LZO", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            data = uncompressedData;
+        }
 
         return true;
     }

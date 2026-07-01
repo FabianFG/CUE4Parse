@@ -115,6 +115,7 @@ public class UBoxComponent : UShapeComponent;
 public class UBoxFalloff : UFieldNodeFloat;
 public class UBoxReflectionCaptureComponent : UReflectionCaptureComponent;
 public class UBrainComponent : UActorComponent;
+
 public class UBrushComponent : UPrimitiveComponent
 {
     public FPackageIndex? Brush { get; protected set; }
@@ -126,11 +127,17 @@ public class UBrushComponent : UPrimitiveComponent
 
         Brush = GetOrDefault(nameof(Brush), new FPackageIndex());
         BrushBodySetup = GetOrDefault(nameof(BrushBodySetup), new FPackageIndex());
+
+        if (Ar.Game < EGame.GAME_UE4_0)
+        {
+            Ar.ReadArray(() => Ar.ReadBulkArray<byte>()); // CachedPhysBrushData
+        }
     }
 
     public UModel? GetBrush() => Brush?.Load<UModel>();
     public override UBodySetup? GetBodySetup() => BrushBodySetup?.Load<UBodySetup>();
 }
+
 public class UCableComponent : UMeshComponent;
 public class UCameraComponent : USceneComponent;
 public class UCameraShakeSourceComponent : USceneComponent;
