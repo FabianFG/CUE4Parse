@@ -402,6 +402,7 @@ public class UWaveScalar : UFieldNodeFloat;
 public class UWidgetComponent : UMeshComponent;
 public class UWidgetInteractionComponent : USceneComponent;
 public class UWindDirectionalSourceComponent : USceneComponent;
+public class UWindPointSourceComponent : UWindDirectionalSourceComponent;
 public class UWorldPartitionDestructibleHLODComponent : USceneComponent;
 public class UWorldPartitionDestructibleHLODMeshComponent : UWorldPartitionDestructibleHLODComponent;
 public class UWorldPartitionStreamingSourceComponent : UActorComponent;

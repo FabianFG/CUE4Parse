@@ -160,7 +160,16 @@ namespace CUE4Parse.FileProvider
                 !collection.TryGetValue(fixedPath.SubstringBeforeWithLast('.') + GameFile.UePackageExtensions[1], out file) && // umap
                 !collection.TryGetValue(path, out file)) // in case FixPath broke something
             {
-                file = null;
+                if (Versions.Game >= EGame.GAME_UE4_0)
+                {
+                    file = null;
+                }
+                else
+                {
+                    // If game is UE3 just find file that matches name
+                    var nameOnly = Path.GetFileNameWithoutExtension(fixedPath);
+                    file = collection.Values.FirstOrDefault(x => x.NameWithoutExtension.Equals(nameOnly, StringComparison.OrdinalIgnoreCase));
+                }
             }
 
             return file != null;
@@ -494,7 +503,7 @@ namespace CUE4Parse.FileProvider
             // This part is only for FSoftObjectPaths and not really needed anymore internally, but it's still in here for user input
             if (lastPart.Contains('.') && lastPart.SubstringBefore('.') == lastPart.SubstringAfter('.'))
                 path = string.Concat(path.SubstringBeforeWithLast('/'), lastPart.SubstringBefore('.'));
-            if (path[^1] != '/' && !lastPart.Contains('.'))
+            if (path[^1] != '/' && !lastPart.Contains('.') && Versions.Game >= EGame.GAME_UE4_0)
                 path += "." + GameFile.UePackageExtensions[0]; // uasset
 
             var ret = path;

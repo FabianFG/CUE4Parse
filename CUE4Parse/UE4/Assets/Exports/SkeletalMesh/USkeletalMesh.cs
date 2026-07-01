@@ -161,7 +161,7 @@ public partial class USkeletalMesh : UObject
                 break;
         }
 
-        if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.DYNAMICTEXTUREINSTANCES && FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
         {
             Ar.SkipFixedArray(sizeof(float));
         }
