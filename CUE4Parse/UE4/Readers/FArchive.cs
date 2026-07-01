@@ -617,7 +617,7 @@ namespace CUE4Parse.UE4.Readers
             }
 
             // Read in base summary, contains total sizes :
-            var summary = Read<FCompressedChunkInfo>();
+            var summary = new FCompressedChunkInfo(this);
 
             if (bWasByteSwapped)
             {
