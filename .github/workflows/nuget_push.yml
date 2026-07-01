@@ -98,13 +98,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $tag = "${{ steps.ver.outputs.packageVersion }}"
-          $tags = gh release list --repo ${{ github.repository }} --json tagName --jq '.[].tagName'
-          if ($tags -contains $tag) {
+          gh api "repos/${{ github.repository }}/releases/tags/$tag" *> $null
+          if ($LASTEXITCODE -eq 0) {
             Write-Host "Release $tag already exists, skipping."
             "skip=true" >> $env:GITHUB_OUTPUT
           } else {
             "skip=false" >> $env:GITHUB_OUTPUT
           }
+          exit 0
 
       - name: Collect DLL artifacts
         if: steps.release_check.outputs.skip == 'false'
