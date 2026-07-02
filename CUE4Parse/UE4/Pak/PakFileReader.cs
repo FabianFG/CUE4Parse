@@ -7,6 +7,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
+using CUE4Parse.GameTypes.LordOfMysteries.UE4.Lua;
 using CUE4Parse.GameTypes.NFS.Mobile.Lua;
 using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.GameTypes.PUBG.UE4.Lua;
@@ -168,6 +169,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                     break;
                 case EGame.GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
                     return NFSLua.RestoreLuaBytecode(pakEntry.Path, uncompressed);
+                case EGame.GAME_LordOfMysteries when pakEntry.Extension is "luac":
+                    return LordOfMysteriesLua.DecryptLuaJITBytecode(pakEntry.Path, uncompressed);
                 default:
                     break;
             }
@@ -221,6 +224,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                 break;
             case EGame.GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
                 return NFSLua.RestoreLuaBytecode(pakEntry.Path, data);
+            case EGame.GAME_LordOfMysteries when pakEntry.Extension is "luac":
+                return LordOfMysteriesLua.DecryptLuaJITBytecode(pakEntry.Path, data);
             default:
                 break;
         }
