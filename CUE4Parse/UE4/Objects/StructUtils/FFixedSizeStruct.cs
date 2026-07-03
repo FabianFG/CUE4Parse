@@ -18,4 +18,9 @@ public class FFixedSizeStruct : IUStruct
 public struct FRawStruct<T> : IUStruct
 {
     public T Value;
+
+    public FRawStruct(Func<T> getter)
+    {
+        Value = getter();
+    }
 }

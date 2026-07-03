@@ -30,6 +30,7 @@ using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.ChaosCaching;
 using CUE4Parse.UE4.Objects.ControlRig;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -56,6 +57,7 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Serilog;
 using FRawUIntStruct = CUE4Parse.UE4.Objects.StructUtils.FRawStruct<uint>;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -448,4 +450,79 @@ public class FScriptStruct
     }
 
     public override string ToString() => $"{StructType} ({StructType.GetType().Name})";
+
+    public static FScriptStruct? ReadInstancedStruct(FAssetArchive Ar)
+    {
+        var structType = new FPackageIndex(Ar);
+        return ReadInstancedStruct(Ar, structType);
+    }
+
+    public static FScriptStruct? ReadInstancedStruct(FAssetArchive Ar, FPackageIndex structType)
+    {
+        var serialSize = Ar.Read<int>();
+        var savedPos = Ar.Position;
+        if (structType is null || structType.IsNull)
+        {
+            Ar.Position = savedPos + serialSize;
+            return null;
+        }
+
+        FScriptStruct? result = null;
+        try
+        {
+            var structName = structType.ResolvedObject is { } obj ? obj.Name.ToString() : null;
+            if (structType.TryLoad<UStruct>(out var struc) || structName != null)
+            {
+                result = new FScriptStruct(Ar, structName, struc, ReadType.NORMAL);
+            }
+            else
+            {
+                Log.Warning("Failed to load FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Warning(e, "Failed to read FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
+        }
+        finally
+        {
+            Ar.Position = savedPos + serialSize;
+        }
+
+        return result;
+    }
+
+    public static FScriptStruct? ReadInstancedStructWithoutSerialSize(FAssetArchive Ar)
+    {
+        var structType = new FPackageIndex(Ar);
+        return ReadInstancedStructWithoutSerialSize(Ar, structType);
+    }
+
+    public static FScriptStruct? ReadInstancedStructWithoutSerialSize(FAssetArchive Ar, FPackageIndex structType)
+    {
+        FScriptStruct? result = null;
+        if (structType is null || structType.IsNull)
+        {
+            return result;
+        }
+
+        try
+        {
+            var structName = structType.ResolvedObject is { } obj ? obj.Name.ToString() : null;
+            if (structType.TryLoad<UStruct>(out var struc) || structName != null)
+            {
+                result = new FScriptStruct(Ar, structName, struc, ReadType.NORMAL);
+            }
+            else
+            {
+                throw new ParserException($"Failed to load FInstancedStruct of type {structType.ResolvedObject?.GetFullName()}");
+            }
+        }
+        catch (Exception e)
+        {
+            throw new ParserException($"Failed to read FInstancedStruct of type {structType.ResolvedObject?.GetFullName()}", e);
+        }
+
+        return result;
+    }
 }

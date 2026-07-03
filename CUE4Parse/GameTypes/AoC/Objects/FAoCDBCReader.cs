@@ -91,7 +91,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         return true;
     }
 
-    public IUStruct? ReadInstancedStruct()
+    public FScriptStruct? ReadInstancedStruct()
     {
         var strucPath = ReadFString();
         var size = Read<int>();
@@ -100,7 +100,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         var name = strucPath.SubstringAfterLast('.');
         try
         {
-            return new FScriptStruct(this, name, null, ReadType.RAW).StructType;
+            return new FScriptStruct(this, name, null, ReadType.RAW);
         }
         catch
         {
