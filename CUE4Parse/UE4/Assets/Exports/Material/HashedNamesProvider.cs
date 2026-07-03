@@ -16,15 +16,22 @@ public sealed class HashedNamesProvider
 
     private HashedNamesProvider()
     {
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse.Resources.ShaderHashedNames.json");
-        if (stream == null)
+        try
         {
-            Log.Error("Couldn't find ShaderHashedNames.json in Embedded Resources");
-            return;
-        }
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse.Resources.ShaderHashedNames.json");
+            if (stream == null)
+            {
+                Log.Error("Couldn't find ShaderHashedNames.json in Embedded Resources");
+                return;
+            }
 
-        using StreamReader reader = new(stream);
-        _hashedNames = JsonConvert.DeserializeObject<ConcurrentDictionary<ulong, string>>(reader.ReadToEnd()) ?? [];
+            using StreamReader reader = new(stream);
+            _hashedNames = JsonConvert.DeserializeObject<ConcurrentDictionary<ulong, string>>(reader.ReadToEnd()) ?? [];
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to load ShaderHashedNames.json from Embedded Resources");
+        }
     }
 
     public static bool TryGetEntry(ulong hash, out string? entry)
