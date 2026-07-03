@@ -28,7 +28,7 @@ public class UMorphTarget : UObject
 
         var bCooked = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MorphTargetCookedCPUDataCompressed && Ar.ReadBoolean();
         if (Ar.Game is EGame.GAME_NevernessToEverness) bCooked = Ar.ReadBoolean();
-        if (Ar.Game == EGame.GAME_MortalKombat1) Ar.SkipFixedArray(4);
+        if (Ar.Game == EGame.GAME_MortalKombat1 && Ar.ReadArray<int>()[^1] != 0) return;
 
         MorphLODModels = Ar.ReadArray(() => new FMorphTargetLODModel(Ar));
 
