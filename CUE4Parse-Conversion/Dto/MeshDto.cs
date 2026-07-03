@@ -149,7 +149,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
     }
 
-    private void ParseMeshRenderData(FStaticMeshRenderData renderData, EMeshQuality quality = EMeshQuality.All, USplineMeshComponent? spline = null)
+    private void ParseMeshRenderData(FStaticMeshRenderData renderData, EMeshQuality quality, USplineMeshComponent? spline = null)
     {
         foreach (var sourceLodIndex in quality.GetRange(renderData.LODs!.Length, i => renderData.LODs[i].SkipLod))
         {

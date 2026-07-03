@@ -10,7 +10,7 @@ public sealed class SplineMeshExporter(USplineMeshComponent component) : MeshExp
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(USplineMeshComponent component, IMeshExportFormat format)
     {
-        using var dto = new StaticMeshDto(component);
+        using var dto = new StaticMeshDto(component, Session.Options.MeshQuality);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Spline mesh has no LODs");
