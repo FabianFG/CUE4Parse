@@ -12,7 +12,7 @@ public class ULightComponentBase : USceneComponent
 {
     public float Intensity { get; protected set; }
     public FColor LightColor { get; private set; }
-    public uint CastShadows { get; private set; }
+    public bool CastShadows { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -20,7 +20,7 @@ public class ULightComponentBase : USceneComponent
 
         Intensity = GetOrDefault(nameof(Intensity), GetOrDefault("Brightness", MathF.PI));
         LightColor = GetOrDefault(nameof(LightColor), new FColor(255, 255, 255, 255));
-        CastShadows = GetOrDefault(nameof(CastShadows), 1u);
+        CastShadows = GetOrDefault(nameof(CastShadows), false);
     }
 
     public FLinearColor GetLightColor()
@@ -36,9 +36,9 @@ public class ULightComponent : ULightComponentBase
     public float Temperature { get; private set; }
     public float MaxDrawDistance { get; private set; }
     public float MaxDistanceFadeRange { get; private set; }
-    public uint bUseTemperature { get; private set; }
+    public bool bUseTemperature { get; private set; }
     public FPackageIndex IESTexture { get; private set; }
-    public uint bUseIESBrightness { get; private set; }
+    public bool bUseIESBrightness { get; private set; }
     public float IESBrightnessScale { get; private set; }
     public FStaticShadowDepthMapData? LegacyData { get; private set; }
 
@@ -49,9 +49,9 @@ public class ULightComponent : ULightComponentBase
         Temperature = GetOrDefault(nameof(Temperature), 6500.0f);
         MaxDrawDistance = GetOrDefault(nameof(MaxDrawDistance), 0.0f);
         MaxDistanceFadeRange = GetOrDefault(nameof(MaxDistanceFadeRange), 0.0f);
-        bUseTemperature = GetOrDefault(nameof(bUseTemperature), 0u);
+        bUseTemperature = GetOrDefault(nameof(bUseTemperature), false);
         IESTexture = GetOrDefault(nameof(IESTexture), new FPackageIndex());
-        bUseIESBrightness = GetOrDefault(nameof(bUseIESBrightness), 0u);
+        bUseIESBrightness = GetOrDefault(nameof(bUseIESBrightness), false);
         IESBrightnessScale = GetOrDefault(nameof(IESBrightnessScale), 1.0f);
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_SHADOW_DEPTH_MAPS)
