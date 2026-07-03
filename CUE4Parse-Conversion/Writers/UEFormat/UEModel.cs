@@ -22,11 +22,10 @@ public sealed class UEModel : UEFormatExport
     {
         using (var lodChunk = new FDataChunk("LODS"))
         {
-            var (start, end) = options.MeshQuality.GetRange(mesh.LODs.Count);
-            for (var i = start; i < end; i++)
+            foreach (var lod in mesh.LODs)
             {
-                using var subLodChunk = new FStaticDataChunk($"LOD{i}");
-                SerializeCommonMeshData(subLodChunk, mesh.LODs[i]);
+                using var subLodChunk = new FStaticDataChunk($"LOD{lod.SourceLodIndex}");
+                SerializeCommonMeshData(subLodChunk, lod);
                 subLodChunk.Serialize(lodChunk);
 
                 lodChunk.Count++;
@@ -63,11 +62,9 @@ public sealed class UEModel : UEFormatExport
         {
             using var lodChunk = new FDataChunk("LODS");
 
-            var (start, end) = options.MeshQuality.GetRange(mesh.LODs.Count);
-            for (var i = start; i < end; i++)
+            foreach (var lod in mesh.LODs)
             {
-                var lod = mesh.LODs[i];
-                using var subLodChunk = new FStaticDataChunk($"LOD{i}");
+                using var subLodChunk = new FStaticDataChunk($"LOD{lod.SourceLodIndex}");
                 SerializeCommonMeshData(subLodChunk, lod);
                 SerializeSkeletalMeshData(subLodChunk, lod, options.ExportMorphTargets ? mesh.MorphTargets : null);
                 subLodChunk.Serialize(lodChunk);

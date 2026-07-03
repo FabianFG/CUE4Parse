@@ -99,7 +99,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
     }
 
-    public StaticMeshDto(UStaticMesh mesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null) : base(mesh)
+    public StaticMeshDto(UStaticMesh mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null) : base(mesh)
     {
         ArgumentNullException.ThrowIfNull(mesh.RenderData?.LODs, "Mesh has no LOD data");
         ArgumentNullException.ThrowIfNull(mesh.RenderData?.Bounds, "Mesh has no bounds");
@@ -109,7 +109,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
         if (naniteFormat != ENaniteMeshFormat.NaniteOnly) // just so we don't waste time
         {
-            ParseMeshRenderData(mesh.RenderData, spline);
+            ParseMeshRenderData(mesh.RenderData, quality, spline);
         }
 
         var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
@@ -119,11 +119,11 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         }
         else if (LODs.Count == 0) // in case someone put NaniteOnly but there was no nanite to parse
         {
-            ParseMeshRenderData(mesh.RenderData, spline);
+            ParseMeshRenderData(mesh.RenderData, quality, spline);
         }
     }
 
-    public StaticMeshDto(USplineMeshComponent spline) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), ENaniteMeshFormat.NoNanite, spline)
+    public StaticMeshDto(USplineMeshComponent spline, EMeshQuality quality = EMeshQuality.All) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), quality, ENaniteMeshFormat.NoNanite, spline)
     {
 
     }
@@ -133,19 +133,17 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
     }
 
-    private void ParseMeshRenderData(FStaticMeshRenderData renderData, USplineMeshComponent? spline = null)
+    private void ParseMeshRenderData(FStaticMeshRenderData renderData, EMeshQuality quality = EMeshQuality.All, USplineMeshComponent? spline = null)
     {
-        for (var i = 0u; i < renderData.LODs!.Length; i++)
+        foreach (var sourceLodIndex in quality.GetRange(renderData.LODs!.Length, i => renderData.LODs[i].SkipLod))
         {
-            if (renderData.LODs[i].SkipLod) continue;
-
             var screenSize = 0.0f;
-            if (i < renderData.ScreenSize.Length)
+            if (sourceLodIndex < renderData.ScreenSize.Length)
             {
-                screenSize = renderData.ScreenSize[i];
+                screenSize = renderData.ScreenSize[sourceLodIndex];
             }
 
-            LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, i, renderData.LODs[i], screenSize, spline));
+            LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, sourceLodIndex, renderData.LODs[sourceLodIndex], screenSize, spline));
         }
     }
 
@@ -279,7 +277,7 @@ public sealed class SkeletalMeshDto : SkeletonDto
     public FPackageIndex[]? MorphTargets { get; private set; }
     public FPackageIndex[]? AssetUserData { get; private set; }
 
-    public SkeletalMeshDto(USkeletalMesh mesh) : base(mesh)
+    public SkeletalMeshDto(USkeletalMesh mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite) : base(mesh)
     {
         ArgumentNullException.ThrowIfNull(mesh.LODModels, "Mesh has no LOD data");
 
@@ -287,10 +285,15 @@ public sealed class SkeletalMeshDto : SkeletonDto
         MorphTargets = mesh.MorphTargets;
         AssetUserData = mesh.AssetUserData;
 
-        for (var i = 0u; i < mesh.LODModels.Length; i++)
+        // TODO: nanite skel mesh: FarFarWest/Content/Characters/Characters/Goat/SKM_Goat.uasset
+        // if (mesh.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
+        // {
+        //
+        // }
+
+        foreach (var sourceLodIndex in quality.GetRange(mesh.LODModels.Length, i => mesh.LODModels[i].SkipLod))
         {
-            if (mesh.LODModels[i].SkipLod) continue;
-            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, i, mesh.LODModels[i], mesh.LODInfo[i].ScreenSize.Value));
+            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, sourceLodIndex, mesh.LODModels[sourceLodIndex], mesh.LODInfo[sourceLodIndex].ScreenSize.Value));
         }
     }
 

@@ -13,14 +13,12 @@ public sealed class GltfMeshFormat : IMeshExportFormat
     {
         var results = new List<ExportFile>();
 
-        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
-        for (var i = start; i < end; i++)
+        foreach (var lod in dto.LODs)
         {
             using var ar = new FArchiveWriter();
-            new Gltf(objectName, dto, i, options.ExportMorphTargets).Save(ar);
+            new Gltf(objectName, lod, options.ExportMorphTargets).Save(ar);
 
-            var suffix = i == 0 ? "" : $"_LOD{i}";
-            results.Add(new ExportFile("glb", ar.GetBuffer(), suffix));
+            results.Add(new ExportFile("glb", ar.GetBuffer(), lod._suffix));
         }
 
         return results;
@@ -30,14 +28,12 @@ public sealed class GltfMeshFormat : IMeshExportFormat
     {
         var results = new List<ExportFile>();
 
-        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
-        for (var i = start; i < end; i++)
+        foreach (var lod in dto.LODs)
         {
             using var ar = new FArchiveWriter();
-            new Gltf(objectName, dto, i).Save(ar);
+            new Gltf(objectName, lod).Save(ar);
 
-            var suffix = i == 0 ? "" : $"_LOD{i}";
-            results.Add(new ExportFile("glb", ar.GetBuffer(), suffix));
+            results.Add(new ExportFile("glb", ar.GetBuffer(), lod._suffix));
         }
 
         return results;

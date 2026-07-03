@@ -15,6 +15,8 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
     public readonly float ScreenSize;
     public readonly bool IsTwoSided;
 
+    internal readonly string? _suffix;
+
     private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColorDto[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
     {
         if (owner.Materials.Length > 0)
@@ -36,6 +38,8 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
         VertexColors = vertexColors;
         ScreenSize = screenSize;
         IsTwoSided = isTwoSided;
+
+        _suffix = SourceLodIndex == 0 ? null : $"_LOD{SourceLodIndex}";
     }
 
     private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)

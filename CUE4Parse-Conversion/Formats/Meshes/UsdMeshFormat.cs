@@ -27,20 +27,18 @@ public class UsdMeshFormat : IMeshExportFormat
         var materials = CreateMaterials(dto.Materials, materialPaths);
         if (materials is not null) root.Add(materials);
 
-        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
-        for (var i = start; i < end; i++)
+        foreach (var lod in dto.LODs)
         {
-            var suffix = i == 0 ? null : $"_LOD{i}";
-            var lodPrim = CreateLod(dto.LODs[i], suffix, materials);
+            var lodPrim = CreateLod(lod, lod._suffix, materials);
             lodPrim.Add(new UsdRelationship("skel:skeleton", root.Children[0]));
             if (options.ExportMorphTargets && dto.MorphTargets is { Length: > 0 } morphTargets)
             {
-                AddBlendShapes(lodPrim, morphTargets, dto.LODs[i].SourceLodIndex);
+                AddBlendShapes(lodPrim, morphTargets, lod.SourceLodIndex);
             }
             root.Add(lodPrim);
 
             var stage = new UsdStage(root);
-            results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));
+            results.Add(new ExportFile("usda", stage.SerializeToBinary(), lod._suffix));
 
             root.Children.RemoveAt(root.Children.Count - 1);
         }
@@ -55,16 +53,14 @@ public class UsdMeshFormat : IMeshExportFormat
         var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
         var materials = CreateMaterials(dto.Materials, materialPaths);
 
-        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
-        for (var i = start; i < end; i++)
+        foreach (var lod in dto.LODs)
         {
-            var suffix = i == 0 ? null : $"_LOD{i}";
-            var root = CreateLod(dto.LODs[i], suffix, materials);
+            var root = CreateLod(lod, lod._suffix, materials);
             if (sockets is not null) root.Add(sockets);
             if (materials is not null) root.Add(materials);
 
             var stage = new UsdStage(root);
-            results.Add(new ExportFile("usda", stage.SerializeToBinary(), suffix));
+            results.Add(new ExportFile("usda", stage.SerializeToBinary(), lod._suffix));
 
             root.Children.RemoveAt(root.Children.Count - 1);
         }

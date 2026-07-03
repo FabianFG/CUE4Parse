@@ -10,7 +10,7 @@ public sealed class StaticMeshExporter(UStaticMesh originalMesh) : MeshExporter<
 {
     protected override IReadOnlyList<ExportFile> BuildFiles(UStaticMesh originalMesh, IMeshExportFormat format)
     {
-        using var dto = new StaticMeshDto(originalMesh, Session.Options.NaniteMeshFormat); // TODO: do we want world export to export nanite meshes?
+        using var dto = new StaticMeshDto(originalMesh, Session.Options.MeshQuality, Session.Options.NaniteMeshFormat);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Static mesh has no LODs");

@@ -38,11 +38,11 @@ public static class MeshConverter
     }
 
     [Obsolete("This method is deprecated. Please use StaticMeshDto constructor directly and handle exceptions as needed.")]
-    public static bool TryConvert(this USplineMeshComponent spline, [MaybeNullWhen(false)] out StaticMeshDto convertedMesh)
+    public static bool TryConvert(this USplineMeshComponent spline, [MaybeNullWhen(false)] out StaticMeshDto convertedMesh, EMeshQuality quality = EMeshQuality.All)
     {
         try
         {
-            convertedMesh = new StaticMeshDto(spline);
+            convertedMesh = new StaticMeshDto(spline, quality);
         }
         catch (Exception e)
         {
@@ -53,11 +53,11 @@ public static class MeshConverter
     }
 
     [Obsolete("This method is deprecated. Please use StaticMeshDto constructor directly and handle exceptions as needed.")]
-    public static bool TryConvert(this UStaticMesh originalMesh, [MaybeNullWhen(false)] out StaticMeshDto convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null)
+    public static bool TryConvert(this UStaticMesh originalMesh, [MaybeNullWhen(false)] out StaticMeshDto convertedMesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null)
     {
         try
         {
-            convertedMesh = new StaticMeshDto(originalMesh, naniteFormat, spline);
+            convertedMesh = new StaticMeshDto(originalMesh, quality, naniteFormat, spline);
         }
         catch (Exception e)
         {
@@ -68,11 +68,11 @@ public static class MeshConverter
     }
 
     [Obsolete("This method is deprecated. Please use SkeletalMeshDto constructor directly and handle exceptions as needed.")]
-    public static bool TryConvert(this USkeletalMesh originalMesh, [MaybeNullWhen(false)] out SkeletalMeshDto convertedMesh)
+    public static bool TryConvert(this USkeletalMesh originalMesh, [MaybeNullWhen(false)] out SkeletalMeshDto convertedMesh, EMeshQuality quality = EMeshQuality.All)
     {
         try
         {
-            convertedMesh = new SkeletalMeshDto(originalMesh);
+            convertedMesh = new SkeletalMeshDto(originalMesh, quality);
         }
         catch (Exception e)
         {

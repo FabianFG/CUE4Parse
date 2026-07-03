@@ -14,14 +14,12 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
     {
         var results = new List<ExportFile>();
 
-        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
-        for (var i = start; i < end; i++)
+        foreach (var lod in dto.LODs)
         {
             using var ar = new FArchiveWriter();
-            new ActorXMesh(dto, options, i).Save(ar);
+            new ActorXMesh(lod, options).Save(ar);
 
-            var suffix = i == 0 ? "" : $"_LOD{i}";
-            results.Add(new ExportFile(dto.LODs[i].Vertices.Length > 65536 ? "pskx" : "psk", ar.GetBuffer(), suffix));
+            results.Add(new ExportFile(lod.Vertices.Length > 65536 ? "pskx" : "psk", ar.GetBuffer(), lod._suffix));
         }
 
         return results;
@@ -31,14 +29,12 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
     {
         var results = new List<ExportFile>();
 
-        var (start, end) = options.MeshQuality.GetRange(dto.LODs.Count);
-        for (var i = start; i < end; i++)
+        foreach (var lod in dto.LODs)
         {
             using var ar = new FArchiveWriter();
-            new ActorXMesh(dto, options, i).Save(ar);
+            new ActorXMesh(lod, options).Save(ar);
 
-            var suffix = i == 0 ? "" : $"_LOD{i}";
-            results.Add(new ExportFile("pskx", ar.GetBuffer(), suffix));
+            results.Add(new ExportFile("pskx", ar.GetBuffer(), lod._suffix));
         }
 
         return results;
@@ -51,4 +47,3 @@ public sealed class ActorXMeshFormat : IMeshExportFormat
         return [new ExportFile("pskx", ar.GetBuffer())];
     }
 }
-

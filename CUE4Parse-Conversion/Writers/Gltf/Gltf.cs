@@ -26,25 +26,27 @@ public class Gltf
 
     public readonly ModelRoot Model;
 
-    public Gltf(string name, StaticMeshDto mesh, int lodIndex)
+    public Gltf(string name, MeshLodDto<MeshVertex> lod)
     {
         var sceneBuilder = new SceneBuilder(name);
-        var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>($"LOD{lodIndex}");
+        var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>($"LOD{lod.SourceLodIndex}");
 
-        ExportMeshSections(meshBuilder, mesh.LODs[lodIndex]);
+        ExportMeshSections(meshBuilder, lod);
         sceneBuilder.AddRigidMesh(meshBuilder, Matrix4x4.CreateTranslation(0, 0, 0));
 
         Model = sceneBuilder.ToGltf2();
     }
 
-    public Gltf(string name, SkeletalMeshDto mesh, int lodIndex, bool exportMorphTargets)
+    public Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, bool exportMorphTargets)
     {
+        if (lod.Owner is not SkeletalMeshDto mesh)
+            throw new ArgumentException("LOD owner must be a SkeletalMeshDto for skeletal meshes.", nameof(lod));
+
         var sceneBuilder = new SceneBuilder(name);
-        var armatureRoot = new NodeBuilder($"{name}.ao_LOD{lodIndex}");
+        var armatureRoot = new NodeBuilder($"{name}.ao_LOD{lod.SourceLodIndex}");
         var armature = CreateGltfSkeleton(mesh.Bones, armatureRoot);
 
-        var lod = mesh.LODs[lodIndex];
-        var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>($"LOD{lodIndex}");
+        var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>($"LOD{lod.SourceLodIndex}");
         ExportMeshSections(meshBuilder, lod);
         sceneBuilder.AddSkinnedMesh(meshBuilder, Matrix4x4.CreateTranslation(0, 0, 0), armature);
 

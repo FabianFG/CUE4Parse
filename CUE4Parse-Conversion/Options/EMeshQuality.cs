@@ -15,10 +15,28 @@ public enum EMeshQuality
 
 internal static class MeshQualityExtensions
 {
-    internal static (int start, int end) GetRange(this EMeshQuality quality, int count) => quality switch
+    internal static IReadOnlyList<uint> GetRange(this EMeshQuality quality, int count, Func<uint, bool> skipPredicate)
     {
-        EMeshQuality.Highest => (0, Math.Min(1, count)),
-        EMeshQuality.Lowest => (Math.Max(0, count - 1), count),
-        _ => (0, count) // All
-    };
+        var indices = new List<uint>();
+        for (var i = 0u; i < count; i++)
+        {
+            if (skipPredicate(i)) continue;
+            indices.Add(i);
+        }
+
+        if (indices.Count > 1)
+        {
+            switch (quality)
+            {
+                case EMeshQuality.Highest:
+                    indices.RemoveRange(1, indices.Count - 1);
+                    break;
+                case EMeshQuality.Lowest:
+                    indices.RemoveRange(0, indices.Count - 1);
+                    break;
+            }
+        }
+
+        return indices;
+    }
 }

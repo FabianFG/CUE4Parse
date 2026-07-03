@@ -36,11 +36,11 @@ public class ActorXMesh
         ExportSkeletonData(skeleton.Bones);
     }
 
-    public ActorXMesh(StaticMeshDto mesh, ExportOptions options, int lodIndex = -1) : this(options)
+    public ActorXMesh(MeshLodDto<MeshVertex> lod, ExportOptions options) : this(options)
     {
-        ExportCommonMeshLod(mesh, lodIndex);
+        ExportCommonMeshLod(lod);
 
-        if (mesh.Sockets is { Length: > 0 } sockets)
+        if (lod.Owner.Sockets is { Length: > 0 } sockets)
         {
             var bones = new List<MeshBoneDto>();
             ExportStaticSockets(sockets, bones);
@@ -48,9 +48,12 @@ public class ActorXMesh
         }
     }
 
-    public ActorXMesh(SkeletalMeshDto mesh, ExportOptions options, int lodIndex = -1) : this(options)
+    public ActorXMesh(MeshLodDto<SkinnedMeshVertex> lod, ExportOptions options) : this(options)
     {
-        ExportCommonMeshLod(mesh, lodIndex);
+        if (lod.Owner is not SkeletalMeshDto mesh)
+            throw new ArgumentException("LOD owner must be a SkeletalMeshDto for skeletal meshes.", nameof(lod));
+
+        ExportCommonMeshLod(lod);
 
         var additionalBones = ExportSkeletalSockets(mesh);
         ExportSkeletonData([..mesh.Bones, ..additionalBones]);
@@ -61,19 +64,8 @@ public class ActorXMesh
         archive.Write(Ar.GetBuffer());
     }
 
-    private void ExportCommonMeshLod<TVertex>(MeshDto<TVertex> mesh, int lodIndex = -1) where TVertex : struct, IMeshVertex
+    private void ExportCommonMeshLod<TVertex>(MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
     {
-        if (lodIndex < 0)
-        {
-            for (var i = 0; i < mesh.LODs.Count; )
-            {
-                lodIndex = i;
-                break;
-            }
-        }
-
-        var lod = mesh.LODs[lodIndex];
-
         var numInfluences = 0;
         var share = new CVertexShare();
         share.Prepare(lod.Vertices);
@@ -119,7 +111,7 @@ public class ActorXMesh
         }
         ExportExtraUV(lod.ExtraUvs);
 
-        if (Options.ExportMorphTargets && mesh is SkeletalMeshDto { MorphTargets: { Length: > 0 } morphTargets })
+        if (Options.ExportMorphTargets && lod.Owner is SkeletalMeshDto { MorphTargets: { Length: > 0 } morphTargets })
         {
             ExportMorphTargets(morphTargets, lod, share);
         }
