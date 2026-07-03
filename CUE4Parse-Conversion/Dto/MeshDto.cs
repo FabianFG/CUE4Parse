@@ -81,6 +81,20 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         return Materials[index];
     }
 
+    protected void SetLodSuffixes()
+    {
+        // suffix is used for writing to disk
+        // the file with no suffix is considered the main quality, that's what world exporter references
+        // nanite lod always has SourceLodIndex 0, same as real lod 0, so we can't key off SourceLodIndex or they would collide
+        // so use position in the list instead
+
+        for (var i = 0; i < LODs.Count; i++)
+        {
+            var lod = LODs[i];
+            lod._suffix = i == 0 ? null : lod.IsNanite ? "_Nanite" : $"_LOD{lod.SourceLodIndex}";
+        }
+    }
+
     public override void Dispose()
     {
         LODs.Clear();
@@ -121,6 +135,8 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         {
             ParseMeshRenderData(mesh.RenderData, quality, spline);
         }
+
+        SetLodSuffixes();
     }
 
     public StaticMeshDto(USplineMeshComponent spline, EMeshQuality quality = EMeshQuality.All) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), quality, ENaniteMeshFormat.NoNanite, spline)
@@ -295,6 +311,8 @@ public sealed class SkeletalMeshDto : SkeletonDto
         {
             LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, sourceLodIndex, mesh.LODModels[sourceLodIndex], mesh.LODInfo[sourceLodIndex].ScreenSize.Value));
         }
+
+        SetLodSuffixes();
     }
 
     public override void Dispose()

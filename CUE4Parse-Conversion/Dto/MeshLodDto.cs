@@ -14,10 +14,11 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
     public readonly MeshVertexColorDto[]? VertexColors;
     public readonly float ScreenSize;
     public readonly bool IsTwoSided;
+    public readonly bool IsNanite;
 
-    internal readonly string? _suffix;
+    internal string? _suffix;
 
-    private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColorDto[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
+    private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColorDto[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false, bool isNanite = false)
     {
         if (owner.Materials.Length > 0)
         {
@@ -38,12 +39,11 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
         VertexColors = vertexColors;
         ScreenSize = screenSize;
         IsTwoSided = isTwoSided;
-
-        _suffix = SourceLodIndex == 0 ? null : $"_LOD{SourceLodIndex}";
+        IsNanite = isNanite;
     }
 
-    private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
-        : this(owner, sourceLodIndex, indices, vertices, sections, extraUv, vertexColors != null ? [new MeshVertexColorDto("COL0", vertexColors)] : null, screenSize, isTwoSided)
+    private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false, bool isNanite = false)
+        : this(owner, sourceLodIndex, indices, vertices, sections, extraUv, vertexColors != null ? [new MeshVertexColorDto("COL0", vertexColors)] : null, screenSize, isTwoSided, isNanite)
     {
 
     }

@@ -99,8 +99,7 @@ public partial class MeshLodDto<TVertex>
             }
         });
 
-        // TODO: source lod index collision here
-        return new MeshLodDto<MeshVertex>(owner, 0, indices, vertices, sections, extraUvs, vertexColors, 1.0f);
+        return new MeshLodDto<MeshVertex>(owner, 0, indices, vertices, sections, extraUvs, vertexColors, 1.0f, false, true);
 
         int FetchAdd(ref int location, int value) => Interlocked.Add(ref location, value) - value;
     }
