@@ -9,10 +9,10 @@ public class BaseHierarchyMusic : AbstractHierarchy
     public readonly EMusicFlags Flags;
     public readonly uint[] ChildIds;
 
-    protected BaseHierarchyMusic(FWwiseArchive Ar) : base(Ar)
+    protected BaseHierarchyMusic(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         Flags = Ar.Version > 89 ? Ar.Read<EMusicFlags>() : EMusicFlags.None;
-        Ar.Position -= 4; // Step back so AbstractHierarchy starts reading correctly, since ID is read twice
         ContainerHierarchy = new BaseHierarchy(Ar);
         ChildIds = new AkChildren(Ar).ChildIds;
     }

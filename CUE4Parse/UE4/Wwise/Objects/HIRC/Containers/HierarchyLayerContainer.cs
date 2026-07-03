@@ -2,22 +2,25 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 
-public class HierarchyLayerContainer : BaseHierarchy
+public class HierarchyLayerContainer : AbstractHierarchy
 {
+    public readonly BaseHierarchy BaseParams;
     public readonly uint[] ChildIds;
     public readonly CAkLayer[] Layers;
     public readonly bool IsContinuousValidation;
 
     // CAkBankMgr::StdBankRead<CAkLayerCntr>
     // CAkLayerCntr::SetInitialValues
-    public HierarchyLayerContainer(FWwiseArchive Ar) : base(Ar)
+    public HierarchyLayerContainer(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
+        BaseParams = new BaseHierarchy(Ar);
         ChildIds = new AkChildren(Ar).ChildIds;
         Layers = Ar.ReadArray((int) Ar.Read<uint>(), () => new CAkLayer(Ar));
 
         if (Ar.Version > 118)
         {
-            IsContinuousValidation = Ar.Read<byte>() is not 0;
+            IsContinuousValidation = Ar.ReadBool();
         }
     }
 
@@ -25,7 +28,10 @@ public class HierarchyLayerContainer : BaseHierarchy
     {
         writer.WriteStartObject();
 
-        base.WriteJson(writer, serializer);
+        writer.WritePropertyName(nameof(BaseParams));
+        writer.WriteStartObject();
+        BaseParams.WriteJson(writer, serializer);
+        writer.WriteEndObject();
 
         writer.WritePropertyName(nameof(ChildIds));
         serializer.Serialize(writer, ChildIds);

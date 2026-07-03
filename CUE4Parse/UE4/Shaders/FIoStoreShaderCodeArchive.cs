@@ -1,7 +1,9 @@
 using System.Runtime.InteropServices;
+using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Shaders;
@@ -25,15 +27,11 @@ public class FIoStoreShaderCodeArchive : FRHIShaderLibrary
       * stored as ShaderIndicesOffset in the shadermap's descriptor (FIoStoreShaderMapEntry).
       * This is also used by the shader groups. */
     public readonly uint[] ShaderIndices;
-    // public readonly FHashTable ShaderMapHashTable;
-    // public readonly FHashTable ShaderHashTable;
-    // public readonly FShaderPreloadEntry[] ShaderPreloads;
-    // public readonly FRWLock ShaderPreloadLock;
 
     public FIoStoreShaderCodeArchive(FArchive Ar)
     {
-        ShaderMapHashes = Ar.ReadArray(() => new FSHAHash(Ar));
-        ShaderHashes = Ar.ReadArray(() => new FSHAHash(Ar));
+        ShaderMapHashes = Ar.Game >= EGame.GAME_UE5_8 ? Ar.ReadArray(() => new FSHAHash(Ar, 8)) : Ar.ReadArray(() => new FSHAHash(Ar));
+        ShaderHashes = Ar.Game >= EGame.GAME_UE5_8 ? Ar.ReadArray(() => new FSHAHash(Ar, 8)) : Ar.ReadArray(() => new FSHAHash(Ar));
         ShaderGroupIoHashes = Ar.ReadArray<FIoChunkId>();
         ShaderMapEntries = Ar.ReadArray<FIoStoreShaderMapEntry>();
         ShaderEntries = Ar.ReadArray<FIoStoreShaderCodeEntry>();
@@ -42,24 +40,24 @@ public class FIoStoreShaderCodeArchive : FRHIShaderLibrary
     }
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
 public readonly struct FIoStoreShaderMapEntry
 {
     public readonly uint ShaderIndicesOffset;
     public readonly uint NumShaders;
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
 public readonly struct FIoStoreShaderCodeEntry
 {
-    public long Frequency => Packed & 0xf;
-    public long ShaderGroupIndex => (Packed & 0x3FFFFFFF0) >> 4;
-    public long UncompressedOffsetInGroup => Packed >> 34;
+    public EShaderFrequency Frequency => (EShaderFrequency) (Packed & 0xF);
+    public uint ShaderGroupIndex => (uint)((Packed >> 4) & 0x3FFFFFFF);
+    public uint UncompressedOffsetInGroup => (uint)(Packed >> 34);
 
-    public readonly long Packed;
+    private readonly long Packed;
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+[StructLayout(LayoutKind.Sequential, Pack = 4)]
 public readonly struct FIoStoreShaderGroupEntry
 {
     public readonly uint ShaderIndicesOffset;

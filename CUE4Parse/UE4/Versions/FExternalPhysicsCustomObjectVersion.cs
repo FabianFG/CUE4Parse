@@ -1,10 +1,10 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.UObject;
 
-public class FExternalPhysicsCustomObjectVersion 
+public class FExternalPhysicsCustomObjectVersion
 {
     public enum Type
 	{
@@ -37,7 +37,7 @@ public class FExternalPhysicsCustomObjectVersion
 
 		// Add kinematic targets to TKinematicGeometryParticles
 		KinematicTargets,
-		
+
 		// Allow trimeshes to serialize their acceleration structure
 		TrimeshSerializesBV,
 
@@ -49,7 +49,7 @@ public class FExternalPhysicsCustomObjectVersion
 
 		// Trimeshes serialize AABBTree
 		TrimeshSerializesAABBTree,
-		
+
 		// Adds Serialization of HashResult, and separates delete/update TAccelerationStructureHandle in FPendingSpatialData
 		SerializeHashResult,
 
@@ -141,7 +141,7 @@ public class FExternalPhysicsCustomObjectVersion
 
 
 	public static readonly FGuid GUID = new(0x35F94A83, 0xE258406C, 0xA31809F5, 0x9610247C);
-	
+
 	public static Type Get(FArchive Ar)
 	{
 		var ver = Ar.CustomVer(GUID);
@@ -150,9 +150,11 @@ public class FExternalPhysicsCustomObjectVersion
 
 		return Ar.Game switch
 		{
-			< EGame.GAME_UE4_22 => Type.BeforeCustomVersionWasAdded, // not sure
-			
-			< EGame.GAME_UE5_0 => Type.AddOneWayInteraction,
+			< GAME_UE4_24 => Type.BeforeCustomVersionWasAdded,
+			< GAME_UE4_25 => Type.SerializeMultiStructures,
+			< GAME_UE4_26 => Type.PhysicsMaterialSleepCounterThreshold,
+			< GAME_UE4_27 => Type.RemovedAABBTreeFullBounds,
+			< GAME_UE5_0 => Type.AddOneWayInteraction,
 			_ => Type.LatestVersion
 		};
 	}

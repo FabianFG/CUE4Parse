@@ -108,6 +108,8 @@ public enum EAkPluginId : uint
     AuroPannerMixer                      = 0x044d1076,
     AuroPannerFX                         = 0x044e1073,
 
+    Bitcrush                             = 0x00000403,
+
     bnsRadio                             = 0x039B2FD3,
 
     CrankcaseAudioREVModelPlayer         = 0x01A01052,

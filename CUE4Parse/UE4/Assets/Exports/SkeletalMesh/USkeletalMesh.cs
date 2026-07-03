@@ -55,6 +55,8 @@ public partial class USkeletalMesh : UObject
             Materials[i] = SkeletalMaterials[i].Material;
         }
 
+        if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 4;
+
         ReferenceSkeleton = new FReferenceSkeleton(Ar);
 
         if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
@@ -143,7 +145,7 @@ public partial class USkeletalMesh : UObject
             }
         }
 
-        if (Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_SKELMESH_NAMEINDEXMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
         {
             var length = Ar.Read<int>();
             Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap
@@ -253,7 +255,7 @@ public partial class USkeletalMesh : UObject
                 }
                 else
                 {
-                    if (morphLODModels[j].Vertices.Length > 0 || morphLODModels[j].NumBaseMeshVerts == 0 || morphLODModels[j].SectionIndices.Length == 0 || LODModels[j].MorphTargetVertexInfoBuffers is null) continue;
+                    if (morphLODModels[j].Vertices.Length > 0 || morphLODModels[j].NumBaseMeshVerts == 0 || morphLODModels[j].SectionIndices.Length == 0 || j >= LODModels.Length || LODModels[j].MorphTargetVertexInfoBuffers is null) continue;
                     morphLODModels[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, morphLODModels[j].SectionIndices);
                 }
             }
@@ -264,7 +266,7 @@ public partial class USkeletalMesh : UObject
             Array.Copy(morphLODModels, newMorphLods, morphLODModels.Length);
             for (int j = morphLODModels.Length; j < maxLodLevel; j++)
             {
-                if (LODModels[j].MorphTargetVertexInfoBuffers is not null)
+                if (j < LODModels.Length && LODModels[j].MorphTargetVertexInfoBuffers is not null)
                     newMorphLods[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, []);
                 else
                     newMorphLods[j] = new FMorphTargetLODModel();

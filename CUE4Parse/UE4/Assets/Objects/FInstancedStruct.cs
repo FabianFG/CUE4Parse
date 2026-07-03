@@ -1,29 +1,27 @@
 using CUE4Parse.GameTypes.AoC.Objects;
-using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Objects.StructUtils;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
 [JsonConverter(typeof(FInstancedStructConverter))]
 public class FInstancedStruct : IUStruct
 {
-    public FStructFallback NonConstStruct => NonConstIUSturct as FStructFallback ?? new FStructFallback();
-    public readonly IUStruct? NonConstIUSturct;
-    public readonly string? StringData;
+    public FStructFallback? NonConstStruct => ScriptStruct?.StructType as FStructFallback;
+    [Obsolete("Deprecated, please use ScriptStruct field", true)]
+    public IUStruct? NonConstIUSturct => ScriptStruct?.StructType;
+    public readonly FScriptStruct? ScriptStruct;
 
     public FInstancedStruct(FAssetArchive Ar)
     {
         if (FInstancedStructCustomVersion.Get(Ar) < FInstancedStructCustomVersion.Type.CustomVersionAdded)
         {
+            const uint LegacyEditorHeader = 0xABABABAB;
             var headerOffset = Ar.Position;
             var header = Ar.Read<uint>();
 
-            const uint LegacyEditorHeader = 0xABABABAB;
             if (header != LegacyEditorHeader)
             {
                 Ar.Position = headerOffset;
@@ -32,47 +30,11 @@ public class FInstancedStruct : IUStruct
             _ = Ar.Read<byte>(); // Old Version
         }
 
-        if (Ar.Game is EGame.GAME_VEIN)
+        ScriptStruct = Ar.Game switch
         {
-            StringData = Ar.ReadFString();
-            return;
-        }
-
-        if (Ar.Game is EGame.GAME_AshesOfCreation && Ar is FAoCDBCReader AoCReader)
-        {
-            NonConstIUSturct = AoCReader.ReadInstancedStruct();
-            return;
-        }
-
-        var strucindex = new FPackageIndex(Ar);
-        var serialSize = Ar.Read<int>();
-        var savedPos = Ar.Position;
-
-        if (strucindex.IsNull)
-        {
-            Ar.Position = savedPos + serialSize;
-            return;
-        }
-
-        try
-        {
-            var structName = strucindex.ResolvedObject is { } obj ? obj.Name.ToString() : null;
-            if (strucindex.TryLoad<UStruct>(out var struc) || structName != null)
-            {
-                NonConstIUSturct = new FScriptStruct(Ar, structName, struc, ReadType.NORMAL).StructType;
-            }
-            else
-            {
-                Log.Warning("Failed to read FInstancedStruct of type {0}, skipping it", strucindex.ResolvedObject?.GetFullName());
-            }
-        }
-        catch (ParserException e)
-        {
-            Log.Warning(e, "Failed to read FInstancedStruct of type {0}, skipping it", strucindex.ResolvedObject?.GetFullName());
-        }
-        finally
-        {
-            Ar.Position = savedPos + serialSize;
-        }
+            EGame.GAME_VEIN => new FScriptStruct(new FRawStruct<string>(Ar.ReadFString)),
+            EGame.GAME_AshesOfCreation when Ar is FAoCDBCReader AoCReader => AoCReader.ReadInstancedStruct(),
+            _ => FScriptStruct.ReadInstancedStruct(Ar)
+        };
     }
 }

@@ -16,6 +16,8 @@ public class FPropertyInfo
     public uint Hash;
     public FPropertyTag? Value;
 
+    public FPropertyInfo() { }
+
     public FPropertyInfo(FAssetArchive Ar)
     {
         Owner = new FPackageIndex(Ar);

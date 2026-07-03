@@ -11,10 +11,10 @@ public class CAkActionSetFX
     // CAkActionSetFX::SetActionParams
     public CAkActionSetFX(FWwiseArchive Ar)
     {
-        IsAudioDeviceElement = Ar.Read<byte>() != 0;
+        IsAudioDeviceElement = Ar.ReadBool();
         SlotIndex = Ar.Read<byte>();
         FxId = Ar.Read<uint>();
-        IsShared = Ar.Read<byte>() != 0;
+        IsShared = Ar.ReadBool();
         ExceptParams = new CAkActionExcept(Ar);
     }
 }

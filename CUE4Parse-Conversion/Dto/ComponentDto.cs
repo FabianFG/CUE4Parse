@@ -259,13 +259,13 @@ public abstract class LightComponentBaseDto(ULightComponentBase component, Actor
 {
     public readonly float Intensity = component.Intensity;
     public readonly FLinearColor Color = component.GetLightColor();
-    public readonly bool CastShadows = component.CastShadows != 0;
+    public readonly bool CastShadows = component.CastShadows;
 }
 
 public abstract class LightComponentDto(ULightComponent component, ActorDto owner) : LightComponentBaseDto(component, owner)
 {
     public readonly float Temperature = component.Temperature;
-    public readonly bool UseTemperature = component.bUseTemperature != 0;
+    public readonly bool UseTemperature = component.bUseTemperature;
     public readonly float IntensityNits = component.GetNitIntensity();
 }
 

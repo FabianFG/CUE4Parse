@@ -25,7 +25,11 @@ public enum EAKBKHircType : byte
     Envelope,
     AudioDevice,
     TimeMod,
-    SidechainMix // >= 168
+    SidechainMix, // >= 168
+
+    // Legacy hierarchies
+    FeedbackBus = 0x80,
+    FeedbackNode = 0x81
 }
 
 // Versions <= 125
@@ -62,7 +66,38 @@ public static class EHierarchyObjectTypeExtensions
     {
         return version switch
         {
-            <= 125 => ((EAKBKHircType_v125) type).ToString(),
+            <= 125 => type.ToV125String(),
+            _ => type.ToString()
+        };
+    }
+
+    private static string ToV125String(this EAKBKHircType type)
+    {
+        return type switch
+        {
+            EAKBKHircType.State => EAKBKHircType_v125.Settings.ToString(),
+            EAKBKHircType.SoundSfxVoice => EAKBKHircType_v125.SoundSfxVoice.ToString(),
+            EAKBKHircType.EventAction => EAKBKHircType_v125.EventAction.ToString(),
+            EAKBKHircType.Event => EAKBKHircType_v125.Event.ToString(),
+            EAKBKHircType.RandomSequenceContainer => EAKBKHircType_v125.RandomSequenceContainer.ToString(),
+            EAKBKHircType.SwitchContainer => EAKBKHircType_v125.SwitchContainer.ToString(),
+            EAKBKHircType.ActorMixer => EAKBKHircType_v125.ActorMixer.ToString(),
+            EAKBKHircType.AudioBus => EAKBKHircType_v125.AudioBus.ToString(),
+            EAKBKHircType.LayerContainer => EAKBKHircType_v125.LayerContainer.ToString(),
+            EAKBKHircType.MusicSegment => EAKBKHircType_v125.MusicSegment.ToString(),
+            EAKBKHircType.MusicTrack => EAKBKHircType_v125.MusicTrack.ToString(),
+            EAKBKHircType.MusicSwitchContainer => EAKBKHircType_v125.MusicSwitchContainer.ToString(),
+            EAKBKHircType.MusicRandomSequenceContainer => EAKBKHircType_v125.MusicRandomSequenceContainer.ToString(),
+            EAKBKHircType.Attenuation => EAKBKHircType_v125.Attenuation.ToString(),
+            EAKBKHircType.DialogueEvent => EAKBKHircType_v125.DialogueEvent.ToString(),
+            EAKBKHircType.FeedbackBus => EAKBKHircType_v125.FeedbackBus.ToString(),
+            EAKBKHircType.FeedbackNode => EAKBKHircType_v125.FeedbackNode.ToString(),
+            EAKBKHircType.FxShareSet => EAKBKHircType_v125.FxShareSet.ToString(),
+            EAKBKHircType.FxCustom => EAKBKHircType_v125.FxCustom.ToString(),
+            EAKBKHircType.AuxiliaryBus => EAKBKHircType_v125.AuxiliaryBus.ToString(),
+            EAKBKHircType.LFO => EAKBKHircType_v125.LFO.ToString(),
+            EAKBKHircType.Envelope => EAKBKHircType_v125.Envelope.ToString(),
+            EAKBKHircType.AudioDevice => EAKBKHircType_v125.AudioDevice.ToString(),
             _ => type.ToString()
         };
     }
@@ -89,6 +124,8 @@ public static class EHierarchyObjectTypeExtensions
             EAKBKHircType_v125.MusicRandomSequenceContainer => EAKBKHircType.MusicRandomSequenceContainer,
             EAKBKHircType_v125.Attenuation => EAKBKHircType.Attenuation,
             EAKBKHircType_v125.DialogueEvent => EAKBKHircType.DialogueEvent,
+            EAKBKHircType_v125.FeedbackBus => EAKBKHircType.FeedbackBus,
+            EAKBKHircType_v125.FeedbackNode => EAKBKHircType.FeedbackNode,
             EAKBKHircType_v125.FxShareSet => EAKBKHircType.FxShareSet,
             EAKBKHircType_v125.FxCustom => EAKBKHircType.FxCustom,
             EAKBKHircType_v125.AuxiliaryBus => EAKBKHircType.AuxiliaryBus,

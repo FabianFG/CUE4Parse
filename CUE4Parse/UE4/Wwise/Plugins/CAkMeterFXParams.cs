@@ -50,7 +50,7 @@ public struct AkMeterFXParams(FWwiseArchive Ar)
         {
             eMode = Ar.Version <= 88 ? null : Ar.Read<AkMeterMode>();
             eScope = Ar.Version >= 125 ? Ar.Read<AkMeterScope>() : null;
-            bApplyDownstreamVolume = Ar.Version > 113 ? Ar.Read<byte>() != 0 : false;
+            bApplyDownstreamVolume = Ar.Version > 113 && Ar.Read<byte>() != 0;
             uGameParamID = Ar.Read<uint>();
         }
     }
