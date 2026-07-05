@@ -12,15 +12,15 @@ internal sealed class LoMManifest
     private const int KmfHeaderSize = 24;
 
     public readonly string BaseDirectory;
-    public readonly string[] Names;
+    public readonly string[] Paths;
     public readonly string[] CompressionMethods;
     public readonly LoMEntry[] Entries;
     public readonly LoMCompressionBlock[] CompressionBlocks;
 
-    private LoMManifest(string baseDirectory, string[] names, string[] compressionMethods, LoMEntry[] entries, LoMCompressionBlock[] compressionBlocks)
+    private LoMManifest(string baseDirectory, string[] paths, string[] compressionMethods, LoMEntry[] entries, LoMCompressionBlock[] compressionBlocks)
     {
         BaseDirectory = baseDirectory;
-        Names = names;
+        Paths = paths;
         CompressionMethods = compressionMethods;
         Entries = entries;
         CompressionBlocks = compressionBlocks;
@@ -28,39 +28,39 @@ internal sealed class LoMManifest
 
     public static LoMManifest Read(FileInfo manifestFile, VersionContainer versions)
     {
-        using var Ar = new FByteArchive(manifestFile.FullName, File.ReadAllBytes(manifestFile.FullName), versions);
-        using var manifestAr = new FByteArchive(manifestFile.FullName, ReadCompressedData(Ar), versions);
+        var manifestData = File.ReadAllBytes(manifestFile.FullName);
+        var decompressedData = ReadCompressedData(manifestFile.FullName, manifestData, versions);
+        using var Ar = new FByteArchive(manifestFile.FullName, decompressedData, versions);
 
-        manifestAr.Read<int>(); // Version
-        var names = manifestAr.ReadArray(manifestAr.ReadFString);
-        var compressionMethods = manifestAr.ReadArray(manifestAr.ReadFString)
+        Ar.Read<int>(); // Version
+        var paths = Ar.ReadArray(Ar.ReadFString);
+        var compressionMethods = Ar.ReadArray(Ar.ReadFString)
             .Where(x => !string.IsNullOrWhiteSpace(x) && !x.Equals(nameof(CompressionMethod.None), StringComparison.OrdinalIgnoreCase))
             .ToArray();
-        var entries = manifestAr.ReadArray(() => new LoMEntry(manifestAr));
-        var compressionBlocks = manifestAr.ReadArray(() => new LoMCompressionBlock(manifestAr));
-        manifestAr.ReadArray<FIoChunkId>(); // Headers
-        manifestAr.ReadArray<int>(); // Chunk IDs
+        var entries = Ar.ReadArray(() => new LoMEntry(Ar));
+        var compressionBlocks = Ar.ReadArray(() => new LoMCompressionBlock(Ar));
+        Ar.ReadArray<FIoChunkId>(); // Headers
+        Ar.ReadArray<int>(); // Chunk IDs
 
-        return new LoMManifest(manifestFile.DirectoryName ?? string.Empty, names, compressionMethods, entries, compressionBlocks);
+        return new LoMManifest(manifestFile.DirectoryName ?? string.Empty, paths, compressionMethods, entries, compressionBlocks);
     }
 
-    private static byte[] ReadCompressedData(FArchive Ar)
+    private static byte[] ReadCompressedData(string archiveName, byte[] manifestData, VersionContainer versions)
     {
-        var manifestData = Ar.ReadBytes((int) Ar.Length);
         if (manifestData.Length < KmfHeaderSize)
             return manifestData;
 
-        using var manifestAr = new FByteArchive(Ar.Name, manifestData, Ar.Versions);
-        if (manifestAr.Read<uint>() != KmfMagic)
+        using var Ar = new FByteArchive(archiveName, manifestData, versions);
+        if (Ar.Read<uint>() != KmfMagic)
             return manifestData;
 
-        manifestAr.Read<int>(); // Version
-        var uncompressedSize = manifestAr.Read<int>();
-        manifestAr.Read<int>();
-        manifestAr.Read<int>();
-        manifestAr.Read<int>();
+        Ar.Read<int>(); // Version
+        var uncompressedSize = Ar.Read<int>();
+        Ar.Read<int>();
+        Ar.Read<int>();
+        Ar.Read<int>();
 
-        var compressedOffset = (int) manifestAr.Position;
+        var compressedOffset = (int) Ar.Position;
 
         return Compression.Compression.Decompress(manifestData, compressedOffset, manifestData.Length - compressedOffset, uncompressedSize, CompressionMethod.Zlib, Ar);
     }

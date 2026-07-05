@@ -19,7 +19,7 @@ public sealed class LoMIoStoreManifest
     {
         var manifest = LoMManifest.Read(manifestFile, versions);
         var compressionBlockSize = Math.Max(0x10000, manifest.CompressionBlocks.Select(x => (uint) x.UncompressedSize).DefaultIfEmpty().Max());
-        var ownerGroups = GetContainerOwnerGroups(manifest.BaseDirectory, manifest.Names, manifest.Entries);
+        var ownerGroups = GetContainerOwnerGroups(manifest.BaseDirectory, manifest.Paths, manifest.Entries);
         var manifests = new List<LoMIoStoreManifest>(ownerGroups.Count);
 
         foreach (var group in ownerGroups)
