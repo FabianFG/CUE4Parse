@@ -19,7 +19,7 @@ public sealed class LoMDirectoryIndex
             return false;
         }
 
-        (bool result, path) = (EIoChunkType5)chunkId.ChunkType switch
+        (bool result, path) = (EIoChunkType5) chunkId.ChunkType switch
         {
             EIoChunkType5.ExportBundleData or EIoChunkType5.ShaderCodeLibrary => (true, packagePath),
             EIoChunkType5.BulkData => (true, Path.ChangeExtension(packagePath, "ubulk")),
@@ -58,7 +58,7 @@ public sealed class LoMDirectoryIndex
     }
 
     private static readonly HashSet<string> _extensions = new(StringComparer.OrdinalIgnoreCase) { ".uasset", ".umap", ".ushaderbytecode" };
-    private static readonly HashSet<string>.AlternateLookup<ReadOnlySpan<char>> _extensionsLookup = _extensions.GetAlternateLookup< ReadOnlySpan<char>>();
+    private static readonly HashSet<string>.AlternateLookup<ReadOnlySpan<char>> _extensionsLookup = _extensions.GetAlternateLookup<ReadOnlySpan<char>>();
 
     private static bool TryReadPackagePath(string line, out string path, out string packageName)
     {
@@ -77,7 +77,8 @@ public sealed class LoMDirectoryIndex
             return false;
 
         var contentIndex = lineSpan.IndexOf("/Content/", StringComparison.OrdinalIgnoreCase);
-        if (contentIndex < 0) return false;
+        if (contentIndex < 0)
+            return false;
 
         path = lineSpan.ToString();
         var relativePath = lineSpan[(contentIndex + "/Content/".Length)..^extension.Length];
@@ -113,15 +114,17 @@ public sealed class LoMDirectoryIndex
             return true;
         }
 
-        var pluginPrefix = "/Plugins/";
-        var pluginIndex = path.IndexOf(pluginPrefix, StringComparison.OrdinalIgnoreCase);
-        if (pluginIndex >= 0)
+        // Generic plugins
+        var pluginRootIndex = path.IndexOf("/Plugins/", StringComparison.OrdinalIgnoreCase);
+        if (pluginRootIndex >= 0)
         {
-            var pluginNameStart = pluginIndex + pluginPrefix.Length;
-            var pluginNameEnd = path.IndexOf('/', pluginNameStart);
-            if (pluginNameEnd > pluginNameStart)
+            var beforeContent = lineSpan[..contentIndex];
+            var lastSlashBeforeContent = beforeContent.LastIndexOf('/');
+            if (lastSlashBeforeContent >= 0 && lastSlashBeforeContent < beforeContent.Length - 1)
             {
-                packageName = string.Concat("/", lineSpan[pluginNameStart..pluginNameEnd], "/", relativePath);
+                var pluginName = beforeContent[(lastSlashBeforeContent + 1)..];
+
+                packageName = string.Concat("/", pluginName, "/", relativePath);
                 return true;
             }
         }
