@@ -151,6 +151,13 @@ public class FReflectionCaptureData
             Brightness = Ar.Read<float>();
         }
 
+        if (Ar.Game is EGame.GAME_MortalKombat1)
+        {
+            Ar.Position += 60;
+            EncodedCaptureData = new FPackageIndex(Ar);
+            return;
+        }
+
         //FullHDRCapturedData = Ar.ReadArray<byte>(); // Can also be stripped, but still a byte[]
         Ar.SkipFixedArray(1); // Skip for now
         if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 4;

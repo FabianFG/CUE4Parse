@@ -7,6 +7,8 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.Aes;
+using CUE4Parse.GameTypes.LordOfMysteries.UE4.Lua;
+using CUE4Parse.GameTypes.Netmarble.NiNoKuni.UE4.Encryption;
 using CUE4Parse.GameTypes.NFS.Mobile.Lua;
 using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.GameTypes.PUBG.UE4.Lua;
@@ -49,8 +51,8 @@ public partial class PakFileReader : AbstractAesVfsReader
         Info = FPakInfo.ReadFPakInfo(Ar);
         CompressionMethods = Info.CompressionMethods.ToArray();
 
-        var hasUnsupportedVersion = (Ar.Game < EGame.GAME_UE5_7 && Info.Version > PakFile_Version_Fnv64BugFix)
-                                    || (Ar.Game >= EGame.GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
+        var hasUnsupportedVersion = (Ar.Game < GAME_UE5_7 && Info.Version > PakFile_Version_Fnv64BugFix)
+                                    || (Ar.Game >= GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
         if (hasUnsupportedVersion && !UsingCustomPakVersion())
         {
             Log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
@@ -62,11 +64,11 @@ public partial class PakFileReader : AbstractAesVfsReader
     {
         return Ar.Game switch
         {
-            EGame.GAME_InfinityNikki or EGame.GAME_MeetYourMaker or EGame.GAME_DeadByDaylight or EGame.GAME_WutheringWaves
-                or EGame.GAME_Snowbreak or EGame.GAME_TorchlightInfinite or EGame.GAME_TowerOfFantasy
-                or EGame.GAME_TheDivisionResurgence or EGame.GAME_QQ or EGame.GAME_DreamStar
-                or EGame.GAME_EtheriaRestart or EGame.GAME_DeadByDaylight_Old or EGame.GAME_WorldofJadeDynasty
-                or EGame.GAME_EmbersofTheUncrowned => true,
+            GAME_InfinityNikki or GAME_MeetYourMaker or GAME_DeadByDaylight or GAME_WutheringWaves
+                or GAME_Snowbreak or GAME_TorchlightInfinite or GAME_TowerOfFantasy
+                or GAME_TheDivisionResurgence or GAME_QQ or GAME_DreamStar
+                or GAME_EtheriaRestart or GAME_DeadByDaylight_Old or GAME_WorldofJadeDynasty
+                or GAME_EmbersofTheUncrowned => true,
             _ => false
         };
     }
@@ -99,19 +101,19 @@ public partial class PakFileReader : AbstractAesVfsReader
         {
             switch (Game)
             {
-                case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
+                case GAME_MarvelRivals or GAME_OperationApocalypse or GAME_WutheringWaves or GAME_MindsEye:
                     return PartialEncryptCompressedExtract(reader, pakEntry, header);
-                case EGame.GAME_GameForPeace:
+                case GAME_GameForPeace:
                     return GameForPeaceExtract(reader, pakEntry);
-                case EGame.GAME_Rennsport:
+                case GAME_Rennsport:
                     return RennsportCompressedExtract(reader, pakEntry);
-                case EGame.GAME_DragonQuestXI:
+                case GAME_DragonQuestXI:
                     return DQXIExtract(reader, pakEntry);
-                case EGame.GAME_CenturyAgeofAshes when pakEntry.CompressionMethod is CompressionMethod.PWC:
+                case GAME_CenturyAgeofAshes when pakEntry.CompressionMethod is CompressionMethod.PWC:
                     return CenturyExtract(reader, pakEntry);
-                case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
+                case GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                     return ABIExtract(reader, pakEntry);
-                case EGame.GAME_eBaseballProSpirit:
+                case GAME_eBaseballProSpirit:
                     return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
             }
 
@@ -155,19 +157,23 @@ public partial class PakFileReader : AbstractAesVfsReader
 
             switch (Ar.Game)
             {
-                case EGame.GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
+                case GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
                     return NRCLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
-                case EGame.GAME_NevernessToEverness when pakEntry.Extension is "ini":
+                case GAME_NevernessToEverness when pakEntry.Extension is "ini":
                     return NevernessToEvernessIniEncryption.DecryptIni(uncompressed, requestedSize);
-                case EGame.GAME_Snowbreak when pakEntry.Extension is "lua":
+                case GAME_Snowbreak when pakEntry.Extension is "lua":
                     return SnowbreakLua.DecryptLua(uncompressed, requestedSize);
-                case EGame.GAME_Undawn when pakEntry.Extension is "lua":
+                case GAME_Undawn when pakEntry.Extension is "lua":
                     return UndawnLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
-                case EGame.GAME_Strinova when pakEntry.Extension is "lua":
+                case GAME_Strinova when pakEntry.Extension is "lua":
                     uncompressed = StrinovaLua.DecryptLuaBytecode(uncompressed);
                     break;
-                case EGame.GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
+                case GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
                     return NFSLua.RestoreLuaBytecode(pakEntry.Path, uncompressed);
+                case GAME_LordOfMysteries when pakEntry.Extension is "luac":
+                    return LordOfMysteriesLua.DecryptLuaJITBytecode(pakEntry.Path, uncompressed);
+                case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
+                    return NiNoKuniCsv.DecryptCsv(pakEntry.Name, uncompressed);
                 default:
                     break;
             }
@@ -183,15 +189,15 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         switch (Game)
         {
-            case EGame.GAME_MarvelRivals or EGame.GAME_OperationApocalypse or EGame.GAME_WutheringWaves or EGame.GAME_MindsEye:
+            case GAME_MarvelRivals or GAME_OperationApocalypse or GAME_WutheringWaves or GAME_MindsEye:
                 return PartialEncryptExtract(reader, pakEntry, header);
-            case EGame.GAME_Rennsport:
+            case GAME_Rennsport:
                 return RennsportExtract(reader, pakEntry);
-            case EGame.GAME_DragonQuestXI:
+            case GAME_DragonQuestXI:
                 return DQXIExtract(reader, pakEntry);
-            case EGame.GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
+            case GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                 return ABIExtract(reader, pakEntry);
-            case EGame.GAME_eBaseballProSpirit:
+            case GAME_eBaseballProSpirit:
                 return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
         }
 
@@ -206,21 +212,25 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         switch (Ar.Game)
         {
-            case EGame.GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
+            case GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
                 return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
-            case EGame.GAME_NevernessToEverness when pakEntry.Extension is "ini":
+            case GAME_NevernessToEverness when pakEntry.Extension is "ini":
                 return NevernessToEvernessIniEncryption.DecryptIni(data, requestedSize);
-            case EGame.GAME_Snowbreak when pakEntry.Extension is "lua":
+            case GAME_Snowbreak when pakEntry.Extension is "lua":
                 return SnowbreakLua.DecryptLua(data, requestedSize);
-            case EGame.GAME_GameForPeace when pakEntry.Extension is "lua":
+            case GAME_GameForPeace when pakEntry.Extension is "lua":
                 return GameForPeaceLua.DecryptLuaBytecode(pakEntry.Path, data);
-            case EGame.GAME_Undawn when pakEntry.Extension is "lua":
+            case GAME_Undawn when pakEntry.Extension is "lua":
                 return UndawnLua.DecryptLuaBytecode(pakEntry.Path, data);
-            case EGame.GAME_Strinova when pakEntry.Extension is "lua":
+            case GAME_Strinova when pakEntry.Extension is "lua":
                 data = StrinovaLua.DecryptLuaBytecode(data);
                 break;
-            case EGame.GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
+            case GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
                 return NFSLua.RestoreLuaBytecode(pakEntry.Path, data);
+            case GAME_LordOfMysteries when pakEntry.Extension is "luac":
+                return LordOfMysteriesLua.DecryptLuaJITBytecode(pakEntry.Path, data);
+            case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
+                return NiNoKuniCsv.DecryptCsv(pakEntry.Name, data);
             default:
                 break;
         }
@@ -242,10 +252,10 @@ public partial class PakFileReader : AbstractAesVfsReader
         {
             switch (Game)
             {
-                case EGame.GAME_CrystalOfAtlan:
+                case GAME_CrystalOfAtlan:
                     CoAReadIndexUpdated(pathComparer);
                     break;
-                case EGame.GAME_DragonSwordAwakening:
+                case GAME_DragonSwordAwakening:
                     DragonSwordReadIndexUpdated(pathComparer);
                     break;
                 default:
@@ -295,19 +305,19 @@ public partial class PakFileReader : AbstractAesVfsReader
         ValidateMountPoint(ref mountPoint);
         MountPoint = mountPoint;
 
-        if (Ar.Game == EGame.GAME_GameForPeace)
+        if (Ar.Game == GAME_GameForPeace)
         {
             GameForPeaceReadIndex(pathComparer, index);
             return;
         }
-        if (Ar.Game == EGame.GAME_DragonQuestXI)
+        if (Ar.Game == GAME_DragonQuestXI)
         {
             DQXIReadIndexLegacy(pathComparer, index);
             return;
         }
 
         var fileCount = index.Read<int>();
-        if (Ar.Game == EGame.GAME_TransformersOnline) fileCount -= 100;
+        if (Ar.Game == GAME_TransformersOnline) fileCount -= 100;
 
         var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
         for (var i = 0; i < fileCount; i++)
@@ -331,7 +341,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         var fileCount = 0;
         EncryptedFileCount = 0;
 
-        if (Ar.Game is EGame.GAME_DreamStar or EGame.GAME_DeltaForce)
+        if (Ar.Game is GAME_DreamStar or GAME_DeltaForce)
         {
             primaryIndex.Position += 8; // PathHashSeed
             fileCount = primaryIndex.Read<int>();
@@ -350,7 +360,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         ValidateMountPoint(ref mountPoint);
         MountPoint = mountPoint;
 
-        if (Ar.Game is not (EGame.GAME_DreamStar or EGame.GAME_DeltaForce))
+        if (Ar.Game is not (GAME_DreamStar or GAME_DeltaForce))
         {
             fileCount = primaryIndex.Read<int>();
             primaryIndex.Position += 8; // PathHashSeed
@@ -360,19 +370,19 @@ public partial class PakFileReader : AbstractAesVfsReader
             throw new ParserException(primaryIndex, "No path hash index");
 
         primaryIndex.Position += 36; // PathHashIndexOffset (long) + PathHashIndexSize (long) + PathHashIndexHash (20 bytes)
-        if (Ar.Game == EGame.GAME_Rennsport) primaryIndex.Position += 16;
+        if (Ar.Game == GAME_Rennsport) primaryIndex.Position += 16;
 
         if (!primaryIndex.ReadBoolean())
             throw new ParserException(primaryIndex, "No directory index");
 
-        if (Ar.Game == EGame.GAME_TheDivisionResurgence) primaryIndex.Position += 40; // duplicate entry
+        if (Ar.Game == GAME_TheDivisionResurgence) primaryIndex.Position += 40; // duplicate entry
 
         var directoryIndexOffset = primaryIndex.Read<long>();
         var directoryIndexSize = primaryIndex.Read<long>();
         primaryIndex.Position += 20; // Directory Index hash
-        if (Ar.Game == EGame.GAME_Rennsport) primaryIndex.Position += 20;
+        if (Ar.Game == GAME_Rennsport) primaryIndex.Position += 20;
         var encodedPakEntriesSize = primaryIndex.Read<int>();
-        if (Ar.Game == EGame.GAME_Rennsport)
+        if (Ar.Game == GAME_Rennsport)
         {
             primaryIndex.Position -= 4;
             encodedPakEntriesSize = (int) (primaryIndex.Length - primaryIndex.Position - 6);
@@ -391,7 +401,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         Ar.Position = directoryIndexOffset;
         var data = Ar.Game switch
         {
-            EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true),
+            GAME_Rennsport => RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true),
             _ => ReadAndDecryptIndex((int) directoryIndexSize),
         };
 

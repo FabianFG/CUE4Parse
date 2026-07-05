@@ -39,26 +39,25 @@ public static class MK1Structs
             return superStructName;
         });
 
-        if (resolvedSuper == "GameParameterBase")
+        return resolvedSuper switch
         {
-            return new FGameParameterBase(Ar);
-        }
+            "GameParameterBase" => new FGameParameterBase(Ar),
+            "MKInventoryItemPtrBase" => new MKInventoryItemPtrBase(Ar),
+            "StructPtrBase" => new FStructPtrBase(Ar),
+            _ => structName switch
+            {
+                "CompressedFloatTrackData" => new FCompressedFloatTrackData(Ar),
+                "MovieSceneFieldEntry_ChildTemplate" or "MovieSceneEvaluationGroupLUTIndex" or "MovieSceneFieldEntry_EvaluationTrack"
+                    or "MovieSceneOrderedEvaluationKey" or "MovieSceneEvaluationFieldTrackPtr" or "PathNodeInfo" or "TrackSetInfo"
+                    or "TrackConfigInfo" or "TimelineKeySampleData" or "MKInventoryItemSlots" or "PoseData" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+                "CompiledTimelinePredicate" => new FCompiledTimelinePredicate(Ar),
+                "TimelinePredicateState" => new FTimelinePredicateState(Ar),
+                "MKLootDropItemPicker" => new FMKLootDropItemPicker(Ar),
+                "Transform" when type is ReadType.RAW => Ar.Read<FTransform>(),
+                "BuffPropertyModificationPtr" => new FStructFallback(),
 
-        return structName switch
-        {
-            "CompressedFloatTrackData" => new FCompressedFloatTrackData(Ar),
-            "MovieSceneFieldEntry_ChildTemplate" or "MovieSceneEvaluationGroupLUTIndex" or "MovieSceneOrderedEvaluationKey" or
-                 "PathNodeInfo" or "TrackSetInfo" or "TrackConfigInfo" or "TimelineKeySampleData" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "MovieSceneFieldEntry_EvaluationTrack" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "MovieSceneEvaluationFieldTrackPtr" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "PoseData" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "CompiledTimelinePredicate" => new FCompiledTimelinePredicate(Ar),
-            "TimelinePredicateState" => new FTimelinePredicateState(Ar),
-            "Transform" when type is ReadType.RAW => Ar.Read<FTransform>(),
-
-            "BuffPropertyModificationPtr" => new FStructFallback(),
-
-            _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
+                _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
+            }
         };
     }
 }
@@ -83,16 +82,10 @@ public class FTimelinePredicateState(FAssetArchive Ar) : IUStruct
     public ulong[] Unknown = Ar.ReadArray<ulong>();
 }
 
-public class FCompiledTimelinePredicate : IUStruct
+public class FCompiledTimelinePredicate(FAssetArchive Ar) : IUStruct
 {
-    public byte[] Unknown;
-    public object[] Parameters;
-
-    public FCompiledTimelinePredicate(FAssetArchive Ar)
-    {
-        Unknown = Ar.ReadArray<byte>();
-        Parameters = Ar.ReadArray(() => ReadParameterValue(Ar));
-    }
+    public byte[] Unknown = Ar.ReadArray<byte>();
+    public object[] Parameters = Ar.ReadArray(() => ReadParameterValue(Ar));
 
     public static object ReadParameterValue(FAssetArchive Ar)
     {
@@ -102,7 +95,7 @@ public class FCompiledTimelinePredicate : IUStruct
             "bool" => Ar.ReadBoolean(),
             "float" => Ar.Read<float>(),
             "int32" => Ar.Read<int>(),
-            "object" => new FPackageIndex(Ar),
+            "object" or "UObject*" => new FPackageIndex(Ar),
             "FVector" => Ar.Read<FVector>(),
             "FName" => Ar.ReadFName(),
             _ => null
@@ -115,18 +108,11 @@ public class FCompiledTimelinePredicate : IUStruct
     }
 }
 
-public class FGameParameterBase : IUStruct
+public class FGameParameterBase(FAssetArchive Ar) : IUStruct
 {
-    public object Value;
-    public byte[] data;
-    public FName Type;
-
-    public FGameParameterBase(FAssetArchive Ar)
-    {
-        Value = FCompiledTimelinePredicate.ReadParameterValue(Ar);
-        data = Ar.ReadArray<byte>(6);
-        Type = Ar.ReadFName();
-    }
+    public object Value = FCompiledTimelinePredicate.ReadParameterValue(Ar);
+    public byte[] data = Ar.ReadArray<byte>(6);
+    public FName Type = Ar.ReadFName();
 }
 
 public class UMKDialogueTable : UDataTable
@@ -144,4 +130,33 @@ public class UMKDialogueTable : UDataTable
             RowMap[rowName] = new FStructFallback(properties);
         }
     }
+}
+
+public class MKInventoryItemPtrBase : IUStruct
+{
+    public FStructFallback FallbackStruct;
+    public FScriptStruct? NonConstStruct;
+
+    public MKInventoryItemPtrBase(FAssetArchive Ar)
+    {
+        FallbackStruct = new FStructFallback(Ar, "MKInventoryItemPtrBase");
+        NonConstStruct = FScriptStruct.ReadInstancedStructWithoutSerialSize(Ar);
+    }
+}
+
+public class FMKLootDropItemPicker : IUStruct
+{
+    public readonly FStructFallback FallbackStruct;
+    public readonly FScriptStruct? NonConstStruct;
+    public FMKLootDropItemPicker(FAssetArchive Ar)
+    {
+        FallbackStruct = new FStructFallback(Ar, "MKLootDropItemPicker");
+        var mLootStruct = FallbackStruct.GetOrDefault<FPackageIndex>("mLootStruct");
+        NonConstStruct = FScriptStruct.ReadInstancedStructWithoutSerialSize(Ar, mLootStruct);
+    }
+}
+public class FStructPtrBase(FAssetArchive Ar) : IUStruct
+{
+    public FStructFallback FallbackStruct = new(Ar, "StructPtrBase");
+    public FScriptStruct? NonConstStruct = FScriptStruct.ReadInstancedStructWithoutSerialSize(Ar);
 }
