@@ -18,7 +18,7 @@ public sealed class LoMIoStoreManifest
     public static IReadOnlyList<LoMIoStoreManifest> Read(FileInfo manifestFile, VersionContainer versions)
     {
         var manifest = LoMManifest.Read(manifestFile, versions);
-        var compressionBlockSize = Math.Max(0x10000, manifest.CompressionBlocks.Select(x => (uint) x.UncompressedSize).DefaultIfEmpty().Max());
+        var compressionBlockSize = manifest.CompressionBlockSize;
         var ownerGroups = GetContainerOwnerGroups(manifest.BaseDirectory, manifest.Paths, manifest.Entries);
         var manifests = new List<LoMIoStoreManifest>(ownerGroups.Count);
 
@@ -59,7 +59,7 @@ public sealed class LoMIoStoreManifest
         }
 
         var containerId = selectedEntries.FirstOrDefault(x => x.Id.ChunkType == (byte) EIoChunkType5.ContainerHeader).Id.ChunkId;
-        var isEncrypted = selectedEntries.Any(entry => entry.Type == ELoMFileType.Bulk);
+        var isEncrypted = true;
 
         using var toc = new FArchiveWriter();
         var partitionCount = owners.Count == 0 ? 1 : owners.Max(x => x.PartitionIndex) + 1;

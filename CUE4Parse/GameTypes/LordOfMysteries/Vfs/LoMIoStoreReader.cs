@@ -30,11 +30,8 @@ public sealed class LoMIoStoreReader(LoMIoStoreManifest manifest, LoMDirectoryIn
         {
             var chunkId = TocResource.ChunkIds[i];
             FIoStoreEntry entry;
+            if (chunkId.ChunkType is (byte) EIoChunkType5.ContainerHeader or (byte) EIoChunkType5.ShaderCode) continue;
             if (_directoryIndex.TryGetPackagePath(chunkId, out var path))
-            {
-                entry = new FIoStoreEntry(this, path, i);
-            }
-            else if (TryGetFallbackPath(chunkId, out path))
             {
                 entry = new FIoStoreEntry(this, path, i);
             }
@@ -61,17 +58,5 @@ public sealed class LoMIoStoreReader(LoMIoStoreManifest manifest, LoMDirectoryIn
             sb.Append($", version {(int) TocResource.Header.Version} in {watch.Elapsed}");
             Log.Information(sb.ToString());
         }
-    }
-
-    private static bool TryGetFallbackPath(FIoChunkId chunkId, out string path)
-    {
-        path = chunkId.ChunkType switch
-        {
-            (byte) EIoChunkType5.ShaderCode => $"C7/Content/Shaders/0x{chunkId.ChunkId:X8}.dxbc",
-            (byte) EIoChunkType5.ShaderCodeLibrary => $"C7/Content/0x{chunkId.ChunkId:X8}.ushaderbytecode",
-            _ => string.Empty
-        };
-
-        return path.Length > 0;
     }
 }
