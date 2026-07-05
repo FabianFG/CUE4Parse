@@ -723,7 +723,7 @@ public class FUniformExpressionSet
             Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
             UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
             if (Ar.Game >= EGame.GAME_UE5_5 && Ar.Game is not EGame.GAME_FateTrigger) UniformTextureCollectionParameters = Ar.ReadArray(() => new FMaterialTextureCollectionParameterInfo(Ar));
-
+            if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 120;
             UniformPreshaderBufferSize = Ar.Read<uint>();
             Ar.Position = Ar.Position.Align(8);
             UniformPreshaderData = new FMaterialPreshaderData(Ar);
@@ -754,6 +754,7 @@ public class FUniformExpressionSet
             UniformPreshaderData = new FMaterialPreshaderData(Ar);
         }
 
+        if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 16;
         VTStacks = Ar.ReadArray(() => new FMaterialVirtualTextureStack(Ar));
         if (Ar.Game >= EGame.GAME_UE5_7 || Ar.Game is EGame.GAME_FateTrigger) MaterialCacheTagStacks = Ar.ReadArray<FMaterialCacheTagStack>();
         ParameterCollections = Ar.ReadArray<FGuid>();
