@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -16,21 +17,21 @@ internal sealed class LoMManifest
     public readonly string[] CompressionMethods;
     public readonly LoMEntry[] Entries;
     public readonly LoMCompressionBlock[] CompressionBlocks;
+    public readonly uint CompressionBlockSize;
 
-    private LoMManifest(string baseDirectory, string[] paths, string[] compressionMethods, LoMEntry[] entries, LoMCompressionBlock[] compressionBlocks)
+    private LoMManifest(string baseDirectory, string[] paths, string[] compressionMethods, LoMEntry[] entries, LoMCompressionBlock[] compressionBlocks, uint compressionBlockSize)
     {
         BaseDirectory = baseDirectory;
         Paths = paths;
         CompressionMethods = compressionMethods;
         Entries = entries;
         CompressionBlocks = compressionBlocks;
+        CompressionBlockSize = compressionBlockSize;
     }
 
     public static LoMManifest Read(FileInfo manifestFile, VersionContainer versions)
     {
-        var manifestData = File.ReadAllBytes(manifestFile.FullName);
-        var decompressedData = ReadCompressedData(manifestFile.FullName, manifestData, versions);
-        using var Ar = new FByteArchive(manifestFile.FullName, decompressedData, versions);
+        using var Ar = new FByteArchive(manifestFile.FullName, ReadCompressedData(manifestFile), versions);
 
         Ar.Read<int>(); // Version
         var paths = Ar.ReadArray(Ar.ReadFString);
@@ -41,28 +42,25 @@ internal sealed class LoMManifest
         var compressionBlocks = Ar.ReadArray(() => new LoMCompressionBlock(Ar));
         Ar.ReadArray<FIoChunkId>(); // Headers
         Ar.ReadArray<int>(); // Chunk IDs
+        Ar.Read<FGuid>();
+        var compressionBlockSize = Ar.Read<uint>();
 
-        return new LoMManifest(manifestFile.DirectoryName ?? string.Empty, paths, compressionMethods, entries, compressionBlocks);
+        return new LoMManifest(manifestFile.DirectoryName ?? string.Empty, paths, compressionMethods, entries, compressionBlocks, compressionBlockSize);
     }
 
-    private static byte[] ReadCompressedData(string archiveName, byte[] manifestData, VersionContainer versions)
+    private static byte[] ReadCompressedData(FileInfo manifestFile)
     {
-        if (manifestData.Length < KmfHeaderSize)
-            return manifestData;
-
-        using var Ar = new FByteArchive(archiveName, manifestData, versions);
-        if (Ar.Read<uint>() != KmfMagic)
+        var manifestData = File.ReadAllBytes(manifestFile.FullName);
+        using var Ar = new FByteArchive(manifestFile.FullName, manifestData);
+        if (manifestData.Length < KmfHeaderSize || Ar.Read<uint>() != KmfMagic)
             return manifestData;
 
         Ar.Read<int>(); // Version
         var uncompressedSize = Ar.Read<int>();
-        Ar.Read<int>();
-        Ar.Read<int>();
-        Ar.Read<int>();
 
-        var compressedOffset = (int) Ar.Position;
-
-        return Compression.Compression.Decompress(manifestData, compressedOffset, manifestData.Length - compressedOffset, uncompressedSize, CompressionMethod.Zlib, Ar);
+        var uncompressed = new byte[uncompressedSize];
+        Compression.Compression.Decompress(manifestData.AsSpan(KmfHeaderSize), uncompressed, CompressionMethod.Zlib, Ar);
+        return uncompressed;
     }
 }
 
@@ -105,9 +103,9 @@ internal record struct LoMEntry
 internal enum ELoMFileType : byte
 {
     File,
-    UnknownFile,
-    Asset = 9,
-    Bulk = 11
+    Ini,
+    AssetEncr = 9,
+    AssetEncrComp = 11
 }
 
 internal readonly struct LoMCompressionBlock

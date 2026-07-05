@@ -17,20 +17,31 @@ public class LoMDefaultFileProvider(string directory, SearchOption searchOption,
         var manifest = _workingDirectory.EnumerateFiles("package.manifest", _searchOption).FirstOrDefault();
         if (manifest == null)
         {
-            Log.Warning("Failed to find Lord of Mysteries manifest");
+            Log.Error("Failed to find Lord of Mysteries manifest");
             return;
         }
 
+        IReadOnlyList<LoMIoStoreManifest> containers;
         try
         {
-            foreach (var container in LoMIoStoreManifest.Read(manifest, Versions))
-            {
-                PostLoadReader(new LoMIoStoreReader(container, directory, Versions));
-            }
+            containers = LoMIoStoreManifest.Read(manifest, Versions);
         }
         catch (Exception e)
         {
             Log.Error(e, "Failed to open Lord of Mysteries manifest {Manifest}", manifest.FullName);
+            return;
+        }
+
+        foreach (var container in containers)
+        {
+            try
+            {
+                PostLoadReader(new LoMIoStoreReader(container, directory, Versions));
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Failed to load container {Container}", container.TocArchive.Name);
+            }
         }
     }
 }

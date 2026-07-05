@@ -19,15 +19,15 @@ public sealed class LoMDirectoryIndex
             return false;
         }
 
-        var extension = GetExtension(chunkId.ChunkType);
-        if (extension.Length == 0)
+        (bool result, path) = (EIoChunkType5)chunkId.ChunkType switch
         {
-            path = string.Empty;
-            return false;
-        }
+            EIoChunkType5.ExportBundleData or EIoChunkType5.ShaderCodeLibrary => (true, packagePath),
+            EIoChunkType5.BulkData => (true, Path.ChangeExtension(packagePath, "ubulk")),
+            EIoChunkType5.OptionalBulkData => (true, Path.ChangeExtension(packagePath, "uptnl")),
+            _ => (false, string.Empty)
+        };
 
-        path = chunkId.ChunkType == (byte) EIoChunkType5.ExportBundleData ? packagePath : Path.ChangeExtension(packagePath, extension);
-        return true;
+        return result;
     }
 
     public static LoMDirectoryIndex Read(DirectoryInfo workingDirectory)
@@ -57,64 +57,75 @@ public sealed class LoMDirectoryIndex
         return new LoMDirectoryIndex(packagePaths);
     }
 
+    private static readonly HashSet<string> _extensions = new(StringComparer.OrdinalIgnoreCase) { ".uasset", ".umap", ".ushaderbytecode" };
+    private static readonly HashSet<string>.AlternateLookup<ReadOnlySpan<char>> _extensionsLookup = _extensions.GetAlternateLookup< ReadOnlySpan<char>>();
+
     private static bool TryReadPackagePath(string line, out string path, out string packageName)
     {
         path = string.Empty;
         packageName = string.Empty;
 
         var tabIndex = line.IndexOf('\t');
+        var lineSpan = line.AsSpan();
         if (tabIndex >= 0)
         {
-            line = line[..tabIndex];
+            lineSpan = lineSpan[..tabIndex].Trim();
         }
 
-        line = line.Trim().Trim('"').Replace('\\', '/');
-        var extension = Path.GetExtension(line);
-        if (!extension.Equals(".uasset", StringComparison.OrdinalIgnoreCase) && !extension.Equals(".umap", StringComparison.OrdinalIgnoreCase))
+        var extension = Path.GetExtension(lineSpan);
+        if (!_extensionsLookup.Contains(extension))
             return false;
 
-        var contentIndex = line.IndexOf("/Content/", StringComparison.OrdinalIgnoreCase);
-        if (contentIndex < 0)
-            return false;
+        var contentIndex = lineSpan.IndexOf("/Content/", StringComparison.OrdinalIgnoreCase);
+        if (contentIndex < 0) return false;
 
-        path = line;
-        var relativePath = line[(contentIndex + "/Content/".Length)..^extension.Length];
-        if (line.StartsWith("C7/Content/", StringComparison.OrdinalIgnoreCase))
+        path = lineSpan.ToString();
+        var relativePath = lineSpan[(contentIndex + "/Content/".Length)..^extension.Length];
+
+        const string shaderArchives = "C7/Content/ShaderArchive-";
+        if (path.StartsWith(shaderArchives, StringComparison.OrdinalIgnoreCase))
         {
-            packageName = "/Game/" + relativePath;
+            packageName = path[shaderArchives.Length..^extension.Length];
             return true;
         }
 
-        if (line.StartsWith("Engine/Content/", StringComparison.OrdinalIgnoreCase))
+        if (path.StartsWith("C7/Content/", StringComparison.OrdinalIgnoreCase))
         {
-            packageName = "/Engine/" + relativePath;
+            packageName = string.Concat("/Game/", relativePath);
+            return true;
+        }
+
+        if (path.StartsWith("Engine/Content/", StringComparison.OrdinalIgnoreCase))
+        {
+            packageName = string.Concat("/Engine/", relativePath);
+            return true;
+        }
+
+        // Plugins
+        if (path.StartsWith("Engine/Plugins/Interchange/Assets/Content", StringComparison.OrdinalIgnoreCase))
+        {
+            packageName = string.Concat("/InterchangeAssets/", relativePath);
+            return true;
+        }
+        else if (path.StartsWith("Engine/Plugins/Interchange/Runtime/Content", StringComparison.OrdinalIgnoreCase))
+        {
+            packageName = string.Concat("/Interchange/", relativePath);
             return true;
         }
 
         var pluginPrefix = "/Plugins/";
-        var pluginIndex = line.IndexOf(pluginPrefix, StringComparison.OrdinalIgnoreCase);
+        var pluginIndex = path.IndexOf(pluginPrefix, StringComparison.OrdinalIgnoreCase);
         if (pluginIndex >= 0)
         {
             var pluginNameStart = pluginIndex + pluginPrefix.Length;
-            var pluginNameEnd = line.IndexOf('/', pluginNameStart);
+            var pluginNameEnd = path.IndexOf('/', pluginNameStart);
             if (pluginNameEnd > pluginNameStart)
             {
-                packageName = "/" + line[pluginNameStart..pluginNameEnd] + "/" + relativePath;
+                packageName = string.Concat("/", lineSpan[pluginNameStart..pluginNameEnd], "/", relativePath);
                 return true;
             }
         }
 
         return false;
     }
-
-    private static string GetExtension(byte chunkType) => (EIoChunkType5) chunkType switch
-    {
-        EIoChunkType5.ExportBundleData => "uasset",
-        EIoChunkType5.BulkData => "ubulk",
-        EIoChunkType5.OptionalBulkData => "uptnl",
-        EIoChunkType5.MemoryMappedBulkData => "m.ubulk",
-        EIoChunkType5.ShaderCodeLibrary => "ushaderbytecode",
-        EIoChunkType5.ShaderCode => "dxbc",
-        _ => string.Empty // ummm, rip?
-    };
 }

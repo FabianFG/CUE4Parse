@@ -31,6 +31,7 @@ public readonly struct FPackageId : IEquatable<FPackageId>
     public static FPackageId FromName(FName name) => FromName(name.Text);
     public static FPackageId FromName(string name)
     {
+        // doesn't work for UE5.8+ ushaderbytecode cause they switched to xxHash64
         Span<char> result = name.Length < 256 ? stackalloc char[name.Length] : new char[name.Length].AsSpan();
         ToLower(name, result);
         var nameBuf = Encoding.Unicode.GetBytes(result.ToArray());
@@ -50,6 +51,20 @@ public readonly struct FPackageId : IEquatable<FPackageId>
         for (var i = 0; i < input.Length; i++)
         {
             result[i] = ToLower(input[i]);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static char ToUpper(char input)
+    {
+        return (char) ((uint) input - ((((uint) input - 'a' < 26u) ? 1 : 0) << 5));
+    }
+
+    public static void ToUpper(string input, Span<char> result)
+    {
+        for (var i = 0; i < input.Length; i++)
+        {
+            result[i] = ToUpper(input[i]);
         }
     }
 }
