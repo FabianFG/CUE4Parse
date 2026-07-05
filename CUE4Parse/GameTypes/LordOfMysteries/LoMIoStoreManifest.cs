@@ -59,7 +59,7 @@ public sealed class LoMIoStoreManifest
         }
 
         var containerId = selectedEntries.FirstOrDefault(x => x.Id.ChunkType == (byte) EIoChunkType5.ContainerHeader).Id.ChunkId;
-        var isEncrypted = true;
+        var isEncrypted = selectedEntries.Any(entry => entry.Type == ELoMFileType.AssetEncrComp);
 
         using var toc = new FArchiveWriter();
         var partitionCount = owners.Count == 0 ? 1 : owners.Max(x => x.PartitionIndex) + 1;
