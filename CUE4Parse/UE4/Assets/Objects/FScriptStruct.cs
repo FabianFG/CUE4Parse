@@ -5,6 +5,7 @@ using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
 using CUE4Parse.GameTypes.L2KD.Objects;
+using CUE4Parse.GameTypes.LordOfMysteries.UE4.Objects;
 using CUE4Parse.GameTypes.MA.Objects;
 using CUE4Parse.GameTypes.MindsEye.Objects;
 using CUE4Parse.GameTypes.MK1.Assets.Objects;
@@ -431,6 +432,8 @@ public class FScriptStruct
 
             // Orcs Must Die Deathtrap
             "RDialogueFactValue" => new FFixedSizeStruct(Ar, 13),
+
+            "KGVariantValue" when Ar.Game is EGame.GAME_LordOfMysteries => new FKGVariantValue(Ar),
 
             _ => Ar.Game switch
             {
