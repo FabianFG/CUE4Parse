@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using CUE4Parse.UE4.VirtualFileSystem;
 using AesProvider = CUE4Parse.Encryption.Aes.Aes;
 
-namespace CUE4Parse.GameTypes.DeltaForce.Encryption.Aes;
+namespace CUE4Parse.GameTypes.DragonSword.Encryption.Aes;
 
 public static class DragonSwordAes
 {

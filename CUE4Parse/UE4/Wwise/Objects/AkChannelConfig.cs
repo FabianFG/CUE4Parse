@@ -19,4 +19,12 @@ public readonly struct AkChannelConfig
         ConfigType = (EAkChannelConfigType) ((data >> 8) & 0x0F);
         ChannelMask = (data >> 12) & 0xFFFFF;
     }
+
+    public AkChannelConfig(ushort channelMask)
+    {
+        NumChannels = 0;
+        ConfigTypePacked = (EAkChannelConfig) channelMask;
+        ConfigType = EAkChannelConfigType.Standard;
+        ChannelMask = channelMask;
+    }
 }

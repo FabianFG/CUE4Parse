@@ -86,7 +86,6 @@ public class AkDecisionTreeNode
         }
 
         Children = ChildrenCount > 0 ? new AkDecisionTreeNode[ChildrenCount] : [];
-
         if (Ar.Version > 29 && Ar.Version <= 36)
         {
             Weight = Ar.Read<ushort>();

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Text;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Objects;
@@ -87,6 +85,11 @@ public class WwiseReader
                         var bank = new WwiseReader(Ar, _source, entry.Size) { Path = entry.AudioPath };
                         LoadedSize += bank.LoadedSize;
                         AKPKBankEntries.Add(bank);
+
+                        foreach (var embeddedWem in bank.WwiseEncodedMedias)
+                        {
+                            WwiseEncodedMedias[embeddedWem.Key] = embeddedWem.Value;
+                        }
                     }
 
                     foreach (var entry in AKPKWemEntries)
@@ -103,6 +106,7 @@ public class WwiseReader
                     Header = new AkBankHeader(Ar, sectionLength);
 
                     Ar.Version = Header.Version;
+                    Ar.HasFeedback = Header.FeedbackInBank;
 
                     if (!Ar.IsSupported())
                         Log.Warning($"Wwise version {Ar.Version} is not supported");

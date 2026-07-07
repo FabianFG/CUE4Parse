@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using CUE4Parse.GameTypes.FF7.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.UE4.AssetRegistry;
@@ -45,6 +42,7 @@ using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.Utils;
 using Fmod5Sharp.FmodTypes;
 using Newtonsoft.Json;
+
 #pragma warning disable CS8765
 
 namespace CUE4Parse;
@@ -99,37 +97,25 @@ public class FIoStoreShaderCodeArchiveConverter : JsonConverter<FIoStoreShaderCo
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("ShaderMapHashes");
-        writer.WriteStartArray();
-        foreach (var shaderMapHash in value.ShaderMapHashes)
-        {
-            serializer.Serialize(writer, shaderMapHash.Hash);
-        }
+        writer.WritePropertyName(nameof(value.ShaderMapHashes));
+        serializer.Serialize(writer, value.ShaderMapHashes);
 
-        writer.WriteEndArray();
+        writer.WritePropertyName(nameof(value.ShaderHashes));
+        serializer.Serialize(writer, value.ShaderHashes);
 
-        writer.WritePropertyName("ShaderHashes");
-        writer.WriteStartArray();
-        foreach (var shaderHash in value.ShaderHashes)
-        {
-            serializer.Serialize(writer, shaderHash.Hash);
-        }
-
-        writer.WriteEndArray();
-
-        writer.WritePropertyName("ShaderGroupIoHashes");
+        writer.WritePropertyName(nameof(value.ShaderGroupIoHashes));
         serializer.Serialize(writer, value.ShaderGroupIoHashes);
 
-        writer.WritePropertyName("ShaderMapEntries");
+        writer.WritePropertyName(nameof(value.ShaderMapEntries));
         serializer.Serialize(writer, value.ShaderMapEntries);
 
-        writer.WritePropertyName("ShaderEntries");
+        writer.WritePropertyName(nameof(value.ShaderEntries));
         serializer.Serialize(writer, value.ShaderEntries);
 
-        writer.WritePropertyName("ShaderGroupEntries");
+        writer.WritePropertyName(nameof(value.ShaderGroupEntries));
         serializer.Serialize(writer, value.ShaderGroupEntries);
 
-        writer.WritePropertyName("ShaderIndices");
+        writer.WritePropertyName(nameof(value.ShaderIndices));
         serializer.Serialize(writer, value.ShaderIndices);
 
         writer.WriteEndObject();
@@ -170,34 +156,22 @@ public class FSerializedShaderArchiveConverter : JsonConverter<FSerializedShader
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("ShaderMapHashes");
-        writer.WriteStartArray();
-        foreach (var shaderMapHash in value.ShaderMapHashes)
-        {
-            serializer.Serialize(writer, shaderMapHash.Hash);
-        }
+        writer.WritePropertyName(nameof(value.ShaderMapHashes));
+        serializer.Serialize(writer, value.ShaderMapHashes);
 
-        writer.WriteEndArray();
+        writer.WritePropertyName(nameof(value.ShaderHashes));
+        serializer.Serialize(writer, value.ShaderHashes);
 
-        writer.WritePropertyName("ShaderHashes");
-        writer.WriteStartArray();
-        foreach (var shaderHash in value.ShaderHashes)
-        {
-            serializer.Serialize(writer, shaderHash.Hash);
-        }
-
-        writer.WriteEndArray();
-
-        writer.WritePropertyName("ShaderMapEntries");
+        writer.WritePropertyName(nameof(value.ShaderMapEntries));
         serializer.Serialize(writer, value.ShaderMapEntries);
 
-        writer.WritePropertyName("ShaderEntries");
+        writer.WritePropertyName(nameof(value.ShaderEntries));
         serializer.Serialize(writer, value.ShaderEntries);
 
-        writer.WritePropertyName("PreloadEntries");
+        writer.WritePropertyName(nameof(value.PreloadEntries));
         serializer.Serialize(writer, value.PreloadEntries);
 
-        writer.WritePropertyName("ShaderIndices");
+        writer.WritePropertyName(nameof(value.ShaderIndices));
         serializer.Serialize(writer, value.ShaderIndices);
 
         writer.WriteEndObject();
@@ -2285,18 +2259,7 @@ public class FInstancedStructConverter : JsonConverter<FInstancedStruct>
 {
     public override void WriteJson(JsonWriter writer, FInstancedStruct? value, JsonSerializer serializer)
     {
-        if (value?.StringData != null)
-        {
-            writer.WriteStartObject();
-
-            writer.WritePropertyName(nameof(value.StringData));
-            serializer.Serialize(writer, value.StringData);
-
-            writer.WriteEndObject();
-            return;
-        }
-
-        serializer.Serialize(writer, value?.NonConstIUSturct);
+        serializer.Serialize(writer, value?.NonConstStruct);
     }
 
     public override FInstancedStruct ReadJson(JsonReader reader, Type objectType, FInstancedStruct? existingValue, bool hasExistingValue, JsonSerializer serializer)
@@ -3439,7 +3402,7 @@ public class FModConverter : JsonConverter<FModReader>
         writer.WriteEndObject();
     }
 
-    public override FModReader ReadJson(JsonReader reader, System.Type objectType, FModReader existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override FModReader ReadJson(JsonReader reader, Type objectType, FModReader existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Material;
@@ -28,6 +25,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
     public FEditorBulkData? EditorData { get; private set; }
+    public FByteBulkData? SourceArt { get; private set; }
     public ETextureCookPlatformTilingSettings CookPlatformTilingSettings { get; private set; }
 
     public bool RenderNearestNeighbor => LODGroup == TextureGroup.TEXTUREGROUP_Pixels2D || Filter == TextureFilter.TF_Nearest;
@@ -74,6 +72,12 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
         SRGB = GetOrDefault(nameof(SRGB), true);
         AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
         CookPlatformTilingSettings = GetOrDefault<ETextureCookPlatformTilingSettings>(nameof(CookPlatformTilingSettings));
+
+        if (Ar.Game < EGame.GAME_UE4_0)
+        {
+            SourceArt = new FByteBulkData(Ar);
+            return;
+        }
 
         var stripFlags = new FStripDataFlags(Ar);
 

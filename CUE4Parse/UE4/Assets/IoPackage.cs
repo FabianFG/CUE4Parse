@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports;
@@ -254,7 +252,6 @@ public sealed class IoPackage : AbstractUePackage
                 Ar.AbsoluteOffset = newPos ? cookedHeaderSize - allExportDataOffset : (int) export.CookedSerialOffset - pos;
                 Ar.Position = pos;
                 DeserializeObject(obj, Ar, (long) export.CookedSerialSize);
-                // TODO right place ???
                 obj.Flags |= EObjectFlags.RF_LoadCompleted;
                 obj.PostLoad();
                 return obj;
@@ -374,6 +371,7 @@ public sealed class IoPackage : AbstractUePackage
 
     private FPackageId[] LoadGraphData(FArchive Ar)
     {
+        if (Ar.Game is EGame.GAME_NeedForSpeedMobile && Ar.ReadBoolean()) Ar.Position += 8;
         var packageCount = Ar.Read<int>();
         if (packageCount == 0) return [];
 

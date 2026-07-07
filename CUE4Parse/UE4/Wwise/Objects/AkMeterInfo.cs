@@ -16,6 +16,6 @@ public readonly struct AkMeterInfo
         Tempo = Ar.Read<float>();
         TimeSigNumBeatsBar = Ar.Read<byte>();
         TimeSigBeatValue = Ar.Read<byte>();
-        MeterInfoFlag = Ar.Read<byte>() != 0;
+        MeterInfoFlag = Ar.ReadBool();
     }
 }

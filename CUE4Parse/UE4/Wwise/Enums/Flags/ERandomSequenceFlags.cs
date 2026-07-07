@@ -1,9 +1,8 @@
-using System;
 
 namespace CUE4Parse.UE4.Wwise.Enums.Flags;
 
 [Flags]
-public enum ERandomSequence : byte
+public enum ERandomSequenceFlags : byte
 {
     None = 0,
     IsUsingWeight = 1 << 0,

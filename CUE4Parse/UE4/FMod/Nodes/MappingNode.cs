@@ -1,6 +1,5 @@
 using CUE4Parse.UE4.FMod.Objects;
 using Newtonsoft.Json;
-using System.IO;
 
 namespace CUE4Parse.UE4.FMod.Nodes;
 

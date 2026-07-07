@@ -18,7 +18,7 @@ public class FSkeleton
 
     public FSkeleton(FMutableArchive Ar)
     {
-        if (Ar.Game < Versions.EGame.GAME_UE5_6) Version = Ar.Read<int>();
+        if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
 
         if (Version >= 7)
         {

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Resources;
 using CUE4Parse.UE4.Objects.UObject;

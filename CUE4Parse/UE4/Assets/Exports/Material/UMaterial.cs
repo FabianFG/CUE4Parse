@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
@@ -349,7 +346,6 @@ public class UMaterial : UMaterialInterface
                 Regex.IsMatch(texture.Name, CMaterialParams2.RegexEmissive, RegexOptions.IgnoreCase))
             {
                 parameters.Textures[CMaterialParams2.FallbackEmissive] = texture;
-                continue;
             }
         }
     }

@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
@@ -18,9 +17,14 @@ public readonly struct Hierarchy
     {
         byte rawType = Ar.Read<byte>();
         Length = Ar.Read<uint>();
-        var hierarchyEndPosition = Ar.Position + Length;
+
+        var hierarchyStartPosition = Ar.Position;
+        var hierarchyEndPosition = hierarchyStartPosition + Length;
 
         Type = rawType.MapToCurrent(Ar.Version);
+
+        if (Type is 0)
+            Log.Warning("Failed to map hierarchy type {Type}", rawType);
 
         // Try/Catch is done to allow for extracting audio even if this fails
         // Due to their complexity it's very likely hierarchies will fail to parse if unsupported
@@ -43,6 +47,8 @@ public readonly struct Hierarchy
                 EAKBKHircType.MusicRandomSequenceContainer => new HierarchyMusicRandomSequenceContainer(Ar),
                 EAKBKHircType.Attenuation => new HierarchyAttenuation(Ar),
                 EAKBKHircType.DialogueEvent => new HierarchyDialogueEvent(Ar),
+                EAKBKHircType.FeedbackBus => new HierarchyFeedbackBus(Ar),
+                EAKBKHircType.FeedbackNode => new HierarchyFeedbackNode(Ar),
                 EAKBKHircType.FxShareSet => new HierarchyFxShareSet(Ar),
                 EAKBKHircType.FxCustom => new HierarchyFxCustom(Ar),
                 EAKBKHircType.AuxiliaryBus => new HierarchyAuxiliaryBus(Ar),
@@ -57,7 +63,7 @@ public readonly struct Hierarchy
         catch (Exception ex) when (!Debugger.IsAttached)
         {
             Log.Error(ex, "Failed to parse HIRC type {Type}. Falling back to generic.", Type);
-            Ar.Position = hierarchyEndPosition - Length;
+            Ar.Position = hierarchyStartPosition;
             Data = new HierarchyGeneric(Ar);
         }
         finally
@@ -65,7 +71,9 @@ public readonly struct Hierarchy
             if (Ar.Position != hierarchyEndPosition)
             {
 #if DEBUG
-                Log.Warning($"Didn't read hierarchy {Type} {Data?.Id} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
+                Ar.Position = hierarchyStartPosition;
+                var id = Length >= 4 ? Ar.Read<uint>() : 0;
+                Log.Warning($"Didn't read hierarchy {Type} {id} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
                 if (Data is HierarchyEventAction action)
                 {
                     Log.Warning($"EventAction type: {action.EventActionType}");

@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Objects.UObject;
+﻿using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
+﻿using System.Text.Json;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;

@@ -1,5 +1,4 @@
-using System.IO;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -13,10 +12,10 @@ public class AkEntry
     public readonly int Size;
     public readonly uint Offset;
     public readonly uint FolderId;
-    public string AudioPath;
+    public string? AudioPath;
     public readonly bool IsSoundBank;
     public readonly bool IsExternalSound;
-    public FDeferredByteData Data;
+    public FDeferredByteData? Data;
 
     public AkEntry(FWwiseArchive Ar, bool isSoundBank, bool externalSound = false)
     {
@@ -38,8 +37,10 @@ public class AkEntry
 
     public string Name => IsExternalSound ? ExternalNameHash.ToString() : NameHash.ToString();
 
+    [MemberNotNull(nameof(AudioPath))]
     public void ReadAudioPath(AkFolder[] folders) => AudioPath = Path.Combine(folders.FirstOrDefault(x => x.Id == FolderId)?.Name ?? "", Name + (IsSoundBank ? ".bnk" : ".wem"));
 
+    [MemberNotNull(nameof(Data))]
     public long ReadData(FWwiseArchive Ar, WwiseDataSource source)
     {
         Data = WwiseReader.ReadDeferredByteData(Ar, source, Offset * OffsetMultiplier, Size);

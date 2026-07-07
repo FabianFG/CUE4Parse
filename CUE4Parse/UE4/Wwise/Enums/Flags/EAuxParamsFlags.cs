@@ -1,9 +1,7 @@
-using System;
-
 namespace CUE4Parse.UE4.Wwise.Enums.Flags;
 
 [Flags]
-public enum EAuxParams : byte
+public enum EAuxParamsFlags : byte
 {
     None = 0,
     OverrideGameAux = 1 << 0,

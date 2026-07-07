@@ -1,8 +1,7 @@
 // ReSharper disable CheckNamespace
 
-using System;
-using System.Linq;
 using System.Text;
+using Blake3;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Pak.Objects;
@@ -48,7 +47,7 @@ public partial class PakFileReader
             var firstBlockIndex = offset / compressionBlockSize;
             var lastBlockIndex = (offset + requestedSize - 1) / compressionBlockSize;
             var lastBlock = pakEntry.CompressionBlocks.Length - 1;
-            
+
             for (var i = 0; i < firstBlockIndex; i++)
             {
                 if (limit > 0)
@@ -181,7 +180,7 @@ public partial class PakFileReader
 
     private int CalculateEncryptedBytesCountForMarvelRivals(FPakEntry pakEntry)
     {
-        using var hasher = Blake3.Hasher.New();
+        using var hasher = Hasher.New();
 
         var initialSeedBytes = BitConverter.GetBytes(0x44332211);
         hasher.Update(initialSeedBytes);

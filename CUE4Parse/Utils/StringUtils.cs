@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Encryption.Aes;
 

@@ -1,9 +1,11 @@
-using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Wwise.Enums.Flags;
 
 [Flags]
-public enum EAdvSettings : byte
+[JsonConverter(typeof(StringEnumConverter))]
+public enum EAdvSettingsFlags : byte
 {
     None = 0,
     KillNewest = 1 << 0,

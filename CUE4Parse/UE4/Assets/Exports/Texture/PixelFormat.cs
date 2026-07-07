@@ -1,4 +1,3 @@
-using System;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -50,8 +49,8 @@ public static class PixelFormatUtils
         new(EPixelFormat.PF_R32_UINT,           "R32_UINT",               1,          1,          1,          4,            1,                false),
         new(EPixelFormat.PF_R32_SINT,           "R32_SINT",               1,          1,          1,          4,            1,                false),
 
-        new(EPixelFormat.PF_PVRTC2,             "PVRTC2",                 8,          4,          1,          8,            4,                false),
-        new(EPixelFormat.PF_PVRTC4,             "PVRTC4",                 4,          4,          1,          8,            4,                false),
+        new(EPixelFormat.PF_PVRTC2,             "PVRTC2",                 8,          4,          1,          8,            4,                true),
+        new(EPixelFormat.PF_PVRTC4,             "PVRTC4",                 4,          4,          1,          8,            4,                true),
 
         new(EPixelFormat.PF_R16_UINT,           "R16_UINT",               1,          1,          1,          2,            1,                false),
         new(EPixelFormat.PF_R16_SINT,           "R16_SINT",               1,          1,          1,          2,            1,                false),

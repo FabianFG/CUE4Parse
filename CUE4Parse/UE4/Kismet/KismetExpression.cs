@@ -1,9 +1,9 @@
-using CUE4Parse.UE4.Objects.UObject;
-using Newtonsoft.Json;
-using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Versions;
 using System.Text;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Kismet;
 
@@ -363,6 +363,7 @@ public class EX_Context : KismetExpression
         ObjectExpression = Ar.ReadExpression();
         Offset = Ar.Read<uint>();
         RValuePointer = new FKismetPropertyPointer(Ar);
+        if (Ar.Game < EGame.GAME_UE4_9) Ar.Read<byte>(); // Property type
         ContextExpression = Ar.ReadExpression();
     }
 
@@ -703,7 +704,7 @@ public class EX_Let : KismetExpression
 
     public EX_Let(FKismetArchive Ar)
     {
-        Property = new FKismetPropertyPointer(Ar);
+        if (Ar.Game >= EGame.GAME_UE4_9) Property = new FKismetPropertyPointer(Ar);
         Variable = Ar.ReadExpression();
         Assignment = Ar.ReadExpression();
     }

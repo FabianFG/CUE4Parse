@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Versions;
 

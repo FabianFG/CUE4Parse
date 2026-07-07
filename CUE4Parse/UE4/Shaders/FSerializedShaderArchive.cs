@@ -18,21 +18,21 @@ public class FSerializedShaderArchive : FRHIShaderLibrary
     /** An array of all shaders descriptors, deduplicated */
     public readonly FShaderCodeEntry[] ShaderEntries;
     /** An array of entries for the bytes of shadercode that need to be preloaded for a shadermap.
-    * Each shadermap has a range in this array, beginning of which is stored in FShaderMapEntry.FirstPreloadIndex. */
+      * Each shadermap has a range in this array, beginning of which is stored in FShaderMapEntry.FirstPreloadIndex. */
     public readonly FFileCachePreloadEntry[] PreloadEntries;
     /** Flat array of shaders referenced by all shadermaps. Each shadermap has a range in this array, beginning of which is
-      * stored as ShaderIndicesOffset in the shadermap's descriptor (FShaderMapEntry).
-      */
+      * stored as ShaderIndicesOffset in the shadermap's descriptor (FShaderMapEntry). */
     public readonly uint[] ShaderIndices;
-    // public readonly FHashTable ShaderMapHashTable;
-    // public readonly FHashTable ShaderHashTable;
 
     public FSerializedShaderArchive(FArchive Ar)
     {
-        ShaderMapHashes = Ar.ReadArray(() => new FSHAHash(Ar));
-        ShaderHashes = Ar.Game == EGame.GAME_MarvelRivals
-            ? Ar.ReadArray(() => new FSHAHash(Ar, 28))
-            : Ar.ReadArray(() => new FSHAHash(Ar));
+        ShaderMapHashes = Ar.Game >= EGame.GAME_UE5_8 ? Ar.ReadArray(() => new FSHAHash(Ar, 8)) : Ar.ReadArray(() => new FSHAHash(Ar));
+        ShaderHashes = Ar.Game switch
+        {
+            EGame.GAME_MarvelRivals => Ar.ReadArray(() => new FSHAHash(Ar, 28)),
+            >= EGame.GAME_UE5_8 => Ar.ReadArray(() => new FSHAHash(Ar, 8)),
+            _ => Ar.ReadArray(() => new FSHAHash(Ar))
+        };
         if (Ar.Game == EGame.GAME_MarvelRivals) Ar.Position += 4; // unknown
         ShaderMapEntries = Ar.ReadArray<FShaderMapEntry>();
         ShaderEntries = Ar.ReadArray<FShaderCodeEntry>();

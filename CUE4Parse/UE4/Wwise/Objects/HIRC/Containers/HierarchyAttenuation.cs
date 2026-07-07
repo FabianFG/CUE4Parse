@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
@@ -13,11 +12,12 @@ public class HierarchyAttenuation : AbstractHierarchy
     public readonly AkRtpc[] RTPCs;
 
     // CAkAttenuation::SetInitialValues
-    public HierarchyAttenuation(FWwiseArchive Ar) : base(Ar)
+    public HierarchyAttenuation(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         if (Ar.Version > 136)
         {
-            IsHeightSpreadEnabled = Ar.Read<byte>() != 0;
+            IsHeightSpreadEnabled = Ar.ReadBool();
         }
 
         IsConeEnabled = (Ar.Read<byte>() & 1) != 0;

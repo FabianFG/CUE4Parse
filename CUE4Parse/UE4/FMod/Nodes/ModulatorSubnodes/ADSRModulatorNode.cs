@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace CUE4Parse.UE4.FMod.Nodes.ModulatorSubnodes;
 
 /// ADSR (Attack, Decay, Sustain, Release) modulator

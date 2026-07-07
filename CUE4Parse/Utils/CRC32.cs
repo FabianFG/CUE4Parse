@@ -26,8 +26,6 @@
 // ------------------------------------------------------------------
 
 
-using System;
-using System.IO;
 using Interop = System.Runtime.InteropServices;
 
 namespace CUE4Parse.Utils;

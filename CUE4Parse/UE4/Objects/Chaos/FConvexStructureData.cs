@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using FConvexStructureDataLarge = CUE4Parse.UE4.Objects.Chaos.TConvexHalfEdgeStructureData<int>;
@@ -28,7 +27,7 @@ public class FConvexStructureData
 {
     public EIndexType IndexType;
     public FStructureData Data;
-    
+
     public FConvexStructureData(FArchive Ar)
     {
         var bUseHalfEdgeStructureData = FPhysicsObjectVersion.Get(Ar) >= FPhysicsObjectVersion.Type.ChaosConvexUsesHalfEdges;
@@ -39,15 +38,15 @@ public class FConvexStructureData
             throw new NotImplementedException("Loading legacy convex structure data is not implemented");
 
         IndexType = (EIndexType)Ar.Read<EIndexType>();
-        
+
         Data = new FStructureData();
         if  (IndexType == EIndexType.Large)
             Data.DataL = new FConvexStructureDataLarge(Ar);
         else if (IndexType == EIndexType.Medium)
             Data.DataM = new FConvexStructureDataMedium(Ar);
         else if (IndexType == EIndexType.Small)
-            Data.DataS = new FConvexStructureDataSmall(Ar);  
-            
+            Data.DataS = new FConvexStructureDataSmall(Ar);
+
     }
 }
 

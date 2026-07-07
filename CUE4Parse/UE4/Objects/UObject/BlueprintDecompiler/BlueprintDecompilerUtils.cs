@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using CUE4Parse.GameTypes._2XKO.Kismet;
 using CUE4Parse.GameTypes.Borderlands4.Kismet;
 using CUE4Parse.GameTypes.DFHO.Kismet;

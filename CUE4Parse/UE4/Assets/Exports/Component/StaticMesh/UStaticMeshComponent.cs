@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -38,6 +37,11 @@ public class UStaticMeshComponent : UMeshComponent
             var bSerializeAsCookedData = Ar.ReadBoolean();
             if (bSerializeAsCookedData)
                 MeshPaintTextureCooked = new FPackageIndex(Ar);
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRESERVE_SMC_VERT_COLORS && Ar.Ver < EUnrealEngineObjectUE3Version.WIIU_COMPRESSED_SOUNDS)
+        {
+            Ar.Read<int>(); // Dummy
         }
     }
 

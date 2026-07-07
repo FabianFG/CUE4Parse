@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -67,12 +66,11 @@ public class FTexturePlatformData
     public FTexturePlatformData(FAssetArchive Ar, UTexture Owner, bool bSerializeMipData = true)
     {
         const long PlaceholderDerivedDataSize = 16;
-        if (Ar.Game is >= EGame.GAME_UE5_2)
+        if (Ar.Game >= EGame.GAME_UE5_2)
         {
             if (Ar.ReadFlag() && Ar.Game != EGame.GAME_InfinityNikki) // bUsingDerivedData
                 throw new NotImplementedException("FTexturePlatformData deserialization using derived data is not implemented.");
-            else
-                Ar.Position += PlaceholderDerivedDataSize - 1;
+            Ar.Position += PlaceholderDerivedDataSize - 1;
         }
         else if (Ar is { Game: >= EGame.GAME_UE5_0, IsFilterEditorOnly: true })
         {
@@ -159,7 +157,7 @@ public class FTexturePlatformData
             }
         }
 
-        if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.ReadBoolean()) Ar.Position += 112; 
+        if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.ReadBoolean()) Ar.Position += 112;
 
         if (Mips.Length > 0)
         {

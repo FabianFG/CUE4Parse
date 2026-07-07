@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Chaos;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -45,7 +41,7 @@ public enum EImplicitObjectType: byte
 public struct FReal
 {
     public double Value;
-    
+
     public FReal(FAssetArchive Ar)
     {
         if (Ar.Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
@@ -57,7 +53,7 @@ public struct FReal
             Value = Ar.Read<double>();
         }
     }
-    
+
     public FReal(double value)
 	{
 		Value = value;
@@ -77,22 +73,22 @@ public class FImplicitObject: ISerializationFactory
 
     public FImplicitObject()
     {
-        
+
     }
 
-    public virtual ISerializationFactory Serialize(FChaosArchive Ar) 
+    public virtual ISerializationFactory Serialize(FChaosArchive Ar)
     {
         if (FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.ChaosArchiveAdded)
         {
             bIsConvex = Ar.ReadBoolean();
             bDoCollide = Ar.ReadBoolean();
         }
-        
+
         if (FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.ImplicitObjectDoCollideAttribute)
         {
             bDoCollide = true;
         }
-        
+
         if (FReleaseObjectVersion.Get(Ar) > FReleaseObjectVersion.Type.CustomImplicitCollisionType)
         {
             CollisionType = (EImplicitObjectType) Ar.Read<byte>();
@@ -101,16 +97,16 @@ public class FImplicitObject: ISerializationFactory
         return this;
     }
 
-    public virtual ISerializationFactory SerializationFactory(FChaosArchive Ar) 
+    public virtual ISerializationFactory SerializationFactory(FChaosArchive Ar)
     {
         EImplicitObjectType objectType = Ar.Read<EImplicitObjectType>(); // because Ar.Loading
 
-        if (FExternalPhysicsCustomObjectVersion.Get(Ar) >= FExternalPhysicsCustomObjectVersion.Type.ScaledGeometryIsConcrete) 
+        if (FExternalPhysicsCustomObjectVersion.Get(Ar) >= FExternalPhysicsCustomObjectVersion.Type.ScaledGeometryIsConcrete)
         {
             if (IsScaled(objectType)) {
                 EImplicitObjectType innerType = GetInnerType(objectType);
 
-                switch (innerType) 
+                switch (innerType)
                 {
                     case EImplicitObjectType.Convex:
                         return new FImplicitObject();
@@ -119,22 +115,22 @@ public class FImplicitObject: ISerializationFactory
                 }
             }
         }
-        
-        if (IsInstanced(objectType)) 
+
+        if (IsInstanced(objectType))
         {
             EImplicitObjectType innerType = GetInnerType(objectType);
 
-            switch (innerType) 
+            switch (innerType)
             {
                 case EImplicitObjectType.Convex:
                     return new TImplicitObjectInstanced<FConvex>();
-                
+
                 default:
 	                throw new ParserException("Unknown instanced geometry type " + innerType);
             }
         }
-        
-        switch (objectType)        
+
+        switch (objectType)
         {
             case EImplicitObjectType.Union:
 	            return new FImplicitObjectUnion();
@@ -149,16 +145,16 @@ public class FImplicitObject: ISerializationFactory
         return this;
     }
 
-    bool IsScaled(EImplicitObjectType type) 
+    bool IsScaled(EImplicitObjectType type)
     {
         return (type & EImplicitObjectType.IsScaled) != 0;
     }
 
-    bool IsInstanced(EImplicitObjectType type) 
+    bool IsInstanced(EImplicitObjectType type)
     {
         return (type & EImplicitObjectType.IsInstanced) != 0;
     }
-    
+
     EImplicitObjectType GetInnerType(EImplicitObjectType Type)
     {
         return Type & (~(EImplicitObjectType.IsWeightedLattice | EImplicitObjectType.IsScaled | EImplicitObjectType.IsInstanced));
@@ -196,7 +192,7 @@ public class TBox<T> : FImplicitObject where T: struct
 			box.Serialize(Ar);
 			return box.AABB;
 		}
-		
+
 		return new TAABB<T>(Ar, dimensions);
 	}
 
@@ -205,7 +201,7 @@ public class TBox<T> : FImplicitObject where T: struct
 		var count = Ar.Read<int>();
 		var AABBs = new Dictionary<int, TAABB<T>>();
 		AABBs.EnsureCapacity(count);
-		
+
 		for (int i = 0; i < count; i++)
 		{
 			var key =  Ar.Read<int>();
@@ -214,7 +210,7 @@ public class TBox<T> : FImplicitObject where T: struct
 			var val = SerializeAsAABB(Ar, dimensions);
 			AABBs[key] = val;
 		}
-		
+
 		return AABBs;
 	}
 }
@@ -232,14 +228,14 @@ public class FImplicitObjectUnion : FImplicitObject
 		Type = EImplicitObjectType.Union;
 	}
 
-	public override ISerializationFactory Serialize(FChaosArchive Ar) 
+	public override ISerializationFactory Serialize(FChaosArchive Ar)
 	{
 		base.Serialize(Ar);
 
 		MObjects = Ar.SerializePtrArray(() => new FImplicitObject());
 
 		MLocalBoundingBox = new FAABB3();
-		
+
 		if (Ar.Game == EGame.GAME_MarvelRivals)
 		{
 			var aabb = TBox<float>.SerializeAsAABB(Ar, 3);
@@ -252,7 +248,7 @@ public class FImplicitObjectUnion : FImplicitObject
 			MLocalBoundingBox.Min = new TVector<double>(aabb.Min[0], aabb.Min[1], aabb.Min[2]);
 			MLocalBoundingBox.Max = new TVector<double>(aabb.Max[0], aabb.Max[1], aabb.Max[2]);
 		}
-		
+
 		bool bHierarchyBuilt;
         if (FExternalPhysicsCustomObjectVersion.Get(Ar) < FExternalPhysicsCustomObjectVersion.Type.UnionObjectsCanAvoidHierarchy)
         {
@@ -267,7 +263,7 @@ public class FImplicitObjectUnion : FImplicitObject
         else
         {
             var flagsBit = Ar.Read<byte>(); // FFLags union of bAllowBVH 1 and bHasBVH 1
-            
+
             if (FFortniteSeasonBranchObjectVersion.Get(Ar) < FFortniteSeasonBranchObjectVersion.Type.ChaosImplicitObjectUnionLeafObjectsToInt32)
             {
                 NumLeafObjects = (int)Ar.Read<ushort>();
@@ -297,16 +293,16 @@ public class TImplicitObjectTransformed<T>: FImplicitObject
 	private FImplicitObject MObject;
 	private FTransform MTransform; // TRigidTransform<T, d>
 	private FAABB3 MLocalBoundingBox; // TAABB<T, d>
-	
+
 	private const int d = 3;
 
 	public override ISerializationFactory Serialize(FChaosArchive Ar)
 	{
 		base.Serialize(Ar);
-		
+
 		MObject = Ar.SerializePtr(new FImplicitObject());
 		MTransform = Ar.Read<TTransform<double>>(); // FReal
-		
+
 
 		if (Ar.Game == EGame.GAME_MarvelRivals)
 		{
@@ -319,7 +315,7 @@ public class TImplicitObjectTransformed<T>: FImplicitObject
 			var aabb = TBox<double>.SerializeAsAABB(Ar, 3);
 			MLocalBoundingBox = new FAABB3(aabb);
 		}
-		
+
 		return this;
 	}
 }

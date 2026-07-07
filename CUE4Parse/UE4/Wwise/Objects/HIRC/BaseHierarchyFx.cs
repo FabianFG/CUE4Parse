@@ -16,33 +16,33 @@ public class BaseHierarchyFx : AbstractHierarchy
     public readonly IAkPluginParam? PluginParams;
 
     // CAkFxBase::SetInitialValues
-    public BaseHierarchyFx(FWwiseArchive Ar) : base(Ar)
+    public BaseHierarchyFx(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         Plugin = WwisePlugin.GetPluginId(Ar);
         PluginParams = WwisePlugin.TryParsePluginParams(Ar, Plugin);
 
         MediaList = Ar.ReadArray(Ar.Read<byte>(), () => new AkMediaMap(Ar));
         RTPCs = AkRtpc.ReadArray(Ar);
 
-        if (Ar.Version <= 89)
+        switch (Ar.Version)
         {
-            // Do nothing for versions <= 89
-        }
-        else if (Ar.Version <= 126)
-        {
-            if (Ar.Version > 122)
-            {
-                // Unused bytes
-                Ar.Read<byte>();
-                Ar.Read<byte>();
-            }
+            case <= 89:
+                break;
+            case <= 126:
+                if (Ar.Version > 122)
+                {
+                    // Unused bytes
+                    Ar.Read<byte>();
+                    Ar.Read<byte>();
+                }
 
-            RtpcInitList = Ar.ReadArray(Ar.Read<ushort>(), () => new RtpcInit(Ar));
-        }
-        else
-        {
-            StateGroups = new AkStateAwareChunk(Ar).Groups;
-            PluginPropertyValues = Ar.ReadArray(Ar.Read<ushort>(), () => new PluginPropertyValue(Ar));
+                RtpcInitList = Ar.ReadArray(Ar.Read<ushort>(), () => new RtpcInit(Ar));
+                break;
+            default:
+                StateGroups = new AkStateAwareChunk(Ar).Groups;
+                PluginPropertyValues = Ar.ReadArray(Ar.Read<ushort>(), () => new PluginPropertyValue(Ar));
+                break;
         }
     }
 

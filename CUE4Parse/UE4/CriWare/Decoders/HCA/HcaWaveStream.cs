@@ -1,7 +1,4 @@
-using System;
-using System.IO;
 using NAudio.Wave;
-using CUE4Parse.UE4.CriWare.Decoders;
 
 namespace CUE4Parse.UE4.CriWare.Decoders.HCA;
 

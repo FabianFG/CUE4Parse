@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -80,10 +78,10 @@ public class FSkelMeshSection
         if (!stripDataFlags.IsAudioVisualDataStripped())
         {
             BaseIndex = Ar.Read<int>();
-            NumTriangles = Ar.Read<int>();
+            NumTriangles = Ar.Ver >= EUnrealEngineObjectUE3Version.DWORD_SKELETAL_MESH_INDICES ? Ar.Read<int>() : Ar.Read<short>();
         }
 
-        if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveTriangleSorting)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELETAL_MESH_SORTING_OPTIONS && skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveTriangleSorting)
         {
             var dummyTriangleSorting = Ar.Read<byte>(); // TEnumAsByte<ETriangleSortOption>
         }

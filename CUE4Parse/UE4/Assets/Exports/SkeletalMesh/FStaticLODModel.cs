@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.GameTypes.MK1.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -191,10 +189,18 @@ public class FStaticLODModel
 
         if (!stripDataFlags.IsAudioVisualDataStripped())
         {
-            NumTexCoords = Ar.Read<int>();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MULTIPLE_UVS_TO_SKELETAL_MESH)
+            {
+                NumTexCoords = Ar.Read<int>();
+            }
+
             if (skelMeshVer < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
             {
-                VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer(Ar);
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.USE_UMA_RESOURCE_ARRAY_MESH_DATA)
+                {
+                    VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer(Ar);
+                }
+
                 if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.UseSeparateSkinWeightBuffer)
                 {
                     var skinWeights = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
@@ -222,7 +228,10 @@ public class FStaticLODModel
                 {
                     if (skelMeshVer < FSkeletalMeshCustomVersion.Type.UseSharedColorBufferFormat)
                     {
-                        ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(Ar);
+                        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SKELETAL_MESH_VERTEX_COLORS)
+                        {
+                            ColorVertexBuffer = new FSkeletalMeshVertexColorBuffer(Ar);
+                        }
                     }
                     else
                     {

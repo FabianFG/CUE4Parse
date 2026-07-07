@@ -1,15 +1,8 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Assets.Exports.Animation;
+﻿using System.Diagnostics;
 using CUE4Parse.UE4.Assets.Exports.Chaos;
 using CUE4Parse.UE4.Assets.Exports.Chaos.GeometryCollection;
-using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -23,7 +16,7 @@ public class TManangedArray : FManagedArrayBase
     {
         var version = Ar.Read<int>(); // 1
         Debug.Assert(version == 1);
-        
+
         // see TryBulkSerializeManagedArray in ManagedArray.h and fix this mess
         switch (ArrayType)
         {
@@ -53,13 +46,13 @@ public class TManangedArray : FManagedArrayBase
                 break;
             case EManagedArrayType.FIntArrayType:
                 // Int[][]
-                // Data = 
+                // Data =
                 // not serialized as bulk
                 SerializeAsArray(Ar, Ar.ReadArray<int>); //here broken!
                 break;
             case EManagedArrayType.FInt32Type:
                 SerializeAsBulk<int>(Ar);
-                
+
                 break;
             case EManagedArrayType.FFloatType:
                 SerializeAsBulk<float>(Ar);
@@ -136,7 +129,7 @@ public class TManangedArray : FManagedArrayBase
         // Data = Ar.ReadBulkArray<T2>() as object[];
         // }
     }
-    
+
     private void SerializeAsBulk<T2>(FChaosArchive Ar) where T2 : struct
     {
         var readArraydata = Ar.ReadBulkArray<T2>();
@@ -148,7 +141,7 @@ public class TManangedArray : FManagedArrayBase
         var readArraydata = Ar.ReadBulkArray(getter);
         Data = Array.ConvertAll(readArraydata, x => (object)x);
     }
-    
+
     private void SerializeAsArray(FChaosArchive Ar, Func<object> getter)
     {
         // var version = Ar.Read<int>(); // 1
@@ -162,7 +155,7 @@ public class TManangedArray : FManagedArrayBase
         //     Data = Ar.ReadBulkArray(getter) as object[];
         // }
     }
-    
+
     // private void SerializePtrArray(FChaosArchive Ar, Func<object> getter)
     // {
     //     // var version = Ar.Read<int>(); // 1
@@ -197,7 +190,7 @@ public abstract class FManagedArrayBase
 {
     [JsonIgnore]
     public object[] Data;
-    
+
     public int DataLength => Data?.Length ?? 0;
 
     // FFVector3fType => Vector

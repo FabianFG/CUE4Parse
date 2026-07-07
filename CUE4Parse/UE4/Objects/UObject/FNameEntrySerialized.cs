@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -39,6 +37,12 @@ namespace CUE4Parse.UE4.Objects.UObject
                 if (Name != null && _pubgNameMap.TryGetValue(Name, out var name)) Name = name;
             }
 
+            if (Ar.Game < EGame.GAME_UE4_0)
+            {
+                _ = (Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag)
+                    ? (EObjectFlags)Ar.Read<long>()
+                    : Ar.Read<EObjectFlags>(); // flags
+            }
             if (bHasNameHashes)
             {
 #if NAME_HASHES

@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Exceptions;
+﻿using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects.OnDemand.V1;
@@ -15,7 +14,7 @@ public class FOnDemandTocHeader
     public string HostGroupName;
 
     private const ulong _expectedMagic = 0x6f6e64656d616e64;
-    
+
     public FOnDemandTocHeader(FArchive Ar)
     {
         Magic = Ar.Read<ulong>();
@@ -25,12 +24,12 @@ public class FOnDemandTocHeader
         Version = Ar.Read<EOnDemandTocVersion>();
         if (Version == EOnDemandTocVersion.Invalid || Version >= EOnDemandTocVersion.LatestPlusOne)
             throw new ParserException("Invalid FOnDemandTocHeader Version");
-        
+
         Flags = Ar.Read<EOnDemandTocFlags>();
         BlockSize = Ar.Read<uint>();
         CompressionFormat = Ar.ReadFString();
         ChunksDirectory = Ar.ReadFString();
-        
+
         if (Version >= EOnDemandTocVersion.HostGroupName)
             HostGroupName = Ar.ReadFString();
 

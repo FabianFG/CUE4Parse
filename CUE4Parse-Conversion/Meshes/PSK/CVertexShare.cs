@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.RenderCore;
+﻿using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Meshes.PSK
 {

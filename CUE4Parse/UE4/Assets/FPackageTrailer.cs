@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Compression;
@@ -166,7 +164,7 @@ public class FPackageTrailer
                 Flags = Ar.Read<EPayloadFlags>();
                 FilterFlags = Ar.Read<EPayloadFilterReason>();
             }
-            
+
             if (Version >= (uint)EPackageTrailerVersion.ACCESS_PER_PAYLOAD)
             {
                 AccessMode = Ar.Read<EPayloadAccessMode>();
@@ -178,7 +176,7 @@ public class FPackageTrailer
     {
         // The original trailer format when it was first added
         INITIAL = 0,
-        // Access mode is now per payload and found in FLookupTableEntry 
+        // Access mode is now per payload and found in FLookupTableEntry
         ACCESS_PER_PAYLOAD = 1,
         // Added EPayloadAccessMode to FLookupTableEntry
         PAYLOAD_FLAGS = 2,

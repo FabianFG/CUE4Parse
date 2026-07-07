@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;

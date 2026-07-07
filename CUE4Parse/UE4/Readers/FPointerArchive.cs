@@ -1,9 +1,4 @@
-using System;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Readers
@@ -18,7 +13,7 @@ namespace CUE4Parse.UE4.Readers
             Name = name;
             Length = length;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -82,7 +77,7 @@ namespace CUE4Parse.UE4.Readers
                 }
                 else
                     Unsafe.CopyBlockUnaligned(ref buffer[offset], ref _ptr[position], (uint) n);
-                
+
                 return Task.FromResult(n);
             }
         }
@@ -115,7 +110,7 @@ namespace CUE4Parse.UE4.Readers
                 return result;
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte[] ReadBytes(int length)
         {

@@ -1,4 +1,3 @@
-using System.IO;
 using CUE4Parse.UE4.FMod.Enums;
 using CUE4Parse.UE4.FMod.Objects;
 

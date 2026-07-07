@@ -1,11 +1,8 @@
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Aion2.Objects;
 using CUE4Parse.UE4.Localization;

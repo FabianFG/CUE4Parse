@@ -22,6 +22,7 @@ public enum EPakFileVersion
     PakFile_Version_Fnv64BugFix = 11,
     PakFile_Version_Utf8PakDirectory = 12,
     PakFile_Version_SortedDirectoryIndex = 13, // FullDirectoryIndex stored as a flat FPakFlatDirectoryIndex.
+    PakFile_Version_PakchunkIndex = 14, // PakchunkIndex stored in the trailer so it doesn't have to be derived from the filename.
 
     PakFile_Version_Last,
     PakFile_Version_Invalid,
@@ -60,6 +61,7 @@ public partial class FPakInfo
     public readonly bool IndexIsFrozen;
     public readonly FGuid EncryptionKeyGuid;
     public readonly List<CompressionMethod> CompressionMethods;
+    public readonly int PakchunkIndex = -1; // INDEX_NONE
     public readonly byte[] CustomEncryptionData;
 
     private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
@@ -246,6 +248,15 @@ public partial class FPakInfo
 
         afterMagic:
         Version = hottaVersion >= 2 ? (EPakFileVersion) (Ar.Read<int>() ^ 2) : Ar.Read<EPakFileVersion>();
+        if (Ar.Game == EGame.GAME_LordOfMysteries && ((uint) Version & 0x80000000) != 0)
+        {
+            Version = (EPakFileVersion) ((uint) Version & 0x7FFFFFFF);
+            IndexHash = new FSHAHash(Ar);
+            IndexOffset = Ar.Read<long>();
+            IndexSize = Ar.Read<long>() >> 1;
+            goto beforeCompression;
+        }
+        
         if (Ar.Game == EGame.GAME_StateOfDecay2)
         {
             // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
@@ -376,6 +387,13 @@ public partial class FPakInfo
             }
         }
 
+        // Written at the tail so the trailer for older versions remains byte-compatible. Paks authored before
+        // this version leave PakchunkIndex at INDEX_NONE, and the reader falls back to deriving it from the filename.
+        if (Version >= EPakFileVersion.PakFile_Version_PakchunkIndex)
+        {
+            PakchunkIndex = Ar.Read<int>();
+        }
+
         // Reset new fields to their default states when seralizing older pak format.
         if (Version < EPakFileVersion.PakFile_Version_IndexEncryption)
         {
@@ -399,6 +417,7 @@ public partial class FPakInfo
         Size8 = Size8_3 + 32, // added size of CompressionMethods as char[32]
         Size8a = Size8 + 32, // UE4.23 - also has version 8 (like 4.22) but different pak file structure
         Size9 = Size8a + 1, // UE4.25
+        Size9a = Size9 + 4, // UE6.0 - Added pakchunk index int32
         SizeB1 = Size9 + 1, // plus 1
         //Size10 = Size8a
 
@@ -425,6 +444,7 @@ public partial class FPakInfo
         OffsetsToTry.Size8,
         OffsetsToTry.Size,
         OffsetsToTry.Size9,
+        OffsetsToTry.Size9a,
 
         OffsetsToTry.Size8_1,
         OffsetsToTry.Size8_2,

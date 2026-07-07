@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Objects.Core;
-using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
-using Org.BouncyCastle.Crypto.Prng;
 
 namespace CUE4Parse.UE4.Assets.Exports.Chaos;
 
@@ -18,12 +11,12 @@ public interface ISerializationFactory
     public ISerializationFactory SerializationFactory(FChaosArchive Ar);
 }
 
-public class FChaosArchiveContext 
+public class FChaosArchiveContext
 {
     public List<object?> TagToObject = new List<object?>();
     public Dictionary<object, int> ObjToTag  = new Dictionary<object, int>();
     // TSet<void*> PendingAdds;
-    public int TagCount;    
+    public int TagCount;
 }
 
 public class FChaosArchive: FAssetArchive
@@ -35,7 +28,7 @@ public class FChaosArchive: FAssetArchive
     //     Context = new FChaosArchiveContext();
     // }
 
-    public FChaosArchive(FAssetArchive Ar) : base(Ar, Ar.Owner) 
+    public FChaosArchive(FAssetArchive Ar) : base(Ar, Ar.Owner)
     {
         Context = new FChaosArchiveContext();
     }
@@ -56,19 +49,19 @@ public class FChaosArchive: FAssetArchive
 
         return result;
     }
-    
+
     // can be refactored!
     public T SerializePtr<T>(T obj) where T : ISerializationFactory
     {
         var bExists = ReadBoolean();
-        
+
         if (!bExists)
         {
             return default!;
         }
-        
+
         var tag = Read<int>();
-        
+
         if (tag < 0)
         {
             // error
@@ -81,14 +74,14 @@ public class FChaosArchive: FAssetArchive
         {
             Context.TagToObject.Add(null);
         }
-        
+
         // if (!Context->TagToObject.IsValidIndex(Tag))
         // {
         //     InnerArchive.SetCriticalError();
         //     return;
         // }
 
-        // tag 
+        // tag
         if (Context.TagToObject.Count < tag)
         {
             throw new ParserException("Invalid tag");

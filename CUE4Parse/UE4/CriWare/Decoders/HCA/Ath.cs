@@ -1,4 +1,3 @@
-using System;
 using static CUE4Parse.UE4.CriWare.Decoders.HCA.Constants;
 
 namespace CUE4Parse.UE4.CriWare.Decoders.HCA;

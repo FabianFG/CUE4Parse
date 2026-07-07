@@ -156,7 +156,7 @@ public class FPakEntry : VfsEntry
     public FPakEntry(PakFileReader reader, string path, GenericBufferReader Ar, int offset) : base(reader, path)
     {
         // UE4 reference: FPakFile::DecodePakEntry()
-        Ar.Seek(offset, System.IO.SeekOrigin.Begin);
+        Ar.Seek(offset, SeekOrigin.Begin);
         var bitfield = Ar.Read<uint>();
 
         if (reader.Game == GAME_WutheringWaves && reader.Info.Version > PakFile_Version_Fnv64BugFix)
@@ -166,7 +166,7 @@ public class FPakEntry : VfsEntry
             CustomData = Ar.Read<byte>();
         }
 
-        if (reader.Game is EGame.GAME_InfinityNikki)
+        if (reader.Game is GAME_InfinityNikki)
         {
             var compressionBlocksNum = (bitfield >> 6) & 0xFFFF;
             var isOffset32BitSafe = (bitfield >> 31) & 1;

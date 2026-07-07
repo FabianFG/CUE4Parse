@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.VirtualFileSystem;
 

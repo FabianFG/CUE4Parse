@@ -22,7 +22,7 @@ public class FMorphTargetDelta
         {
             TangentZDelta = Ar.Read<FVector>();
         }
-        SourceIdx = Ar.Read<uint>();
+        SourceIdx = Ar.Ver >= EUnrealEngineObjectUE3Version.DWORD_SKELETAL_MESH_INDICES ? Ar.Read<uint>() : Ar.Read<ushort>();
 
         if (Ar.Game == EGame.GAME_StarWarsHunters) Ar.Position += 4;
     }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CUE4Parse.Utils
+﻿namespace CUE4Parse.Utils
 {
     public static class HexUtils
     {

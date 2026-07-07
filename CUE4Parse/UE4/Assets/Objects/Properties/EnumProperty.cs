@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;

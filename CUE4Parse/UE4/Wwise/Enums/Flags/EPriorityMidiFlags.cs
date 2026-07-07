@@ -1,9 +1,8 @@
-using System;
 
 namespace CUE4Parse.UE4.Wwise.Enums.Flags;
 
 [Flags]
-public enum EPriorityMidi : byte
+public enum EPriorityMidiFlags : byte
 {
     None = 0,
     PriorityOverrideParent = 1 << 0,

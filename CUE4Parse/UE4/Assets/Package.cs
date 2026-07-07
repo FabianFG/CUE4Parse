@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.ACE7.Encryption;
 using CUE4Parse.UE4.Assets.Exports;
@@ -78,6 +75,15 @@ namespace CUE4Parse.UE4.Assets
             }
             else uassetAr = new FAssetArchive(uasset, this);
 
+            // The package has been stored in a separate endianness than the linker expected so we need to force
+            // endian conversion. Latent handling allows the PC version to retrieve information about cooked packages.
+            var Tag = uassetAr.Read<uint>();
+            if (Tag == FPackageFileSummary.PACKAGE_FILE_TAG_SWAPPED)
+            {
+                uassetAr = new FAssetArchive(new FArchiveBigEndian(uasset), this);
+            }
+            uassetAr.Position -= 4;
+            
             Summary = new FPackageFileSummary(uassetAr);
 
             uassetAr.SeekAbsolute(Summary.NameOffset, SeekOrigin.Begin);
@@ -208,7 +214,6 @@ namespace CUE4Parse.UE4.Assets
                         var Ar = (FAssetArchive) uexpAr.Clone();
                         Ar.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
                         DeserializeObject(obj, Ar, export.SerialSize);
-                        // TODO right place ???
                         obj.Flags |= EObjectFlags.RF_LoadCompleted;
                         obj.PostLoad();
                         return obj;
@@ -496,7 +501,6 @@ namespace CUE4Parse.UE4.Assets
                 var Ar = (FAssetArchive) _archive.Clone();
                 Ar.SeekAbsolute(_export.SerialOffset, SeekOrigin.Begin);
                 _package.DeserializeObject(_object, Ar, _export.SerialSize);
-                // TODO right place ???
                 _object.Flags |= EObjectFlags.RF_LoadCompleted;
                 _object.PostLoad();
             }

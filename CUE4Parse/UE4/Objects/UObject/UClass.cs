@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
@@ -105,9 +102,9 @@ public class UClass : UStruct
         return null;
     }
 
-    public string DecompileBlueprintToPseudo(TypeMappings mappings, UClassCookedMetaData? cookedMetaData = null)
+    public string DecompileBlueprintToPseudo(UClassCookedMetaData? cookedMetaData = null)
     {
-        BlueprintDecompilerUtils.Mappings = mappings;
+        BlueprintDecompilerUtils.Mappings = this.Owner.Mappings;
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";

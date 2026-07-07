@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Wwise.Objects;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;

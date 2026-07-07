@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.RenderCore;
@@ -31,7 +30,7 @@ public class FStaticMeshVertexBuffer
         NumTexCoords = Ar.Read<int>();
         Strides = Ar.Game < EGame.GAME_UE4_19 ? Ar.Read<int>() : -1;
         NumVertices = Ar.Read<int>();
-        UseFullPrecisionUVs = Ar.ReadBoolean();
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedFullPrecisionUV) UseFullPrecisionUVs = Ar.ReadBoolean();
         UseHighPrecisionTangentBasis = Ar.Game >= EGame.GAME_UE4_12 && Ar.ReadBoolean();
 
         int customData = 0;

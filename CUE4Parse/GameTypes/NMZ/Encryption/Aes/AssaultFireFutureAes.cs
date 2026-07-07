@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.VirtualFileSystem;
 using static CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes.MarvelAes;
 
@@ -93,7 +92,7 @@ public class AssaultFireFutureAes
             (((byte) Td4[(byte) (eax_432 >> 8)] * 0x0000_0101u) & 0x0000_FF00u) ^
             (((byte) Td4[(byte) (eax_451 >> 24)] * 0x0101_0101u) & 0xFF00_0000u) ^ rk[58];
 
-        
+
         a4[8] = (byte) ((edx_61 >> 24) ^ xorKey[8]);
         a4[9] = (byte) ((edx_61 >> 16) ^ xorKey[9]);
         a4[10] = (byte) ((edx_61 >> 8) ^ xorKey[10]);
@@ -103,7 +102,7 @@ public class AssaultFireFutureAes
             (((byte) Td4[(byte) (eax_451 >> 16)] * 0x0001_0101u) & 0x00FF_0000u) ^
             (((byte) Td4[(byte) (ecx_234 >> 8)] * 0x0000_0101u) & 0x0000_FF00u) ^
             (((byte) Td4[(byte) (edi_33 >> 24)] * 0x0101_0101u) & 0xFF00_0000u) ^ rk[59];
-        
+
         a4[12] = (byte) ((edx_67 >> 24) ^ xorKey[12]);
         a4[13] = (byte) ((edx_67 >> 16) ^ xorKey[13]);
         a4[14] = (byte) ((edx_67 >> 8) ^ xorKey[14]);

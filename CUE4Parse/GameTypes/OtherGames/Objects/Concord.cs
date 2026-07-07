@@ -28,7 +28,7 @@ public class UPMTimelineEvent : UObject
 
 public class FPMTimelineRelevancy(FAssetArchive Ar) : IUStruct
 {
-    public FStructFallback? NonConstStruct = FStructFallback.ReadInstancedStruct(Ar);
+    public FScriptStruct? NonConstStruct = FScriptStruct.ReadInstancedStructWithoutSerialSize(Ar);
 }
 
 public class FGameplayEffectApplicationDataHandle(FAssetArchive Ar) : IUStruct
@@ -39,11 +39,11 @@ public class FGameplayEffectApplicationDataHandle(FAssetArchive Ar) : IUStruct
 
 public class FPMTimelineObjectBindingDef : FStructFallback
 {
-    public readonly FStructFallback? NonConstStruct;
+    public readonly FScriptStruct? NonConstStruct;
 
     public FPMTimelineObjectBindingDef(FAssetArchive Ar) : base(Ar, "PMTimelineObjectBindingDef")
     {
-        NonConstStruct = ReadInstancedStruct(Ar);
+        NonConstStruct = FScriptStruct.ReadInstancedStructWithoutSerialSize(Ar);
     }
 }
 

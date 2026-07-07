@@ -9,6 +9,7 @@ using CUE4Parse.GameTypes.ArcRaiders.Encryption.Aes;
 using CUE4Parse.GameTypes.BB3.Encryption.Aes;
 using CUE4Parse.GameTypes.DBD.Encryption.Aes;
 using CUE4Parse.GameTypes.DeltaForce.Encryption.Aes;
+using CUE4Parse.GameTypes.DragonSword.Encryption.Aes;
 using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
 using CUE4Parse.GameTypes.FSR.Encryption.Aes;
 using CUE4Parse.GameTypes.FunkoFusion.Encryption.Aes;
@@ -21,8 +22,8 @@ using CUE4Parse.GameTypes.OPA.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 using CUE4Parse.GameTypes.PMA.Encryption.Aes;
 using CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
-using CUE4Parse.GameTypes.RocoKingdomWorld.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
 using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
@@ -138,6 +139,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 switch (archive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
+                    case "UPAK" when archive.Game is EGame.GAME_LordOfMysteries:
                         reader = new PakFileReader(archive);
                         break;
                     case "UTOC":
@@ -172,6 +174,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 switch (pakOrUtocArchive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
+                    case "UPAK" when pakOrUtocArchive.Game is EGame.GAME_LordOfMysteries:
                         reader = new PakFileReader(pakOrUtocArchive);
                         break;
                     case "UTOC":
@@ -204,6 +207,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 switch (pakOrUtocArchive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
+                    case "UPAK" when pakOrUtocArchive.Game is EGame.GAME_LordOfMysteries:
                         reader = new PakFileReader(pakOrUtocArchive);
                         break;
                     case "UTOC":

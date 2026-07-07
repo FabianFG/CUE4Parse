@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using CUE4Parse.UE4.Objects.UObject;
+﻿using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using FConfigFileMap = System.Collections.Generic.Dictionary<string, CUE4Parse.UE4.BinaryConfig.Objects.FConfigSection>;
 

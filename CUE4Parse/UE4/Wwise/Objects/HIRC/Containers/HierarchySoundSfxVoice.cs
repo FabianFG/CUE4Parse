@@ -8,10 +8,10 @@ public class HierarchySoundSfxVoice : AbstractHierarchy
     public readonly BaseHierarchy BaseParams;
 
     // CAkSound::SetInitialValues
-    public HierarchySoundSfxVoice(FWwiseArchive Ar) : base(Ar)
+    public HierarchySoundSfxVoice(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         Source = new AkBankSourceData(Ar);
-        Ar.Position -= 4; // Step back so AbstractHierarchy starts reading correctly, since ID is read twice
         BaseParams = new BaseHierarchy(Ar);
     }
 

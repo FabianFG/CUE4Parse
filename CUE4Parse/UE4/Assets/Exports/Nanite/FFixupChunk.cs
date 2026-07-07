@@ -1,4 +1,3 @@
-using System.IO;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteConstants;
@@ -18,7 +17,7 @@ public class FFixupChunk
         public readonly uint NumParentFixups;
         public readonly uint NumHierarchyLocations;
         public readonly uint NumClusterIndices;
-        
+
         /// <summary>
         /// Pages that need to be reconsidered for fixup when this page is installed/uninstalled. The last pages of any groups in the page.
         /// </summary>
@@ -39,7 +38,7 @@ public class FFixupChunk
                 NumGroupFixups = Ar.Read<ushort>();
                 NumPartFixups = Ar.Read<ushort>();
             }
-            
+
             NumClusters = Ar.Read<ushort>();
 
             if (Ar.Game >= EGame.GAME_UE5_7)
@@ -55,7 +54,7 @@ public class FFixupChunk
                 NumHierarchyFixups = Ar.Read<ushort>();
                 NumClusterFixups = Ar.Read<ushort>();
             }
-            
+
             if (Ar.Game < EGame.GAME_UE5_3) Ar.Position += 2;
         }
     }
@@ -67,7 +66,7 @@ public class FFixupChunk
     public FHierarchyLocation[] HierarchyLocations;
     public ushort[] ReconsiderPageIndexes;
     public byte[] ClusterIndex;
-    
+
     public FHierarchyFixup[] HierarchyFixups;
     public FClusterFixup[] ClusterFixups;
 

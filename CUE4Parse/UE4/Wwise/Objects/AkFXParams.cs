@@ -18,8 +18,8 @@ public readonly struct AkFx
             case <= 145:
                 FXIndex = Ar.Read<byte>();
                 FXId = Ar.Read<uint>();
-                IsShareSet = Ar.Read<byte>() != 0;
-                IsRendered = Ar.Read<byte>() != 0;
+                IsShareSet = Ar.ReadBool();
+                IsRendered = Ar.ReadBool();
                 break;
             default: // Version > 145
                 FXIndex = Ar.Read<byte>();
@@ -51,17 +51,16 @@ public readonly struct AkFxParams
 
         if (count > 0)
         {
-            if (Ar.Version <= 26)
+            switch (Ar.Version)
             {
-                // No additional fields for version <= 26
-            }
-            else if (Ar.Version <= 145)
-            {
-                BypassAll = Ar.Read<byte>() != 0;
-            }
-            else
-            {
-                BypassAll = Ar.Read<byte>() != 0;
+                case <= 26:
+                    break;
+                case <= 145:
+                    BypassAll = Ar.ReadBool();
+                    break;
+                default:
+                    BypassAll = Ar.ReadBool();
+                    break;
             }
 
             Effects = Ar.ReadArray(count, () => new AkFx(Ar));
@@ -94,23 +93,26 @@ public class AkFxBus
 {
     public readonly byte BitsFxBypass;
     public readonly AkFxChunk[] FxChunks = [];
+    public readonly AkFxParams? FxParams; // >136
     public readonly uint FxId0;
     public readonly bool IsShareSet0;
 
     public AkFxBus(FWwiseArchive Ar)
     {
-        int count = 0;
+        int count;
+
         if (Ar.Version <= 26)
         {
             var numFX = Ar.Read<uint>();
-            if (numFX != 0)
-            {
-                count = 1;
-            }
+            count = numFX != 0 ? 1 : 0;
+        }
+        else if (Ar.Version <= 135)
+        {
+            count = Ar.Read<byte>();
         }
         else
         {
-            count = Ar.Read<byte>(); // numFX
+            count = 0;
         }
 
         bool readFx;
@@ -136,19 +138,20 @@ public class AkFxBus
                 var fxIndex = Ar.Read<byte>();
                 var fxId = Ar.Read<uint>();
                 var isShareSet = Ar.Read<byte>();
+                Ar.Read<byte>(); // unused byte
                 FxChunks[i] = new AkFxChunk(fxIndex, fxId, isShareSet);
-
-                if (Ar.Version > 89 && Ar.Version <= 145)
-                {
-                    Ar.Read<byte>(); // unused byte
-                }
             }
+        }
+
+        if (Ar.Version > 135)
+        {
+            FxParams = new AkFxParams(Ar);
         }
 
         if (Ar.Version > 89 && Ar.Version <= 145)
         {
             FxId0 = Ar.Read<uint>();
-            IsShareSet0 = Ar.Read<byte>() != 0;
+            IsShareSet0 = Ar.ReadBool();
         }
     }
 }

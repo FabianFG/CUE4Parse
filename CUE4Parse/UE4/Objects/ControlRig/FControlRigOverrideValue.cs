@@ -1,10 +1,9 @@
-using System;
-using System.Linq;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 using Serilog;
 
 namespace CUE4Parse.UE4.Objects.ControlRig;
@@ -14,21 +13,53 @@ public class FControlRigOverrideValue
     public FName SubjectKey; // TOptional
     public FPropertyInfo[] Properties;
     public long OffsetForData;
+    public FSoftObjectPath OwnerStructPath;
+    public string? TempPath;
 
     public FControlRigOverrideValue(FAssetArchive Ar)
     {
         if (Ar.ReadBoolean()) SubjectKey = Ar.ReadFName();
-        Properties = Ar.ReadArray(() => new FPropertyInfo(Ar));
+        bool bStoresOnlyPathAndLeafProperty = FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.OverridesStorePathAndLeafPropertyOnly;
+        if (bStoresOnlyPathAndLeafProperty)
+        {
+            OwnerStructPath = new FSoftObjectPath(Ar);
+            TempPath = Ar.ReadBoolean() ? Ar.ReadFString() : null;
+        }
+        else
+        {
+            Properties = Ar.ReadArray(() => new FPropertyInfo(Ar));
+        }
         var saved = Ar.Position;
         OffsetForData = Ar.Read<long>();
         try
         {
             if (OffsetForData == 0) return;
+            var property = Properties?.Last();
+            if (property is null)
+            {
+                if (!bStoresOnlyPathAndLeafProperty) return;
+                else
+                {
+                    property = new FPropertyInfo() { ArrayIndex =  -1 };
+                    if (TempPath != null)
+                        property.Property = new FFieldPath() { Path = TempPath.Split("->").Select(x => new FName(x)).ToArray()};
+                    else
+                        return;
+                    Properties = [property];
+                }
+            }
+            if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.OverridesStoreLeafPropertyHashOnly)
+            {
+                property.Hash = Ar.Read<uint>();
+            }
+            else if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.OverridesStoreTOCDataForProperties)
+            {
+                property.Size = Ar.Read<int>();
+                property.Hash = Ar.Read<uint>();
+            }
 
-            var property = Properties.Last();
-            property.Size = Ar.Read<int>();
-            property.Hash = Ar.Read<uint>();
-            if (property.Property.ResolvedOwner!.TryLoad<UStruct>(out var struc))
+            if ((!bStoresOnlyPathAndLeafProperty && property.Property.ResolvedOwner!.TryLoad<UStruct>(out var struc))
+                || (bStoresOnlyPathAndLeafProperty && OwnerStructPath.TryLoad<UStruct>(out struc)))
             {
                 var type = struc.Name;
                 Struct? propMappings = null;
@@ -37,9 +68,26 @@ public class FControlRigOverrideValue
                 else
                     propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
 
-                var propInfo = propMappings?.Properties.FirstOrDefault(x => x.Value.Name.Equals(property.Property.Path[0].Text));
-                
-                if (propInfo != null)
+                KeyValuePair<int, PropertyInfo>? propInfo = new();
+                for (int index = 0; index < property.Property.Path.Length; index++)
+                {
+                    FName name = property.Property.Path[index];
+                    propInfo = propMappings?.Properties.FirstOrDefault(x =>
+                        x.Value.Name.Equals(name.Text, StringComparison.OrdinalIgnoreCase));
+                    if (propInfo?.Value is null) return;
+                    if (index < property.Property.Path.Length - 1 && propInfo.Value.Value.MappingType.Type is "StructProperty")
+                    {
+                        var inner = propInfo.Value.Value.MappingType;
+                        if (inner.StructType is not null)
+                            Ar.Owner!.Mappings?.Types.TryGetValue(inner.StructType, out propMappings);
+                        else if (inner.Struct is not null)
+                            propMappings = new SerializedStruct(Ar.Owner!.Mappings, inner.Struct);
+                        else
+                            return;
+                    }
+                }
+
+                if (propInfo?.Value is not null)
                 {
                     var propType = propInfo.Value.Value;
                     var arrayIndex = property.ArrayIndex;
@@ -59,7 +107,7 @@ public class FControlRigOverrideValue
                     Log.Warning("Failed to find property {Property} in struct {Struct} via mappings", property.Property, struc.Name);
                 }
             }
-            
+
         }
         catch (Exception e)
         {

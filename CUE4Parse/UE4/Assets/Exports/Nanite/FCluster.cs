@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -177,7 +176,7 @@ public class FCluster
         BitsPerAttribute = GetBits(attributeOffset_bitsPerAttribute, 10, 22);
 
         var decodeInfoOffset_bHasTengants_numUVs_colorMode = Ar.Read<uint>();
-        DecodeInfoOffset = NaniteUtils.GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 22, 0);
+        DecodeInfoOffset = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 22, 0);
         if (Ar.Game >= EGame.GAME_UE5_5)
         {
             bHasTangents = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
@@ -510,7 +509,7 @@ public class FCluster
         (uint x, uint y, uint z) = (0, 0, 0);
         long readBaseAddress = page.PageDiskHeaderOffset + clusterDiskHeader.IndexDataOffset;
         // -1 if not Start
-        uint indexData = NaniteUtils.ReadUnalignedDword(Ar, readBaseAddress, (numPrevRefVertices + ~isStart) * 5);
+        uint indexData = ReadUnalignedDword(Ar, readBaseAddress, (numPrevRefVertices + ~isStart) * 5);
         if (isStart != 0)
         {
             int minusNumRefVertices = (isLeft << 1) + isRef;
@@ -577,8 +576,8 @@ public class FCluster
 
             // ReadOffset: Where is the vertex relative to triangle we searched for?
             int readOffset = isFoundCaseS != 0 ? isLeft : 1;
-            uint foundIndexData = NaniteUtils.ReadUnalignedDword(Ar, readBaseAddress, (foundNumPrevRefVertices - readOffset) * 5);
-            uint foundIndex = ((uint)foundNumPrevNewVertices - 1u) - NaniteUtils.GetBits(foundIndexData, 5, 0);
+            uint foundIndexData = ReadUnalignedDword(Ar, readBaseAddress, (foundNumPrevRefVertices - readOffset) * 5);
+            uint foundIndex = ((uint)foundNumPrevNewVertices - 1u) - GetBits(foundIndexData, 5, 0);
 
             bool condition = isFoundCaseS != 0 ? ((int) foundNumRefVertices >= 1 - isLeft) : (isBeforeFoundRefVertex != 0);
             int foundNewVertex = foundNumPrevNewVertices + (isFoundCaseS != 0 ? (isLeft & (foundNumRefVertices == 0 ? 1 : 0)) : -1);
