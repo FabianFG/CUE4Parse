@@ -33,7 +33,7 @@ public class FMaterialResourceProxyReader : FArchive
             _nameMap = InnerArchive.ReadArray(() => new FNameEntrySerialized(Ar));
             var num = Ar.Read<int>();
             Ar.Position += num * Unsafe.SizeOf<FMaterialResourceLocOnDisk>(); // Locs
-            if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += num;
+            if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) Ar.Position += num;
             if (Ar.Game is EGame.GAME_RocoKingdomWorld) Ar.Position += num * 5;
             Ar.Position += 4; // NumBytes
         }

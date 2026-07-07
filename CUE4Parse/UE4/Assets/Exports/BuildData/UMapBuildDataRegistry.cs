@@ -46,7 +46,7 @@ public class UMapBuildDataRegistry : UObject
                 ReflectionCaptureBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FReflectionCaptureMapBuildData(Ar));
             }
 
-            if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite) return;
+            if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) return;
             if (Ar.Game == EGame.GAME_TheDivisionResurgence) Ar.Position += 12;
             if (Ar.Game == EGame.GAME_HogwartsLegacy)
             {
@@ -160,7 +160,7 @@ public class FReflectionCaptureData
 
         //FullHDRCapturedData = Ar.ReadArray<byte>(); // Can also be stripped, but still a byte[]
         Ar.SkipFixedArray(1); // Skip for now
-        if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 4;
+        if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) Ar.Position += 4;
         if (Ar.Game == EGame.GAME_HogwartsLegacy)
         {
             Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 1);
@@ -366,11 +366,11 @@ public class FMeshMapBuildData
         {
             ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
             ELightMapType.LMT_2D => new FLightMap2D(Ar),
-            (ELightMapType)3 when Ar.Game == EGame.GAME_ArenaBreakoutInfinite && Ar.ReadBytes(24).Length == 24 => null,
+            (ELightMapType)3 when Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile && Ar.ReadBytes(24).Length == 24 => null,
             _ => null
         };
 
-        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite) Ar.Position += Ar.Read<int>() == 2 ? 156 : 4; // FTransferLightMap
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) Ar.Position += Ar.Read<int>() == 2 ? 156 : 4; // FTransferLightMap
         if (Ar.Game == EGame.GAME_NeedForSpeedMobile) Ar.Position += 92;
         if (Ar.Game is EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyLittleHope or
             EGame.GAME_TheQuarry && LightMap is not null) Ar.Position += 4;

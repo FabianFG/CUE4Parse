@@ -111,7 +111,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                     return DQXIExtract(reader, pakEntry);
                 case GAME_CenturyAgeofAshes when pakEntry.CompressionMethod is CompressionMethod.PWC:
                     return CenturyExtract(reader, pakEntry);
-                case GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
+                case GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                     return ABIExtract(reader, pakEntry);
                 case GAME_eBaseballProSpirit:
                     return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
@@ -195,7 +195,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 return RennsportExtract(reader, pakEntry);
             case GAME_DragonQuestXI:
                 return DQXIExtract(reader, pakEntry);
-            case GAME_ArenaBreakoutInfinite when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
+            case GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile when header is null || ABIDecryption.encryptedFiles.Contains(pakEntry.Extension, StringComparer.OrdinalIgnoreCase):
                 return ABIExtract(reader, pakEntry);
             case GAME_eBaseballProSpirit:
                 return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);

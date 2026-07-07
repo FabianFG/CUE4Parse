@@ -75,6 +75,8 @@ public class FStaticMeshLODResources
             return;
         }
 
+        if (Ar.Game is GAME_ArenaBreakoutMobile) Ar.SkipFixedArray(28);
+
         var bIsLODCookedOut = false;
         if (Ar.Game != EGame.GAME_Splitgate)
             bIsLODCookedOut = Ar.ReadBoolean();
@@ -149,7 +151,7 @@ public class FStaticMeshLODResources
                     >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
                     EGame.GAME_NeedForSpeedMobile => 32,
                     EGame.GAME_SuicideSquad => 29,
-                    EGame.GAME_ArenaBreakoutInfinite => 16,
+                    EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile => 16,
                     EGame.GAME_TheFinals or EGame.GAME_ArcRaiders => 12,
                     EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForce => 4, // bDropNormals
                     EGame.GAME_FateTrigger => 5,
@@ -300,7 +302,7 @@ public class FStaticMeshLODResources
 
         if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 4;
 
-        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile)
         {
             _ = new FRawStaticIndexBuffer(Ar);
             _ = new FRawStaticIndexBuffer(Ar);

@@ -109,6 +109,7 @@ public enum EGame : uint
         GAME_RocoKingdomWorld = GAME_UE4_26 + 27,
         GAME_HonorofKingsWorld = GAME_UE4_26 + 28,
         GAME_eFootball = GAME_UE4_26 + 29,
+        GAME_ArenaBreakoutMobile = GAME_UE4_26 + 30,
     GAME_UE4_27 = GameUtils.GameUe4Base + (27 << 16),
         GAME_Splitgate = GAME_UE4_27 + 1,
         GAME_HYENAS = GAME_UE4_27 + 2,

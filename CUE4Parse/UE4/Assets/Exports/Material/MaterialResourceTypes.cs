@@ -253,7 +253,7 @@ public class FShaderParameterBindings
         BindlessResourceParameters = Ar.Game >= EGame.GAME_UE5_1 ? Ar.ReadArray<FBindlessResourceParameter>() : [];
         GraphUniformBuffers = Ar.Game >= EGame.GAME_UE4_26 ? Ar.ReadArray<FParameterStructReference>() : [];
         ParameterReferences = Ar.ReadArray<FParameterStructReference>();
-        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 16;
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) Ar.Position += 16;
 
         StructureLayoutHash = Ar.Read<uint>();
         RootParameterBufferIndex = Ar.Read<ushort>();
@@ -373,10 +373,10 @@ public class FShaderParameterMapInfo
             TextureSamplers = Ar.ReadArray(() => new FShaderParameterInfo(Ar), false);
             SRVs = Ar.ReadArray(() => new FShaderParameterInfo(Ar), false);
         }
-        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or EGame.GAME_HonorofKingsWorld) Ar.Position += 16;
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile or EGame.GAME_HonorofKingsWorld) Ar.Position += 16;
         LooseParameterBuffers = Ar.ReadArray(() => new FShaderLooseParameterBufferInfo(Ar));
         Hash = Ar.Game >= EGame.GAME_UE4_26 ? Ar.Read<ulong>() : 0;
-        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 8;
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) Ar.Position += 8;
     }
 }
 
@@ -1527,7 +1527,7 @@ public class FMaterialShaderMapId
         {
             QualityLevel = Ar.Game >= EGame.GAME_UE5_2 ? (EMaterialQualityLevel) Ar.Read<byte>() : (EMaterialQualityLevel) Ar.Read<int>();//changed to byte in FN 23.20
             FeatureLevel = (ERHIFeatureLevel) Ar.Read<int>();
-            if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += 4;
+            if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) Ar.Position += 4;
             if (Ar.Game is EGame.GAME_RocoKingdomWorld)
             {
                 (QualityLevel, FeatureLevel) = ((EMaterialQualityLevel) FeatureLevel, (ERHIFeatureLevel) QualityLevel);
