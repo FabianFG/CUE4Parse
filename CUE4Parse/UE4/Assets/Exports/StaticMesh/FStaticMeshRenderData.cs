@@ -127,7 +127,7 @@ public class FStaticMeshRenderData
             }
         }
 
-        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile)
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite)
         {
             var flags = new FStripDataFlags(Ar);
             if (Ar.ReadBoolean())
