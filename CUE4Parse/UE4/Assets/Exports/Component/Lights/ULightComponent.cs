@@ -90,6 +90,8 @@ public class ULocalLightComponent : ULightComponent
 
         AttenuationRadius = GetOrDefault(nameof(AttenuationRadius), 1000.0f);
         IntensityUnits = GetOrDefault(nameof(IntensityUnits), Owner.Provider.DefaultLightUnit);
+
+        if (Ar.Game is GAME_LordOfMysteries) Ar.Position += 24;
     }
 
     public override ELightUnits GetLightUnits() => IntensityUnits;
