@@ -101,6 +101,7 @@ public readonly struct FPrecomputedVolumeDistanceField : IUStruct
         VolumeSizeX = Ar.Read<int>();
         VolumeSizeY = Ar.Read<int>();
         VolumeSizeZ = Ar.Read<int>();
+        if (Ar.Game is EGame.GAME_LordOfMysteries) return;
         Data = Ar.ReadArray<FColor>();
     }
 }
@@ -149,6 +150,7 @@ public class ULevel : Assets.Exports.UObject
             PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);
             return;
         }
+        if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 8;
         PrecomputedVisibilityHandler = new FPrecomputedVisibilityHandler(Ar);
         if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.Read<int>() != 0) return;
         PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);
