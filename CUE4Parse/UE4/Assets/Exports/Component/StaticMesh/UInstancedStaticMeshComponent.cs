@@ -120,7 +120,15 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
         if (Ar.Game is EGame.GAME_LordOfMysteries)
         {
             Ar.SkipBulkArrayData();
-            Ar.Position += Ar.Read<long>() + 8;
+            Ar.Position += Ar.Read<long>() + 4;
+
+            if (Ar.ReadBoolean())
+            {
+                Ar.SkipBulkArrayData();
+                Ar.Position += 4;
+                Ar.Position += Ar.Read<int>() * 4;
+                Ar.Position += 4;
+            }    
             return;
         }
 
