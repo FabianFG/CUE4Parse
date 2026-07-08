@@ -481,6 +481,7 @@ public class FLightMap2D : FLightMap
         }
         else
         {
+            if (Ar.Game is GAME_ArenaBreakoutMobile) Ar.Position += 4;
             Textures[0] = new FPackageIndex(Ar);
             Textures[1] = new FPackageIndex(Ar);
 
@@ -504,7 +505,7 @@ public class FLightMap2D : FLightMap
 
         CoordinateScale = new FVector2D(Ar);
         CoordinateBias = new FVector2D(Ar);
-
+       
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.LightmapHasShadowmapData)
         {
             bShadowChannelValid = Ar.ReadArray(4, Ar.ReadBoolean);

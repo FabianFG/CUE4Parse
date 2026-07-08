@@ -114,12 +114,11 @@ public partial class FPakInfo
             if (Magic == PAK_FILE_MAGIC_ArenaBreakoutInfinite)
             {
                 EncryptionKeyGuid = default;
-                CustomEncryptionData = [Ar.Read<byte>()];
+                EncryptedIndex = Ar.Read<byte>() != 0;
                 IndexSize = Ar.Read<long>();
                 IndexOffset = Ar.Read<long>();
                 IndexHash = new FSHAHash(Ar);
                 Version = Ar.Read<EPakFileVersion>();
-                EncryptedIndex = true;
                 goto beforeCompression;
             }
 
@@ -127,7 +126,7 @@ public partial class FPakInfo
             if (Magic == PAK_FILE_MAGIC_ArenaBreakoutMobile)
             {
                 EncryptionKeyGuid = default;
-                CustomEncryptionData = [Ar.Read<byte>()];
+                EncryptedIndex = Ar.Read<byte>() != 0;
                 var encryptedIndexInfo = Ar.ReadBytes(16);
                 var indexInfo = new byte[16];
                 Buffer.BlockCopy(encryptedIndexInfo, 8, indexInfo, 0, 8);
@@ -137,7 +136,6 @@ public partial class FPakInfo
                 IndexSize = BinaryPrimitives.ReadInt64LittleEndian(indexInfo.AsSpan(8));
                 IndexHash = new FSHAHash(Ar);
                 Version = Ar.Read<EPakFileVersion>();
-                EncryptedIndex = true;
                 goto beforeCompression;
             }
         }
