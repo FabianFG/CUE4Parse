@@ -178,6 +178,7 @@ public class FReflectionCaptureData
         }
 
         if (Ar.Game == EGame.GAME_Valorant) Ar.SkipFixedArray(1);
+        if (Ar.Game == EGame.GAME_LordOfMysteries) Ar.Position += 4;
         if (Ar.Game == EGame.GAME_BlackMythWukong)
         {
             Ar.SkipFixedArray(1);
@@ -389,6 +390,14 @@ public class FMeshMapBuildData
             return;
         }
 
+        if (Ar.Game is EGame.GAME_LordOfMysteries)
+        {
+            Ar.Position += 12;
+            IrrelevantLights = Ar.ReadArray<FGuid>();
+            Ar.SkipMultipleBulkArrayData(2);
+            return;
+        }
+
         IrrelevantLights = Ar.ReadArray<FGuid>();
         PerInstanceLightmapData = Ar.ReadBulkArray<FPerInstanceLightmapData>();
     }
@@ -494,6 +503,7 @@ public class FLightMap2D : FLightMap
             }
 
             if (Ar.Game is EGame.GAME_RocoKingdomWorld) Ar.Position += 72;
+            if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 12;
 
             for (var CoefficientIndex = 0; CoefficientIndex < NUM_STORED_LIGHTMAP_COEF; CoefficientIndex++)
             {
@@ -557,10 +567,11 @@ public class FShadowMap2D : FShadowMap
 
     public FShadowMap2D(FAssetArchive Ar) : base(Ar)
     {
+        if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 8;
         Texture = new FPackageIndex(Ar);
         CoordinateScale = new FVector2D(Ar);
         CoordinateBias = new FVector2D(Ar);
-        bChannelValid = Ar.ReadArray(4, () => Ar.ReadBoolean());
+        bChannelValid = Ar.ReadArray(4, Ar.ReadBoolean);
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_SHADOWMAP_PENUMBRA_SIZE)
         {
