@@ -1,5 +1,7 @@
 using System.Reflection;
+using CUE4Parse.GameTypes.ABI.UE4.Lua;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using Org.BouncyCastle.Crypto.Engines;
@@ -131,29 +133,16 @@ public static class ABIDecryption
         return iniLength != length ? output.SubByteArray(iniLength) : output;
     }
 
-    public static byte[] AbiDecryptLua(byte[] bytes)
+    public static byte[] AbiDecryptLua(byte[] bytes, EGame game)
     {
         if (bytes.Length < 12)
             throw new ArgumentException("Lua file must be at least 12 bytes", nameof(bytes));
 
         var magic = BitConverter.ToUInt32(bytes);
-
-        // If starts with this, it's encrypted with SM4, but this isn't even used
-        if (magic == 0x464d551b)
-            //var luaLength = bytes.Length - 8;
-            //var length = (luaLength >> 4) << 4;
-
-            //var output = new byte[length];
-            //Buffer.BlockCopy(bytes, 8, output, 0, length);
-
-            //Sm4SboxSwitch.SetTo48();
-            //Sm4Helper.Decrypt(Sm4Helper.GetKey(iniDecryptKey, SM4Mode.Lua), ref output, SM4Mode.A);
-            return bytes;
-
         if (magic != 0x4d41551b)
             return bytes;
 
-        var decrypted = ABILua.DecryptLuaBytecode(bytes);
+        var decrypted = ABILuaReader.DecryptLuaBytecode(bytes, game is GAME_ArenaBreakoutMobile);
 
         return decrypted;
     }
