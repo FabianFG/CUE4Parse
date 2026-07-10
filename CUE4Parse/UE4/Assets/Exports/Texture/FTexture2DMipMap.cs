@@ -1,3 +1,4 @@
+using System;
 using System.Buffers.Binary;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Objects;
@@ -22,12 +23,20 @@ public class FTexture2DMipMap
         SizeY = sizeY;
         SizeZ = sizeZ;
     }
+    public FTexture2DMipMap(int sizeX, int sizeY, int sizeZ)
+    {
+        SizeX = sizeX;
+        SizeY = sizeY;
+        SizeZ = sizeZ;
+    }
 
     public FTexture2DMipMap(FAssetArchive Ar, bool bSerializeMipData = true)
     {
-        var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadBoolean() : Ar.IsFilterEditorOnly;
+        var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < EGame.GAME_UE5_0
+            ? Ar.ReadBoolean() : Ar.IsFilterEditorOnly;
 
-        if (bSerializeMipData) BulkData = new FByteBulkData(Ar);
+        if (bSerializeMipData)
+            BulkData = new FByteBulkData(Ar);
 
         if (Ar.Game == EGame.GAME_Borderlands3)
         {
@@ -37,7 +46,7 @@ public class FTexture2DMipMap
         }
         else if (Ar.Game == EGame.GAME_WorldofJadeDynasty)
         {
-            SizeX = (int)(Ar.Read<uint>() ^ 0xa537ea93);
+            SizeX = (int) (Ar.Read<uint>() ^ 0xa537ea93);
             SizeY = Ar.Read<int>();
             SizeZ = BinaryPrimitives.ReverseEndianness(Ar.Read<int>());
         }
@@ -65,24 +74,30 @@ public class FTexture2DMipMap
         switch (provider)
         {
             case ULandscapeTextureStorageProviderFactory landscapeProvider:
-            {
-                var data = new Lazy<byte[]?>(() =>
                 {
-                    var mip = landscapeProvider.Mips[mipLevel];
-                    if (mip.BulkData.Data is null)
+                    var data = new Lazy<byte[]?>(() =>
                     {
-                        throw new ArgumentException("mip data provider has no data to work with");
-                    }
+                        var mip = landscapeProvider.Mips[mipLevel];
+                        if (mip.BulkData.Data is null)
+                            throw new ArgumentException("mip data provider has no data to work with");
 
-                    var destination = new byte[mip.SizeX * mip.SizeY * 4];
-                    landscapeProvider.DecompressMip(mip.BulkData.Data, mip.BulkData.Data.Length, destination, destination.Length, mipLevel);
-                    return destination;
-                });
+                        var destination = new byte[mip.SizeX * mip.SizeY * 4];
+                        landscapeProvider.DecompressMip(mip.BulkData.Data, mip.BulkData.Data.Length, destination, destination.Length, mipLevel);
+                        return destination;
+                    });
 
-                BulkData = new FByteArrayData(data);
-                return true;
-            }
-            // default: throw new NotImplementedException("unknown mip data provider");
+                    BulkData = new FByteArrayData(data);
+                    return true;
+                }
+            case UOodleTextureStorageProviderFactory oodleProvider
+                when oodleProvider.TryGetMipData(mipLevel, out var data, out var sizeX, out var sizeY, out var sizeZ):
+                {
+                    BulkData = new FByteArrayData(data);
+                    SizeX = sizeX;
+                    SizeY = sizeY;
+                    SizeZ = sizeZ;
+                    return true;
+                }
         }
 
         return false;

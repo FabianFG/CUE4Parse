@@ -5,7 +5,7 @@ using CUE4Parse.UE4.Lua.Readers;
 
 namespace CUE4Parse.GameTypes.LordOfMysteries.UE4.Lua;
 
-public static class LoMLua
+public static class LordOfMysteriesLua
 {
     private static readonly byte[] _xorKey = Encoding.ASCII.GetBytes("c7fjs-432890fadnsyu9reqwj;lerwqio;jf;ldsanmdgmzz"); // off_14C7ECAE8
 

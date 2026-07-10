@@ -149,10 +149,9 @@ public class FStaticMeshLODResources
                 Ar.Position += Ar.Game switch
                 {
                     >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
-                    GAME_ArenaBreakoutMobile => 44,
                     EGame.GAME_NeedForSpeedMobile => 32,
                     EGame.GAME_SuicideSquad => 29,
-                    EGame.GAME_ArenaBreakoutInfinite => 16,
+                    EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile => 16,
                     EGame.GAME_TheFinals or EGame.GAME_ArcRaiders => 12,
                     EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForce => 4, // bDropNormals
                     EGame.GAME_FateTrigger => 5,
@@ -303,14 +302,10 @@ public class FStaticMeshLODResources
 
         if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 4;
 
-        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile)
         {
             _ = new FRawStaticIndexBuffer(Ar);
             _ = new FRawStaticIndexBuffer(Ar);
-        }
-        if (Ar.Game is GAME_ArenaBreakoutMobile)
-        {
-            Ar.SkipMultipleBulkArrayData(4);
         }
         if (Ar.Game is EGame.GAME_TheFinals or EGame.GAME_ArcRaiders)
         {

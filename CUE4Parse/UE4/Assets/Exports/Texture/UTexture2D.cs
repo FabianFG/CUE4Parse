@@ -18,7 +18,8 @@ public class UTexture2D : UTexture
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
+        if (Ar.Game == EGame.GAME_WorldofJadeDynasty)
+            Ar.Position += 12;
         base.Deserialize(Ar, validPos);
         ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
         AddressX = GetOrDefault<TextureAddress>(nameof(AddressX));
@@ -45,7 +46,6 @@ public class UTexture2D : UTexture
 
             if (bHasLegacyMips && legacyMips.Length > 0)
             {
-                // TODO: Populate PlatformData.Mips[] with LegacyMips data.
             }
         }
 
@@ -54,13 +54,25 @@ public class UTexture2D : UTexture
             var bSerializeMipData = true;
             if (Ar.Game >= EGame.GAME_UE5_3 || Ar.Game == EGame.GAME_TheFirstDescendant)
             {
-                // Controls whether FByteBulkData is serialized??
                 bSerializeMipData = Ar.ReadBoolean();
             }
 
-            if (Ar.Position >= validPos) return;
+            if (Ar.Position >= validPos)
+                return;
 
-            DeserializeCookedPlatformData(Ar, bSerializeMipData);
+            try
+            {
+                DeserializeCookedPlatformData(Ar, bSerializeMipData);
+            }
+            catch when (Ar.Game == EGame.GAME_WutheringWaves && TryLoadOodleTextureStorageProvider())
+            {
+                Ar.Position = validPos;
+            }
+
+            if (Ar.Game == EGame.GAME_WutheringWaves)
+            {
+                TryLoadOodleTextureStorageProvider();
+            }
         }
     }
 }

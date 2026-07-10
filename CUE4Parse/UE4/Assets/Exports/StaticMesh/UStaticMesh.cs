@@ -115,9 +115,6 @@ public class UStaticMesh : UObject
                     case EGame.GAME_HonorofKingsWorld:
                         Ar.SkipBulkArrayData();
                         break;
-                    case GAME_ArenaBreakoutMobile:
-                        Ar.SkipMultipleBulkArrayData(2);
-                        break;
                     default:
                         Ar.SkipFixedArray(12); // Vertices
                         Ar.SkipFixedArray(2); // Indices

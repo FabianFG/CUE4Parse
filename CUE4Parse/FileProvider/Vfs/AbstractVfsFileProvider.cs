@@ -471,7 +471,6 @@ namespace CUE4Parse.FileProvider.Vfs
         public void PostMount()
         {
             var workingAes = LoadIniConfigs();
-            if (Versions.Game is EGame.GAME_ArenaBreakoutMobile) return;
             if (workingAes || DefaultGame.EncryptionKeyGuid is null) return;
 
             var vfsToVerify = _mountedVfs.Keys

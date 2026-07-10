@@ -399,3 +399,8 @@ FodyWeavers.xsd
 *.idea
 
 build
+
+# Runtime native libraries downloaded/extracted by CUE4Parse.Example at run time
+/oodle-data-shared.dll
+/oo2core_9_win64.dll
+/Detex.dll

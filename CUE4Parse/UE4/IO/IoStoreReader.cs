@@ -270,8 +270,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
             reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
             // FragPunk decided to encrypt the global utoc too.
-            // For Lord of Mysteries utoc files are "synthetic", without dir index, so we can't test the key.
-            compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == GAME_LordOfMysteries || Game == GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
+            compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
 
             byte[] src;
             if (compressionBlock.CompressionMethodIndex == 0)
@@ -411,7 +410,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         watch.Start();
 
         ProcessIndex(pathComparer);
-        InitializeContainerHeader();
+        _containerHeader = new Lazy<FIoContainerHeader?>(ReadContainerHeader);
 
         if (Globals.LogVfsMounts)
         {
@@ -419,7 +418,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
             var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
             if (EncryptedFileCount > 0)
                 sb.Append($" ({EncryptedFileCount} encrypted)");
-            if (MountPoint.Contains('/'))
+            if (MountPoint.Contains("/"))
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", version {(int) TocResource.Header.Version} in {elapsed}");
@@ -492,8 +491,6 @@ public partial class IoStoreReader : AbstractAesVfsReader
         Files = files;
         ArrayPool<char>.Shared.Return(dirNamePool);
     }
-
-    protected void InitializeContainerHeader() => _containerHeader = new Lazy<FIoContainerHeader?>(ReadContainerHeader);
 
     private FIoContainerHeader ReadContainerHeader()
     {

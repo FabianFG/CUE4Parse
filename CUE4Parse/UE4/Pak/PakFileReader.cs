@@ -171,7 +171,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 case GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
                     return NFSLua.RestoreLuaBytecode(pakEntry.Path, uncompressed);
                 case GAME_LordOfMysteries when pakEntry.Extension is "luac":
-                    return LoMLua.DecryptLuaJITBytecode(pakEntry.Path, uncompressed);
+                    return LordOfMysteriesLua.DecryptLuaJITBytecode(pakEntry.Path, uncompressed);
                 case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
                     return NiNoKuniCsv.DecryptCsv(pakEntry.Name, uncompressed);
                 default:
@@ -228,7 +228,7 @@ public partial class PakFileReader : AbstractAesVfsReader
             case GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
                 return NFSLua.RestoreLuaBytecode(pakEntry.Path, data);
             case GAME_LordOfMysteries when pakEntry.Extension is "luac":
-                return LoMLua.DecryptLuaJITBytecode(pakEntry.Path, data);
+                return LordOfMysteriesLua.DecryptLuaJITBytecode(pakEntry.Path, data);
             case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
                 return NiNoKuniCsv.DecryptCsv(pakEntry.Name, data);
             default:

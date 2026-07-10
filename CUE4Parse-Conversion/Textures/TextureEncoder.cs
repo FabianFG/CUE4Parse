@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -394,14 +394,14 @@ public static class TextureEncoder
                         *outPtr = conversionFunc(value);
                         outPtr += sizeof(byte);
                     }
-                    FillMissingChannels(ref outPtr, channelCount);
+                    FillMissingChannels(outPtr, channelCount);
                 }
             }
         }
         return retPtr;
     }
 
-    private static unsafe void FillMissingChannels(ref byte* outPtr, int channelCount)
+    private static unsafe void FillMissingChannels(byte* outPtr, int channelCount)
     {
         for (int i = channelCount; i < 4; i++)
         {
