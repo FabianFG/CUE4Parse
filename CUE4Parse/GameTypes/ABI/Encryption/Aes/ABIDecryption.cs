@@ -20,6 +20,7 @@ public static class ABIDecryption
     #region Mobile
     private static readonly byte[] pakInfoMobileKey = [0x76, 0x69, 0xF3, 0x85, 0x02, 0xC1, 0xC4, 0xF6, 0xA7, 0xC4, 0x0B, 0x57, 0x35, 0x6B, 0x68, 0x9E];
     private static readonly byte[] pakIndexMobileKey = [0xF3, 0x7F, 0x02, 0xC1, 0x8B, 0x29, 0x5E, 0x5B, 0xC9, 0x8C, 0xA3, 0xD6, 0x38, 0x97, 0x0B, 0xEC];
+    private static readonly byte[] iniDecryptMobileKey = [0x0D, 0x46, 0xCB, 0x87, 0x0B, 0x4B, 0x4C, 0x4D, 0x30, 0xB3, 0xF0, 0x72, 0xDA, 0x5C, 0x1D, 0x1C];
 
     private static readonly byte[] uassetDecryptMobileKey38 = [0x43, 0x23, 0x07, 0x67, 0x19, 0xAB, 0xAC, 0xEE, 0xFE, 0x3C, 0xB3, 0xAB, 0x71, 0x58, 0x12, 0x40];
     private static readonly byte[] uassetDecryptMobileKey39 = [0x43, 0x23, 0x07, 0x67, 0x19, 0xAB, 0xAC, 0xF0, 0xFE, 0x3C, 0xB3, 0xAC, 0x71, 0x58, 0x12, 0x40];
@@ -42,7 +43,7 @@ public static class ABIDecryption
         {
             if (reader.Game is GAME_ArenaBreakoutMobile)
             {
-                Sm4Helper.Decrypt(pakIndexMobileKey, ref output, SM4Mode.None, deriveKey: false);
+                Sm4Helper.Decrypt(pakIndexMobileKey, ref output, SM4Mode.None);
             }
             else
             {
@@ -114,13 +115,15 @@ public static class ABIDecryption
         return output;
     }
 
-    public static byte[] AbiDecryptIni(byte[] bytes)
+    public static byte[] AbiDecryptIni(byte[] bytes, EGame game)
     {
         if (bytes.Length < 8)
             throw new ArgumentException("ini file must be at least 8 bytes", nameof(bytes));
-
-        if (bytes[0] != 0x1b || bytes[2] != 0x55 || bytes[3] != 0x41) // 0x41 seems to change, 0x45 for mobile
+        if (bytes is not [0x1b, _, 0x55, ..])
             return bytes;
+
+        var key = game is GAME_ArenaBreakoutMobile ? iniDecryptMobileKey : iniDecryptKey;
+        var mode = game is GAME_ArenaBreakoutMobile ? SM4Mode.None : (SM4Mode) bytes[3];
 
         var iniLength = BitConverter.ToInt32(bytes, 4);
         var length = iniLength.Align(16);
@@ -128,8 +131,9 @@ public static class ABIDecryption
         var output = new byte[length];
         Buffer.BlockCopy(bytes, 8, output, 0, length);
 
-        Sm4SboxSwitch.SetTo48();
-        Sm4Helper.Decrypt(iniDecryptKey, ref output, SM4Mode.A);
+        if (game is not GAME_ArenaBreakoutMobile) Sm4SboxSwitch.SetTo48();
+        Sm4Helper.Decrypt(key, ref output, mode);
+
         return iniLength != length ? output.SubByteArray(iniLength) : output;
     }
 
@@ -148,7 +152,7 @@ public static class ABIDecryption
     }
 
     public static void DecryptAbiMobilePakInfo(byte[] data) =>
-        Sm4Helper.Decrypt(pakInfoMobileKey, ref data, SM4Mode.None, deriveKey: false);
+        Sm4Helper.Decrypt(pakInfoMobileKey, ref data, SM4Mode.None);
 }
 
 public enum SM4Mode : byte
@@ -158,7 +162,7 @@ public enum SM4Mode : byte
     B = 0x42,
     C = 0x43,
     D = 0x44,
-    Lua = 0xFF
+    E = 0x45,
 }
 
 public static class Sm4Helper
@@ -211,17 +215,16 @@ public static class Sm4Helper
         0x4C, 0x3B, 0xBE, 0x48, 0xF0, 0x9A, 0xDB, 0x44
     ];
 
-
-    static readonly byte[] TableLua =
+    static readonly byte[] TableE =
     [
-        0x22, 0x32, 0x42, 0x52, 0x62, 0x63, 0x53, 0x43,
-        0x33, 0x23, 0x13, 0x54, 0x55, 0x56, 0x51, 0x31,
-        0x11, 0x34, 0xF3, 0x55, 0x33, 0xE4, 0xE3, 0xF4,
-        0xF3, 0xD3, 0xA3, 0xA4, 0xA4, 0xA7, 0xB7, 0xD6,
-        0xAA, 0xA3, 0xEA, 0xF7, 0xC3, 0xC8, 0xE1, 0xAA,
-        0xF3, 0xE3, 0xB1, 0xF2, 0xA3, 0xE4, 0xAA, 0xEB,
-        0x13, 0x14, 0x23, 0x24, 0xA3, 0xA1, 0xF1, 0xE2,
-        0xAA, 0xF3, 0xD3, 0xD4, 0xD1, 0xAD, 0xAB, 0x11
+        0x96, 0x0D, 0xBD, 0xAA, 0x5A, 0xCB, 0x7A, 0xEB,
+        0x9A, 0x0B, 0xBB, 0x6A, 0xDB, 0x4C, 0xFB, 0x6C,
+        0x1C, 0x8D, 0x3C, 0xEC, 0x5C, 0xCD, 0x7D, 0x01,
+        0x72, 0xE3, 0xD1, 0x03, 0xB3, 0x24, 0x95, 0x05,
+        0xB5, 0xE7, 0x97, 0x46, 0xF5, 0xA5, 0x54, 0x87,
+        0x36, 0x69, 0x9B, 0x4B, 0xFA, 0x6B, 0xDC, 0x4D,
+        0xBE, 0x6D, 0x1D, 0xCC, 0x7B, 0x2B, 0xDA, 0x89,
+        0x0E, 0x7F, 0xF0, 0x60, 0xD1, 0x81, 0x30, 0xA1
     ];
 
     public static byte[] GetKey(byte[] key, SM4Mode mode)
@@ -235,7 +238,7 @@ public static class Sm4Helper
             SM4Mode.B => TableB,
             SM4Mode.C => TableC,
             SM4Mode.D => TableD,
-            SM4Mode.Lua => TableLua,
+            SM4Mode.E => TableE,
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
         };
 
@@ -248,10 +251,10 @@ public static class Sm4Helper
         return res;
     }
 
-    public static void Decrypt(byte[] key, ref byte[] data, SM4Mode mode, bool deriveKey = true)
+    public static void Decrypt(byte[] key, ref byte[] data, SM4Mode mode)
     {
         var engine = new SM4Engine();
-        if (deriveKey) key = GetKey(key, mode);
+        if (mode is not SM4Mode.None) key = GetKey(key, mode);
         engine.Init(false, new KeyParameter(key));
         for (var i = 0; i < data.Length; i += 16)
         {

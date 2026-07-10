@@ -27,7 +27,7 @@ public partial class PakFileReader
 
             return pakEntry.Extension switch
             {
-                "ini" => ABIDecryption.AbiDecryptIni(uncompressed),
+                "ini" => ABIDecryption.AbiDecryptIni(uncompressed, reader.Game),
                 "lua" => ABIDecryption.AbiDecryptLua(uncompressed, reader.Game),
                 "uasset" or "umap" => ABIDecryption.AbiDecryptPackageSummary(uncompressed),
                 _ => uncompressed
@@ -38,7 +38,7 @@ public partial class PakFileReader
         var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize, size, reader, pakEntry.IsEncrypted);
         data = pakEntry.Extension switch
         {
-            "ini" => ABIDecryption.AbiDecryptIni(data),
+            "ini" => ABIDecryption.AbiDecryptIni(data, reader.Game),
             "lua" => ABIDecryption.AbiDecryptLua(data, reader.Game),
             "uasset" or "umap" => ABIDecryption.AbiDecryptPackageSummary(data),
             _ => data
