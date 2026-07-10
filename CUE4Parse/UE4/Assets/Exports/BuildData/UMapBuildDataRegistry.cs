@@ -46,7 +46,7 @@ public class UMapBuildDataRegistry : UObject
                 ReflectionCaptureBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FReflectionCaptureMapBuildData(Ar));
             }
 
-            if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) return;
+            if (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) return;
             if (Ar.Game == EGame.GAME_TheDivisionResurgence) Ar.Position += 12;
             if (Ar.Game == EGame.GAME_HogwartsLegacy)
             {
@@ -220,6 +220,15 @@ public class FVolumeLightingSample
     {
         Position = Ar.Read<FVector>();
         Radius = Ar.Read<float>();
+        if (Ar.Game is GAME_ArenaBreakoutMobile)
+        {
+            PackedSkyBentNormal = Ar.Read<FColor>();
+            DirectionalLightShadowing = Ar.Read<float>();
+            var unknown = Ar.Read<int>();
+            if (Ar.Read<int>() == -1)
+                Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(order * order));
+            return;
+        }
         Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(order*order));
         PackedSkyBentNormal = Ar.Read<FColor>();
         DirectionalLightShadowing = Ar.Read<float>();
@@ -243,6 +252,7 @@ public class FPrecomputedLightVolumeData
         if (bVolumeInitialized)
         {
             Bounds = new FBox(Ar);
+            if (Ar.Game is GAME_ArenaBreakoutMobile) Ar.ReadArray<FBox>(2);
             SampleSpacing = Ar.Read<float>();
             NumSHSamples = 4;
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.IndirectLightingCache3BandSupport)
@@ -260,6 +270,13 @@ public class FPrecomputedLightVolumeData
             {
                 Ar.Position += 20;
                 Ar.SkipMultipleFixedArrays([4, 144]);
+            }
+
+            if (Ar.Game is GAME_ArenaBreakoutMobile)
+            {
+                Ar.SkipFixedArray(76);
+                Ar.Position += 8;
+                Ar.SkipFixedArray(324);
             }
         }
     }

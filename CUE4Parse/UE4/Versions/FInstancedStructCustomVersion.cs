@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions;
@@ -25,6 +25,7 @@ public static class FInstancedStructCustomVersion
 
         return Ar.Game switch
         {
+            EGame.GAME_ArenaBreakoutMobile => Type.CustomVersionAdded,
             < EGame.GAME_UE5_3 => (Type) (-1),
             _ => Type.LatestVersion
         };
