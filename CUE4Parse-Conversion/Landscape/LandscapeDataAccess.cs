@@ -44,8 +44,7 @@ internal class FLandscapeComponentDataInterface {
         var format = heightMapTexture.Format;
         Debug.Assert(heightMapTexture.Format == EPixelFormat.PF_B8G8R8A8);
 
-        if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int)format) is not { Supported: true } formatInfo ||
-            formatInfo.BlockBytes == 0)
+        if (!PixelFormatUtils.PixelFormats.TryGetValue(format, out var formatInfo) || !formatInfo.Supported || formatInfo.BlockBytes == 0)
             throw new NotImplementedException($"The supplied pixel format {format} is not supported!");
 
         HeightmapStride = heightMapTexture.PlatformData.SizeX >> MipLevel;
@@ -176,8 +175,7 @@ internal class FLandscapeComponentDataInterface {
         var weightTexture =
             componentWeightmapTextures[componentWeightmapLayerAllocations[layerIdx].WeightmapTextureIndex];
         var format = weightTexture.Format;
-        if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int)format) is not { Supported: true } formatInfo ||
-            formatInfo.BlockBytes == 0)
+        if (!PixelFormatUtils.PixelFormats.TryGetValue(format, out var formatInfo) || !formatInfo.Supported || formatInfo.BlockBytes == 0)
             throw new NotImplementedException($"The supplied pixel format {format} is not supported!");
 
         var platform = weightTexture.Owner!.Provider!.Versions.Platform;
