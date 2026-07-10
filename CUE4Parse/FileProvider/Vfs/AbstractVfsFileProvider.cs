@@ -25,6 +25,7 @@ using CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.RocoKingdomWorld.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
+using CUE4Parse.GameTypes.SilverPalace.Encryption;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
 using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
 using CUE4Parse.GameTypes.THPS.Encryption.Aes;
@@ -100,6 +101,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 EGame.GAME_RocoKingdomWorld => RocoKingdomWorldAes.RocoKingdomWorldDecrypt,
                 EGame.GAME_DragonSwordAwakening => DragonSwordAes.DragonSwordDecrypt,
                 EGame.GAME_eBaseballProSpirit => ProSpiEncryption.ProSpiDecrypt,
+                EGame.GAME_SilverPalace => SilverPalaceAes.SilverPalaceDecrypt,
                 _ => null
             };
         }
