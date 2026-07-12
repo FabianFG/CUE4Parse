@@ -1,162 +1,8 @@
-using System.Reflection;
-using CUE4Parse.GameTypes.ABI.UE4.Lua;
-using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Versions;
-using CUE4Parse.UE4.VirtualFileSystem;
-using CUE4Parse.Utils;
-using Org.BouncyCastle.Crypto.Engines;
-using Org.BouncyCastle.Crypto.Parameters;
+using System.Buffers.Binary;
+using System.Collections.Concurrent;
+using Org.BouncyCastle.Utilities;
 
-namespace CUE4Parse.GameTypes.ABI.Encryption.Aes;
-
-public static class ABIDecryption
-{
-    public static readonly string[] encryptedFiles = ["ini", "lua", "uasset", "umap"];
-    private static readonly byte[] iniDecryptKey = [0x97, 0x67, 0x87, 0xDE, 0xEA, 0x18, 0x47, 0x0D, 0xA8, 0x07, 0x90, 0xB6, 0x45, 0x27, 0x23, 0x14];
-    private static readonly byte[] uassetDecryptKey37 = [0x43, 0x23, 0x07, 0x67, 0x19, 0xAB, 0xAC, 0xEF, 0xFE, 0x3C, 0xB3, 0xA8, 0x71, 0x57, 0x12, 0x40];
-    private static readonly byte[] uassetDecryptKey38 = [0x3C, 0x17, 0x08, 0xD5, 0xBD, 0x80, 0xD8, 0x15, 0x62, 0x37, 0xDD, 0x59, 0x15, 0x1C, 0x28, 0xA8];
-    private static readonly byte[] uassetDecryptKey39 = [0xDF, 0x2E, 0xBD, 0x77, 0xDE, 0xAB, 0xDC, 0x56, 0xC2, 0x29, 0xD6, 0xD9, 0xA4, 0x99, 0xA8, 0xAC];
-
-    #region Mobile
-    private static readonly byte[] pakInfoMobileKey = [0x76, 0x69, 0xF3, 0x85, 0x02, 0xC1, 0xC4, 0xF6, 0xA7, 0xC4, 0x0B, 0x57, 0x35, 0x6B, 0x68, 0x9E];
-    private static readonly byte[] pakIndexMobileKey = [0xF3, 0x7F, 0x02, 0xC1, 0x8B, 0x29, 0x5E, 0x5B, 0xC9, 0x8C, 0xA3, 0xD6, 0x38, 0x97, 0x0B, 0xEC];
-    private static readonly byte[] iniDecryptMobileKey = [0x0D, 0x46, 0xCB, 0x87, 0x0B, 0x4B, 0x4C, 0x4D, 0x30, 0xB3, 0xF0, 0x72, 0xDA, 0x5C, 0x1D, 0x1C];
-
-    private static readonly byte[] uassetDecryptMobileKey38 = [0x43, 0x23, 0x07, 0x67, 0x19, 0xAB, 0xAC, 0xEE, 0xFE, 0x3C, 0xB3, 0xAB, 0x71, 0x58, 0x12, 0x40];
-    private static readonly byte[] uassetDecryptMobileKey39 = [0x43, 0x23, 0x07, 0x67, 0x19, 0xAB, 0xAC, 0xF0, 0xFE, 0x3C, 0xB3, 0xAC, 0x71, 0x58, 0x12, 0x40];
-    #endregion
-
-    private static readonly byte[] uassetMagic = [0xc1, 0x83, 0x2a, 0x9e, 0xf9, 0xff, 0xff, 0xff];
-    private const int uassetMagicLength = 8;
-
-    public static byte[] ABIDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
-    {
-        if (bytes.Length < beginOffset + count)
-            throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");
-        if (count % 16 != 0)
-            throw new ArgumentException("count must be a multiple of 16");
-
-        var output = new byte[count];
-        Buffer.BlockCopy(bytes, beginOffset, output, 0, count);
-
-        if (isIndex)
-        {
-            if (reader.Game is GAME_ArenaBreakoutMobile)
-            {
-                Sm4Helper.Decrypt(pakIndexMobileKey, ref output, SM4Mode.None);
-            }
-            else
-            {
-                if (reader.AesKey == null)
-                    throw new NullReferenceException("reader.AesKey");
-
-                Sm4Helper.Decrypt(reader.AesKey.Key, ref output, SM4Mode.A);
-            }
-
-            return output;
-        }
-
-        for (var i = 0; i < count; i++)
-        {
-            if (output[i] != 0 && output[i] != 0x93)
-                output[i] ^= 0x93;
-        }
-
-        return output;
-    }
-
-    public static byte[] AbiDecryptPackageSummary(byte[] bytes)
-    {
-        var magic = BitConverter.ToUInt32(bytes);
-        byte[] currentKey;
-        var mode = SM4Mode.C;
-
-        // For PC base is 0x03000000, for mobile 0x04000000
-        switch (magic)
-        {
-            case 0x03000337:
-            case 0x04000337:
-                Sm4SboxSwitch.SetTo37();
-                currentKey = uassetDecryptKey37;
-                break;
-            case 0x03000338:
-                Sm4SboxSwitch.SetTo38();
-                currentKey = uassetDecryptKey38;
-                break;
-            case 0x03000339:
-                Sm4SboxSwitch.SetTo39();
-                currentKey = uassetDecryptKey39;
-                mode = SM4Mode.D;
-                break;
-            case 0x04000338:
-                Sm4SboxSwitch.SetToMobile38();
-                currentKey = uassetDecryptMobileKey38;
-                break;
-            case 0x04000339:
-                Sm4SboxSwitch.SetToMobile39();
-                currentKey = uassetDecryptMobileKey39;
-                break;
-            case FPackageFileSummary.PACKAGE_FILE_TAG:
-                return bytes;
-            default:
-                throw new ParserException($"FilePackageSummary magic is different 0x{magic:X} (encryption is not supported)");
-        }
-
-        var encryptedLength = BitConverter.ToUInt16(bytes, 6);
-        var unencryptedLength = encryptedLength + uassetMagicLength;
-        var output = new byte[bytes.Length];
-        Buffer.BlockCopy(uassetMagic, 0, output, 0, uassetMagicLength);
-        Buffer.BlockCopy(bytes, unencryptedLength, output, unencryptedLength, bytes.Length - unencryptedLength);
-
-        var encryptedBlock = new byte[encryptedLength];
-        Buffer.BlockCopy(bytes, uassetMagicLength, encryptedBlock, 0, encryptedLength);
-
-        Sm4Helper.Decrypt(currentKey, ref encryptedBlock, mode);
-
-        Buffer.BlockCopy(encryptedBlock, 0, output, uassetMagicLength, encryptedLength);
-        return output;
-    }
-
-    public static byte[] AbiDecryptIni(byte[] bytes, EGame game)
-    {
-        if (bytes.Length < 8)
-            throw new ArgumentException("ini file must be at least 8 bytes", nameof(bytes));
-        if (bytes is not [0x1b, _, 0x55, ..])
-            return bytes;
-
-        var key = game is GAME_ArenaBreakoutMobile ? iniDecryptMobileKey : iniDecryptKey;
-        var mode = game is GAME_ArenaBreakoutMobile ? SM4Mode.None : (SM4Mode) bytes[3];
-
-        var iniLength = BitConverter.ToInt32(bytes, 4);
-        var length = iniLength.Align(16);
-
-        var output = new byte[length];
-        Buffer.BlockCopy(bytes, 8, output, 0, length);
-
-        if (game is not GAME_ArenaBreakoutMobile) Sm4SboxSwitch.SetTo48();
-        Sm4Helper.Decrypt(key, ref output, mode);
-
-        return iniLength != length ? output.SubByteArray(iniLength) : output;
-    }
-
-    public static byte[] AbiDecryptLua(byte[] bytes, EGame game)
-    {
-        if (bytes.Length < 12)
-            throw new ArgumentException("Lua file must be at least 12 bytes", nameof(bytes));
-
-        var magic = BitConverter.ToUInt32(bytes);
-        if (magic != 0x4d41551b)
-            return bytes;
-
-        var decrypted = ABILuaReader.DecryptLuaBytecode(bytes, game is GAME_ArenaBreakoutMobile);
-
-        return decrypted;
-    }
-
-    public static void DecryptAbiMobilePakInfo(byte[] data) =>
-        Sm4Helper.Decrypt(pakInfoMobileKey, ref data, SM4Mode.None);
-}
+namespace CUE4Parse.GameTypes.ABI.Encryption.SM4;
 
 public enum SM4Mode : byte
 {
@@ -168,8 +14,35 @@ public enum SM4Mode : byte
     E = 0x45,
 }
 
+public enum SboxMode
+{
+    None,
+    Mode37,
+    Mode38,
+    Mode39,
+    Mode38Mobile,
+    Mode39Mobile,
+}
+
+public struct SM4DecryptionKeyMode
+{
+    public uint K0, K1, K2, K3;
+    public SboxMode Mode;
+
+    public SM4DecryptionKeyMode(ReadOnlySpan<byte> key, SboxMode mode)
+    {
+        K0 = BinaryPrimitives.ReadUInt32BigEndian(key);
+        K1 = BinaryPrimitives.ReadUInt32BigEndian(key[4..]);
+        K2 = BinaryPrimitives.ReadUInt32BigEndian(key[8..]);
+        K3 = BinaryPrimitives.ReadUInt32BigEndian(key[12..]);
+        Mode = mode;
+    }
+}
+
 public static class Sm4Helper
 {
+    private static ConcurrentDictionary<SM4DecryptionKeyMode, ABSM4Engine> SM4Engines = [];
+
     static readonly byte[] TableA =
     [
         0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
@@ -254,29 +127,81 @@ public static class Sm4Helper
         return res;
     }
 
-    public static void Decrypt(byte[] key, ref byte[] data, SM4Mode mode)
+    public static void Decrypt(ref byte[] data, byte[] key, SM4Mode mode, SboxMode sboxMode)
     {
-        var engine = new SM4Engine();
         if (mode is not SM4Mode.None) key = GetKey(key, mode);
-        engine.Init(false, new KeyParameter(key));
+        var sm4Key = new SM4DecryptionKeyMode(key, sboxMode);
+        var engine = SM4Engines.GetOrAdd(sm4Key, _ => new ABSM4Engine(sm4Key));
         for (var i = 0; i < data.Length; i += 16)
         {
-            engine.ProcessBlock(data, i, data, i);
+            engine.ProcessBlock(data.AsSpan(i, 16));
         }
     }
 }
 
-public static class Sm4SboxSwitch
+public class ABSM4Engine
 {
-    private static readonly object Gate = new();
+    public ABSM4Engine(SM4DecryptionKeyMode key)
+    {
+        Sbox = key.Mode switch
+        {
+            SboxMode.None => SboxNone,
+            SboxMode.Mode37 => Sbox37,
+            SboxMode.Mode38 => Sbox38,
+            SboxMode.Mode39 => Sbox39,
+            SboxMode.Mode38Mobile => MobileSbox38,
+            SboxMode.Mode39Mobile => MobileSbox39,
+            _ => throw new ArgumentException($"Unknown Sbox mode {key.Mode}"),
+        };
 
-    private static readonly FieldInfo SboxField =
-        typeof(SM4Engine).GetField("Sbox", BindingFlags.NonPublic | BindingFlags.Static) ??
-        throw new MissingFieldException("SM4Engine.Sbox not found");
+        rk ??= new uint[32];
+        ExpandKey(key);
+    }
 
-    private static readonly byte[] SboxRef = (byte[])SboxField.GetValue(null)!;
+    private readonly uint[] rk;
+    private readonly byte[] Sbox;
 
-    private static readonly byte[] OriginalSbox = new byte[256];
+    private const int BlockSize = 16;
+
+    private static readonly byte[] SboxNone =
+    [
+        0xd6, 0x90, 0xe9, 0xfe, 0xcc, 0xe1, 0x3d, 0xb7, 0x16, 0xb6, 0x14, 0xc2, 0x28, 0xfb, 0x2c, 0x05,
+        0x2b, 0x67, 0x9a, 0x76, 0x2a, 0xbe, 0x04, 0xc3, 0xaa, 0x44, 0x13, 0x26, 0x49, 0x86, 0x06, 0x99,
+        0x9c, 0x42, 0x50, 0xf4, 0x91, 0xef, 0x98, 0x7a, 0x33, 0x54, 0x0b, 0x43, 0xed, 0xcf, 0xac, 0x62,
+        0xe4, 0xb3, 0x1c, 0xa9, 0xc9, 0x08, 0xe8, 0x95, 0x80, 0xdf, 0x94, 0xfa, 0x75, 0x8f, 0x3f, 0xa6,
+        0x47, 0x07, 0xa7, 0xfc, 0xf3, 0x73, 0x17, 0xba, 0x83, 0x59, 0x3c, 0x19, 0xe6, 0x85, 0x4f, 0xa8,
+        0x68, 0x6b, 0x81, 0xb2, 0x71, 0x64, 0xda, 0x8b, 0xf8, 0xeb, 0x0f, 0x4b, 0x70, 0x56, 0x9d, 0x35,
+        0x1e, 0x24, 0x0e, 0x5e, 0x63, 0x58, 0xd1, 0xa2, 0x25, 0x22, 0x7c, 0x3b, 0x01, 0x21, 0x78, 0x87,
+        0xd4, 0x00, 0x46, 0x57, 0x9f, 0xd3, 0x27, 0x52, 0x4c, 0x36, 0x02, 0xe7, 0xa0, 0xc4, 0xc8, 0x9e,
+        0xea, 0xbf, 0x8a, 0xd2, 0x40, 0xc7, 0x38, 0xb5, 0xa3, 0xf7, 0xf2, 0xce, 0xf9, 0x61, 0x15, 0xa1,
+        0xe0, 0xae, 0x5d, 0xa4, 0x9b, 0x34, 0x1a, 0x55, 0xad, 0x93, 0x32, 0x30, 0xf5, 0x8c, 0xb1, 0xe3,
+        0x1d, 0xf6, 0xe2, 0x2e, 0x82, 0x66, 0xca, 0x60, 0xc0, 0x29, 0x23, 0xab, 0x0d, 0x53, 0x4e, 0x6f,
+        0xd5, 0xdb, 0x37, 0x45, 0xde, 0xfd, 0x8e, 0x2f, 0x03, 0xff, 0x6a, 0x72, 0x6d, 0x6c, 0x5b, 0x51,
+        0x8d, 0x1b, 0xaf, 0x92, 0xbb, 0xdd, 0xbc, 0x7f, 0x11, 0xd9, 0x5c, 0x41, 0x1f, 0x10, 0x5a, 0xd8,
+        0x0a, 0xc1, 0x31, 0x88, 0xa5, 0xcd, 0x7b, 0xbd, 0x2d, 0x74, 0xd0, 0x12, 0xb8, 0xe5, 0xb4, 0xb0,
+        0x89, 0x69, 0x97, 0x4a, 0x0c, 0x96, 0x77, 0x7e, 0x65, 0xb9, 0xf1, 0x09, 0xc5, 0x6e, 0xc6, 0x84,
+        0x18, 0xf0, 0x7d, 0xec, 0x3a, 0xdc, 0x4d, 0x20, 0x79, 0xee, 0x5f, 0x3e, 0xd7, 0xcb, 0x39, 0x48
+    ];
+
+    private static readonly byte[] Sbox37 =
+    [
+        0xd6, 0x90, 0xe9, 0xfe, 0xcc, 0xe1, 0x3d, 0xb7, 0x16, 0xb6, 0x14, 0xc2, 0x28, 0xfb, 0x2c, 0x05,
+        0x2b, 0x67, 0x9a, 0x76, 0x2a, 0xbe, 0x04, 0xc3, 0xaa, 0x44, 0x13, 0x26, 0x49, 0x86, 0x06, 0x99,
+        0x9c, 0x42, 0x50, 0xf4, 0x91, 0xef, 0x98, 0x7a, 0x33, 0x54, 0x0b, 0x43, 0xed, 0xcf, 0xac, 0x62,
+        0xe4, 0xb3, 0x1c, 0xa9, 0xc9, 0x08, 0xe8, 0x95, 0x80, 0xdf, 0x94, 0xfa, 0x75, 0x8f, 0x3f, 0xa6,
+        0x47, 0x07, 0xa7, 0xfc, 0xf3, 0x73, 0x17, 0xba, 0x83, 0x59, 0x3c, 0x19, 0xe6, 0x85, 0x4f, 0xa8,
+        0x68, 0x6b, 0x81, 0xb2, 0x71, 0x64, 0xda, 0x8b, 0xf8, 0xeb, 0x0f, 0x4b, 0x70, 0x56, 0x9d, 0x35,
+        0x1e, 0x24, 0x0e, 0x5e, 0x63, 0x58, 0xd1, 0xa2, 0x25, 0x22, 0x7c, 0x3b, 0x01, 0x21, 0x78, 0x87,
+        0xd4, 0x00, 0x46, 0x57, 0x9f, 0xd3, 0x27, 0x52, 0x4c, 0x36, 0x02, 0xe7, 0xa0, 0xc4, 0xc8, 0x9e,
+        0xea, 0xbf, 0x8a, 0xd2, 0x40, 0xc7, 0x38, 0xb5, 0xa3, 0xf7, 0xf2, 0xce, 0xf9, 0x61, 0x15, 0xa1,
+        0xe0, 0xae, 0x5d, 0xa4, 0x9b, 0x34, 0x1a, 0x55, 0xad, 0x93, 0x32, 0x30, 0xf5, 0x8c, 0xb1, 0xe3,
+        0x1d, 0xf6, 0xe2, 0x2e, 0x82, 0x66, 0xca, 0x60, 0xc0, 0x29, 0x23, 0xab, 0x0d, 0x53, 0x4e, 0x6f,
+        0xd5, 0xdb, 0x37, 0x45, 0xde, 0xfd, 0x8e, 0x2f, 0x03, 0xff, 0x6a, 0x72, 0x6d, 0x6c, 0x5b, 0x51,
+        0x8d, 0x1b, 0xaf, 0x92, 0xbb, 0xdd, 0xbc, 0x7f, 0x11, 0xd9, 0x5c, 0x41, 0x1f, 0x10, 0x5a, 0xd8,
+        0x0a, 0xc1, 0x31, 0x88, 0xa5, 0xcd, 0x7b, 0xbd, 0x2d, 0x74, 0xd0, 0x12, 0xb8, 0xe5, 0xb4, 0xb0,
+        0x89, 0x69, 0x97, 0x4a, 0x0c, 0x96, 0x77, 0x7e, 0x65, 0xb9, 0xf1, 0x09, 0xc5, 0x6e, 0xc6, 0x84,
+        0x18, 0xf0, 0x7d, 0xec, 0x3a, 0xdc, 0x4d, 0x20, 0x79, 0xee, 0x5f, 0x3e, 0xd7, 0xcb, 0x39, 0x37
+    ];
 
     private static readonly byte[] Sbox38 =
     [
@@ -358,48 +283,96 @@ public static class Sm4SboxSwitch
         0x18, 0xF0, 0x7D, 0xEC, 0x3A, 0xDC, 0x4D, 0x20, 0x79, 0xEE, 0x5F, 0x3E, 0xD7, 0xCB, 0x39, 0x37
     ];
 
-    static Sm4SboxSwitch()
+    private static readonly uint[] CK =
+    [
+        0x00070e15, 0x1c232a31, 0x383f464d, 0x545b6269,
+        0x70777e85, 0x8c939aa1, 0xa8afb6bd, 0xc4cbd2d9,
+        0xe0e7eef5, 0xfc030a11, 0x181f262d, 0x343b4249,
+        0x50575e65, 0x6c737a81, 0x888f969d, 0xa4abb2b9,
+        0xc0c7ced5, 0xdce3eaf1, 0xf8ff060d, 0x141b2229,
+        0x30373e45, 0x4c535a61, 0x686f767d, 0x848b9299,
+        0xa0a7aeb5, 0xbcc3cad1, 0xd8dfe6ed, 0xf4fb0209,
+        0x10171e25, 0x2c333a41, 0x484f565d, 0x646b7279
+    ];
+
+    private static readonly uint[] FK =
+    [
+        0xa3b1bac6, 0x56aa3350, 0x677d9197, 0xb27022dc
+    ];
+
+    // non-linear substitution tau.
+    private uint tau(uint A)
     {
-        Buffer.BlockCopy(SboxRef, 0, OriginalSbox, 0, 256);
+        uint b0 = Sbox[A >> 24];
+        uint b1 = Sbox[(A >> 16) & 0xFF];
+        uint b2 = Sbox[(A >> 8) & 0xFF];
+        uint b3 = Sbox[A & 0xFF];
+
+        return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
     }
 
-    private static void SetStandardWithLastByte(byte lastByte)
+    private static uint L_ap(uint B)
     {
-        lock (Gate)
+        return B ^ Integers.RotateLeft(B, 13) ^ Integers.RotateLeft(B, 23);
+    }
+
+    private uint T_ap(uint Z)
+    {
+        return L_ap(tau(Z));
+    }
+
+    // Key expansion
+    private void ExpandKey(SM4DecryptionKeyMode key)
+    {
+        uint K0 = key.K0 ^ FK[0];
+        uint K1 = key.K1 ^ FK[1];
+        uint K2 = key.K2 ^ FK[2];
+        uint K3 = key.K3 ^ FK[3];
+
+        rk[31] = K0 ^ T_ap(K1     ^ K2     ^ K3     ^ CK[0]);
+        rk[30] = K1 ^ T_ap(K2     ^ K3     ^ rk[31] ^ CK[1]);
+        rk[29] = K2 ^ T_ap(K3     ^ rk[31] ^ rk[30] ^ CK[2]);
+        rk[28] = K3 ^ T_ap(rk[31] ^ rk[30] ^ rk[29] ^ CK[3]);
+        for (int i = 27; i >= 0; --i)
         {
-            Buffer.BlockCopy(OriginalSbox, 0, SboxRef, 0, 256);
-            SboxRef[255] = lastByte;
+            rk[i] = rk[i + 4] ^ T_ap(rk[i + 3] ^ rk[i + 2] ^ rk[i + 1] ^ CK[31 - i]);
         }
     }
 
-    private static void SetFullSbox(byte[] customSbox)
+    // Linear substitution L
+    private static uint L(uint B)
     {
-        lock (Gate)
+        return B ^ Integers.RotateLeft(B, 2) ^ Integers.RotateLeft(B, 10) ^ Integers.RotateLeft(B, 18) ^ Integers.RotateLeft(B, 24);
+    }
+
+    // Mixer-substitution T
+    private uint T(uint Z)
+    {
+        return L(tau(Z));
+    }
+
+    public int ProcessBlock(Span<byte> data)
+    {
+        if (null == rk) throw new InvalidOperationException("ABSM4 not initialised");
+
+        uint X0 = BinaryPrimitives.ReadUInt32BigEndian(data);
+        uint X1 = BinaryPrimitives.ReadUInt32BigEndian(data[4..]);
+        uint X2 = BinaryPrimitives.ReadUInt32BigEndian(data[8..]);
+        uint X3 = BinaryPrimitives.ReadUInt32BigEndian(data[12..]);
+
+        for (int i = 0; i < 32; i += 4)
         {
-            Buffer.BlockCopy(customSbox, 0, SboxRef, 0, 256);
+            X0 ^= T(X1 ^ X2 ^ X3 ^ rk[i    ]);  // F0
+            X1 ^= T(X2 ^ X3 ^ X0 ^ rk[i + 1]);  // F1
+            X2 ^= T(X3 ^ X0 ^ X1 ^ rk[i + 2]);  // F2
+            X3 ^= T(X0 ^ X1 ^ X2 ^ rk[i + 3]);  // F3
         }
-    }
 
-    public static void SetTo37() => SetStandardWithLastByte(0x37);
-    public static void SetTo48() => SetStandardWithLastByte(0x48);
+        BinaryPrimitives.WriteUInt32BigEndian(data[0..], X3);
+        BinaryPrimitives.WriteUInt32BigEndian(data[4..], X2);
+        BinaryPrimitives.WriteUInt32BigEndian(data[8..], X1);
+        BinaryPrimitives.WriteUInt32BigEndian(data[12..], X0);
 
-    public static void SetTo38()
-    {
-        SetFullSbox(Sbox38);
-    }
-
-    public static void SetTo39()
-    {
-        SetFullSbox(Sbox39);
-    }
-
-    public static void SetToMobile38()
-    {
-        SetFullSbox(MobileSbox38);
-    }
-
-    public static void SetToMobile39()
-    {
-        SetFullSbox(MobileSbox39);
+        return BlockSize;
     }
 }

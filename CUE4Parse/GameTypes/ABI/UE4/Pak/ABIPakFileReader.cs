@@ -1,5 +1,5 @@
 using CUE4Parse.Encryption.Aes;
-using CUE4Parse.GameTypes.ABI.Encryption.Aes;
+using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
