@@ -166,6 +166,7 @@ public enum EGame : uint
         GAME_Dauntless = GAME_UE5_1 + 5,
         GAME_WorldofJadeDynasty = GAME_UE5_1 + 6,
         GAME_LordsoftheFallen = GAME_UE5_1 + 7,
+        GAME_Palworld = GAME_UE5_1 + 8,
     GAME_UE5_2 = GameUtils.GameUe5Base + (2 << 16),
         GAME_Placeholder5 = GAME_UE5_2 + 1,
         GAME_PaxDei = GAME_UE5_2 + 2,
