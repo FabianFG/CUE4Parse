@@ -285,6 +285,7 @@ public class FSkelMeshSection
             EGame.GAME_FateTrigger => 19,
             EGame.GAME_Strinova => 18,
             EGame.GAME_SuicideSquad => 11,
+            EGame.GAME_ValorantSource => 4,
             _ => 0,
         };
     }
