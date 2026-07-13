@@ -28,11 +28,12 @@ public partial class PakFileReader
         ValidateMountPoint(ref mountPoint);
         MountPoint = mountPoint;
 
-        primaryIndex.Position = 0x6E;
+        primaryIndex.Position += 4;
+
         var encodedPakEntriesSize = primaryIndex.Read<int>();
-        if (encodedPakEntriesSize < 0 || encodedPakEntriesSize > primaryIndex.Length - 0x72)
+        if (encodedPakEntriesSize < 0 || encodedPakEntriesSize > primaryIndex.Length - primaryIndex.Position)
             throw new ParserException(primaryIndex, "Invalid Valorant Source encoded entry data size");
-        primaryIndex.Position = 0x72;
+
         using var encodedPakEntries = new GenericBufferReader(primaryIndex.ReadBytes(encodedPakEntriesSize));
 
         if (directoryIndexOffset < 0 || directoryIndexSize < 0 || directoryIndexOffset + directoryIndexSize > Ar.Length)
