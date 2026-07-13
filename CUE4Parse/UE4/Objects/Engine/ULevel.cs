@@ -111,7 +111,7 @@ public class ULevel : Assets.Exports.UObject
     public FPackageIndex WorldSettings;
     public FPackageIndex WorldDataLayers;
     public FSoftObjectPath WorldPartitionRuntimeCell;
-    
+
     public FPackageIndex?[] Actors;
     public FURL URL;
     public FPackageIndex Model;
@@ -128,7 +128,7 @@ public class ULevel : Assets.Exports.UObject
         WorldSettings = GetOrDefault(nameof(WorldSettings), new FPackageIndex());
         WorldDataLayers = GetOrDefault(nameof(WorldDataLayers), new FPackageIndex());
         WorldPartitionRuntimeCell = GetOrDefault<FSoftObjectPath>(nameof(WorldPartitionRuntimeCell));
-        
+
         if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
         if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) || Ar.Position >= validPos) return;
         if (FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.LevelTransArrayConvertedToTArray) Ar.Position += 4;
@@ -151,6 +151,7 @@ public class ULevel : Assets.Exports.UObject
             return;
         }
         if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 8;
+        if (Ar.Game is GAME_ValorantSource) Ar.Position += 28;
         PrecomputedVisibilityHandler = new FPrecomputedVisibilityHandler(Ar);
         if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.Read<int>() != 0) return;
         PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);

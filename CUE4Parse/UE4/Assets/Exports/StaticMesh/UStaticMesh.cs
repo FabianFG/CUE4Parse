@@ -116,6 +116,7 @@ public class UStaticMesh : UObject
                         Ar.SkipBulkArrayData();
                         break;
                     case GAME_ArenaBreakoutMobile:
+                    case GAME_ValorantSource:
                         Ar.SkipMultipleBulkArrayData(2);
                         break;
                     default:
@@ -126,8 +127,24 @@ public class UStaticMesh : UObject
             }
         }
 
-        if (Ar.Game is EGame.GAME_FateTrigger or EGame.GAME_GhostsofTabor or EGame.GAME_Aion2) Ar.Position += 4;
-        if (Ar.Game is EGame.GAME_TheFinals or EGame.GAME_ArcRaiders && Ar.ReadBoolean()) Ar.SkipMultipleBulkArrayData(5);
+        switch (Ar.Game)
+        {
+            case GAME_FateTrigger or GAME_GhostsofTabor or GAME_Aion2:
+                Ar.Position += 4;
+                break;
+            case GAME_TheFinals or GAME_ArcRaiders when Ar.ReadBoolean():
+                Ar.SkipMultipleBulkArrayData(5);
+                break;
+            case GAME_ValorantSource when Ar.ReadBoolean():
+                var count = Ar.Read<int>();
+                for (var i = 0; i < count; i++)
+                {
+                    Ar.Position += 64;
+                    Ar.SkipFixedArray(16);
+                }
+                Ar.SkipFixedArray(12);
+                break;
+        }
 
         // (Ar.Ver >= EUnrealEngineObjectUE4Version.SPEEDTREE_STATICMESH), but we check UE version for Materials
         if (Ar.Game >= EGame.GAME_UE4_14)

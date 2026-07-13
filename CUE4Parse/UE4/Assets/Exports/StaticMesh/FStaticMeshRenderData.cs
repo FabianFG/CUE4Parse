@@ -206,7 +206,7 @@ public class FStaticMeshRenderData
             }
 
             if (Ar.Game == EGame.GAME_HogwartsLegacy) Ar.Position += 8;
-            if (Ar.Game == EGame.GAME_VisionsofMana) Ar.Position += 4;
+            if (Ar.Game is GAME_VisionsofMana or GAME_ValorantSource) Ar.Position += 4;
         }
 
         if (Ar.Game == EGame.GAME_Borderlands3)

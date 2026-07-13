@@ -299,8 +299,13 @@ public class FPrecomputedVolumetricLightmapData
 
         if (bValid)
         {
-            if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 8;
-            if (Ar.Game == EGame.GAME_NeedForSpeedMobile) Ar.Position += 4;
+            Ar.Position += Ar.Game switch
+            {
+                GAME_NeedForSpeedMobile => 4,
+                GAME_StarWarsJediSurvivor => 8,
+                GAME_ValorantSource => 16,
+                _ => 0
+            };
 
             Bounds = new FBox(Ar);
             IndirectionTextureDimensions = Ar.Read<FIntVector>();
@@ -507,7 +512,7 @@ public class FLightMap2D : FLightMap
         }
         else
         {
-            if (Ar.Game is GAME_ArenaBreakoutMobile) Ar.Position += 4;
+            if (Ar.Game is GAME_ArenaBreakoutMobile or GAME_ValorantSource) Ar.Position += 4;
             Textures[0] = new FPackageIndex(Ar);
             Textures[1] = new FPackageIndex(Ar);
 
@@ -520,8 +525,13 @@ public class FLightMap2D : FLightMap
                 }
             }
 
-            if (Ar.Game is EGame.GAME_RocoKingdomWorld) Ar.Position += 72;
-            if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 12;
+            Ar.Position += Ar.Game switch
+            {
+                GAME_RocoKingdomWorld => 72,
+                GAME_LordOfMysteries => 12,
+                GAME_ValorantSource => 4,
+                _ => 0
+            };
 
             for (var CoefficientIndex = 0; CoefficientIndex < NUM_STORED_LIGHTMAP_COEF; CoefficientIndex++)
             {
@@ -532,7 +542,7 @@ public class FLightMap2D : FLightMap
 
         CoordinateScale = new FVector2D(Ar);
         CoordinateBias = new FVector2D(Ar);
-       
+
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.LightmapHasShadowmapData)
         {
             bShadowChannelValid = Ar.ReadArray(4, Ar.ReadBoolean);
