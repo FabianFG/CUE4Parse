@@ -31,7 +31,7 @@ public class USceneComponent : UActorComponent
         base.Deserialize(Ar, validPos);
         AttachParent = GetOrDefault<FPackageIndex?>(nameof(AttachParent));
 
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 4;
         var bComputeBoundsOnceForGame = GetOrDefault<bool>("bComputeBoundsOnceForGame");
         var bComputedBoundsOnceForGame = GetOrDefault<bool>("bComputedBoundsOnceForGame");
         var bComputeBounds = bComputeBoundsOnceForGame || bComputedBoundsOnceForGame;

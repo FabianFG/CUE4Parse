@@ -159,25 +159,25 @@ public static class FReleaseObjectVersion
 
         return Ar.Game switch
         {
-            EGame.GAME_AssaultFireFuture => Type.FFieldPathOwnerSerialization,
-            EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyLittleHope or
-                EGame.GAME_DarkPicturesAnthologyTheDevilinMe => Type.GeometryCollectionCacheRemovesMassToLocal,
+            GAME_AssaultFireFuture => Type.FFieldPathOwnerSerialization,
+            GAME_DarkPicturesAnthologyManofMedan or GAME_DarkPicturesAnthologyLittleHope or
+                GAME_DarkPicturesAnthologyTheDevilinMe => Type.GeometryCollectionCacheRemovesMassToLocal,
 
-            < EGame.GAME_UE4_11 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_13 => Type.StaticMeshExtendedBoundsFix,
-            < EGame.GAME_UE4_14 => Type.LevelTransArrayConvertedToTArray,
-            < EGame.GAME_UE4_15 => Type.AddComponentNodeTemplateUniqueNames,
-            < EGame.GAME_UE4_16 => Type.SpeedTreeBillboardSectionInfoFixup,
-            < EGame.GAME_UE4_17 => Type.SkyLightRemoveMobileIrradianceMap,
-            < EGame.GAME_UE4_19 => Type.RenameNoTwistToAllowTwistInTwoBoneIK,
-            < EGame.GAME_UE4_20 => Type.AddSkeletalMeshSectionDisable,
-            < EGame.GAME_UE4_21 => Type.MeshDescriptionNewSerialization,
-            < EGame.GAME_UE4_23 => Type.TrailNodeBlendVariableNameChange,
-            < EGame.GAME_UE4_24 => Type.Unused_SoundClass2DReverbSend,
-            < EGame.GAME_UE4_25 => Type.DeprecateFilmbackSettings,
-            < EGame.GAME_UE4_26 => Type.FFieldPathOwnerSerialization,
-            < EGame.GAME_UE4_27 => Type.StructureDataAddedToConvex,
-            < EGame.GAME_UE5_0 => Type.LonglatTextureCubeDefaultMaxResolution,
+            < GAME_UE4_11 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_13 => Type.StaticMeshExtendedBoundsFix,
+            < GAME_UE4_14 => Type.LevelTransArrayConvertedToTArray,
+            < GAME_UE4_15 => Type.AddComponentNodeTemplateUniqueNames,
+            < GAME_UE4_16 => Type.SpeedTreeBillboardSectionInfoFixup,
+            < GAME_UE4_17 => Type.SkyLightRemoveMobileIrradianceMap,
+            < GAME_UE4_19 => Type.RenameNoTwistToAllowTwistInTwoBoneIK,
+            < GAME_UE4_20 => Type.AddSkeletalMeshSectionDisable,
+            < GAME_UE4_21 => Type.MeshDescriptionNewSerialization,
+            < GAME_UE4_23 => Type.TrailNodeBlendVariableNameChange,
+            < GAME_UE4_24 => Type.Unused_SoundClass2DReverbSend,
+            < GAME_UE4_25 => Type.DeprecateFilmbackSettings,
+            < GAME_UE4_26 => Type.FFieldPathOwnerSerialization,
+            < GAME_UE4_27 => Type.StructureDataAddedToConvex,
+            < GAME_UE5_0 => Type.LonglatTextureCubeDefaultMaxResolution,
             _ => Type.LatestVersion
         };
     }

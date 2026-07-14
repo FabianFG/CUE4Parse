@@ -21,7 +21,7 @@ public struct FRigVMGraphFunctionData
 
         SerializedCollapsedNode = Ar.ReadFString();
 
-        if (Ar.Game >= EGame.GAME_UE5_8) // can't find anything in source, but it's there for FN
+        if (Ar.Game >= GAME_UE5_8) // can't find anything in source, but it's there for FN
             Ar.ReadMap(Ar.Read<FGuid>, Ar.Read<int>);
 
         if (FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.RigVMSaveSerializedGraphInGraphFunctionDataAsByteArray)

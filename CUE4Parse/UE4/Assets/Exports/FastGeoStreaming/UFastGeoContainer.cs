@@ -18,11 +18,11 @@ public class UFastGeoContainer : UAssetUserData
         Assets = GetOrDefault<FPackageIndex[]>(nameof(Assets), []);
 
         var length = (int)(validPos - Ar.Position);
-        if (Ar.Game is EGame.GAME_WutheringWaves)
+        if (Ar.Game is GAME_WutheringWaves)
         {
             using var arclone = (FAssetArchive) Ar.Clone();
             arclone.Versions = (VersionContainer) Ar.Versions.Clone();
-            arclone.Game = EGame.GAME_WutheringWavesFastGeo;
+            arclone.Game = GAME_WutheringWavesFastGeo;
             using var fgWuWaAr = new FFastGeoArchive(arclone, Assets);
             ComponentClusters = fgWuWaAr.ReadArray(() => new FFastGeoComponentCluster(fgWuWaAr));
             HLODs = fgWuWaAr.ReadArray(() => new FFastGeoHLOD(fgWuWaAr));

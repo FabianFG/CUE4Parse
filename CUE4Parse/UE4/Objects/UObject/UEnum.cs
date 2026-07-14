@@ -29,7 +29,7 @@ public class UEnum : UField
         }
         else if (FCoreObjectVersion.Get(Ar) < FCoreObjectVersion.Type.EnumProperties)
         {
-            if (Ar.Game == EGame.GAME_StateOfDecay2) Ar.Position += 4;
+            if (Ar.Game == GAME_StateOfDecay2) Ar.Position += 4;
             var oldNames = Ar.ReadArray(() => (Ar.ReadFName(), Ar.Read<byte>()));
             Names = new (FName, long)[oldNames.Length];
             for (var value = 0; value < oldNames.Length; value++)
@@ -44,7 +44,7 @@ public class UEnum : UField
 
         if (Ar.Ver < EUnrealEngineObjectUE4Version.ENUM_CLASS_SUPPORT)
         {
-            var bIsNamespace = Ar.Game >= EGame.GAME_UE4_0 && Ar.ReadBoolean();
+            var bIsNamespace = Ar.Game >= GAME_UE4_0 && Ar.ReadBoolean();
             CppForm = bIsNamespace ? ECppForm.Namespaced : ECppForm.Regular;
         }
         else

@@ -102,13 +102,13 @@ public static class FRigVMObjectVersion
 
         return Ar.Game switch
         {
-              EGame.GAME_Aion2 => Type.VMMemoryStorageDefaultsGeneratedAtVM,
-            < EGame.GAME_UE5_3 => (Type) (-1),
-            < EGame.GAME_UE5_4 => Type.PredicatesAddedToExecuteOps,
-            < EGame.GAME_UE5_5 => Type.VMRemoveTooltipFromFunctionHeader,
-            < EGame.GAME_UE5_6 => Type.FunctionHeaderLayoutStoresCategoryExpansion,
-            < EGame.GAME_UE5_7 => Type.ByteCodeCleanup,
-            < EGame.GAME_UE5_8 => Type.LocalizedRegistry,
+              GAME_Aion2 => Type.VMMemoryStorageDefaultsGeneratedAtVM,
+            < GAME_UE5_3 => (Type) (-1),
+            < GAME_UE5_4 => Type.PredicatesAddedToExecuteOps,
+            < GAME_UE5_5 => Type.VMRemoveTooltipFromFunctionHeader,
+            < GAME_UE5_6 => Type.FunctionHeaderLayoutStoresCategoryExpansion,
+            < GAME_UE5_7 => Type.ByteCodeCleanup,
+            < GAME_UE5_8 => Type.LocalizedRegistry,
             _ => Type.LatestVersion
         };
     }

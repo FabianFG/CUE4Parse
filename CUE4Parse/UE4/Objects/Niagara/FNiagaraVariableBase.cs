@@ -13,7 +13,7 @@ public class FNiagaraVariableBase : IUStruct
 
     public FNiagaraVariableBase(FAssetArchive Ar)
     {
-        if (Ar.Game == EGame.GAME_HellLetLoose)
+        if (Ar.Game == GAME_HellLetLoose)
         {
             FallbackStruct = new FStructFallback(Ar);
             Name = FallbackStruct.GetOrDefault<FName>(nameof(Name));

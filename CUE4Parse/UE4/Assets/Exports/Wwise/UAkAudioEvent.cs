@@ -27,7 +27,7 @@ public class UAkAudioEvent : UAkAudioType
         IsInfinite = Ar.ReadBoolean();
         MaxAttenuationRadius = Ar.Read<float>();
 
-        if (Ar.Game is EGame.GAME_MortalKombat1) CustomGameData = Ar.ReadMap(Ar.Read<uint>, () => Ar.ReadMap(Ar.Read<uint>, Ar.Read<float>));
+        if (Ar.Game is GAME_MortalKombat1) CustomGameData = Ar.ReadMap(Ar.Read<uint>, () => Ar.ReadMap(Ar.Read<uint>, Ar.Read<float>));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

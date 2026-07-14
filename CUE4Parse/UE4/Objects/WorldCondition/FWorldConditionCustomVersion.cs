@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -27,7 +27,7 @@ public static class FWorldConditionCustomVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE5_1 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE5_1 => Type.BeforeCustomVersionWasAdded,
             _ => Type.StructSharedDefinition
         };
     }

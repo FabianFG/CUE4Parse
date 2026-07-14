@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions;
@@ -60,12 +60,12 @@ public static class FAnimPhysObjectVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_16 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_17 => Type.ThumbnailSceneInfoAndAssetImportDataAreTransactional,
-            < EGame.GAME_UE4_18 => Type.TuneSoftLimitStiffnessAndDamping,
-            < EGame.GAME_UE4_19 => Type.AddLODToCurveMetaData,
-            < EGame.GAME_UE4_20 => Type.SaveEditorOnlyFullPoseForPoseAsset,
-            < EGame.GAME_UE4_26 => Type.GeometryCacheAssetDeprecation,
+            < GAME_UE4_16 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_17 => Type.ThumbnailSceneInfoAndAssetImportDataAreTransactional,
+            < GAME_UE4_18 => Type.TuneSoftLimitStiffnessAndDamping,
+            < GAME_UE4_19 => Type.AddLODToCurveMetaData,
+            < GAME_UE4_20 => Type.SaveEditorOnlyFullPoseForPoseAsset,
+            < GAME_UE4_26 => Type.GeometryCacheAssetDeprecation,
             _ => Type.LatestVersion
         };
     }

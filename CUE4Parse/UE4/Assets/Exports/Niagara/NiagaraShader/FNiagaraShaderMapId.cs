@@ -25,13 +25,13 @@ public class FNiagaraShaderMapId
         FeatureLevel = Ar.Read<ERHIFeatureLevel>();
         Ar.Position = Ar.Position.Align(8);
 
-        if (Ar.Game < EGame.GAME_UE5_6)
+        if (Ar.Game < GAME_UE5_6)
         {
             _ = Ar.Read<FGuid>(); // BaseScriptID_DEPRECATED
         }
 
         AdditionalDefines = Ar.ReadArray(Ar.ReadFString);
-        if (Ar.Game >= EGame.GAME_UE4_27 || Ar.Game is EGame.GAME_HonorofKingsWorld)
+        if (Ar.Game >= GAME_UE4_27 || Ar.Game is GAME_HonorofKingsWorld)
         {
             AdditionalVariables = Ar.ReadArray(Ar.ReadFString);
         }
@@ -41,7 +41,7 @@ public class FNiagaraShaderMapId
         ReferencedCompileHashes = Ar.ReadArray(() => new FSHAHash(Ar));
         LayoutParams = new FPlatformTypeLayoutParameters(Ar);
         Ar.Position = Ar.Position.Align(8);
-        if (Ar.Game >= EGame.GAME_UE4_27 || Ar.Game is EGame.GAME_HonorofKingsWorld)
+        if (Ar.Game >= GAME_UE4_27 || Ar.Game is GAME_HonorofKingsWorld)
         {
             ShaderTypeDependencies = Ar.ReadArray(() => new FShaderTypeDependency(Ar));
         }

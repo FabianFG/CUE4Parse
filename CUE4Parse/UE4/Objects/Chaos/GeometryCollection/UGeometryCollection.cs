@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Chaos;
+using CUE4Parse.UE4.Assets.Exports.Chaos;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection
             // marvel rival's doing some shit here
             if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.GeometryCollectionNaniteTransient)
             {
-                // if (Ar.Game == EGame.GAME_MarvelRivals)
+                // if (Ar.Game == GAME_MarvelRivals)
                 // {
                 //     var gi = (GeometryCollection?.GroupInfo).FirstOrDefault(x => x.Key.PlainText == "Transform");
                 //     if (!gi.Key.IsNone)

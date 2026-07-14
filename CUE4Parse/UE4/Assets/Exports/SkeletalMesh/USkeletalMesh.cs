@@ -32,7 +32,7 @@ public partial class USkeletalMesh : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 8;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 8;
         base.Deserialize(Ar, validPos);
         LODInfo = GetOrDefault<FSkeletalMeshLODGroupSettings[]?>(nameof(LODInfo)) ?? GetOrDefault<FSkeletalMeshLODGroupSettings[]>("SourceModels", []); ;
 
@@ -55,7 +55,7 @@ public partial class USkeletalMesh : UObject
             Materials[i] = SkeletalMaterials[i].Material;
         }
 
-        if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 4;
+        if (Ar.Game is GAME_LordOfMysteries) CustomGameData = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
 
         ReferenceSkeleton = new FReferenceSkeleton(Ar);
 
@@ -63,7 +63,7 @@ public partial class USkeletalMesh : UObject
         {
             LODModels = Ar.Game switch
             {
-                EGame.GAME_GameForPeace => GFPSerializeLODModels(Ar),
+                GAME_GameForPeace => GFPSerializeLODModels(Ar),
                 _ => Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors)),
             };
         }
@@ -97,7 +97,7 @@ public partial class USkeletalMesh : UObject
                     }
                 }
 
-                if (Ar.Game == EGame.GAME_Stalker2)
+                if (Ar.Game == GAME_Stalker2)
                 {
                     var fallbackLODModels = new FStaticLODModel[Ar.Read<int>()];
                     for (var i = 0; i < fallbackLODModels.Length; i++)
@@ -109,7 +109,7 @@ public partial class USkeletalMesh : UObject
                     LODModels = LODModels.Concat(fallbackLODModels).ToArray();
                 }
 
-                if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+                if (Ar.Game is GAME_RocoKingdomWorld)
                 {
                     foreach (var lod in LODModels)
                     {
@@ -121,12 +121,12 @@ public partial class USkeletalMesh : UObject
                     }
                 }
 
-                if (Ar.Game >= EGame.GAME_UE5_5)
+                if (Ar.Game >= GAME_UE5_5)
                 {
                     NaniteResources = new FNaniteResources(Ar);
                 }
 
-                if (Ar.Game == EGame.GAME_DeadzoneRogue) Ar.Position += 4;
+                if (Ar.Game == GAME_DeadzoneRogue) Ar.Position += 4;
 
                 if (useNewCookedFormat)
                 {
@@ -136,7 +136,7 @@ public partial class USkeletalMesh : UObject
             }
         }
 
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty)
+        if (Ar.Game == GAME_WorldofJadeDynasty)
         {
             _ = new FStripDataFlags(Ar);
             for (var i = 0; i < LODModels.Length; i++)
@@ -153,7 +153,7 @@ public partial class USkeletalMesh : UObject
 
         switch (Ar.Game)
         {
-            case EGame.GAME_Back4Blood:
+            case GAME_Back4Blood:
                 Ar.Position += 8;
                 break;
             default:
@@ -166,7 +166,7 @@ public partial class USkeletalMesh : UObject
             Ar.SkipFixedArray(sizeof(float));
         }
 
-        if ((Ar.Game >= EGame.GAME_UE4_19 && !Ar.IsFilterEditorOnly) || Ar.Game < EGame.GAME_UE4_19)
+        if ((Ar.Game >= GAME_UE4_19 && !Ar.IsFilterEditorOnly) || Ar.Game < GAME_UE4_19)
         {
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH)
             {
@@ -183,8 +183,8 @@ public partial class USkeletalMesh : UObject
         //     var bodySetup = new FPackageIndex(Ar);
         // }
 
-        if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
-        if (Ar.Game == EGame.GAME_WeHappyFew) Ar.Position += 20;
+        if (Ar.Game == GAME_OutlastTrials) Ar.Position += 1;
+        if (Ar.Game == GAME_WeHappyFew) Ar.Position += 20;
 
         if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo"))
         {
@@ -209,7 +209,7 @@ public partial class USkeletalMesh : UObject
     {
         if (LODModels is null || MorphTargets.Length == 0) return;
 
-        if (Owner?.Provider?.Versions.Game is EGame.GAME_MortalKombat1)
+        if (Owner?.Provider?.Versions.Game is GAME_MortalKombat1)
         {
             PopulateMorphTargetVerticesDataMK1();
             return;

@@ -154,27 +154,27 @@ public static class FRenderingObjectVersion
         return Ar.Game switch
         {
             // Game Overrides
-            EGame.GAME_TEKKEN7 => Type.MapBuildDataSeparatePackage,
+            GAME_TEKKEN7 => Type.MapBuildDataSeparatePackage,
 
             // Engine
-            < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_13 => Type.CustomReflectionCaptureResolutionSupport,
-            < EGame.GAME_UE4_14 => Type.IntroducedMeshDecals,
-            < EGame.GAME_UE4_16 => Type.FixedBSPLightmaps, // 4.14 and 4.15
-            < EGame.GAME_UE4_17 => Type.ShaderResourceCodeSharing,
-            < EGame.GAME_UE4_18 => Type.AddedbUseShowOnlyList,
-            < EGame.GAME_UE4_19 => Type.VolumetricLightmaps,
-            < EGame.GAME_UE4_20 => Type.ShaderPermutationId,
-            < EGame.GAME_UE4_21 => Type.IncreaseNormalPrecision,
-            < EGame.GAME_UE4_22 => Type.VirtualTexturedLightmaps,
-            < EGame.GAME_UE4_23 => Type.GeometryCacheFastDecoder,
-            < EGame.GAME_UE4_24 => Type.VirtualTexturedLightmapsV2,
-            < EGame.GAME_UE4_25 => Type.MaterialShaderMapIdSerialization,
-            < EGame.GAME_UE4_26 => Type.AutoExposureDefaultFix,
-            < EGame.GAME_UE4_27 => Type.VolumeExtinctionBecomesRGB,
-            < EGame.GAME_UE5_3 => Type.VirtualTexturedLightmapsV3,
-            < EGame.GAME_UE5_4 => Type.NaniteForceMaterialUsage,
-            < EGame.GAME_UE5_5 => Type.AddedMaterialExpressionIncludesHash,
+            < GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_13 => Type.CustomReflectionCaptureResolutionSupport,
+            < GAME_UE4_14 => Type.IntroducedMeshDecals,
+            < GAME_UE4_16 => Type.FixedBSPLightmaps, // 4.14 and 4.15
+            < GAME_UE4_17 => Type.ShaderResourceCodeSharing,
+            < GAME_UE4_18 => Type.AddedbUseShowOnlyList,
+            < GAME_UE4_19 => Type.VolumetricLightmaps,
+            < GAME_UE4_20 => Type.ShaderPermutationId,
+            < GAME_UE4_21 => Type.IncreaseNormalPrecision,
+            < GAME_UE4_22 => Type.VirtualTexturedLightmaps,
+            < GAME_UE4_23 => Type.GeometryCacheFastDecoder,
+            < GAME_UE4_24 => Type.VirtualTexturedLightmapsV2,
+            < GAME_UE4_25 => Type.MaterialShaderMapIdSerialization,
+            < GAME_UE4_26 => Type.AutoExposureDefaultFix,
+            < GAME_UE4_27 => Type.VolumeExtinctionBecomesRGB,
+            < GAME_UE5_3 => Type.VirtualTexturedLightmapsV3,
+            < GAME_UE5_4 => Type.NaniteForceMaterialUsage,
+            < GAME_UE5_5 => Type.AddedMaterialExpressionIncludesHash,
             _ => Type.LatestVersion
         };
     }

@@ -1,4 +1,4 @@
-﻿using System.IO.Compression;
+using System.IO.Compression;
 using System.Text;
 
 using CUE4Parse.FileProvider.Objects;
@@ -66,7 +66,7 @@ public class ApkFileProvider : DefaultFileProvider
                 switch (upperExt)
                 {
                     case "PAK":
-                    case "UPAK" when Versions.Game is EGame.GAME_LordOfMysteries:
+                    case "UPAK" when Versions.Game is GAME_LordOfMysteries:
                         RegisterVfs(fileEntry.Name, streams);
                         continue;
                     case "UTOC":

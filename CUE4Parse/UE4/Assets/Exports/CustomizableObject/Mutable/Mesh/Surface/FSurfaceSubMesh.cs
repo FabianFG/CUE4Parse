@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -19,6 +19,6 @@ public struct FSurfaceSubMesh
         VertexEnd = Ar.Read<int>();
         IndexBegin = Ar.Read<int>();
         IndexEnd = Ar.Read<int>();
-        ExternalId = Ar.Game >= EGame.GAME_UE5_8 ? 0 : Ar.Read<uint>();
+        ExternalId = Ar.Game >= GAME_UE5_8 ? 0 : Ar.Read<uint>();
     }
 }

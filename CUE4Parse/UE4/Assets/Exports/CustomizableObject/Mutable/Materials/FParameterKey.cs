@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
@@ -12,6 +12,6 @@ public class FParameterKey
     public FParameterKey(FMutableArchive Ar)
     {
         ParameterName = Ar.ReadFName();
-        LayerIndex = Ar.Game >= EGame.GAME_UE5_8 ? Ar.Read<int>() : 0;
+        LayerIndex = Ar.Game >= GAME_UE5_8 ? Ar.Read<int>() : 0;
     }
 }

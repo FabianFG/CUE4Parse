@@ -28,7 +28,7 @@ public class UMaterialInstance : UMaterialInterface
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         _parent = GetOrDefault<ResolvedObject>(nameof(Parent));
         bHasStaticPermutationResource = GetOrDefault<bool>("bHasStaticPermutationResource");
@@ -49,7 +49,7 @@ public class UMaterialInstance : UMaterialInterface
                 bHasNonUPropertyStaticParameters = true;
             }
 
-            if (Ar is { Game: >= EGame.GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
+            if (Ar is { Game: >= GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
             {
                 var saved = Ar.Position;
                 try
@@ -68,11 +68,11 @@ public class UMaterialInstance : UMaterialInterface
             }
         }
 
-        if (Ar.Game is EGame.GAME_DeadByDaylight && Ar.Position < validPos && Ar is { Owner.Provider.ReadShaderMaps: true })
+        if (Ar.Game is GAME_DeadByDaylight && Ar.Position < validPos && Ar is { Owner.Provider.ReadShaderMaps: true })
             CustomGameData = Ar.ReadArray(() => new FStructFallback(Ar, "BHVRVariantConfigurator", FRawHeader.FullRead, ReadType.RAW));
-        if (Ar.Game == EGame.GAME_Valorant && !bHasStaticPermutationResource)
+        if (Ar.Game == GAME_Valorant && !bHasStaticPermutationResource)
             Ar.Position += 8; // 0.0f and 1.0f, for all
-        if (Ar.Game is EGame.GAME_RocoKingdomWorld && bHasStaticPermutationResource)
+        if (Ar.Game is GAME_RocoKingdomWorld && bHasStaticPermutationResource)
         {
             // Additional DynamicSwitchParameters
             CustomGameData = Ar.ReadArray(() => new FRKWStaticSwitchParameter(Ar));
@@ -124,7 +124,7 @@ public class FStaticParameterSet
 
     public FStaticParameterSet(FArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.Game < GAME_UE4_0)
         {
             Ar.Read<FGuid>(); // BaseMaterialId
         }

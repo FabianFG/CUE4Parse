@@ -30,7 +30,7 @@ public static class FCurveExpressionCustomVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE5_4 => Type.SerializedExpressions,
+            < GAME_UE5_4 => Type.SerializedExpressions,
             _ => Type.ExpressionDataInSharedObject
         };
     }

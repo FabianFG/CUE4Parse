@@ -104,12 +104,12 @@ public static class FPCGCustomVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE5_2 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE5_3 => Type.SplineSamplerUpdatedNodeInputs,
-            < EGame.GAME_UE5_4 => Type.UpdateTransferAttributeWithSelectors,
-            < EGame.GAME_UE5_5 => Type.NoMoreSpatialDataConversionToPointDataByDefaultOnNonPointPins,
-            < EGame.GAME_UE5_6 => Type.AttributesAndTagsCanContainSpaces,
-            < EGame.GAME_UE5_7 => Type.AttributePropertySelectorDeprecatePointProperties,
+            < GAME_UE5_2 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE5_3 => Type.SplineSamplerUpdatedNodeInputs,
+            < GAME_UE5_4 => Type.UpdateTransferAttributeWithSelectors,
+            < GAME_UE5_5 => Type.NoMoreSpatialDataConversionToPointDataByDefaultOnNonPointPins,
+            < GAME_UE5_6 => Type.AttributesAndTagsCanContainSpaces,
+            < GAME_UE5_7 => Type.AttributePropertySelectorDeprecatePointProperties,
             _ => Type.LatestVersion
         };
     }

@@ -13,7 +13,7 @@ public class UMorphTarget : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 4;
         base.Deserialize(Ar, validPos);
 
         if (!Ar.Versions["MorphTarget"])
@@ -27,12 +27,12 @@ public class UMorphTarget : UObject
             return;
 
         var bCooked = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MorphTargetCookedCPUDataCompressed && Ar.ReadBoolean();
-        if (Ar.Game is EGame.GAME_NevernessToEverness) bCooked = Ar.ReadBoolean();
-        if (Ar.Game == EGame.GAME_MortalKombat1 && Ar.ReadArray<int>()[^1] != 0) return;
+        if (Ar.Game is GAME_NevernessToEverness) bCooked = Ar.ReadBoolean();
+        if (Ar.Game == GAME_MortalKombat1 && Ar.ReadArray<int>()[^1] != 0) return;
 
         MorphLODModels = Ar.ReadArray(() => new FMorphTargetLODModel(Ar));
 
-        if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+        if (Ar.Game is GAME_RocoKingdomWorld)
         {
             var posscales = GetOrDefault<float[]>("MorphPosDeltaCompressExtent", []);
             var tanscales = GetOrDefault<float[]>("MorphTanDeltaCompressExtent", []);

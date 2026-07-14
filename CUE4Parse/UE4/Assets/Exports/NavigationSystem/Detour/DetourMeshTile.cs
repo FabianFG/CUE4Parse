@@ -33,7 +33,7 @@ public class DetourMeshTile
         for (var i = 0; i < DetailTris.Length; i++)
             DetailTris[i] = Ar.ReadArray<byte>(4);
 
-        if (Ar.Game is EGame.GAME_MongilStarDive) Ar.Position += sizeInfo.PolyCount;
+        if (Ar.Game is GAME_MongilStarDive) Ar.Position += sizeInfo.PolyCount;
         
         BvTree = Ar.ReadArray(sizeInfo.BvNodeCount, () => new DetourBVNode(Ar));
         OffMeshConnections = Ar.ReadArray(sizeInfo.OffMeshConCount, () => new DetourOffMeshConnection(Ar));

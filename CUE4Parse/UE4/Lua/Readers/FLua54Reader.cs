@@ -35,8 +35,10 @@ public static class FLua54Reader
             NumParams = Ar.Read<byte>(),
             IsVarArg = Ar.Read<byte>(),
             MaxStackSize = Ar.Read<byte>(),
-            Code = [.. Ar.ReadLuaArray(() => Ar.ReadBytes(4)).SelectMany(x => x)]
         };
+
+        var count = (int) Ar.ReadLuaInt();
+        func.Code = Ar.ReadBytes(count * 4);
 
         MapOpcodes(func.Code, opcodeMapping);
 

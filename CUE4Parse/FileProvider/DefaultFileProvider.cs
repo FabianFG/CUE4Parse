@@ -95,7 +95,7 @@ namespace CUE4Parse.FileProvider
                 var upperExt = file.Extension.SubstringAfter('.').ToUpper();
 
                 // Only load containers if .uproject file is not found
-                if (uproject is null && (upperExt is "PAK" or "UTOC" || (upperExt == "UPAK" && Versions.Game is EGame.GAME_LordOfMysteries)))
+                if (uproject is null && (upperExt is "PAK" or "UTOC" || (upperExt == "UPAK" && Versions.Game is GAME_LordOfMysteries)))
                 {
                     if (file.FullName.Contains(@"Binaries\ThirdParty\CEF", StringComparison.OrdinalIgnoreCase) || file.FullName.Contains(@"Binaries\Win32\host") || file.FullName.Contains(@"Binaries\Win64\host") || file.FullName.Contains(@"\qtwebengine_") || file.FullName.Contains(@"NexonPlatformWebView\ThirdParty") || file.FullName.Contains("SnapversePCGameSDK")) continue;
                     RegisterVfs(file);

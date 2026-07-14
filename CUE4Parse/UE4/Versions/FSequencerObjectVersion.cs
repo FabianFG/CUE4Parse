@@ -65,16 +65,16 @@ public static class FSequencerObjectVersion
 
         return Ar.Game switch
         {
-            EGame.GAME_DeltaForce => Type.ModifyLinearKeysForOldInterp,
+            GAME_DeltaForce => Type.ModifyLinearKeysForOldInterp,
 
-            < EGame.GAME_UE4_14 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_15 => Type.RenameMediaSourcePlatformPlayers,
-            < EGame.GAME_UE4_16 => Type.ConvertMultipleRowsToTracks,
-            < EGame.GAME_UE4_19 => Type.WhenFinishedDefaultsToRestoreState,
-            < EGame.GAME_UE4_20 => Type.WhenFinishedDefaultsToProjectDefault,
-            < EGame.GAME_UE4_22 => Type.FinishUMGEvaluation,
-            < EGame.GAME_UE4_25 => Type.ModifyLinearKeysForOldInterp,
-            < EGame.GAME_UE4_27 => Type.SerializeFloatChannelCompletely,
+            < GAME_UE4_14 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_15 => Type.RenameMediaSourcePlatformPlayers,
+            < GAME_UE4_16 => Type.ConvertMultipleRowsToTracks,
+            < GAME_UE4_19 => Type.WhenFinishedDefaultsToRestoreState,
+            < GAME_UE4_20 => Type.WhenFinishedDefaultsToProjectDefault,
+            < GAME_UE4_22 => Type.FinishUMGEvaluation,
+            < GAME_UE4_25 => Type.ModifyLinearKeysForOldInterp,
+            < GAME_UE4_27 => Type.SerializeFloatChannelCompletely,
             _ => Type.LatestVersion
         };
     }

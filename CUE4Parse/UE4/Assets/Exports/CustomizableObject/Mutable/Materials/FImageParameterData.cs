@@ -25,6 +25,6 @@ public class FImageParameterData
                 throw new Exception($"Unknown FImageParameterData type {type}");
         }
 
-        ImagePropertyIndex = Ar.Game >= EGame.GAME_UE5_8 ? Ar.Read<int>() : 0;
+        ImagePropertyIndex = Ar.Game >= GAME_UE5_8 ? Ar.Read<int>() : 0;
     }
 }

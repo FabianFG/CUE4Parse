@@ -12,7 +12,7 @@ public class FBodyShape
 
     public FBodyShape(FMutableArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
+        if (Ar.Game < GAME_UE5_6) Version = Ar.Read<int>();
         if (Version >= 1)
             Name = Ar.ReadFString();
         else

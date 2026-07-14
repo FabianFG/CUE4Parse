@@ -16,7 +16,7 @@ public class NaniteUtils
     {
         return ver switch
         {
-            >= EGame.GAME_UE5_2 => NANITE_MAX_NORMAL_QUANTIZATION_BITS_502,
+            >= GAME_UE5_2 => NANITE_MAX_NORMAL_QUANTIZATION_BITS_502,
             _ => NANITE_MAX_NORMAL_QUANTIZATION_BITS_500
         };
     }
@@ -25,7 +25,7 @@ public class NaniteUtils
     {
         return ver switch
         {
-            >= EGame.GAME_UE5_4 => NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_504,
+            >= GAME_UE5_4 => NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_504,
             _ => NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_500
         };
     }
@@ -35,7 +35,7 @@ public class NaniteUtils
     {
         return ver switch
         {
-            >= EGame.GAME_UE5_4 => NANITE_MIN_POSITION_PRECISION_504,
+            >= GAME_UE5_4 => NANITE_MIN_POSITION_PRECISION_504,
             _ => NANITE_MIN_POSITION_PRECISION_500
         };
     }
@@ -44,7 +44,7 @@ public class NaniteUtils
     {
         return ver switch
         {
-            >= EGame.GAME_UE5_4 => NANITE_MAX_POSITION_PRECISION_504,
+            >= GAME_UE5_4 => NANITE_MAX_POSITION_PRECISION_504,
             _ => NANITE_MAX_POSITION_PRECISION_500
         };
     }
@@ -53,7 +53,7 @@ public class NaniteUtils
     {
         return ver switch
         {
-            >= EGame.GAME_UE5_4 => NANITE_MAX_CLUSTERS_PER_PAGE_BITS_504,
+            >= GAME_UE5_4 => NANITE_MAX_CLUSTERS_PER_PAGE_BITS_504,
             _ => NANITE_MAX_CLUSTERS_PER_PAGE_BITS_500
         };
     }
@@ -62,7 +62,7 @@ public class NaniteUtils
     {
         return ver switch
         {
-            >= EGame.GAME_UE5_4 => 1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS_504,
+            >= GAME_UE5_4 => 1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS_504,
             _ => 1 << NANITE_MAX_CLUSTERS_PER_PAGE_BITS_500
         };
     }
@@ -71,7 +71,7 @@ public class NaniteUtils
     {
         return ver switch
         {
-            >= EGame.GAME_UE5_5 => NANITE_MAX_GROUP_PARTS_BITS_505,
+            >= GAME_UE5_5 => NANITE_MAX_GROUP_PARTS_BITS_505,
             _ => NANITE_MAX_GROUP_PARTS_BITS_500
         };
     }
@@ -80,7 +80,7 @@ public class NaniteUtils
     {
         return ver switch
         {
-            >= EGame.GAME_UE5_5 => NANITE_MAX_GROUP_PARTS_MASK_505,
+            >= GAME_UE5_5 => NANITE_MAX_GROUP_PARTS_MASK_505,
             _ => NANITE_MAX_GROUP_PARTS_MASK_500
         };
     }
@@ -89,7 +89,7 @@ public class NaniteUtils
     {
         return ver switch
         {
-            >= EGame.GAME_UE5_5 => NANITE_MAX_RESOURCE_PAGES_BITS_505,
+            >= GAME_UE5_5 => NANITE_MAX_RESOURCE_PAGES_BITS_505,
             _ => NANITE_MAX_RESOURCE_PAGES_BITS_500
         };
     }

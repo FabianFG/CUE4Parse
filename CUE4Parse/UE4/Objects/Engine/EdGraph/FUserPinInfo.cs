@@ -44,7 +44,7 @@ public class FUserPinInfo
             var PinCategoryStr = Ar.ReadFString();
             var PinSubCategoryStr = Ar.ReadFString();
 
-            if (Ar.Game is >= EGame.GAME_UE5_0 && PinCategoryStr is "double" or "float")
+            if (Ar.Game is >= GAME_UE5_0 && PinCategoryStr is "double" or "float")
             {
                 PinCategoryStr = "real";
                 PinSubCategoryStr = "double";

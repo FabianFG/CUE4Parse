@@ -7,7 +7,7 @@ public class UCompositeDataTable : UDataTable
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game is EGame.GAME_HonorofKingsWorld) CustomGameData = Ar.ReadArray<uint>();
+        if (Ar.Game is GAME_HonorofKingsWorld) CustomGameData = Ar.ReadArray<uint>();
         base.Deserialize(Ar, validPos);
     }
 }
