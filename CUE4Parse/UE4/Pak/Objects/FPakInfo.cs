@@ -1,6 +1,6 @@
 using System.Buffers.Binary;
 using CUE4Parse.Compression;
-using CUE4Parse.GameTypes.ABI.Encryption.Aes;
+using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;

@@ -3,6 +3,7 @@ using System.Text;
 using CUE4Parse.GameTypes._2XKO.Kismet;
 using CUE4Parse.GameTypes.Borderlands4.Kismet;
 using CUE4Parse.GameTypes.DFHO.Kismet;
+using CUE4Parse.GameTypes.OtherGames.Objects;
 using CUE4Parse.GameTypes.WuWa.Kismet;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Kismet;
@@ -136,6 +137,7 @@ public class FKismetArchive : FArchive
             EExprToken.EX_6E when Versions.Game == GAME_WutheringWaves => new EX_WuWaInstr1(this),
             EExprToken.EX_6F when Versions.Game == GAME_WutheringWaves => new EX_WuWaInstr2(this),
             EExprToken.EX_6E when Versions.Game == GAME_DeltaForce => new EX_DFInstr(this),
+            EExprToken.EX_A2 when Versions.Game == GAME_Palworld => new EX_PalworldInstr1(this),
             EExprToken.EX_FD when Versions.Game == GAME_2XKO => new EX_FixedPointConst(this),
             EExprToken.EX_F9 when Versions.Game == GAME_Borderlands4 => new EX_DamageSourceContainer(this),
             EExprToken.EX_FD when Versions.Game == GAME_Borderlands4 => new EX_GbxDefPtr(this),
