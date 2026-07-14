@@ -472,7 +472,7 @@ public partial class FPakInfo
 
         // Written at the tail so the trailer for older versions remains byte-compatible. Paks authored before
         // this version leave PakchunkIndex at INDEX_NONE, and the reader falls back to deriving it from the filename.
-        if (Version >= EPakFileVersion.PakFile_Version_PakchunkIndex && Ar.Game is not GAME_ValorantSource)
+        if (Version >= EPakFileVersion.PakFile_Version_PakchunkIndex && Ar.Game >= GAME_UE5_9)
         {
             PakchunkIndex = Ar.Read<int>();
         }
@@ -519,7 +519,7 @@ public partial class FPakInfo
         SizeBack4Blood = 222,
         SizeArenaBreakoutMobile = 205,
         SizeDuneAwakening = 261,
-        SizeValorantSource = 286,
+        SizeValorantSource = 286, // For older versions it was 282
         SizeKartRiderDrift = 397, // don't let this be SizeMax, it's way above average and cause issues
     }
 
@@ -555,13 +555,14 @@ public partial class FPakInfo
             var buffer = stackalloc byte[(int) maxOffset];
             Ar.Serialize(buffer, (int) maxOffset);
 
-            if (Ar.Game == GAME_InZOI)
+            switch (Ar.Game)
             {
-                DecryptInZOIFPakInfo(Ar, maxOffset, buffer);
-            }
-            else if (Ar.Game is GAME_ValorantSource)
-            {
-                DecryptValorantSourcePakInfo(Ar, maxOffset, buffer);
+                case GAME_InZOI:
+                    DecryptInZOIFPakInfo(Ar, maxOffset, buffer);
+                    break;
+                case GAME_ValorantSource:
+                    DecryptValorantSourcePakInfo(Ar, maxOffset, buffer);
+                    break;
             }
 
             using var reader = new FPointerArchive(Ar.Name, buffer, maxOffset, Ar.Versions);
