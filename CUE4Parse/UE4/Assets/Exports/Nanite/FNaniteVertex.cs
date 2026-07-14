@@ -110,7 +110,7 @@ public class FNaniteVertex
         Attributes.Normal = UnpackNormals(normalBits, (int) cluster.NormalPrecision);
 
         // parse tangent
-        if (Ar.Game >= EGame.GAME_UE5_3)
+        if (Ar.Game >= GAME_UE5_3)
         {
             int numTangentBits = cluster.bHasTangents ? ((int) cluster.TangentPrecision + 1) : 0;
             uint tangentAngleAndSignBits = bitStreamReader.Read(Ar, numTangentBits, NANITE_MAX_TANGENT_QUANTIZATION_BITS + 1);

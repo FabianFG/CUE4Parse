@@ -101,7 +101,7 @@ public class FCluster
     public FCluster(FArchive Ar, int stride)
     {
         var numVerts_positionOffset = Ar.Read<uint>();
-        if (Ar.Game >= EGame.GAME_UE5_6)
+        if (Ar.Game >= GAME_UE5_6)
         {
             NumVerts = GetBits(numVerts_positionOffset, 14, 0);
             PositionOffset = GetBits(numVerts_positionOffset, 18, 14);
@@ -132,7 +132,7 @@ public class FCluster
         PosStart = Ar.Read<FIntVector>();
 
         var bitsPerIndex_posPrecision_posBits = Ar.Read<uint>();
-        if (Ar.Game >= EGame.GAME_UE5_4)
+        if (Ar.Game >= GAME_UE5_4)
         {
             BitsPerIndex = GetBits(bitsPerIndex_posPrecision_posBits, 3, 0) + 1;
             PosPrecision = (int) GetBits(bitsPerIndex_posPrecision_posBits, 6, 3) + NANITE_MIN_POSITION_PRECISION_504;
@@ -145,8 +145,8 @@ public class FCluster
         PosBitsX = GetBits(bitsPerIndex_posPrecision_posBits, 5, 9);
         PosBitsY = GetBits(bitsPerIndex_posPrecision_posBits, 5, 14);
         PosBitsZ = GetBits(bitsPerIndex_posPrecision_posBits, 5, 19);
-        NormalPrecision = Ar.Game >= EGame.GAME_UE5_2 ? GetBits(bitsPerIndex_posPrecision_posBits, 4, 24) : NANITE_MAX_NORMAL_QUANTIZATION_BITS_500;
-        TangentPrecision = Ar.Game >= EGame.GAME_UE5_3 ? GetBits(bitsPerIndex_posPrecision_posBits, 4, 28) : 0;
+        NormalPrecision = Ar.Game >= GAME_UE5_2 ? GetBits(bitsPerIndex_posPrecision_posBits, 4, 24) : NANITE_MAX_NORMAL_QUANTIZATION_BITS_500;
+        TangentPrecision = Ar.Game >= GAME_UE5_3 ? GetBits(bitsPerIndex_posPrecision_posBits, 4, 28) : 0;
         PosScale = PrecisionScales[PosPrecision];
 
         Ar.Position += stride;
@@ -159,7 +159,7 @@ public class FCluster
 
         Ar.Position += stride;
         BoxBoundsExtent = Ar.Read<FVector>();
-        if (Ar.Game >= EGame.GAME_UE5_6)
+        if (Ar.Game >= GAME_UE5_6)
         {
             var packed = Ar.Read<uint>();
             Flags = (NANITE_CLUSTER_FLAG) GetBits(packed, 4, 0);
@@ -177,20 +177,20 @@ public class FCluster
 
         var decodeInfoOffset_bHasTengants_numUVs_colorMode = Ar.Read<uint>();
         DecodeInfoOffset = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 22, 0);
-        if (Ar.Game >= EGame.GAME_UE5_5)
+        if (Ar.Game >= GAME_UE5_5)
         {
             bHasTangents = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
             bSkinning = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 23) == 1;
             NumUVs = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 24);
             ColorMode = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 27);
         }
-        else if (Ar.Game >= EGame.GAME_UE5_4)
+        else if (Ar.Game >= GAME_UE5_4)
         {
             bHasTangents = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
             NumUVs = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 23);
             ColorMode = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 26);
         }
-        else if (Ar.Game >= EGame.GAME_UE5_3)
+        else if (Ar.Game >= GAME_UE5_3)
         {
             bHasTangents = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 1, 22) == 1;
             NumUVs = GetBits(decodeInfoOffset_bHasTengants_numUVs_colorMode, 3, 23);
@@ -205,7 +205,7 @@ public class FCluster
         UVBitOffsets = Ar.Read<uint>();
         var materialEncoding = Ar.Read<uint>();
         Ar.Position += stride;
-        if (Ar.Game >= EGame.GAME_UE5_5)
+        if (Ar.Game >= GAME_UE5_5)
         {
             var ExtendedDataOfsset_Num = Ar.Read<uint>();
             ExtendedDataOffset = GetBits(ExtendedDataOfsset_Num, 22, 0);
@@ -231,7 +231,7 @@ public class FCluster
             VertReuseBatchCountTableSize = 0;
 
             Ar.Position += stride;
-            VertReuseBatchInfo = Ar.Game >= EGame.GAME_UE5_1 ? Ar.Read<TIntVector4<uint>>() : default;
+            VertReuseBatchInfo = Ar.Game >= GAME_UE5_1 ? Ar.Read<TIntVector4<uint>>() : default;
             MaterialRanges = [];
         }
         else
@@ -245,7 +245,7 @@ public class FCluster
             Material0Length = 0;
             Material1Length = 0;
             Material1Length = 0;
-            if (Ar.Game >= EGame.GAME_UE5_1)
+            if (Ar.Game >= GAME_UE5_1)
             {
                 VertReuseBatchCountTableOffset = Ar.Read<uint>();
                 VertReuseBatchCountTableSize = Ar.Read<uint>();
@@ -321,7 +321,7 @@ public class FCluster
         }
 
         Ar.Position = page.GPUPageHeaderOffset + DecodeInfoOffset;
-        if (Ar.Game >= EGame.GAME_UE5_4)
+        if (Ar.Game >= GAME_UE5_4)
         {
             UVRanges = Ar.ReadArray((int) NumUVs, () => new FUVRange(Ar));
         }
@@ -332,7 +332,7 @@ public class FCluster
 
         Vertices = new FNaniteVertex[NumVerts];
         // read non ref vert information
-        if (Ar.Game >= EGame.GAME_UE5_4)
+        if (Ar.Game >= GAME_UE5_4)
         {
             FUIntVector nextLowMidHighOffsets = new FUIntVector((int) clusterDiskHeader.LowBytesDataOffset, (int) clusterDiskHeader.MidBytesDataOffset,
                     (int) clusterDiskHeader.HighBytesDataOffset) + (uint) page.PageDiskHeaderOffset;
@@ -464,7 +464,7 @@ public class FCluster
             + 2 * NANITE_MAX_NORMAL_QUANTIZATION_BITS(Ar.Game)
             + 4 * NANITE_MAX_COLOR_QUANTIZATION_BITS
             + numTexCoords * (2 * NANITE_MAX_TEXCOORD_QUANTIZATION_BITS(Ar.Game));
-        if (Ar.Game >= EGame.GAME_UE5_3)
+        if (Ar.Game >= GAME_UE5_3)
         {
             ret += 1 + NANITE_MAX_TANGENT_QUANTIZATION_BITS;
         }
@@ -637,7 +637,7 @@ public class FCluster
             uint srcLocalClusterIndex = GetBits(pageClusterData, maxClustersPerPageBits, 0);
             Ar.Position = page.PageDiskHeaderOffset + clusterDiskHeader.VertexRefDataOffset + refVertexIndex + page.PageDiskHeader.NumVertexRefs;
             byte srcCodedVertexIndex = Ar.Read<byte>();
-            if (Ar.Game >= EGame.GAME_UE5_4)
+            if (Ar.Game >= GAME_UE5_4)
             {
                 var temp = DecodeZigZag(srcCodedVertexIndex) + prevRefVertexIndex;
                 prevRefVertexIndex = temp;
@@ -658,7 +658,7 @@ public class FCluster
             else
             {
                 srcCluster = page.Clusters[srcLocalClusterIndex];
-                if (Ar.Game >= EGame.GAME_UE5_4)
+                if (Ar.Game >= GAME_UE5_4)
                 {
                     realSrcVertexIndex = srcCodedVertexIndex;
                 }

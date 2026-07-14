@@ -68,15 +68,15 @@ public class FNaniteResources
             PageStreamingStates = Ar.ReadArray(() => new FPageStreamingState(Ar));
             HierarchyNodes = Ar.ReadArray(() => new FPackedHierarchyNode(Ar));
             HierarchyRootOffsets = Ar.ReadArray<uint>();
-            PageDependencies = Ar.ReadArray(() => Ar.Game >= EGame.GAME_UE5_7 ? Ar.Read<ushort>() : Ar.Read<uint>());
-            if (Ar.Game >= EGame.GAME_UE5_6)
+            PageDependencies = Ar.ReadArray(() => Ar.Game >= GAME_UE5_7 ? Ar.Read<ushort>() : Ar.Read<uint>());
+            if (Ar.Game >= GAME_UE5_6)
             {
                 AssemblyTransforms = Ar.ReadArray<FMatrix3x4>();
 
-                if (Ar.Game >= EGame.GAME_UE5_7)
+                if (Ar.Game >= GAME_UE5_7)
                 {
                     AssemblyBoneAttachmentData = Ar.ReadArray<uint>();
-                    if (Ar.Game >= EGame.GAME_UE5_8)
+                    if (Ar.Game >= GAME_UE5_8)
                         BoneIndices = Ar.ReadArray<uint>();
 
                     PageRangeLookup = Ar.ReadArray<FPageRangeKey>();
@@ -84,11 +84,11 @@ public class FNaniteResources
 
                 MeshBounds = new FBoxSphereBounds(Ar.Read<FVector>(), Ar.Read<FVector>(), Ar.Read<float>());
             }
-            if (Ar.Game < EGame.GAME_UE5_8) ImposterAtlas = Ar.ReadArray<ushort>();
-            if (Ar.Game is EGame.GAME_Aion2) Ar.SkipFixedArray(1); // same length as ImposterAtlas
+            if (Ar.Game < GAME_UE5_8) ImposterAtlas = Ar.ReadArray<ushort>();
+            if (Ar.Game is GAME_Aion2) Ar.SkipFixedArray(1); // same length as ImposterAtlas
             NumRootPages = Ar.Read<int>();
             PositionPrecision = Ar.Read<int>();
-            if (Ar.Game >= EGame.GAME_UE5_2) NormalPrecision = Ar.Read<int>();
+            if (Ar.Game >= GAME_UE5_2) NormalPrecision = Ar.Read<int>();
             NumInputTriangles = Ar.Read<uint>();
 #if DEBUG
             if (NumInputTriangles > 0)
@@ -97,14 +97,14 @@ public class FNaniteResources
             }
 #endif
             NumInputVertices = Ar.Read<uint>();
-            if (Ar.Game < EGame.GAME_UE5_6)
+            if (Ar.Game < GAME_UE5_6)
             {
                 NumInputMeshes = Ar.Read<ushort>();
                 NumInputTexCoords = Ar.Read<ushort>();
             }
-            if (Ar.Game >= EGame.GAME_UE5_1) NumClusters = Ar.Read<uint>();
-            if (Ar.Game >= EGame.GAME_UE5_7) VoxelMaterialsMask = Ar.Read<ulong>();
-            if (Ar.Game >= EGame.GAME_UE5_8) NumInputCurves = Ar.Read<uint>();
+            if (Ar.Game >= GAME_UE5_1) NumClusters = Ar.Read<uint>();
+            if (Ar.Game >= GAME_UE5_7) VoxelMaterialsMask = Ar.Read<ulong>();
+            if (Ar.Game >= GAME_UE5_8) NumInputCurves = Ar.Read<uint>();
         }
     }
 
@@ -151,10 +151,10 @@ public class FNaniteResources
         }
 
         var versionContainer = Archive.Versions;
-        if (Archive.Game == EGame.GAME_TheFirstDescendant)
+        if (Archive.Game == GAME_TheFirstDescendant)
         {
             versionContainer = (VersionContainer) versionContainer.Clone();
-            versionContainer.Game = EGame.GAME_UE5_3;
+            versionContainer.Game = GAME_UE5_3;
         }
 
         var page = PageStreamingStates[pageIndex];

@@ -22,15 +22,15 @@ namespace CUE4Parse.UE4.Objects.PhysicsEngine
 
             var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_BODY_SETUP && Ar.ReadBoolean();
             if (!bCooked) return;
-            if (Ar.Game is EGame.GAME_Aion2 && GetOrDefault<bool>("bNeverNeedsCookedCollisionData")) return;
-            if (Ar.Game is EGame.GAME_Highguard) return;
+            if (Ar.Game is GAME_Aion2 && GetOrDefault<bool>("bNeverNeedsCookedCollisionData")) return;
+            if (Ar.Game is GAME_Highguard) return;
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.STORE_HASCOOKEDDATA_FOR_BODYSETUP)
             {
                 _ = Ar.ReadBoolean(); // bTemp
             }
 
             CookedFormatData = new FFormatContainer(Ar);
-            if (Ar.Game == EGame.GAME_DreamStar) Ar.Position += 4;
+            if (Ar.Game == GAME_DreamStar) Ar.Position += 4;
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

@@ -59,7 +59,7 @@ public sealed class IoPackage : AbstractUePackage
         int cookedHeaderSize;
         int allExportDataOffset;
 
-        if (uassetAr.Game >= EGame.GAME_UE5_0)
+        if (uassetAr.Game >= GAME_UE5_0)
         {
             // Summary
             var summary = new FZenPackageSummary(uassetAr);
@@ -109,9 +109,9 @@ public sealed class IoPackage : AbstractUePackage
             Name = CreateFNameFromMappedName(summary.Name).Text;
 
             BulkDataMap = [];
-            if (uassetAr.Ver >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || uassetAr.Game == EGame.GAME_TheFirstDescendant)
+            if (uassetAr.Ver >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || uassetAr.Game == GAME_TheFirstDescendant)
             {
-                if (uassetAr.Game >= EGame.GAME_UE5_4)
+                if (uassetAr.Game >= GAME_UE5_4)
                 {
                     var pad = uassetAr.Read<ulong>(); // pad
                     _ = uassetAr.ReadArray<byte>((int) pad);
@@ -139,7 +139,7 @@ public sealed class IoPackage : AbstractUePackage
             exportBundleEntries = uassetAr.ReadArray<FExportBundleEntry>(Summary.ExportCount * 2);
 
             (var storeEntry, importedPackageIds) = GetStoreEntryAndImportedPackageIds(containerHeader, provider);
-            if (uassetAr.Game < EGame.GAME_UE5_3)
+            if (uassetAr.Game < GAME_UE5_3)
             {
                 // Export bundle headers
                 uassetAr.Position = summary.GraphDataOffset;
@@ -371,7 +371,7 @@ public sealed class IoPackage : AbstractUePackage
 
     private FPackageId[] LoadGraphData(FArchive Ar)
     {
-        if (Ar.Game is EGame.GAME_NeedForSpeedMobile && Ar.ReadBoolean()) Ar.Position += 8;
+        if (Ar.Game is GAME_NeedForSpeedMobile && Ar.ReadBoolean()) Ar.Position += 8;
         var packageCount = Ar.Read<int>();
         if (packageCount == 0) return [];
 

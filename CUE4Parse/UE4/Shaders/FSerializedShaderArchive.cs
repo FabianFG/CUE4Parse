@@ -26,14 +26,14 @@ public class FSerializedShaderArchive : FRHIShaderLibrary
 
     public FSerializedShaderArchive(FArchive Ar)
     {
-        ShaderMapHashes = Ar.Game >= EGame.GAME_UE5_8 ? Ar.ReadArray(() => new FSHAHash(Ar, 8)) : Ar.ReadArray(() => new FSHAHash(Ar));
+        ShaderMapHashes = Ar.Game >= GAME_UE5_8 ? Ar.ReadArray(() => new FSHAHash(Ar, 8)) : Ar.ReadArray(() => new FSHAHash(Ar));
         ShaderHashes = Ar.Game switch
         {
-            EGame.GAME_MarvelRivals => Ar.ReadArray(() => new FSHAHash(Ar, 28)),
-            >= EGame.GAME_UE5_8 => Ar.ReadArray(() => new FSHAHash(Ar, 8)),
+            GAME_MarvelRivals => Ar.ReadArray(() => new FSHAHash(Ar, 28)),
+            >= GAME_UE5_8 => Ar.ReadArray(() => new FSHAHash(Ar, 8)),
             _ => Ar.ReadArray(() => new FSHAHash(Ar))
         };
-        if (Ar.Game == EGame.GAME_MarvelRivals) Ar.Position += 4; // unknown
+        if (Ar.Game == GAME_MarvelRivals) Ar.Position += 4; // unknown
         ShaderMapEntries = Ar.ReadArray<FShaderMapEntry>();
         ShaderEntries = Ar.ReadArray<FShaderCodeEntry>();
         PreloadEntries = Ar.ReadArray<FFileCachePreloadEntry>();

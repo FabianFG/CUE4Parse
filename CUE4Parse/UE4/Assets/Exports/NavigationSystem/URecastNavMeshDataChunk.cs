@@ -16,11 +16,11 @@ public class URecastNavMeshDataChunk : Assets.Exports.UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Game is EGame.GAME_OuterWorlds2) return;
+        if (Ar.Game is GAME_OuterWorlds2) return;
 
         NavMeshVersion = Ar.Read<ENavMeshVersion>();
         var recastNavMeshSizePos = Ar.Position;
-        var recastNavMeshSizeBytes = Ar.Game != EGame.GAME_WutheringWaves ? Ar.Read<long>() : 8;
+        var recastNavMeshSizeBytes = Ar.Game != GAME_WutheringWaves ? Ar.Read<long>() : 8;
 
         if (NavMeshVersion < ENavMeshVersion.NAVMESHVER_MIN_COMPATIBLE)
         {

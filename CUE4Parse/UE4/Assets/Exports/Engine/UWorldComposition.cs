@@ -17,7 +17,7 @@ public class UWorldComposition : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         if (Ar.Position >= validPos) return;
         WorldRoot = Ar.ReadFString();
@@ -101,19 +101,19 @@ public class FWorldTileInfo
             ZOrder = Ar.Read<int>();
         }
 
-        if (Ar.Game is EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
-        if (Ar.Game is EGame.GAME_DuneAwakening)
+        if (Ar.Game is GAME_WorldofJadeDynasty) Ar.Position += 4;
+        if (Ar.Game is GAME_DuneAwakening)
         {
             Ar.SkipFString();
             Ar.SkipFString();
         }
-        if (Ar.Game is EGame.GAME_InfinityNikki)
+        if (Ar.Game is GAME_InfinityNikki)
         {
             Ar.Position += 12;
             Ar.SkipFString();
         }
 
-        if (Ar.Game is EGame.GAME_PlayerUnknownsBattlegrounds or EGame.GAME_Lego2KDrive) return;
+        if (Ar.Game is GAME_PlayerUnknownsBattlegrounds or GAME_Lego2KDrive) return;
 
         if (Ar.Ver < EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
         {
@@ -136,7 +136,7 @@ public class FWorldTileLayer
     {
         Name = Ar.ReadFString();
         Reserved0 = Ar.Read<int>();
-        Reserved1 = Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds ? new FIntPoint() :Ar.Read<FIntPoint>();
+        Reserved1 = Ar.Game == GAME_PlayerUnknownsBattlegrounds ? new FIntPoint() :Ar.Read<FIntPoint>();
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.WORLD_LEVEL_INFO_UPDATED)
         {
             StreamingDistance = Ar.Read<int>();
@@ -146,7 +146,7 @@ public class FWorldTileLayer
         {
             DistanceStreamingEnabled = Ar.ReadBoolean();
         }
-        if (Ar.Game is EGame.GAME_ConanExilesEnhanced) Ar.Position += 4;
+        if (Ar.Game is GAME_ConanExilesEnhanced) Ar.Position += 4;
     }
 }
 
@@ -162,7 +162,7 @@ public struct FWorldTileLODInfo
 
     public FWorldTileLODInfo(FAssetArchive Ar)
     {
-        if (Ar.Game is EGame.GAME_DuneAwakening or EGame.GAME_ConanExilesEnhanced) Ar.Position += 4;
+        if (Ar.Game is GAME_DuneAwakening or GAME_ConanExilesEnhanced) Ar.Position += 4;
         RelativeStreamingDistance = Ar.Read<int>();
         Ar.Position += 16;
     }

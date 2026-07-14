@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions;
@@ -30,10 +30,10 @@ public static class FCoreObjectVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_15 => Type.MaterialInputNativeSerialize,
-            < EGame.GAME_UE4_22 => Type.EnumProperties,
-            < EGame.GAME_UE4_25 => Type.SkeletalMaterialEditorDataStripping,
+            < GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_15 => Type.MaterialInputNativeSerialize,
+            < GAME_UE4_22 => Type.EnumProperties,
+            < GAME_UE4_25 => Type.SkeletalMaterialEditorDataStripping,
             _ => Type.FProperties
         };
     }

@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions;
@@ -107,24 +107,24 @@ public static class FEditorObjectVersion
         return Ar.Game switch
         {
             // Game Overrides
-            EGame.GAME_TEKKEN7 => Type.ComboBoxControllerSupportUpdate,
-            EGame.GAME_Paragon => Type.AddedMaterialSharedInputs,
+            GAME_TEKKEN7 => Type.ComboBoxControllerSupportUpdate,
+            GAME_Paragon => Type.AddedMaterialSharedInputs,
 
             // Engine
-            < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_13 => Type.GatheredTextPackageCacheFixesV1,
-            < EGame.GAME_UE4_14 => Type.SplineComponentCurvesInStruct,
-            < EGame.GAME_UE4_15 => Type.RefactorMeshEditorMaterials,
-            < EGame.GAME_UE4_16 => Type.AddedInlineFontFaceAssets,
-            < EGame.GAME_UE4_17 => Type.MaterialThumbnailRenderingChanges,
-            < EGame.GAME_UE4_19 => Type.GatheredTextEditorOnlyPackageLocId,
-            < EGame.GAME_UE4_20 => Type.AddedMorphTargetSectionIndices,
-            < EGame.GAME_UE4_21 => Type.SerializeInstancedStaticMeshRenderData,
-            < EGame.GAME_UE4_22 => Type.MeshDescriptionNewAttributeFormat,
-            < EGame.GAME_UE4_23 => Type.MeshDescriptionRemovedHoles,
-            < EGame.GAME_UE4_24 => Type.RemoveLandscapeHoleMaterial,
-            < EGame.GAME_UE4_25 => Type.SkeletalMeshBuildRefactor,
-            < EGame.GAME_UE4_26 => Type.SkeletalMeshMoveEditorSourceDataToPrivateAsset,
+            < GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_13 => Type.GatheredTextPackageCacheFixesV1,
+            < GAME_UE4_14 => Type.SplineComponentCurvesInStruct,
+            < GAME_UE4_15 => Type.RefactorMeshEditorMaterials,
+            < GAME_UE4_16 => Type.AddedInlineFontFaceAssets,
+            < GAME_UE4_17 => Type.MaterialThumbnailRenderingChanges,
+            < GAME_UE4_19 => Type.GatheredTextEditorOnlyPackageLocId,
+            < GAME_UE4_20 => Type.AddedMorphTargetSectionIndices,
+            < GAME_UE4_21 => Type.SerializeInstancedStaticMeshRenderData,
+            < GAME_UE4_22 => Type.MeshDescriptionNewAttributeFormat,
+            < GAME_UE4_23 => Type.MeshDescriptionRemovedHoles,
+            < GAME_UE4_24 => Type.RemoveLandscapeHoleMaterial,
+            < GAME_UE4_25 => Type.SkeletalMeshBuildRefactor,
+            < GAME_UE4_26 => Type.SkeletalMeshMoveEditorSourceDataToPrivateAsset,
             _ => Type.LatestVersion
         };
     }

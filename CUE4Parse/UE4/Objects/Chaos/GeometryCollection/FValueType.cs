@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using CUE4Parse.UE4.Assets.Exports.Chaos;
 using CUE4Parse.UE4.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.UObject;
@@ -15,13 +15,13 @@ namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection
 
         public FValueType(FChaosArchive Ar, int version)
         {
-            if (Ar.Game >= EGame.GAME_UE5_0)
+            if (Ar.Game >= GAME_UE5_0)
                 version = Ar.Read<int>(); // 4
             Debug.Assert(version == 4);
             var arrayTypeAsInt = Ar.Read<int>();
             ArrayType = (EManagedArrayType) arrayTypeAsInt;
 
-            if (Ar.Game == EGame.GAME_MarvelRivals)
+            if (Ar.Game == GAME_MarvelRivals)
             {
                 ArrayType = ArrayType switch
                 {

@@ -20,7 +20,7 @@ public class UScriptSet
 
     public UScriptSet(FAssetArchive Ar, FPropertyTagData? tagData, ReadType readType)
     {
-        if (Ar.Game == EGame.GAME_StateOfDecay2 && tagData is not null)
+        if (Ar.Game == GAME_StateOfDecay2 && tagData is not null)
         {
             tagData.InnerType = tagData.Name switch
             {
@@ -29,7 +29,7 @@ public class UScriptSet
                 _ => null
             };
         }
-        if (Ar.Game is EGame.GAME_HonorofKingsWorld && tagData?.Name is "LogicState" or "CategorySet") tagData.InnerType = "EnumProperty";
+        if (Ar.Game is GAME_HonorofKingsWorld && tagData?.Name is "LogicState" or "CategorySet") tagData.InnerType = "EnumProperty";
 
         var innerType = tagData?.InnerType ?? throw new ParserException(Ar, "UScriptSet needs inner type");
 
@@ -42,18 +42,18 @@ public class UScriptSet
 
             tagData.InnerTypeData = Ar.Game switch
             {
-                EGame.GAME_AssaultFireFuture when tagData.Name is "Data" => new FPropertyTagData("SoftObjectPath"),
-                EGame.GAME_AssaultFireFuture when tagData.Name is "MGCIdList" => new FPropertyTagData("GPRowName"),
-                EGame.GAME_AssaultFireFuture when tagData.Name is "PrimitiveBindingGuids" or "RefSets" or "OwnerActors" => new FPropertyTagData("Guid"),
-                EGame.GAME_ThroneAndLiberty when tagData.Name is "ExcludeMeshes" or "IncludeMeshes" => new FPropertyTagData("SoftObjectPath"),
-                EGame.GAME_MetroAwakening when tagData.Name is "SoundscapePaletteCollection" => new FPropertyTagData("SoftObjectPath"),
-                EGame.GAME_Avowed when tagData.Name.EndsWith("IDs") => new FPropertyTagData("Guid"),
-                EGame.GAME_Farlight84 => new FPropertyTagData("SoftObjectPath"),
-                EGame.GAME_HonorofKingsWorld when tagData.Name is "WaterPhysicalMaterials" => new FPropertyTagData("SoftObjectPath"),
-                EGame.GAME_HonorofKingsWorld when tagData.Name is "InstanceIdsNotToHide" => new FPropertyTagData("Guid"),
-                EGame.GAME_ChasingKaleidoRIDER when tagData.Name is "DialogueEntityInstances" => new FPropertyTagData("Guid"),
-                EGame.GAME_NeedForSpeedMobile when tagData.Name is "ReferencedAssetsPath" or "ReferencedMeshMergeAssets" or "FilterWhiteList" or "Paths"=> new FPropertyTagData("SoftObjectPath"),
-                EGame.GAME_DuneAwakening => DAStructs.ResolveSetPropertyInnerTypeData(tagData),
+                GAME_AssaultFireFuture when tagData.Name is "Data" => new FPropertyTagData("SoftObjectPath"),
+                GAME_AssaultFireFuture when tagData.Name is "MGCIdList" => new FPropertyTagData("GPRowName"),
+                GAME_AssaultFireFuture when tagData.Name is "PrimitiveBindingGuids" or "RefSets" or "OwnerActors" => new FPropertyTagData("Guid"),
+                GAME_ThroneAndLiberty when tagData.Name is "ExcludeMeshes" or "IncludeMeshes" => new FPropertyTagData("SoftObjectPath"),
+                GAME_MetroAwakening when tagData.Name is "SoundscapePaletteCollection" => new FPropertyTagData("SoftObjectPath"),
+                GAME_Avowed when tagData.Name.EndsWith("IDs") => new FPropertyTagData("Guid"),
+                GAME_Farlight84 => new FPropertyTagData("SoftObjectPath"),
+                GAME_HonorofKingsWorld when tagData.Name is "WaterPhysicalMaterials" => new FPropertyTagData("SoftObjectPath"),
+                GAME_HonorofKingsWorld when tagData.Name is "InstanceIdsNotToHide" => new FPropertyTagData("Guid"),
+                GAME_ChasingKaleidoRIDER when tagData.Name is "DialogueEntityInstances" => new FPropertyTagData("Guid"),
+                GAME_NeedForSpeedMobile when tagData.Name is "ReferencedAssetsPath" or "ReferencedMeshMergeAssets" or "FilterWhiteList" or "Paths"=> new FPropertyTagData("SoftObjectPath"),
+                GAME_DuneAwakening => DAStructs.ResolveSetPropertyInnerTypeData(tagData),
                 _ => tagData.InnerTypeData
             };
         }
@@ -66,7 +66,7 @@ public class UScriptSet
                 FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
             }
         }
-        if (Ar.Game is EGame.GAME_AshesOfCreation && Ar is FAoCDBCReader) Ar.Position += 4;
+        if (Ar.Game is GAME_AshesOfCreation && Ar is FAoCDBCReader) Ar.Position += 4;
 
         var type = readType == ReadType.RAW ? ReadType.RAW : ReadType.ARRAY;
         var num = Ar.Read<int>();

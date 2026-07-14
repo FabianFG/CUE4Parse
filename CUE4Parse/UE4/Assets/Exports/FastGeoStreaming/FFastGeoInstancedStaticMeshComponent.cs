@@ -27,7 +27,7 @@ public class FFastGeoInstancedStaticMeshComponent : FFastGeoStaticMeshComponentB
     public FFastGeoInstancedStaticMeshComponent(FFastGeoArchive Ar) : base(Ar)
     {
         bUseHighPrecisionPerInstanceSMData = Ar.Game switch {
-            >= EGame.GAME_UE5_8 => Ar.ReadBoolean(),
+            >= GAME_UE5_8 => Ar.ReadBoolean(),
             _ => true,
         };
 
@@ -40,14 +40,14 @@ public class FFastGeoInstancedStaticMeshComponent : FFastGeoStaticMeshComponentB
             PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar.Read<FTransform>()));
         }
         
-        LastInstanceBodyIndex = Ar.Game >= EGame.GAME_UE5_8 ? Ar.Read<int>() : 0;
+        LastInstanceBodyIndex = Ar.Game >= GAME_UE5_8 ? Ar.Read<int>() : 0;
         InstancingRandomSeed = Ar.Read<int>();
         PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
         AdditionalRandomSeeds = Ar.ReadArray<FInstancedStaticMeshRandomSeed>();
         NavigationBounds = new FBox(Ar);
         SceneProxyDesc.InstancedStaticMeshSceneProxyDesc = new FInstancedStaticMeshSceneProxyDesc(Ar);
-        SpatialHashes = Ar.Game >= EGame.GAME_UE5_8 ? Ar.ReadBulkArray<FCompressedSpatialHashItem>() : [] ;
-        PerInstanceRandomIDs = Ar.Game >= EGame.GAME_UE5_8 ? Ar.ReadBulkArray<float>() : [] ;
+        SpatialHashes = Ar.Game >= GAME_UE5_8 ? Ar.ReadBulkArray<FCompressedSpatialHashItem>() : [] ;
+        PerInstanceRandomIDs = Ar.Game >= GAME_UE5_8 ? Ar.ReadBulkArray<float>() : [] ;
     }
 }
 

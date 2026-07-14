@@ -106,11 +106,11 @@ public static class NNEModelDataVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE5_2 => (Type) (-1),
-            < EGame.GAME_UE5_3 => Type.V0,
-            < EGame.GAME_UE5_4 => Type.V1,
-            < EGame.GAME_UE5_5 => Type.V3,
-            < EGame.GAME_UE5_6 => Type.V4,
+            < GAME_UE5_2 => (Type) (-1),
+            < GAME_UE5_3 => Type.V0,
+            < GAME_UE5_4 => Type.V1,
+            < GAME_UE5_5 => Type.V3,
+            < GAME_UE5_6 => Type.V4,
             _ => Type.LatestVersion
         };
     }

@@ -123,7 +123,7 @@ namespace CUE4Parse.FileProvider
                     }
                 }
 
-                if (Versions.Game is EGame.GAME_Back4Blood)
+                if (Versions.Game is GAME_Back4Blood)
                     _gameDisplayName = "Back 4 Blood"; // They left is as LDTEXT("TEXT_UI_GameTitle")
 
                 return _gameDisplayName;

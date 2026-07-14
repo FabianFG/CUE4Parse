@@ -82,10 +82,10 @@ public static class FPhysicsObjectVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_24 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_25 => Type.SerializeGTGeometryParticles,
-            < EGame.GAME_UE4_26 => Type.GroomWithImportSettings, //also 4.26
-            < EGame.GAME_UE4_27 => Type.ChaosConvexHasUniqueEdgeSet, // 4.26-chaos and 4.27
+            < GAME_UE4_24 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_25 => Type.SerializeGTGeometryParticles,
+            < GAME_UE4_26 => Type.GroomWithImportSettings, //also 4.26
+            < GAME_UE4_27 => Type.ChaosConvexHasUniqueEdgeSet, // 4.26-chaos and 4.27
             _ => Type.LatestVersion
         };
     }

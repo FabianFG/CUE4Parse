@@ -15,7 +15,7 @@ public class FClothLODDataCommon : FStructFallback
     {
         TransitionUPSkinData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
         TransitionDownSkinData = Ar.ReadArray(() => new FMeshToMeshVertData(Ar));
-        if (Ar.Game == EGame.GAME_Borderlands4) Ar.Position += 4;
+        if (Ar.Game == GAME_Borderlands4) Ar.Position += 4;
     }
 }
 

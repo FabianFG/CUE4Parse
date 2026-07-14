@@ -28,7 +28,7 @@ public class USceneComponent : UActorComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 4;
         var bComputeBoundsOnceForGame = GetOrDefault<bool>("bComputeBoundsOnceForGame");
         var bComputedBoundsOnceForGame = GetOrDefault<bool>("bComputedBoundsOnceForGame");
         var bComputeBounds = bComputeBoundsOnceForGame || bComputedBoundsOnceForGame;
