@@ -20,7 +20,7 @@ public struct FShaderValueTypeHandle : IUStruct
         Type = Ar.Read<EShaderFundamentalType>();
 
         //if (FComputeFrameworkObjectVersion.Get(Ar) >= FComputeFrameworkObjectVersion.Type.InitialVersion)
-        if(Ar.Game >= EGame.GAME_UE5_1)
+        if(Ar.Game >= GAME_UE5_1)
         {
             bIsDynamicArray = Ar.ReadBoolean();
         }

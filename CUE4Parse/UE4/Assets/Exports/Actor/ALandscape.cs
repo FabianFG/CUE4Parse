@@ -29,7 +29,7 @@ public class ALandscapeProxy : APartitionActor
         LandscapeSectionOffset = GetOrDefault<FIntPoint>(nameof(LandscapeSectionOffset));
         LandscapeMaterial = GetOrDefault(nameof(LandscapeMaterial), new FPackageIndex());
         SplineComponent = GetOrDefault(nameof(SplineComponent), new FPackageIndex());
-        if (Ar.Game >= EGame.GAME_UE5_3)
+        if (Ar.Game >= GAME_UE5_3)
             NaniteComponents = GetOrDefault<FPackageIndex[]>(nameof(NaniteComponents), []);
         else
         {

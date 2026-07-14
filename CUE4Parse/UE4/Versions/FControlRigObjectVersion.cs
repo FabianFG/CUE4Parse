@@ -155,18 +155,18 @@ public static class FControlRigObjectVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_23 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_25 => Type.OperatorsStoringPropertyPaths,
-            < EGame.GAME_UE4_26 => Type.SwitchedToRigVM,
-            < EGame.GAME_UE5_0 => Type.BlueprintVariableSupport,
-            < EGame.GAME_UE5_1 => Type.PerChannelLimits,
-            < EGame.GAME_UE5_2 => Type.LibraryNodeTemplates,
-            < EGame.GAME_UE5_3 => Type.RigHierarchyStoringPreviousNames,
-            < EGame.GAME_UE5_4 => Type.RigHierarchyControlPreferredRotationOrderFlag,
-            < EGame.GAME_UE5_5 => Type.RigPoseWithParentKey,
-            < EGame.GAME_UE5_6 => Type.RigHierarchyIndirectElementStorage,
-            < EGame.GAME_UE5_7 => Type.RigHierarchyPreviousNameAndParentMapUsingHierarchyKey,
-            < EGame.GAME_UE5_8 => Type.OverridesStoreTOCDataForProperties,
+            < GAME_UE4_23 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_25 => Type.OperatorsStoringPropertyPaths,
+            < GAME_UE4_26 => Type.SwitchedToRigVM,
+            < GAME_UE5_0 => Type.BlueprintVariableSupport,
+            < GAME_UE5_1 => Type.PerChannelLimits,
+            < GAME_UE5_2 => Type.LibraryNodeTemplates,
+            < GAME_UE5_3 => Type.RigHierarchyStoringPreviousNames,
+            < GAME_UE5_4 => Type.RigHierarchyControlPreferredRotationOrderFlag,
+            < GAME_UE5_5 => Type.RigPoseWithParentKey,
+            < GAME_UE5_6 => Type.RigHierarchyIndirectElementStorage,
+            < GAME_UE5_7 => Type.RigHierarchyPreviousNameAndParentMapUsingHierarchyKey,
+            < GAME_UE5_8 => Type.OverridesStoreTOCDataForProperties,
             _ => Type.LatestVersion
         };
     }

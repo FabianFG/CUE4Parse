@@ -18,21 +18,21 @@ public struct FImageLODRange
     public FImageLODRange(FMutableArchive Ar)
     {
         FirstIndex = Ar.Read<int>();
-        if (Ar.Game < EGame.GAME_UE5_3)
+        if (Ar.Game < GAME_UE5_3)
         {
             LODCount = (byte)Ar.Read<int>();
         }
         ImageSizeX = Ar.Read<ushort>();
         ImageSizeY = Ar.Read<ushort>();
         
-        if (Ar.Game >= EGame.GAME_UE5_7)
+        if (Ar.Game >= GAME_UE5_7)
         {
             LODCount = Ar.Read<byte>();
             NumLODsInTail = Ar.Read<byte>();
             Flags = Ar.Read<byte>();
             ImageFormat = Ar.Read<EImageFormat>();
         }
-        else if (Ar.Game >= EGame.GAME_UE5_3)
+        else if (Ar.Game >= GAME_UE5_3)
         {
             Ar.Position += 2;
             LODCount = Ar.Read<byte>();

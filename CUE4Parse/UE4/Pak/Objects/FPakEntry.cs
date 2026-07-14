@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
+using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
@@ -185,6 +186,8 @@ public class FPakEntry : VfsEntry
                        | (isOffset32BitSafe << 31);
         }
 
+        if (reader.Game is GAME_ValorantSource) Ar.Position += FSHAHash.SIZE;
+
         uint compressionBlockSize = (bitfield & 0x3f) == 0x3f ? Ar.Read<uint>() : (bitfield & 0x3f) << 11;
 
         // Filter out the CompressionMethod.
@@ -192,14 +195,28 @@ public class FPakEntry : VfsEntry
 
         // Read the Offset.
         var bIsOffset32BitSafe = (bitfield & (1 << 31)) != 0;
-        Offset = bIsOffset32BitSafe ? Ar.Read<uint>() : Ar.Read<long>(); // Should be ulong
+        var bIsUncompressedSize32BitSafe = (bitfield & (1 << 30)) != 0;
+        if (reader.Game is GAME_ValorantSource)
+        {
+            var obfuscatedA = Ar.Read<ulong>();
+            var obfuscatedB = Ar.Read<ulong>();
+
+            const ulong lowNibbles = ValorantSourceAes.LOW_NIBBLES_MASK;
+            const ulong highNibbles = ValorantSourceAes.HIGH_NIBBLES_MASK;
+
+            var reconstructedOffset = (obfuscatedB & highNibbles) | (obfuscatedA & lowNibbles);
+            var reconstructedSize = (obfuscatedB & lowNibbles) | (obfuscatedA & highNibbles);
+            Offset = bIsOffset32BitSafe ? (uint) (reconstructedOffset >> 8) : (long) reconstructedOffset;
+            UncompressedSize = bIsUncompressedSize32BitSafe ? (uint) (reconstructedSize >> 8) : (long) reconstructedSize;
+        }
+        else
+        {
+            Offset = bIsOffset32BitSafe ? Ar.Read<uint>() : Ar.Read<long>(); // Should be ulong
+            UncompressedSize = bIsUncompressedSize32BitSafe ? Ar.Read<uint>() : Ar.Read<long>(); // Should be ulong
+        }
 
         if (reader.Game == GAME_Snowbreak) Offset ^= 0x1F1E1D1C;
         if (reader.Game is GAME_QQ or GAME_DreamStar) Offset += 8;
-
-        // Read the UncompressedSize.
-        var bIsUncompressedSize32BitSafe = (bitfield & (1 << 30)) != 0;
-        UncompressedSize = bIsUncompressedSize32BitSafe ? Ar.Read<uint>() : Ar.Read<long>(); // Should be ulong
 
         if (reader.Game == GAME_WutheringWaves && reader.Info.Version > PakFile_Version_Fnv64BugFix)
             (Offset, UncompressedSize) = (UncompressedSize, Offset);
@@ -246,6 +263,9 @@ public class FPakEntry : VfsEntry
             GAME_VisionsofMana => -3,
             _ => 0
         };
+
+        if (reader.Game == GAME_ValorantSource)
+            StructSize = 0;
 
         // Handle building of the CompressionBlocks array.
         var compressedBlockOffset = Offset + StructSize;

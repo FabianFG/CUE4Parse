@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions;
@@ -26,7 +26,7 @@ public class FDNAAssetCustomVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_26 => (Type) (-1),
+            < GAME_UE4_26 => (Type) (-1),
             _ => Type.LatestVersion
         };
     }

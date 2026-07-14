@@ -221,7 +221,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
     {
         switch (Game)
         {
-            case EGame.GAME_MindsEye:
+            case GAME_MindsEye:
                 return ReadPartiallyEncrypted(offset, length, offsetInFile);
         }
 
@@ -244,7 +244,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
             ref var compressionBlock = ref TocResource.CompressionBlocks[blockIndex];
 
             var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
-            if (Game is EGame.GAME_eBaseballProSpirit)
+            if (Game is GAME_eBaseballProSpirit)
             {
                 rawSize = (compressionBlock.CompressedSize + ProSpiEncryption.EncryptionDataTrailerSize).Align(Aes.ALIGN);
             }
@@ -307,7 +307,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
     {
         var limit = Game switch
         {
-            EGame.GAME_MindsEye => 0x1000,
+            GAME_MindsEye => 0x1000,
             _ => throw new ArgumentOutOfRangeException(nameof(Game), "Unsupported game for partial encrypted io store extraction")
         };
 
@@ -472,7 +472,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                     var name = stringTable[fileEntry.Name];
                     var fullPathLength = Write(directoryName, directoryLength, name, true);
                     var fullPathSpan = directoryName.AsSpan(..fullPathLength);
-                    if (Game == EGame.GAME_NeedForSpeedMobile) fullPathSpan = fullPathSpan.SubstringAfter("../../../");
+                    if (Game == GAME_NeedForSpeedMobile) fullPathSpan = fullPathSpan.SubstringAfter("../../../");
                     var path = new string(fullPathSpan);
 
                     var entry = new FIoStoreEntry(this, path, fileEntry.UserData);
@@ -499,13 +499,13 @@ public partial class IoStoreReader : AbstractAesVfsReader
     {
         try
         {
-            var headerChunkId = new FIoChunkId(TocResource.Header.ContainerId.Id, 0, Game >= EGame.GAME_UE5_0 ? (byte) EIoChunkType5.ContainerHeader : (byte) EIoChunkType.ContainerHeader);
+            var headerChunkId = new FIoChunkId(TocResource.Header.ContainerId.Id, 0, Game >= GAME_UE5_0 ? (byte) EIoChunkType5.ContainerHeader : (byte) EIoChunkType.ContainerHeader);
             using var Ar = new FByteArchive("ContainerHeader", Read(headerChunkId), Versions);
             return new FIoContainerHeader(Ar);
         }
         catch (Exception)
         {
-            if (Game >= EGame.GAME_UE5_0)
+            if (Game >= GAME_UE5_0)
                 throw;
             else
                 return null!;

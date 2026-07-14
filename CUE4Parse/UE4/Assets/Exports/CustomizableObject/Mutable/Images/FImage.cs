@@ -13,7 +13,7 @@ public class FImage
 
     public FImage(FMutableArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
+        if (Ar.Game < GAME_UE5_6) Version = Ar.Read<int>();
 
         DataStorage = new FImageDataStorage(Ar, Version);
         Flags = (EImageFlags) Ar.Read<byte>();

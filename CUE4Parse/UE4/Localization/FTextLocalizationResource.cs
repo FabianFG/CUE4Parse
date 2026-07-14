@@ -34,11 +34,11 @@ public class FTextLocalizationResource
         // Is this LocRes file too new to load?
         if (versionNumber > ELocResVersion.Latest)
         {
-            if (Ar.Game is not (EGame.GAME_StellarBlade or EGame.GAME_HonorofKingsWorld))
+            if (Ar.Game is not (GAME_StellarBlade or GAME_HonorofKingsWorld))
                 throw new ParserException(Ar, $"LocRes '{Ar.Name}' is too new to be loaded (File Version: {versionNumber:D}, Loader Version: {ELocResVersion.Latest:D})");
         }
 
-        if (Ar.Game is EGame.GAME_HonorofKingsWorld && versionNumber > ELocResVersion.Latest)
+        if (Ar.Game is GAME_HonorofKingsWorld && versionNumber > ELocResVersion.Latest)
         {
             Ar.SkipFixedArray(sizeof(uint));
             var dts = Ar.ReadArray(() => (Ar.ReadFString(), Ar.Read<int>(), Ar.Read<int>()));
@@ -94,7 +94,7 @@ public class FTextLocalizationResource
                         Log.Warning($"LocRes '{newEntry.LocResName}' has an invalid localized string index for namespace '{namespce.Str}' and key '{key.Str}'. This entry will have no translation.");
                     }
 
-                    if (Ar.Game == EGame.GAME_StellarBlade && versionNumber > ELocResVersion.Latest) Ar.Position += 4;
+                    if (Ar.Game == GAME_StellarBlade && versionNumber > ELocResVersion.Latest) Ar.Position += 4;
                 }
                 else
                 {
@@ -109,7 +109,7 @@ public class FTextLocalizationResource
 
     private static FTextLocalizationResourceString[] ReadLocResStringArray(FArchive Ar, ELocResVersion versionNumber)
     {
-        if (Ar.Game is EGame.GAME_NevernessToEverness or EGame.GAME_NevernessToEverness_CBT2 && Ar.Name.StartsWith("HT/Content/Localization/"))
+        if (Ar.Game is GAME_NevernessToEverness or GAME_NevernessToEverness_CBT2 && Ar.Name.StartsWith("HT/Content/Localization/"))
         {
             return FNTEFTextLocalizationResource.ReadLocResStringArray(Ar);
         }
@@ -121,9 +121,9 @@ public class FTextLocalizationResource
             Ar.Position = localizedStringArrayOffset;
             var localizedStringArray = Ar.Game switch
             {
-                EGame.GAME_CodeVein2 when Ar.Name.Contains("CodeVein2/Content/Localization/") => Ar.ReadArray(() =>
+                GAME_CodeVein2 when Ar.Name.Contains("CodeVein2/Content/Localization/") => Ar.ReadArray(() =>
                     new FTextLocalizationResourceString(CodeVein2StringEncryption.CodeVein2EncryptedFString(Ar, ECV2DecryptionMode.Locres), Ar.Read<int>())),
-                EGame.GAME_EmbersofTheUncrowned => Ar.ReadArray(() => new FTextLocalizationResourceString(EOTUStringEncryption.DecryptString(Ar), Ar.Read<int>())),
+                GAME_EmbersofTheUncrowned => Ar.ReadArray(() => new FTextLocalizationResourceString(EOTUStringEncryption.DecryptString(Ar), Ar.Read<int>())),
                 _ => Ar.ReadArray(() => new FTextLocalizationResourceString(Ar, versionNumber))
             };
             Ar.Position = currentFileOffset;

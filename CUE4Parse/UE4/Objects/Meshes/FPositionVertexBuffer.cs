@@ -20,17 +20,17 @@ public class FPositionVertexBuffer
 
     public FPositionVertexBuffer(FArchive Ar)
     {
-        if (Ar.Game is EGame.GAME_Undawn or EGame.GAME_RacingMaster)
+        if (Ar.Game is GAME_Undawn or GAME_RacingMaster)
         {
-            bool bUseFullPrecisionPositions = Ar.Game == EGame.GAME_Undawn && Ar.ReadBoolean();
+            bool bUseFullPrecisionPositions = Ar.Game == GAME_Undawn && Ar.ReadBoolean();
             Stride = Ar.Read<int>();
             NumVertices = Ar.Read<int>();
-            bUseFullPrecisionPositions = Ar.Game == EGame.GAME_RacingMaster && Stride == 12;
+            bUseFullPrecisionPositions = Ar.Game == GAME_RacingMaster && Stride == 12;
             Verts = bUseFullPrecisionPositions ? Ar.ReadBulkArray<FVector>() : Ar.ReadBulkArray<FVector>(() => Ar.Read<FVector3UnsignedShort>());
             return;
         }
 
-        if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+        if (Ar.Game is GAME_HonorofKingsWorld)
         {
             var size = Ar.Read<int>();
             if (size == 32)
@@ -56,7 +56,7 @@ public class FPositionVertexBuffer
             return;
         }
 
-        if (Ar.Game is EGame.GAME_Farlight84)
+        if (Ar.Game is GAME_Farlight84)
         {
             bool bUseHalfPrecisionPositions = Ar.ReadBoolean();
             Stride = Ar.Read<int>();
@@ -74,7 +74,7 @@ public class FPositionVertexBuffer
             return;
         }
 
-        if (Ar.Game is EGame.GAME_SuicideSquad)
+        if (Ar.Game is GAME_SuicideSquad)
         {
             Stride = Ar.Read<int>();
             NumVertices = Ar.Read<int>();
@@ -102,9 +102,9 @@ public class FPositionVertexBuffer
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
 
-        if (Ar.Game is EGame.GAME_Valorant_PRE_11_2 or EGame.GAME_NeedForSpeedMobile || (Ar.Game is EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile && Stride == 8))
+        if (Ar.Game is GAME_Valorant_PRE_11_2 or GAME_NeedForSpeedMobile || (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile && Stride == 8))
         {
-            bool bUseFullPrecisionPositions = Ar.Game is not EGame.GAME_ArenaBreakoutInfinite and not GAME_ArenaBreakoutMobile && Ar.ReadBoolean();
+            bool bUseFullPrecisionPositions = Ar.Game is not GAME_ArenaBreakoutInfinite and not GAME_ArenaBreakoutMobile && Ar.ReadBoolean();
             var bounds = new FBoxSphereBounds(Ar);
             if (!bUseFullPrecisionPositions)
             {
@@ -127,7 +127,7 @@ public class FPositionVertexBuffer
                 return;
             }
         }
-        if (Ar.Game is EGame.GAME_Gothic1Remake && Stride == 8)
+        if (Ar.Game is GAME_Gothic1Remake && Stride == 8)
         {
             var vertsHalf = Ar.ReadBulkArray<FHalfVector4>();
             Verts = new FVector[vertsHalf.Length];
@@ -135,7 +135,7 @@ public class FPositionVertexBuffer
                 Verts[i] = vertsHalf[i];
             return;
         }
-        if (Ar.Game is EGame.GAME_DaysGone)
+        if (Ar.Game is GAME_DaysGone)
         {
             Verts = Stride switch
             {
@@ -146,7 +146,7 @@ public class FPositionVertexBuffer
             };
             return;
         }
-        if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+        if (Ar.Game is GAME_RocoKingdomWorld)
         {
             Verts = Stride switch
             {
@@ -156,7 +156,7 @@ public class FPositionVertexBuffer
             };
             return;
         }
-        if (Ar.Game == EGame.GAME_FateTrigger)
+        if (Ar.Game == GAME_FateTrigger)
         {
             var box = Ar.Read<byte>();
             Verts = Ar.ReadBulkArray<FVector>();
@@ -167,12 +167,12 @@ public class FPositionVertexBuffer
             }
             return;
         }
-        if (Ar.Game is EGame.GAME_WorldofJadeDynasty)
+        if (Ar.Game is GAME_WorldofJadeDynasty)
         {
             Stride = (int)(Stride ^ 0xdbb1054f);
             NumVertices >>= 9;
         }
-        if (Ar.Game == EGame.GAME_Gollum) Ar.Position += 25;
+        if (Ar.Game == GAME_Gollum) Ar.Position += 25;
 
         Verts = Ar.ReadBulkArray<FVector>();
     }

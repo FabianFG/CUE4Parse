@@ -17,13 +17,13 @@ public class FMeshSurface
 
     public FMeshSurface(FMutableArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE5_5)
+        if (Ar.Game >= GAME_UE5_5)
         {
             SubMeshes = Ar.ReadArray(() => new FSurfaceSubMesh(Ar));
             BoneMapIndex = Ar.Read<uint>();
             BoneMapCount = Ar.Read<uint>();
             Id = Ar.Read<uint>();
-            if (Ar.Game >= EGame.GAME_UE5_8)
+            if (Ar.Game >= GAME_UE5_8)
             {
                 bCastShadow = Ar.ReadFlag();
                 bRecomputeTangent = Ar.ReadFlag();

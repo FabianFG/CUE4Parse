@@ -17,17 +17,17 @@ public class FCurveMetaData
     {
         Type = new FAnimCurveType(Ar);
 
-        if (Ar.Game == EGame.GAME_TheFirstDescendant) Ar.Position += 4;
+        if (Ar.Game == GAME_TheFirstDescendant) Ar.Position += 4;
         LinkedBones = Ar.ReadArray(Ar.ReadFName);
 
         if (FrwAniVer >= FAnimPhysObjectVersion.Type.AddLODToCurveMetaData)
         {
-            MaxLOD = Ar.Game == EGame.GAME_KingdomHearts3 ? Ar.Read<int>() : Ar.Read<byte>();
+            MaxLOD = Ar.Game == GAME_KingdomHearts3 ? Ar.Read<int>() : Ar.Read<byte>();
         }
 
-        if (Ar.Game == EGame.GAME_AssaultFireFuture) Ar.Position += 4;
+        if (Ar.Game == GAME_AssaultFireFuture) Ar.Position += 4;
 
-        if (Ar.Game == EGame.GAME_FinalFantasy7Remake)
+        if (Ar.Game == GAME_FinalFantasy7Remake)
         {
             // Cutscene mat replacements
             var matAssetName = Ar.ReadFName();

@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Shaders
 
             // version - 1 | Must be I/O Store.
             // version - 2 | Normal pak storage
-            if (Ar.Game >= EGame.GAME_UE5_0)
+            if (Ar.Game >= GAME_UE5_0)
             {
                 if (archiveVersion == 1) bIsIoStore = true;
             }

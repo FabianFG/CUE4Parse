@@ -16,7 +16,7 @@ public class FKismetPropertyPointer
 
     public FKismetPropertyPointer(FKismetArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE4_25 || Ar.Game is EGame.GAME_AssaultFireFuture)
+        if (Ar.Game >= GAME_UE4_25 || Ar.Game is GAME_AssaultFireFuture)
         {
             New = new FFieldPath(Ar);
         }
@@ -363,7 +363,7 @@ public class EX_Context : KismetExpression
         ObjectExpression = Ar.ReadExpression();
         Offset = Ar.Read<uint>();
         RValuePointer = new FKismetPropertyPointer(Ar);
-        if (Ar.Game < EGame.GAME_UE4_9) Ar.Read<byte>(); // Property type
+        if (Ar.Game < GAME_UE4_9) Ar.Read<byte>(); // Property type
         ContextExpression = Ar.ReadExpression();
     }
 
@@ -704,7 +704,7 @@ public class EX_Let : KismetExpression
 
     public EX_Let(FKismetArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE4_9) Property = new FKismetPropertyPointer(Ar);
+        if (Ar.Game >= GAME_UE4_9) Property = new FKismetPropertyPointer(Ar);
         Variable = Ar.ReadExpression();
         Assignment = Ar.ReadExpression();
     }
@@ -1485,7 +1485,7 @@ public class FScriptText
 
     public FScriptText(FKismetArchive Ar)
     {
-        TextLiteralType = Ar.Game >= EGame.GAME_UE4_12 ? ReadTextLiteralType(Ar) : EBlueprintTextLiteralType.LocalizedText;
+        TextLiteralType = Ar.Game >= GAME_UE4_12 ? ReadTextLiteralType(Ar) : EBlueprintTextLiteralType.LocalizedText;
         switch (TextLiteralType)
         {
             case EBlueprintTextLiteralType.Empty:
@@ -1519,8 +1519,8 @@ public class FScriptText
     {
         return Ar.Game switch
         {
-            >= EGame.GAME_UE5_8 => (EBlueprintTextLiteralType) Ar.Read<byte>(),
-            >= EGame.GAME_UE4_12 => Ar.Read<byte>() switch
+            >= GAME_UE5_8 => (EBlueprintTextLiteralType) Ar.Read<byte>(),
+            >= GAME_UE4_12 => Ar.Read<byte>() switch
             {
                 1 => EBlueprintTextLiteralType.LocalizedText,
                 2 => EBlueprintTextLiteralType.InvariantText,

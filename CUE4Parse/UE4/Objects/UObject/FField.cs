@@ -17,7 +17,7 @@ public class FField
     public virtual void Deserialize(FAssetArchive Ar)
     {
         Name = Ar.ReadFName();
-        if (Ar.Game < EGame.GAME_UE5_8 || !Ar.IsFilterEditorOnly)
+        if (Ar.Game < GAME_UE5_8 || !Ar.IsFilterEditorOnly)
             Flags = Ar.Read<EObjectFlags>();
     }
 

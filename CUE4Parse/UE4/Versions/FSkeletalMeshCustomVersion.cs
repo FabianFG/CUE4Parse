@@ -73,18 +73,18 @@ public static class FSkeletalMeshCustomVersion
         return Ar.Game switch
         {
             // Game Overrides
-            EGame.GAME_Paragon => Type.SplitModelAndRenderData,
+            GAME_Paragon => Type.SplitModelAndRenderData,
 
             // Engine
-            < EGame.GAME_UE4_13 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_14 => Type.SaveNumVertices,
-            < EGame.GAME_UE4_15 => Type.RegenerateClothingShadowFlags,
-            < EGame.GAME_UE4_16 => Type.UseSeparateSkinWeightBuffer,
-            < EGame.GAME_UE4_18 => Type.CachedClothInverseMasses,
-            < EGame.GAME_UE4_19 => Type.CompactClothVertexBuffer,
-            < EGame.GAME_UE4_20 => Type.DeprecateSectionDisabledFlag,
-            < EGame.GAME_UE4_23 => Type.SectionIgnoreByReduceAdded,
-            < EGame.GAME_UE4_26 => Type.SkinWeightProfiles,
+            < GAME_UE4_13 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_14 => Type.SaveNumVertices,
+            < GAME_UE4_15 => Type.RegenerateClothingShadowFlags,
+            < GAME_UE4_16 => Type.UseSeparateSkinWeightBuffer,
+            < GAME_UE4_18 => Type.CachedClothInverseMasses,
+            < GAME_UE4_19 => Type.CompactClothVertexBuffer,
+            < GAME_UE4_20 => Type.DeprecateSectionDisabledFlag,
+            < GAME_UE4_23 => Type.SectionIgnoreByReduceAdded,
+            < GAME_UE4_26 => Type.SkinWeightProfiles,
             _ => Type.RemoveEnableClothLOD
         };
     }

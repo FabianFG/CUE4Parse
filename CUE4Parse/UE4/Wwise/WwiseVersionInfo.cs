@@ -14,7 +14,7 @@ public static class WwiseVersionInfo
         125,    // Ace Combat 7
         132,    // Dead by Daylight (old), Undawn
         134,    // Valorant (old)
-        135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect
+        135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect, Valorant Source
         140,    // Dead by Daylight (old), FNAF Security Breach, Hogwarts Legacy, The Casting of Frank Stone, BLUE PROTOCOL, PAYDAY 3, The Anacrusis, The Outlast Trials, Little Nightmares 3, eBaseball PRO SPIRIT
         145,    // Valorant, Marvel Rivals, FNAF: Secret of the Mimic, 2XKO, Crystal of Atlan, REMATCH
         150,    // Dead by Daylight (old), Splitgate 2, Byte Breakers, Le Dernier Don

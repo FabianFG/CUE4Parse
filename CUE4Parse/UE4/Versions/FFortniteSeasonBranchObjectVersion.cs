@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions;
@@ -71,10 +71,10 @@ public static class FFortniteSeasonBranchObjectVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE5_1 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE5_4 => Type.ChaosGeometryCollectionSaveLevelsAttribute,
-            < EGame.GAME_UE5_5 => Type.ChaosImplicitObjectUnionLeafObjectsToInt32,
-            < EGame.GAME_UE5_7 => Type.CVDSerializationFixMissingSerializationProperties,
+            < GAME_UE5_1 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE5_4 => Type.ChaosGeometryCollectionSaveLevelsAttribute,
+            < GAME_UE5_5 => Type.ChaosImplicitObjectUnionLeafObjectsToInt32,
+            < GAME_UE5_7 => Type.CVDSerializationFixMissingSerializationProperties,
             _ => Type.LatestVersion
         };
     }

@@ -190,8 +190,8 @@ public abstract class FPropertyTagType
             "VerseDynamicProperty" => new ObjectProperty(Ar, type), // idk, but for now read as ObjectProperty
             "VerseClassProperty" => new VerseClassProperty(Ar, type),
 
-            "CustomProperty_FD" or "GbxDefPtrProperty" when Ar.Game == EGame.GAME_Borderlands4 => new GbxDefPtrProperty(Ar, type),
-            "CustomProperty_FE" or "GameDataHandleProperty" when Ar.Game == EGame.GAME_Borderlands4 => new GameDataHandleProperty(Ar, type),
+            "CustomProperty_FD" or "GbxDefPtrProperty" when Ar.Game == GAME_Borderlands4 => new GbxDefPtrProperty(Ar, type),
+            "CustomProperty_FE" or "GameDataHandleProperty" when Ar.Game == GAME_Borderlands4 => new GameDataHandleProperty(Ar, type),
 
             _ => null
         };

@@ -15,7 +15,7 @@ public class UScriptStruct : UStruct
             StructFlags = Ar.Read<EStructFlags>();
         }
 
-        if (Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.Game < GAME_UE4_0)
         {
             DeserializePropertiesTagged(Properties, Ar, false);
         }

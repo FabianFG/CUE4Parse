@@ -16,6 +16,7 @@ using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
 using CUE4Parse.GameTypes.Strinova.Lua;
+using CUE4Parse.GameTypes.Tencent.ValorantSource.Lua;
 using CUE4Parse.GameTypes.UDWN.Lua;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
@@ -49,7 +50,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         this.Ar = Ar;
         Length = Ar.Length;
         Info = FPakInfo.ReadFPakInfo(Ar);
-        CompressionMethods = Info.CompressionMethods.ToArray();
+        CompressionMethods = [.. Info.CompressionMethods];
 
         var hasUnsupportedVersion = (Ar.Game < GAME_UE5_7 && Info.Version > PakFile_Version_Fnv64BugFix)
                                     || (Ar.Game >= GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
@@ -68,7 +69,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 or GAME_Snowbreak or GAME_TorchlightInfinite or GAME_TowerOfFantasy
                 or GAME_TheDivisionResurgence or GAME_QQ or GAME_DreamStar
                 or GAME_EtheriaRestart or GAME_DeadByDaylight_Old or GAME_WorldofJadeDynasty
-                or GAME_EmbersofTheUncrowned => true,
+                or GAME_EmbersofTheUncrowned or GAME_ValorantSource => true,
             _ => false
         };
     }
@@ -174,6 +175,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                     return LoMLua.DecryptLuaJITBytecode(pakEntry.Path, uncompressed);
                 case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
                     return NiNoKuniCsv.DecryptCsv(pakEntry.Name, uncompressed);
+                case GAME_ValorantSource when pakEntry.Extension is "lua":
+                    return ValorantSourceLua.DecryptLuaBytecode(pakEntry.Name, uncompressed);
                 default:
                     break;
             }
@@ -231,6 +234,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                 return LoMLua.DecryptLuaJITBytecode(pakEntry.Path, data);
             case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
                 return NiNoKuniCsv.DecryptCsv(pakEntry.Name, data);
+            case GAME_ValorantSource when pakEntry.Extension is "lua":
+                return ValorantSourceLua.DecryptLuaBytecode(pakEntry.Name, data);
             default:
                 break;
         }
@@ -257,6 +262,9 @@ public partial class PakFileReader : AbstractAesVfsReader
                     break;
                 case GAME_DragonSwordAwakening:
                     DragonSwordReadIndexUpdated(pathComparer);
+                    break;
+                case GAME_ValorantSource:
+                    ValorantSourceReadIndexUpdated(pathComparer);
                     break;
                 default:
                     ReadIndexUpdated(pathComparer);
@@ -409,7 +417,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
 
-        if (Info.Version >= PakFile_Version_SortedDirectoryIndex && !UsingCustomPakVersion())
+        if (Info.Version >= PakFile_Version_SortedDirectoryIndex && Ar.Game >= GAME_UE5_9)
         {
             ReadFlatDirectoryIndex(directoryIndex, files, encodedPakEntries, NonEncodedEntries);
             Files = files;

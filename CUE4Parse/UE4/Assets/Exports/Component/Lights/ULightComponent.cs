@@ -62,7 +62,7 @@ public class ULightComponent : ULightComponentBase
             }
         }
 
-        if (Ar.Game == EGame.GAME_Valorant) Ar.Position += 24; // Zero FVector, 1.0f, -1 int, 1.0f
+        if (Ar.Game == GAME_Valorant) Ar.Position += 24; // Zero FVector, 1.0f, -1 int, 1.0f
     }
 
     public virtual ELightUnits GetLightUnits() => ELightUnits.Unitless;

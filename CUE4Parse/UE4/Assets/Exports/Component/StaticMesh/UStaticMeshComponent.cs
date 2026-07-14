@@ -17,10 +17,10 @@ public class UStaticMeshComponent : UMeshComponent
     {
         base.Deserialize(Ar, validPos);
         if (Ar.Position == validPos) return;
-        if (Ar.Game is EGame.GAME_Borderlands3) Ar.ReadBoolean();
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
+        if (Ar.Game is GAME_Borderlands3) Ar.ReadBoolean();
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         LODData = Ar.ReadArray(() => new FStaticMeshComponentLODInfo(Ar));
-        if (Ar.Game is EGame.GAME_SuicideSquad)
+        if (Ar.Game is GAME_SuicideSquad)
         {
             var count = Ar.Read<int>();
             for (var i = 0; i < count; i++)

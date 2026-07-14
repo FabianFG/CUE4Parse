@@ -17,15 +17,15 @@ public class UAkAudioBank : UAkAudioType
         if (Ar.Position >= validPos - 4) return;
         switch (Ar.Game)
         {
-            case EGame.GAME_HogwartsLegacy or EGame.GAME_Farlight84 or EGame.GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile or EGame.GAME_LittleNightmares3:
+            case GAME_HogwartsLegacy or GAME_Farlight84 or GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile or GAME_LittleNightmares3:
                 return;
-            case EGame.GAME_FateTrigger:
+            case GAME_FateTrigger:
             {
                 var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(4, 1)], ERawHeaderFlags.RawProperties));
                 Properties.AddRange(idk.Properties);
                 return;
             }
-            case EGame.GAME_CenturyAgeofAshes:
+            case GAME_CenturyAgeofAshes:
             {
                 var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(2, 1)], ERawHeaderFlags.RawProperties));
                 Properties.AddRange(idk.Properties);

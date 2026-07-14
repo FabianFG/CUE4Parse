@@ -34,12 +34,12 @@ public class FHierarchyNodeSlice
         BoxBoundsExtent = Ar.Read<FVector>();
         ChildStartReference = Ar.Read<uint>();
         bLoaded = ChildStartReference != 0xFFFFFFFFu;
-        if (Ar.Game >= EGame.GAME_UE5_7)
+        if (Ar.Game >= GAME_UE5_7)
         {
             uint x;
             uint y;
 
-            if (Ar.Game >= EGame.GAME_UE5_8)
+            if (Ar.Game >= GAME_UE5_8)
             {
                 var misc2 = Ar.Read<TIntVector3<uint>>();
                 x = misc2.X;

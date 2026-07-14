@@ -14,7 +14,7 @@ public struct FMovieSceneSubSequenceTreeEntry : IUStruct
     {
         SequenceID = Ar.Read<uint>();
         Flags = (ESectionEvaluationFlags) Ar.ReadByte();
-        if (Ar.Game < EGame.GAME_UE5_5 && (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddedSubSequenceEntryWarpCounter ||
+        if (Ar.Game < GAME_UE5_5 && (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddedSubSequenceEntryWarpCounter ||
             FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.AddedSubSequenceEntryWarpCounter))
         {
             RootToSequenceWarpCounter = new FStructFallback(Ar, "MovieSceneWarpCounter");

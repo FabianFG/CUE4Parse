@@ -35,8 +35,8 @@ public static class FMobileObjectVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_19 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_26 => Type.LQVolumetricLightmapLayers,
+            < GAME_UE4_19 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_26 => Type.LQVolumetricLightmapLayers,
             _ => Type.LatestVersion
         };
     }

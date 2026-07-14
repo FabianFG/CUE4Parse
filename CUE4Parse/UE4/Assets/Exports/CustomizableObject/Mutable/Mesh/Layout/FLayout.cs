@@ -19,7 +19,7 @@ public class FLayout
 
     public FLayout(FMutableArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE5_7)
+        if (Ar.Game >= GAME_UE5_7)
         {
             Size = Ar.Read<FIntVector2>();
             MaxSize = Ar.Read<FIntVector2>();
@@ -28,7 +28,7 @@ public class FLayout
             Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar));
             Masks = Ar.ReadPtrArray(() => new FImage(Ar));
         }
-        else if (Ar.Game >= EGame.GAME_UE5_5)
+        else if (Ar.Game >= GAME_UE5_5)
         {
             Size = Ar.Read<FIntVector2>();
             Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar));
@@ -42,7 +42,7 @@ public class FLayout
             var size = Ar.Read<TIntVector2<ushort>>();
             Size = new FIntVector2(size.X, size.Y);
             Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar, Version));
-            if (Ar.Game is EGame.GAME_LordsoftheFallen && Blocks.Length != 0)
+            if (Ar.Game is GAME_LordsoftheFallen && Blocks.Length != 0)
             {
                 Ar.Position +=4;
             }

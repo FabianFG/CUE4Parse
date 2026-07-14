@@ -33,11 +33,11 @@ public static class FPropertyBagCustomVersion
 
         return Ar.Game switch
         {
-            EGame.GAME_BlackMythWukong => Type.NestedContainerTypes,
-            < EGame.GAME_UE5_1 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE5_3 => Type.ContainerTypes,
-            < EGame.GAME_UE5_4 => Type.NestedContainerTypes,
-            < EGame.GAME_UE5_8 => Type.MetaClass,
+            GAME_BlackMythWukong => Type.NestedContainerTypes,
+            < GAME_UE5_1 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE5_3 => Type.ContainerTypes,
+            < GAME_UE5_4 => Type.NestedContainerTypes,
+            < GAME_UE5_8 => Type.MetaClass,
             _ => Type.LatestVersion
         };
     }

@@ -26,9 +26,9 @@ public readonly struct FSoftObjectPath : IUStruct
 
     public FSoftObjectPath(FAssetArchive Ar)
     {
-        if (Ar.Ver < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || Ar.Game == EGame.GAME_DragonQuestXI)
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.ADDED_SOFT_OBJECT_PATH || Ar.Game == GAME_DragonQuestXI)
         {
-            var path = Ar.Game != EGame.GAME_DragonQuestXI ? Ar.ReadFString() : Ar.ReadFName().Text;
+            var path = Ar.Game != GAME_DragonQuestXI ? Ar.ReadFString() : Ar.ReadFName().Text;
             AssetPathName = path.SubstringBeforeLast('.');
             SubPathString = path.SubstringAfterLast('.');
             Owner = Ar.Owner;
@@ -53,7 +53,7 @@ public readonly struct FSoftObjectPath : IUStruct
             return;
         }
 
-        if (Ar.Game is EGame.GAME_AshesOfCreation && Ar is FAoCDBCReader)
+        if (Ar.Game is GAME_AshesOfCreation && Ar is FAoCDBCReader)
         {
             var str = Ar.ReadFName().Text;
             AssetPathName = str.SubstringBeforeLast(':');
@@ -62,7 +62,7 @@ public readonly struct FSoftObjectPath : IUStruct
             return;
         }
 
-        if (Ar.Game is EGame.GAME_OuterWorlds2 && Ar is FOW2ObjectsArchive OW2Ar)
+        if (Ar.Game is GAME_OuterWorlds2 && Ar is FOW2ObjectsArchive OW2Ar)
         {
             while (true)
             {
@@ -80,7 +80,7 @@ public readonly struct FSoftObjectPath : IUStruct
             return;
         }
 
-        AssetPathName = Ar.Ver >= EUnrealEngineObjectUE5Version.FSOFTOBJECTPATH_REMOVE_ASSET_PATH_FNAMES || Ar.Game == EGame.GAME_TheFirstDescendant ? new FName(new FTopLevelAssetPath(Ar).ToString()) : Ar.ReadFName();
+        AssetPathName = Ar.Ver >= EUnrealEngineObjectUE5Version.FSOFTOBJECTPATH_REMOVE_ASSET_PATH_FNAMES || Ar.Game == GAME_TheFirstDescendant ? new FName(new FTopLevelAssetPath(Ar).ToString()) : Ar.ReadFName();
         SubPathString = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.SoftObjectPathUtf8SubPaths ? Ar.ReadFString() : Ar.ReadFUtf8String();
         Owner = Ar.Owner;
     }

@@ -16,7 +16,7 @@ public class FLandscapeComponentGrassData
 
     public FLandscapeComponentGrassData(FAssetArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE5_0)
+        if (Ar.Game >= GAME_UE5_0)
         {
             NumElements = Ar.Read<int>();
             WeightOffsets = Ar.ReadMap(() => new FPackageIndex(Ar), Ar.Read<int>);
@@ -24,12 +24,12 @@ public class FLandscapeComponentGrassData
         }
         else
         {
-            if (Ar.Game < EGame.GAME_UE4_13 && Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA_MATERIAL_GUID)
+            if (Ar.Game < GAME_UE4_13 && Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA_MATERIAL_GUID)
             {
                 Ar.Position +=16; // Guid
             }
 
-            if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+            if (Ar.Game is GAME_HonorofKingsWorld)
             {
                 NumElements = Ar.Read<int>();
                 var count = Ar.Read<int>();
@@ -47,7 +47,7 @@ public class FLandscapeComponentGrassData
                 return;
             }
 
-            if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
+            if (Ar.Game == GAME_PlayerUnknownsBattlegrounds)
             {
                 var bulkData = new FByteBulkData(Ar);
                 var data = bulkData.Data ?? [];

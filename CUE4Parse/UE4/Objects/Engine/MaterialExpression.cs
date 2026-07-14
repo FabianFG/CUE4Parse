@@ -119,7 +119,7 @@ public class FExpressionInput : IUStruct
             return;
         }
 
-        if (Ar is { Game: < EGame.GAME_UE5_1, IsFilterEditorOnly: false } || Ar.Game >= EGame.GAME_UE5_1)
+        if (Ar is { Game: < GAME_UE5_1, IsFilterEditorOnly: false } || Ar.Game >= GAME_UE5_1)
             Expression = new FPackageIndex(Ar);
         OutputIndex = Ar.Read<int>();
         InputName = FFrameworkObjectVersion.Get(Ar) >= FFrameworkObjectVersion.Type.PinsStoreFName ? Ar.ReadFName() : new FName(Ar.ReadFString());
@@ -128,7 +128,7 @@ public class FExpressionInput : IUStruct
         MaskG = Ar.Read<int>();
         MaskB = Ar.Read<int>();
         MaskA = Ar.Read<int>();
-        ExpressionName = Ar is { Game: < EGame.GAME_UE5_2, IsFilterEditorOnly: true } ? Ar.ReadFName() : (Expression ?? new FPackageIndex()).Name.SubstringAfterLast('/');
+        ExpressionName = Ar is { Game: < GAME_UE5_2, IsFilterEditorOnly: true } ? Ar.ReadFName() : (Expression ?? new FPackageIndex()).Name.SubstringAfterLast('/');
     }
 
     public virtual void WriteAdditionalProperties(JsonWriter writer, JsonSerializer serializer) { }
