@@ -314,7 +314,7 @@ public static class BlueprintDecompilerUtils
             "NameProperty" => "FName",
             "TextProperty" => "FText",
             "FloatProperty" => "float",
-            "SoftObjectProperty" or "AssetObjectProperty" => "FSoftObjectPath",
+            "SoftObjectProperty" or "SoftClassProperty" or "AssetObjectProperty" => "FSoftObjectPath",
             "ObjectProperty" or "ClassProperty" => "UObject*",
             "StructProperty" => $"F{tagType.StructType}",
             "InterfaceProperty" => $"I{tagType.StructType}",
