@@ -10,7 +10,7 @@ public class FFastGeoStaticMeshComponentBase : FFastGeoMeshComponent
     {
         SceneProxyDesc.StaticMeshSceneProxyDesc = new FStaticMeshSceneProxyDesc(Ar);
         bUseDefaultCollision = Ar.ReadBoolean();
-        if (Ar.Game is EGame.GAME_WutheringWavesFastGeo) Ar.SkipFixedArray(sizeof(uint)*3);
+        if (Ar.Game is GAME_WutheringWavesFastGeo) Ar.SkipFixedArray(sizeof(uint)*3);
     }
 }
 

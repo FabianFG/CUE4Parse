@@ -43,7 +43,7 @@ namespace CUE4Parse.UE4.Readers
 
         public bool SupportPartialReads => Game switch
         {
-            EGame.GAME_GameForPeace or EGame.GAME_Rennsport or EGame.GAME_DragonQuestXI => false,
+            GAME_GameForPeace or GAME_Rennsport or GAME_DragonQuestXI => false,
             _ => true,
         };
 
@@ -195,7 +195,7 @@ namespace CUE4Parse.UE4.Readers
         {
             var pos = Position;
             T[] array = ReadArray(elementCount, getter);
-            if (Game != EGame.GAME_HogwartsLegacy && Position != pos + array.Length * elementSize)
+            if (Game != GAME_HogwartsLegacy && Position != pos + array.Length * elementSize)
                 throw new ParserException($"RawArray item size mismatch: expected {elementSize}, serialized {(Position - pos) / array.Length}");
             return array;
         }
@@ -759,8 +759,8 @@ namespace CUE4Parse.UE4.Readers
 
             public FCompressedChunkInfo(FArchive Ar)
             {
-                CompressedSize = Ar.Game < EGame.GAME_UE4_0 ? Ar.Read<uint>() : Ar.Read<long>();
-                UncompressedSize = Ar.Game < EGame.GAME_UE4_0 ? Ar.Read<uint>() : Ar.Read<long>();
+                CompressedSize = Ar.Game < GAME_UE4_0 ? Ar.Read<uint>() : Ar.Read<long>();
+                UncompressedSize = Ar.Game < GAME_UE4_0 ? Ar.Read<uint>() : Ar.Read<long>();
             }
         }
     }

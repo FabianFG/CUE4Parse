@@ -31,7 +31,7 @@ public class ULandscapeComponent : UPrimitiveComponent
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 20;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 20;
         base.Deserialize(Ar, validPos);
         SectionBaseX = GetOrDefault(nameof(SectionBaseX), 0);
         SectionBaseY = GetOrDefault(nameof(SectionBaseY), 0);
@@ -73,19 +73,19 @@ public class ULandscapeComponent : UPrimitiveComponent
             GrassData = new FLandscapeComponentGrassData(Ar);
         }
 
-        if (!Ar.IsFilterEditorOnly && Ar.Game >= EGame.GAME_UE4_0)
+        if (!Ar.IsFilterEditorOnly && Ar.Game >= GAME_UE4_0)
         {
             Ar.Position += sizeof(int); // SelectedType
         }
 
-        if (Ar.Game is EGame.GAME_Farlight84) Ar.Position += 32;
+        if (Ar.Game is GAME_Farlight84) Ar.Position += 32;
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.LANDSCAPE_PLATFORMDATA_COOKING && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
         {
             bCooked = Ar.ReadBoolean();
         }
 
-        if (Ar.Game is EGame.GAME_Aion2)
+        if (Ar.Game is GAME_Aion2)
         {
             var bCookedMobileData = Ar.ReadBoolean();
             var some = Ar.ReadBulkArray<FVector>();
@@ -93,7 +93,7 @@ public class ULandscapeComponent : UPrimitiveComponent
             return;
         }
 
-        if (Ar.Game >= EGame.GAME_UE4_0 && Ar.Game < EGame.GAME_UE5_1 && Ar.Position + 4 <= validPos)
+        if (Ar.Game >= GAME_UE4_0 && Ar.Game < GAME_UE5_1 && Ar.Position + 4 <= validPos)
         {
             var bCookedMobileData = Ar.ReadBoolean();
             if (bCookedMobileData)
@@ -153,7 +153,7 @@ public class FLandscapeComponentDerivedData
     public FLandscapeComponentDerivedData(FAssetArchive Ar)
     {
         CompressedLandscapeData = Ar.ReadArray<byte>();
-        if (Ar.Game >= EGame.GAME_UE4_26)
+        if (Ar.Game >= GAME_UE4_26)
         {
             StreamingLODDataArray = Ar.ReadArray(() => new FByteBulkData(Ar));
         }

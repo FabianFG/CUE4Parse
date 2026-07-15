@@ -13,7 +13,7 @@ public class GFPStaticMeshRenderData : FStaticMeshRenderData
     {
         if (bIsStreamable)
         {
-            if (Ar.Game == EGame.GAME_WeHappyFew) Ar.Position += 4; //ubulk lods count
+            if (Ar.Game == GAME_WeHappyFew) Ar.Position += 4; //ubulk lods count
             var size = Ar.Read<int>();
             LODs = new FStaticMeshLODResources[size];
             for (var i = 0; i < size; i++)
@@ -31,7 +31,7 @@ public class GFPStaticMeshRenderData : FStaticMeshRenderData
             LODs = Ar.ReadArray(() => new FStaticMeshLODResources(Ar));
         }
 
-        if (Ar.Game == EGame.GAME_WeHappyFew)
+        if (Ar.Game == GAME_WeHappyFew)
         {
             Bounds = new FBoxSphereBounds(Ar);
             if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"]) bLODsShareStaticLighting = Ar.ReadBoolean();
@@ -43,7 +43,7 @@ public class GFPStaticMeshRenderData : FStaticMeshRenderData
 
         var stripDataFlags = new FStripDataFlags(Ar);
         var stripped = stripDataFlags.IsAudioVisualDataStripped();
-        if (Ar.Game >= EGame.GAME_UE4_21)
+        if (Ar.Game >= GAME_UE4_21)
         {
             stripped |= stripDataFlags.IsClassDataStripped(0x01);
         }

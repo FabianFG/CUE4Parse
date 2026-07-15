@@ -44,21 +44,21 @@ public class FStaticMeshLODResources
     {
         var stripDataFlags = new FStripDataFlags(Ar);
 
-        if (Ar.Game == EGame.GAME_TheDivisionResurgence) Ar.Position += 4;
+        if (Ar.Game == GAME_TheDivisionResurgence) Ar.Position += 4;
 
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
 
-        if (Ar.Game >= EGame.GAME_UE5_6)
+        if (Ar.Game >= GAME_UE5_6)
         {
             SourceMeshBounds = new FBoxSphereBounds(Ar);
         }
-        if (Ar.Game >= EGame.GAME_UE4_0)
+        if (Ar.Game >= GAME_UE4_0)
         {
             MaxDeviation = Ar.Read<float>();
         }
 
-        if (Ar.Game is EGame.GAME_ThePathless or EGame.GAME_ARKSurvivalAscended) Ar.Position += 4;
-        if (Ar.Game == EGame.GAME_NeedForSpeedMobile)
+        if (Ar.Game is GAME_ThePathless or GAME_ARKSurvivalAscended) Ar.Position += 4;
+        if (Ar.Game == GAME_NeedForSpeedMobile)
         {
             Ar.SkipFixedArray(36);
             Ar.SkipFixedArray(28);
@@ -75,39 +75,41 @@ public class FStaticMeshLODResources
             return;
         }
 
-        var bIsLODCookedOut = false;
-        if (Ar.Game != EGame.GAME_Splitgate)
-            bIsLODCookedOut = Ar.ReadBoolean();
-        var bInlined = Ar.ReadBoolean() || Ar.Game == EGame.GAME_RogueCompany;
+        if (Ar.Game is GAME_ArenaBreakoutMobile) Ar.SkipFixedArray(28);
 
-        if (Ar.Game is EGame.GAME_LordOfMysteries) Ar.Position += 4;
+        var bIsLODCookedOut = false;
+        if (Ar.Game != GAME_Splitgate)
+            bIsLODCookedOut = Ar.ReadBoolean();
+        var bInlined = Ar.ReadBoolean() || Ar.Game == GAME_RogueCompany;
+
+        if (Ar.Game is GAME_LordOfMysteries) Ar.Position += 4;
 
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
-            if (Ar.Game >= EGame.GAME_UE5_5 || Ar.Game == EGame.GAME_MetalGearSolidDelta) Ar.Position += 4; // bHasRayTracingGeometry
+            if (Ar.Game >= GAME_UE5_5 || Ar.Game == GAME_MetalGearSolidDelta) Ar.Position += 4; // bHasRayTracingGeometry
 
             if (bInlined)
             {
                 SerializeBuffers(Ar);
                 switch (Ar.Game)
                 {
-                    case EGame.GAME_RogueCompany:
+                    case GAME_RogueCompany:
                         Ar.Position += 10;
                         break;
-                    case EGame.GAME_TheDivisionResurgence:
+                    case GAME_TheDivisionResurgence:
                         Ar.Position += 12;
                         break;
-                    case EGame.GAME_PUBGBlackBudget:
+                    case GAME_PUBGBlackBudget:
                         Ar.Position += 4;
                         if (Ar.Read<int>() > 0) Ar.SkipBulkArrayData();
                         break;
-                    case EGame.GAME_HonorofKingsWorld:
+                    case GAME_HonorofKingsWorld:
                         _ = Ar.ReadArray(2, () => new FRawStaticIndexBuffer(Ar));
                         Ar.Position += 4;
                         var additionalBuffers = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
                         if (additionalBuffers[0] is { Buffer: {Length: > 0 }}) Sections[0].CustomData = 1; // flag for custom serialization in FStaticMeshRenderData
                         break;
-                    case EGame.GAME_InfinityNikki when Sections.Any(x => x.CustomData is 1):
+                    case GAME_InfinityNikki when Sections.Any(x => x.CustomData is 1):
                         _ = Ar.ReadArray(4, () => new FRawStaticIndexBuffer(Ar));
                         break;
                 }
@@ -121,7 +123,7 @@ public class FStaticMeshLODResources
                     SerializeBuffers(tempAr);
                 }
 
-                if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+                if (Ar.Game is GAME_HonorofKingsWorld)
                 {
                     Ar.Position += 8;
                     Ar.Position += Ar.Read<int>() == 32 ? 64 : 40;
@@ -146,13 +148,14 @@ public class FStaticMeshLODResources
 
                 Ar.Position += Ar.Game switch
                 {
-                    >= EGame.GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
-                    EGame.GAME_NeedForSpeedMobile => 32,
-                    EGame.GAME_SuicideSquad => 29,
-                    EGame.GAME_ArenaBreakoutInfinite => 16,
-                    EGame.GAME_TheFinals or EGame.GAME_ArcRaiders => 12,
-                    EGame.GAME_StarWarsJediSurvivor or EGame.GAME_DeltaForce => 4, // bDropNormals
-                    EGame.GAME_FateTrigger => 5,
+                    >= GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
+                    GAME_ArenaBreakoutMobile => 44,
+                    GAME_NeedForSpeedMobile => 32,
+                    GAME_SuicideSquad => 29,
+                    GAME_ArenaBreakoutInfinite => 16,
+                    GAME_TheFinals or GAME_ArcRaiders => 12,
+                    GAME_StarWarsJediSurvivor or GAME_DeltaForce => 4, // bDropNormals
+                    GAME_FateTrigger => 5,
                     _ => 0
                 };
             }
@@ -163,8 +166,8 @@ public class FStaticMeshLODResources
             // uint32 ReversedIBsSize       = 0;
             Ar.Position += 12;
 
-            if (Ar.Game is EGame.GAME_StarWarsJediSurvivor or EGame.GAME_TheFinals or EGame.GAME_ArcRaiders) Ar.Position += 4;
-            if (Ar.Game is EGame.GAME_NeedForSpeedMobile)
+            if (Ar.Game is GAME_StarWarsJediSurvivor or GAME_TheFinals or GAME_ArcRaiders) Ar.Position += 4;
+            if (Ar.Game is GAME_NeedForSpeedMobile)
             {
                 var count = Ar.Read<int>();
                 for (var i = 0; i < count; i++)
@@ -179,12 +182,12 @@ public class FStaticMeshLODResources
     // Pre-UE4.23 code
     public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
     {
-        if (Ar.Game is EGame.GAME_Abzu) Ar.Position += 4;
+        if (Ar.Game is GAME_Abzu) Ar.Position += 4;
 
         PositionVertexBuffer = new FPositionVertexBuffer(Ar);
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);
 
-        if (Ar.Game == EGame.GAME_Borderlands3)
+        if (Ar.Game == GAME_Borderlands3)
         {
             var numColorStreams = Ar.Read<int>();
             if (numColorStreams != 0)
@@ -207,7 +210,7 @@ public class FStaticMeshLODResources
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-        if (Ar.Game == EGame.GAME_NarutotoBorutoShinobiStriker)
+        if (Ar.Game == GAME_NarutotoBorutoShinobiStriker)
         {
             if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
@@ -215,7 +218,7 @@ public class FStaticMeshLODResources
             return;
         }
 
-        if (Ar.Game != EGame.GAME_PlayerUnknownsBattlegrounds || !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_StripIndexBuffers))
+        if (Ar.Game != GAME_PlayerUnknownsBattlegrounds || !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_StripIndexBuffers))
         {
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.SOUND_CONCURRENCY_PACKAGE && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_ReversedIndexBuffer))
             {
@@ -229,7 +232,7 @@ public class FStaticMeshLODResources
                 DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
             }
 
-            if (Ar.Game is EGame.GAME_Abzu)
+            if (Ar.Game is GAME_Abzu)
             {
                 Ar.Position += 4;
                 Ar.SkipMultipleFixedArrays([8, 4, 24, 4]);
@@ -247,7 +250,7 @@ public class FStaticMeshLODResources
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
 
-        if (Ar.Game > EGame.GAME_UE4_16)
+        if (Ar.Game > GAME_UE4_16)
         {
             for (var i = 0; i < Sections.Length; i++)
             {
@@ -257,7 +260,7 @@ public class FStaticMeshLODResources
             _ = new FWeightedRandomSampler(Ar);
         }
 
-        if (Ar.Game == EGame.GAME_SeaOfThieves) Ar.Position += 17;
+        if (Ar.Game == GAME_SeaOfThieves) Ar.Position += 17;
     }
 
     public void SerializeBuffers(FArchive Ar)
@@ -268,11 +271,11 @@ public class FStaticMeshLODResources
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);
         ColorVertexBuffer = new FColorVertexBuffer(Ar);
 
-        if (Ar.Game is EGame.GAME_RogueCompany)
+        if (Ar.Game is GAME_RogueCompany)
         {
             _ = new FColorVertexBuffer(Ar);
         }
-        if (Ar.Game == EGame.GAME_ThePathless) Ar.Position += 20;
+        if (Ar.Game == GAME_ThePathless) Ar.Position += 20;
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
 
@@ -281,7 +284,7 @@ public class FStaticMeshLODResources
             ReversedIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
 
-        if (Ar.Game is EGame.GAME_OutlastTrials) Ar.Position += 4;
+        if (Ar.Game is GAME_OutlastTrials) Ar.Position += 4;
 
         DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
@@ -294,24 +297,28 @@ public class FStaticMeshLODResources
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation &&
             !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
         {
-            if (Ar.Game != EGame.GAME_GTATheTrilogyDefinitiveEdition && Ar.Game != EGame.GAME_FinalFantasy7Rebirth)
+            if (Ar.Game != GAME_GTATheTrilogyDefinitiveEdition && Ar.Game != GAME_FinalFantasy7Rebirth)
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
 
-        if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 4;
+        if (Ar.Game == GAME_OutlastTrials) Ar.Position += 4;
 
-        if (Ar.Game == EGame.GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is GAME_ArenaBreakoutInfinite)
         {
             _ = new FRawStaticIndexBuffer(Ar);
             _ = new FRawStaticIndexBuffer(Ar);
         }
-        if (Ar.Game is EGame.GAME_TheFinals or EGame.GAME_ArcRaiders)
+        if (Ar.Game is GAME_ArenaBreakoutMobile)
+        {
+            Ar.SkipMultipleBulkArrayData(4);
+        }
+        if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
         {
             _ = new FRawStaticIndexBuffer(Ar);
             Ar.Position += 4; // Vert count
         }
 
-        if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth)
+        if (Ar.Game == GAME_FinalFantasy7Rebirth)
         {
             if (FF7FStaticMeshLODResources.SerializeIndexBuffer(Ar, out var sections, out var indexBuffer))
             {
@@ -326,7 +333,7 @@ public class FStaticMeshLODResources
 
         if (Ar.Versions["StaticMesh.HasRayTracingGeometry"] && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_RayTracingResources))
         {
-            if (Ar.Game >= EGame.GAME_UE5_6)
+            if (Ar.Game >= GAME_UE5_6)
                 Ar.Position += 6 * sizeof(uint); // RawDataHeader = 6x uint32
 
             Ar.SkipBulkArrayData(); // rayTracingGeometry

@@ -136,6 +136,19 @@ public abstract class TBulkData<T> where T: struct
             archive = uptnlAr;
             position = uptnlAr.Length == Header.SizeOnDisk ? 0 : Header.OffsetInFile;
         }
+        else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile | BULKDATA_MemoryMappedPayload))
+        {
+            if (!TryGetBulkPayload(archive, PayloadType.MUBULK, out var mubulkAr))
+            {
+#if DEBUG
+                Log.Debug("Failed to load bulk data in {CookedIndex}.m.ubulk file (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
+#endif
+                return false;
+            }
+
+            archive = mubulkAr;
+            position = mubulkAr.Length == Header.SizeOnDisk ? 0 : Header.OffsetInFile;
+        }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile))
         {
             if (!TryGetBulkPayload(archive, PayloadType.UBULK, out var ubulkAr))
@@ -172,7 +185,16 @@ public abstract class TBulkData<T> where T: struct
         payloadAr = null;
         if (Header.CookedIndex.IsDefault)
         {
-            Ar.TryGetPayload(type, out payloadAr, Header);
+            if (type is PayloadType.MUBULK && Ar.Owner?.Provider is IVfsFileProvider vfsFileProvider)
+            {
+                var path = Path.ChangeExtension(Ar.Name, ".m.ubulk");
+                if (vfsFileProvider.TryGetGameFile(path, out var file) && file.TryCreateReader(out var reader, Header))
+                {
+                    payloadAr = new FAssetArchive(reader, Ar.Owner);
+                }
+            }
+            else
+                Ar.TryGetPayload(type, out payloadAr, Header);
         }
         else if (Ar.Owner?.Provider is IVfsFileProvider vfsFileProvider)
         {

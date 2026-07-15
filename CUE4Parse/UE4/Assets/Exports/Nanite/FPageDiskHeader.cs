@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Nanite;
@@ -25,12 +25,12 @@ public readonly struct FPageDiskHeader
 
     public FPageDiskHeader(FArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_4) GpuSize = Ar.Read<uint>();
+        if (Ar.Game < GAME_UE5_4) GpuSize = Ar.Read<uint>();
         NumClusters = Ar.Read<uint>();
         NumRawFloat4s = Ar.Read<uint>();
-        if (Ar.Game < EGame.GAME_UE5_4) NumTexCoords = Ar.Read<uint>();
+        if (Ar.Game < GAME_UE5_4) NumTexCoords = Ar.Read<uint>();
         NumVertexRefs = Ar.Read<uint>();
-        if (Ar.Game < EGame.GAME_UE5_7) DecodeInfoOffset = Ar.Read<uint>();
+        if (Ar.Game < GAME_UE5_7) DecodeInfoOffset = Ar.Read<uint>();
         StripBitmaskOffset = Ar.Read<uint>();
         VertexRefBitmaskOffset = Ar.Read<uint>();
     }

@@ -221,7 +221,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
     {
         switch (Game)
         {
-            case EGame.GAME_MindsEye:
+            case GAME_MindsEye:
                 return ReadPartiallyEncrypted(offset, length, offsetInFile);
         }
 
@@ -243,7 +243,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
             ref var compressionBlock = ref TocResource.CompressionBlocks[blockIndex];
 
             var rawSize = compressionBlock.CompressedSize.Align(Aes.ALIGN);
-            if (Game is EGame.GAME_eBaseballProSpirit)
+            if (Game is GAME_eBaseballProSpirit)
             {
                 rawSize = (compressionBlock.CompressedSize + ProSpiEncryption.EncryptionDataTrailerSize).Align(Aes.ALIGN);
             }
@@ -268,7 +268,8 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
             reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
             // FragPunk decided to encrypt the global utoc too.
-            compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == EGame.GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
+            // For Lord of Mysteries utoc files are "synthetic", without dir index, so we can't test the key.
+            compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == GAME_LordOfMysteries || Game == GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
 
             byte[] src;
             if (compressionBlock.CompressionMethodIndex == 0)
@@ -304,7 +305,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
     {
         var limit = Game switch
         {
-            EGame.GAME_MindsEye => 0x1000,
+            GAME_MindsEye => 0x1000,
             _ => throw new ArgumentOutOfRangeException(nameof(Game), "Unsupported game for partial encrypted io store extraction")
         };
 
@@ -408,7 +409,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         watch.Start();
 
         ProcessIndex(pathComparer);
-        _containerHeader = new Lazy<FIoContainerHeader?>(ReadContainerHeader);
+        InitializeContainerHeader();
 
         if (Globals.LogVfsMounts)
         {
@@ -416,7 +417,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
             var sb = new StringBuilder($"IoStore \"{Name}\": {FileCount} files");
             if (EncryptedFileCount > 0)
                 sb.Append($" ({EncryptedFileCount} encrypted)");
-            if (MountPoint.Contains("/"))
+            if (MountPoint.Contains('/'))
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", version {(int) TocResource.Header.Version} in {elapsed}");
@@ -469,7 +470,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                     var name = stringTable[fileEntry.Name];
                     var fullPathLength = Write(directoryName, directoryLength, name, true);
                     var fullPathSpan = directoryName.AsSpan(..fullPathLength);
-                    if (Game == EGame.GAME_NeedForSpeedMobile) fullPathSpan = fullPathSpan.SubstringAfter("../../../");
+                    if (Game == GAME_NeedForSpeedMobile) fullPathSpan = fullPathSpan.SubstringAfter("../../../");
                     var path = new string(fullPathSpan);
 
                     var entry = new FIoStoreEntry(this, path, fileEntry.UserData);
@@ -490,17 +491,19 @@ public partial class IoStoreReader : AbstractAesVfsReader
         ArrayPool<char>.Shared.Return(dirNamePool);
     }
 
+    protected void InitializeContainerHeader() => _containerHeader = new Lazy<FIoContainerHeader?>(ReadContainerHeader);
+
     private FIoContainerHeader ReadContainerHeader()
     {
         try
         {
-            var headerChunkId = new FIoChunkId(TocResource.Header.ContainerId.Id, 0, Game >= EGame.GAME_UE5_0 ? (byte) EIoChunkType5.ContainerHeader : (byte) EIoChunkType.ContainerHeader);
+            var headerChunkId = new FIoChunkId(TocResource.Header.ContainerId.Id, 0, Game >= GAME_UE5_0 ? (byte) EIoChunkType5.ContainerHeader : (byte) EIoChunkType.ContainerHeader);
             using var Ar = new FByteArchive("ContainerHeader", Read(headerChunkId), Versions);
             return new FIoContainerHeader(Ar);
         }
         catch (Exception)
         {
-            if (Game >= EGame.GAME_UE5_0)
+            if (Game >= GAME_UE5_0)
                 throw;
             else
                 return null!;

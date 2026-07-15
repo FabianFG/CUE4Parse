@@ -116,13 +116,13 @@ public struct FBodyInstance : IUStruct
             ResponseArray[names[i]] = (ECollisionResponse) values[i];
         }
         Flags = Ar.Read<ulong>();
-        if (Ar.Game is EGame.GAME_DuneAwakening)
+        if (Ar.Game is GAME_DuneAwakening)
         {
             SomeVector = Ar.Read<FVector>();
             Ar.Position += 96; // some floats/vectors and maybe some enum array at the end
             Scale = new FVector(Ar);
         }
-        else if (Ar.Game is EGame.GAME_ConanExilesEnhanced)
+        else if (Ar.Game is GAME_ConanExilesEnhanced)
         {
             Ar.Position += 114;
         }

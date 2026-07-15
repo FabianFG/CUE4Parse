@@ -8,7 +8,7 @@ public class UMorphTargetSet : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SERIALIZE_MORPHTARGETRAWVERTSINDICES && Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SERIALIZE_MORPHTARGETRAWVERTSINDICES && Ar.Game < GAME_UE4_0)
         {
             Ar.ReadArray(() => Ar.ReadArray<int>()); // RawWedgePointIndices
         }

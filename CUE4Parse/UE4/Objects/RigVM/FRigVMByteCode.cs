@@ -278,7 +278,7 @@ public readonly struct FRigVMCopyOp : IRigInstruction
         Source = Ar.Read<FRigVMOperand>();
         Target = Ar.Read<FRigVMOperand>();
 
-        if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RigVMCopyOpStoreNumBytes && Ar.Game != EGame.GAME_HonorofKingsWorld)
+        if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RigVMCopyOpStoreNumBytes && Ar.Game != GAME_HonorofKingsWorld)
         {
             NumBytes = 0;
             RegisterType = ERigVMRegisterType.Invalid;

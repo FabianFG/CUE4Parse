@@ -26,14 +26,14 @@ public class FFixupChunk
         public FHeader(FArchive Ar)
         {
             // the NF header was added in 5.3 in previous versions it isn't there
-            if (Ar.Game >= EGame.GAME_UE5_3)
+            if (Ar.Game >= GAME_UE5_3)
             {
                 var magic = Ar.Read<ushort>();
                 if (magic != NANITE_FIXUP_MAGIC) //NF
                     throw new InvalidDataException($"Invalid magic value, expected {NANITE_FIXUP_MAGIC:04x} got {magic:04x}");
             }
 
-            if (Ar.Game >= EGame.GAME_UE5_7)
+            if (Ar.Game >= GAME_UE5_7)
             {
                 NumGroupFixups = Ar.Read<ushort>();
                 NumPartFixups = Ar.Read<ushort>();
@@ -41,7 +41,7 @@ public class FFixupChunk
 
             NumClusters = Ar.Read<ushort>();
 
-            if (Ar.Game >= EGame.GAME_UE5_7)
+            if (Ar.Game >= GAME_UE5_7)
             {
                 NumReconsiderPages = Ar.Read<ushort>();
                 Ar.Position += sizeof(ushort); // pad
@@ -55,7 +55,7 @@ public class FFixupChunk
                 NumClusterFixups = Ar.Read<ushort>();
             }
 
-            if (Ar.Game < EGame.GAME_UE5_3) Ar.Position += 2;
+            if (Ar.Game < GAME_UE5_3) Ar.Position += 2;
         }
     }
 
@@ -74,7 +74,7 @@ public class FFixupChunk
     {
         Header = new FHeader(Ar);
 
-        if (Ar.Game >= EGame.GAME_UE5_7)
+        if (Ar.Game >= GAME_UE5_7)
         {
             GroupFixups = Ar.ReadArray<FGroupFixup>(Header.NumGroupFixups);
             PartFixups = Ar.ReadArray<FPartFixup>(Header.NumPartFixups);

@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
@@ -22,6 +22,6 @@ public struct DetourPoly
         Flags = Ar.Read<ushort>();
         VertCount = Ar.Read<byte>();
         AreaAndType = Ar.Read<byte>();
-        if (Ar.Game is EGame.GAME_NeedForSpeedMobile) Ar.Position += 16;
+        if (Ar.Game is GAME_NeedForSpeedMobile) Ar.Position += 16;
     }
 }

@@ -82,7 +82,7 @@ namespace CUE4Parse.UE4.Versions
             Options["Vector_NetQuantize_AsStruct"] = Game >= GAME_UE5_0;
 
             // fields
-            Options["RawIndexBuffer.HasShouldExpandTo32Bit"] = Game >= GAME_UE4_25 && Game != GAME_DeltaForce;
+            Options["RawIndexBuffer.HasShouldExpandTo32Bit"] = Game is >= GAME_UE4_25 and not GAME_DeltaForce and not GAME_ArenaBreakoutMobile;
             Options["ShaderMap.UseNewCookedFormat"] = Game >= GAME_UE5_0;
             Options["SkeletalMesh.UseNewCookedFormat"] = Game >= GAME_UE4_24;
             Options["SkeletalMesh.HasRayTracingData"] = Game is >= GAME_UE4_27 or GAME_UE4_25_Plus;

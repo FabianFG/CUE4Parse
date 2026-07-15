@@ -8,7 +8,7 @@ namespace CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 public class FDPAMorphTargetDeltaBatchData(FArchive Ar)
 {
     public byte[] Indices = Ar.ReadArray<byte>();
-    public TPair<FHalfVectorScaled>[] VertData = Ar.Game is EGame.GAME_DarkPicturesAnthologyLittleHope
+    public TPair<FHalfVectorScaled>[] VertData = Ar.Game is GAME_DarkPicturesAnthologyLittleHope
             ? Ar.ReadArray(() => new TPair<FHalfVectorScaled>(Ar.Read<FHalfVector>(), Ar.Read<FHalfVector>()))
             : Ar.ReadArray(Ar.Read<TPair<FHalfVectorScaled>>);
     public uint StartIndex = Ar.Read<uint>();

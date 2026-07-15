@@ -33,7 +33,7 @@ public class UDataTable : UObject
             }
         }
 
-        if (Ar.Game is EGame.GAME_HonorofKingsWorld)
+        if (Ar.Game is GAME_HonorofKingsWorld)
         {
             Ar.Position += 16;
             var numRows1 = Ar.Read<int>();
@@ -56,7 +56,7 @@ public class UDataTable : UObject
             RowMap[rowName] = rowStruct != null ? new FStructFallback(Ar, rowStruct) : new FStructFallback(Ar, RowStructName);
         }
 
-        if (Ar.Game == EGame.GAME_LostSoulAside)
+        if (Ar.Game == GAME_LostSoulAside)
         {
             var DataTableName = Ar.ReadFString();
             var MetaData = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadMap(Ar.ReadFName, Ar.ReadFString));

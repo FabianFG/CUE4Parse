@@ -92,21 +92,21 @@ public class FProgram
 
     public FProgram(FMutableArchive Ar)
     {
-        if (Ar.Game is EGame.GAME_LordsoftheFallen) Ar.Position += 20;
+        if (Ar.Game is GAME_LordsoftheFallen) Ar.Position += 20;
 
-        OpAddress = Ar.Game >= EGame.GAME_UE5_8 ? [] : Ar.ReadArray<uint>();
+        OpAddress = Ar.Game >= GAME_UE5_8 ? [] : Ar.ReadArray<uint>();
         ByteCode = Ar.ReadArray<byte>();
         States = Ar.ReadArray(() => new FState(Ar));
-        if (Ar.Game >= EGame.GAME_UE5_6)
+        if (Ar.Game >= GAME_UE5_6)
         {
             Roms = Ar.ReadArray<FRomDataRuntime>();
             RomsCompileData = Ar.ReadArray<FRomDataCompile>();
         }
-        else if (Ar.Game is EGame.GAME_LordsoftheFallen)
+        else if (Ar.Game is GAME_LordsoftheFallen)
         {
             Roms = Ar.ReadArray<FRomDataRuntime>(); // all -1
             var customData = new FLotFCustomProgram(Ar);
-            ConstantStrings = Ar.Game >= EGame.GAME_UE5_4 ? Ar.ReadArray(Ar.ReadFString) : Ar.ReadArray(Ar.ReadString);
+            ConstantStrings = Ar.Game >= GAME_UE5_4 ? Ar.ReadArray(Ar.ReadFString) : Ar.ReadArray(Ar.ReadString);
             ConstantLayouts = Ar.ReadPtrArray(() => new FLayout(Ar));
             ConstantProjectors = Ar.ReadArray<FProjector>();
             ConstantMatrices = Ar.ReadArray(() => new FMatrix(Ar, false));
@@ -115,7 +115,7 @@ public class FProgram
             customData.Unknown = Ar.ReadArray(() => Ar.ReadArray(() => (Ar.Read<int>(), Ar.Read<int>())));
             CustomData = customData;
             ConstantSkeletons = Ar.ReadPtrArray(() => new FSkeleton(Ar));
-            if (Ar.Game < EGame.GAME_UE5_7) ConstantPhysicsBodies = Ar.ReadPtrArray(() => new FPhysicsBody(Ar));
+            if (Ar.Game < GAME_UE5_7) ConstantPhysicsBodies = Ar.ReadPtrArray(() => new FPhysicsBody(Ar));
             Parameters = Ar.ReadArray(() => new FParameterDesc(Ar));
             Ranges = Ar.ReadArray(() => new FRangeDesc(Ar));
             ParameterLists = Ar.ReadArray(Ar.ReadArray<ushort>);
@@ -128,7 +128,7 @@ public class FProgram
         ConstantImageLODsPermanent = Ar.ReadPtrArray(() => new FImage(Ar));
         ConstantImageLODIndices = Ar.ReadArray<FConstantResourceIndex>();
         ConstantImages = Ar.ReadArray<FImageLODRange>();
-        if (Ar.Game >= EGame.GAME_UE5_6)
+        if (Ar.Game >= GAME_UE5_6)
         {
             ConstantMeshesPermanent = Ar.ReadPtrArray(() => new FMesh(Ar));
             ConstantMeshContentIndices = Ar.ReadArray<FConstantResourceIndex>();
@@ -145,9 +145,9 @@ public class FProgram
                 ConstantMeshes_Deprecated.Add(new(index, Ar.ReadPtr(() => new FMesh(Ar))));
             }
         }
-        if (Ar.Game is >= EGame.GAME_UE5_3 and < EGame.GAME_UE5_8) ConstantExtensionData = Ar.ReadArray(() => new FExtensionDataConstant(Ar));
-        ConstantStrings = Ar.Game >= EGame.GAME_UE5_4 ? Ar.ReadArray(Ar.ReadFString) : Ar.ReadArray(Ar.ReadString);
-        if (Ar.Game >= EGame.GAME_UE5_8)
+        if (Ar.Game is >= GAME_UE5_3 and < GAME_UE5_8) ConstantExtensionData = Ar.ReadArray(() => new FExtensionDataConstant(Ar));
+        ConstantStrings = Ar.Game >= GAME_UE5_4 ? Ar.ReadArray(Ar.ReadFString) : Ar.ReadArray(Ar.ReadString);
+        if (Ar.Game >= GAME_UE5_8)
         {
             ConstantUInt32Lists = Ar.ReadArray(Ar.ReadArray<uint>);
             ConstantInt32Lists = Ar.ReadArray(Ar.ReadArray<int>);
@@ -155,7 +155,7 @@ public class FProgram
             ConstantFloatLists = Ar.ReadArray(Ar.ReadArray<float>);
             ConstantBoolLists = Ar.ReadArray(() => Ar.ReadArray(Ar.ReadFlag));
         }
-        else if (Ar.Game >= EGame.GAME_UE5_7)
+        else if (Ar.Game >= GAME_UE5_7)
         {
             ConstantUInt32Lists = Ar.ReadArray(Ar.ReadArray<uint>);
             ConstantUInt64Lists = Ar.ReadArray(Ar.ReadArray<ulong>);
@@ -164,7 +164,7 @@ public class FProgram
         ConstantProjectors = Ar.ReadArray<FProjector>();
         ConstantMatrices = Ar.ReadArray(() => new FMatrix(Ar, false));
         ConstantShapes = Ar.ReadArray<FShape>();
-        if (Ar.Game >= EGame.GAME_UE5_5)
+        if (Ar.Game >= GAME_UE5_5)
         {
             ConstantCurves = Ar.ReadArray(() => new FRichCurve(Ar));
         }
@@ -173,13 +173,13 @@ public class FProgram
             ConstantCurves = Ar.ReadArray(() => new FRichCurve() { Keys = Ar.ReadArray(() => new FRichCurveKey(Ar)), DefaultValue = Ar.Read<float>() });
         }
         ConstantSkeletons = Ar.ReadPtrArray(() => new FSkeleton(Ar));
-        if (Ar.Game < EGame.GAME_UE5_7) ConstantPhysicsBodies = Ar.ReadPtrArray(() => new FPhysicsBody(Ar));
+        if (Ar.Game < GAME_UE5_7) ConstantPhysicsBodies = Ar.ReadPtrArray(() => new FPhysicsBody(Ar));
         Parameters = Ar.ReadArray(() => new FParameterDesc(Ar));
         Ranges = Ar.ReadArray(() => new FRangeDesc(Ar));
         ParameterLists = Ar.ReadArray(Ar.ReadArray<ushort>);
-        if (Ar.Game >= EGame.GAME_UE5_8) RelevantParameterList = Ar.ReadMap(Ar.Read<uint>, Ar.Read<int>);
-        if (Ar.Game >= EGame.GAME_UE5_7) ConstantMaterials = Ar.ReadPtrArray(() => new FMaterial(Ar));
-        if (Ar.Game >= EGame.GAME_UE5_8)
+        if (Ar.Game >= GAME_UE5_8) RelevantParameterList = Ar.ReadMap(Ar.Read<uint>, Ar.Read<int>);
+        if (Ar.Game >= GAME_UE5_7) ConstantMaterials = Ar.ReadPtrArray(() => new FMaterial(Ar));
+        if (Ar.Game >= GAME_UE5_8)
         {
             ConstantNames = Ar.ReadMap(Ar.Read<uint>, Ar.ReadFName);
             ConstantSockets = Ar.ReadMap(Ar.Read<uint>, () => new FMeshSocket(Ar));

@@ -90,7 +90,7 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
         // else
         {
             LoadByPattern($"^{exclusion}.+/{Culture}/.+.locres$", files);
-            if (_provider?.Versions.Game is EGame.GAME_Aion2)
+            if (_provider?.Versions.Game is GAME_Aion2)
                 LoadAion2L10NDatFiles(Culture);
         }
     }

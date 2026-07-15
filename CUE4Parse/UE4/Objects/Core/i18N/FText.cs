@@ -152,7 +152,7 @@ public class FText : IUStruct
                 ETextHistoryType.TextGenerator => new FTextHistory.TextGenerator(Ar),
                 _ => new FTextHistory.None(Ar)
             };
-            if (Ar.Game == EGame.GAME_Splitgate2) Ar.Position += 4;
+            if (Ar.Game == GAME_Splitgate2) Ar.Position += 4;
         }
     }
 
@@ -218,10 +218,10 @@ public abstract class FTextHistory : IUStruct
 
             switch (Ar.Game)
             {
-                case EGame.GAME_HonorofKingsWorld:
+                case GAME_HonorofKingsWorld:
                     strNamespace = "";
                     break;
-                case EGame.GAME_EmbersofTheUncrowned:
+                case GAME_EmbersofTheUncrowned:
                     SourceString = EOTUStringEncryption.DecryptString(SourceString);
                     break;
                 default:
@@ -403,8 +403,8 @@ public abstract class FTextHistory : IUStruct
                 SourceString = t;
                 LocalizedString = Ar.Owner.Provider.Internationalization.SafeGet(table.StringTable.TableNamespace, Key, t);
             }
-
-            if (Ar.Game is EGame.GAME_DeltaForce) Ar.Position += 4;
+            
+            if (Ar.Game is GAME_DeltaForce) Ar.Position += 4;
         }
     }
 

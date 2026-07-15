@@ -54,7 +54,7 @@ public class URigHierarchy : UObject
         }
 
         bool bAllocateStoragePerElement = FControlRigObjectVersion.Get(archiveForElements) < FControlRigObjectVersion.Type.RigHierarchyIndirectElementStorage;
-        if (Ar.Game == EGame.GAME_Aion2) bAllocateStoragePerElement = false;
+        if (Ar.Game == GAME_Aion2) bAllocateStoragePerElement = false;
 
         var elementCount = archiveForElements.Read<int>();
         Elements = new FRigBaseElement[elementCount];

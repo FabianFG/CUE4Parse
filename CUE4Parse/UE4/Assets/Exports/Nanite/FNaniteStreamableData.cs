@@ -104,12 +104,12 @@ public readonly struct FClusterDiskHeader
 
     public FClusterDiskHeader(FArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE5_7) DecodeInfoOffset = Ar.Read<uint>();
+        if (Ar.Game >= GAME_UE5_7) DecodeInfoOffset = Ar.Read<uint>();
         IndexDataOffset = Ar.Read<uint>();
         PageClusterMapOffset = Ar.Read<uint>();
         VertexRefDataOffset = Ar.Read<uint>();
 
-        if (Ar.Game >= EGame.GAME_UE5_4)
+        if (Ar.Game >= GAME_UE5_4)
         {
             LowBytesDataOffset = Ar.Read<uint>();
             MidBytesDataOffset = Ar.Read<uint>();

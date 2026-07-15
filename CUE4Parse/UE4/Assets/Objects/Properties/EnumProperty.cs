@@ -18,7 +18,7 @@ public class EnumProperty : FPropertyTagType<FName>
         }
         else if ((Ar.HasUnversionedProperties && type == ReadType.NORMAL) || type == ReadType.RAW)
         {
-            if (Ar.Game is EGame.GAME_AshesOfCreation && Ar is FAoCDBCReader)
+            if (Ar.Game is GAME_AshesOfCreation && Ar is FAoCDBCReader)
             {
                 Value = Ar.ReadFName();
                 return;

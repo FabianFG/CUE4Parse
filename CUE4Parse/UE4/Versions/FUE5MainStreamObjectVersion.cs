@@ -398,15 +398,15 @@ public static class FUE5MainStreamObjectVersion
 
         return Ar.Game switch
         {
-            EGame.GAME_BlackMythWukong => Type.UseTriangleMeshBVH,
+            GAME_BlackMythWukong => Type.UseTriangleMeshBVH,
 
-            < EGame.GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE5_1 => Type.TextureDoScaleMipsForAlphaCoverage,
-            < EGame.GAME_UE5_2 => Type.WorldPartitionActorDescActorAndClassPaths,
-            < EGame.GAME_UE5_3 => Type.RigVMGeneratedClass,
-            < EGame.GAME_UE5_4 => Type.ClothCollectionSingleLodSchema,
-            < EGame.GAME_UE5_6 => Type.VisualLoggerAddedSeparateWorldTime,
-            < EGame.GAME_UE5_8 => Type.RuntimeVirtualTextureMaterialValidation,
+            < GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE5_1 => Type.TextureDoScaleMipsForAlphaCoverage,
+            < GAME_UE5_2 => Type.WorldPartitionActorDescActorAndClassPaths,
+            < GAME_UE5_3 => Type.RigVMGeneratedClass,
+            < GAME_UE5_4 => Type.ClothCollectionSingleLodSchema,
+            < GAME_UE5_6 => Type.VisualLoggerAddedSeparateWorldTime,
+            < GAME_UE5_8 => Type.RuntimeVirtualTextureMaterialValidation,
             _ => Type.LatestVersion
         };
     }

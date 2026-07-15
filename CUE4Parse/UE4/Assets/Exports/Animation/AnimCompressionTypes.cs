@@ -107,7 +107,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         public void SerializeCompressedData(FAssetArchive Ar)
         {
-            var baseFirst = Ar.Game >= EGame.GAME_UE4_25 || Ar.Game is EGame.GAME_AssaultFireFuture;
+            var baseFirst = Ar.Game >= GAME_UE4_25 || Ar.Game is GAME_AssaultFireFuture;
 
             if (baseFirst)
             {

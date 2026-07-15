@@ -98,7 +98,7 @@ public class FCompressedTileCacheData
         if (!bHasHeader) return;
 
         Header = new DetourTileCacheLayerHeader(Ar);
-        if (Ar.Game < EGame.GAME_UE5_0)
+        if (Ar.Game < GAME_UE5_0)
             compressedDataSizeNoHeader -= Header.Value.Size(Ar);
 
         if (compressedDataSizeNoHeader > 4)

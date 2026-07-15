@@ -51,7 +51,7 @@ public class FStaticMeshComponentLODInfo
         {
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
             {
-                if (Ar.Game < EGame.GAME_UE4_0)
+                if (Ar.Game < GAME_UE4_0)
                 {
                     Ar.ReadArray(() => new FPackageIndex(Ar)); // ShadowMaps
                     Ar.ReadArray(() => new FPackageIndex(Ar)); // ShadowVertexBuffers
@@ -74,7 +74,7 @@ public class FStaticMeshComponentLODInfo
             }
             else
             {
-                if (Ar.Game >= EGame.GAME_UE5_5)
+                if (Ar.Game >= GAME_UE5_5)
                 {
                     if (Ar.IsLoadingFromCookedPackage) MapBuildDataId = Ar.Read<FGuid>();
                     OriginalMapBuildDataId = Ar.Read<FGuid>();
@@ -93,7 +93,7 @@ public class FStaticMeshComponentLODInfo
                 var bLoadVertexColorData = Ar.Read<byte>();
                 if (bLoadVertexColorData == 1)
                 {
-                    if (Ar.Game is EGame.GAME_HonorofKingsWorld) Ar.Position += 4;
+                    if (Ar.Game is GAME_HonorofKingsWorld) Ar.Position += 4;
                     OverrideVertexColors = new FColorVertexBuffer(Ar);
                 }
             }
@@ -109,6 +109,6 @@ public class FStaticMeshComponentLODInfo
             PaintedVertices = Ar.ReadArray(() => new FPaintedVertex(Ar));
         }
 
-        if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 20;
+        if (Ar.Game == GAME_StarWarsJediSurvivor) Ar.Position += 20;
     }
 }

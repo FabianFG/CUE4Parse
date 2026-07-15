@@ -26,7 +26,7 @@ public class UReflectionCaptureComponent : USceneComponent
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.REFLECTION_DATA_IN_PACKAGES)
             {
-                if (Ar.Game >= EGame.GAME_UE4_19)
+                if (Ar.Game >= GAME_UE4_19)
                 {
                     SavedVersion = Ar.Read<FGuid>();
                     if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.ReflectionCapturesStoreAverageBrightness)
@@ -66,7 +66,7 @@ public class UReflectionCaptureComponent : USceneComponent
                 {
                     if (bLegacy)
                     {
-                        if (Ar.Game >= EGame.GAME_UE4_14)
+                        if (Ar.Game >= GAME_UE4_14)
                             AverageBrightness = Ar.Read<float>();
                         var formatsCount = Ar.Read<int>();
                         for (var i = 0; i < formatsCount; i++)

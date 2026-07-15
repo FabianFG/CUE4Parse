@@ -15,7 +15,7 @@ public class FMeshBufferSet
     {
         ElementCount = Ar.Read<uint>();
         Buffers = Ar.ReadArray(() => new FMeshBuffer(Ar));
-        if (Ar.Game >= EGame.GAME_UE5_6)
+        if (Ar.Game >= GAME_UE5_6)
             Flags = Ar.Read<EMeshBufferSetFlags>();
     }
 }
