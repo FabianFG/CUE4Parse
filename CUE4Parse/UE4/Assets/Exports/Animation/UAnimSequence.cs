@@ -11,14 +11,12 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionFormat;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public class UAnimSequence : UAnimSequenceBase
     {
-        private static readonly ILogger Log = Serilog.Log.ForContext<UAnimSequence>();
         
         public int NumFrames;
         public FTrackToSkeletonMap[]? TrackToSkeletonMapTable; // used for raw data
@@ -144,7 +142,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 }
                 else
                 {
-                    Log.Warning("Unknown curve compression codec {0}", CurveCodecPath);
+                    CUE4ParseLog.Logger.Warning("Unknown curve compression codec {0}", CurveCodecPath);
                 }
             }
         }
@@ -223,7 +221,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 var compressedSegments = Ar.ReadArray<FCompressedSegment>();
                 if (compressedSegments.Length > 0)
                 {
-                    Log.Information("animation has CompressedSegments!");
+                    CUE4ParseLog.Logger.Information("animation has CompressedSegments!");
                 }
             }
 
@@ -327,7 +325,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
             else
             {
-                Log.Warning("Unknown bone compression codec {0}", BoneCodecDDCHandle);
+                CUE4ParseLog.Logger.Warning("Unknown bone compression codec {0}", BoneCodecDDCHandle);
             }
         }
 

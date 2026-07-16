@@ -11,14 +11,12 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets;
 
 [SkipObjectRegistration]
 public sealed class IoPackage : AbstractUePackage
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<IoPackage>();
     
     private readonly IoGlobalData _globalData;
 
@@ -307,7 +305,7 @@ public sealed class IoPackage : AbstractUePackage
                     // this  should not happen for regular packages, but can be the case for editor only data
                     mainAssetStoreEntry = (provider as AbstractVfsFileProvider)?.TryFindStoreEntry(packageId);
                     if (mainAssetStoreEntry == null)
-                        Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
+                        CUE4ParseLog.Logger.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
                 }
             }
         }
@@ -527,7 +525,7 @@ public sealed class IoPackage : AbstractUePackage
 
         if (Globals.WarnMissingImportPackage)
         {
-            Log.Warning("Missing {0} import 0x{1:X} for package {2}", index.IsScriptImport ? "script" : "package", index.Value, Name);
+            CUE4ParseLog.Logger.Warning("Missing {0} import 0x{1:X} for package {2}", index.IsScriptImport ? "script" : "package", index.Value, Name);
         }
 
         return null;

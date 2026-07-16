@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.FN.Assets.Exports;
 
@@ -84,7 +83,6 @@ public class FLevelSaveRecordArchive : FObjectAndNameAsStringProxyArchive
 [StructFallback]
 public class FActorTemplateRecord
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FActorTemplateRecord>();
 
     public ulong ID;
     public FSoftObjectPath ActorClass;
@@ -141,7 +139,7 @@ public class FActorTemplateRecord
             DataHash = Ar.Read<uint>();
             if (DataHash != hash)
             {
-                Log.Error("FActorTemplateRecord::Serialize failed to deserialize data for: {0} dropping corrupted data.", ActorClass.ToString());
+                CUE4ParseLog.Logger.Error("FActorTemplateRecord::Serialize failed to deserialize data for: {0} dropping corrupted data.", ActorClass.ToString());
                 ActorData = null;
                 DataHash = 0;
             }
@@ -178,7 +176,6 @@ public class FActorTemplateRecord
 
 public class FActorComponentRecord
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FActorComponentRecord>();
 
     public FName ComponentName;
     public FSoftObjectPath ComponentClass; // UClass
@@ -224,7 +221,7 @@ public class FActorComponentRecord
             DataHash = Ar.Read<uint>();
             if (DataHash != hash)
             {
-                Log.Error("FActorComponentRecord::Serialize failed to deserialize data for: {0} dropping corrupted data.", ComponentClass.ToString());
+                CUE4ParseLog.Logger.Error("FActorComponentRecord::Serialize failed to deserialize data for: {0} dropping corrupted data.", ComponentClass.ToString());
                 ComponentData = null;
                 DataHash = 0;
             }
@@ -330,7 +327,6 @@ public class FFortCreativeVkPalette
 
 public class ULevelSaveRecord : UObject
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<ULevelSaveRecord>();
 
     public FName PackageName;
     public ELevelSaveRecordVersion SaveVersion;
@@ -517,7 +513,7 @@ public class ULevelSaveRecord : UObject
 
         if (SaveVersion > ELevelSaveRecordVersion.LatestVersion)
         {
-            Log.Warning("Unsupported level save record version " + (short) SaveVersion);
+            CUE4ParseLog.Logger.Warning("Unsupported level save record version " + (short) SaveVersion);
         }
 
         bCompressed = Ar.ReadBoolean();

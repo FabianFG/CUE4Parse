@@ -3,7 +3,6 @@ using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.Lua;
 
@@ -44,7 +43,6 @@ public readonly struct Chunk(FNGRLuaArchive Ar, int chunkSize)
 
 public class NGRLuaReader
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<NGRLuaReader>();
     
     private const uint NGR_LUA_MAGIC = 0xFADEFACE;
 
@@ -78,14 +76,14 @@ public class NGRLuaReader
         using var Ar = new FNGRLuaArchive(name, data, null);
         if (Ar.Length < 0x14)
         {
-            Log.Warning("Fade Face header is too small");
+            CUE4ParseLog.Logger.Warning("Fade Face header is too small");
             return data;
         }
 
         Header = new FadeFaceHeader(Ar);
         if (Header.Magic != NGR_LUA_MAGIC)
         {
-            Log.Warning($"Invalid magic: 0x{Header.Magic:X}, expected: 0x{NGR_LUA_MAGIC:X}");
+            CUE4ParseLog.Logger.Warning($"Invalid magic: 0x{Header.Magic:X}, expected: 0x{NGR_LUA_MAGIC:X}");
             return data;
         }
 

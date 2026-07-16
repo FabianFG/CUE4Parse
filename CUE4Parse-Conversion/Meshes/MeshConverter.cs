@@ -16,7 +16,6 @@ using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
@@ -25,7 +24,6 @@ namespace CUE4Parse_Conversion.Meshes;
 
 public static class MeshConverter
 {
-    private static ILogger Log = Serilog.Log.ForContext(typeof(MeshConverter));
     
     public static bool TryConvert(this USkeleton originalSkeleton, out List<CSkelMeshBone> bones, out FBox box)
     {
@@ -94,7 +92,7 @@ public static class MeshConverter
             }
 
             if (numTexCoords > Constants.MAX_MESH_UV_SETS)
-                Log.Warning($"Static mesh has too many UV sets ({numTexCoords})");
+                CUE4ParseLog.Logger.Warning($"Static mesh has too many UV sets ({numTexCoords})");
 
             var screenSize = 0.0f;
             if (i < originalMesh.RenderData.ScreenSize.Length)
@@ -393,7 +391,7 @@ public static class MeshConverter
 
             var numTexCoords = srcLod.NumTexCoords;
             if (numTexCoords > Constants.MAX_MESH_UV_SETS)
-                Log.Warning($"Skeletal mesh has too many UV sets ({numTexCoords})");
+                CUE4ParseLog.Logger.Warning($"Skeletal mesh has too many UV sets ({numTexCoords})");
 
             var skeletalMeshLod = new CSkelMeshLod
             {

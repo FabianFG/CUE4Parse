@@ -2,13 +2,11 @@ using System.Diagnostics;
 using System.IO.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Lua.unluac;
 
 public static class UnluacHelper
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(UnluacHelper));
     
     public const uint LuaMagic = 0x61754c1B;
     private const string _currentVersion = "1.0.0";
@@ -47,7 +45,7 @@ public static class UnluacHelper
         var dllPath = Path.GetFullPath(string.IsNullOrWhiteSpace(path) ? DllName : path);
         if (!await DownloadDllAsync(dllPath, null, cancellationToken).ConfigureAwait(false))
         {
-            Log.Warning("Unable to download unluac dll");
+            CUE4ParseLog.Logger.Warning("Unable to download unluac dll");
             return;
         }
 
@@ -91,12 +89,12 @@ public static class UnluacHelper
                                               UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
             }
 
-            Log.Information("Successfully downloaded unluac dll at {0}", dllPath);
+            CUE4ParseLog.Logger.Information("Successfully downloaded unluac dll at {0}", dllPath);
             return true;
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Uncaught exception while downloading unluac dll");
+            CUE4ParseLog.Logger.Warning(ex, "Uncaught exception while downloading unluac dll");
         }
         return false;
     }

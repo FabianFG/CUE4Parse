@@ -8,7 +8,6 @@ using CUE4Parse.Utils;
 
 using OodleDotNet;
 
-using Serilog;
 
 namespace CUE4Parse.Compression;
 
@@ -20,7 +19,6 @@ public class OodleException : ParserException
 
 public static class OodleHelper
 {
-    private static ILogger Log = Serilog.Log.ForContext(typeof(OodleHelper));
     
     public const string OODLE_NAME_OLD = "oo2core_9_win64.dll";
     public const string OODLE_NAME_CURRENT = "oodle-data-shared.dll";
@@ -54,7 +52,7 @@ public static class OodleHelper
             return;
         }
 
-        Log.Warning("Oodle decompression failed: unable to download oodle dll");
+        CUE4ParseLog.Logger.Warning("Oodle decompression failed: unable to download oodle dll");
     }
 
     public static void Initialize(Oodle instance)
@@ -92,7 +90,7 @@ public static class OodleHelper
         if (decodedSize < uncompressedSize)
         {
             // Not sure whether this should be an exception or not
-            Log.Warning("Oodle decompression just decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
+            CUE4ParseLog.Logger.Warning("Oodle decompression just decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
         }
     }
 
@@ -139,7 +137,7 @@ public static class OodleHelper
         }
         catch (Exception e)
         {
-            Log.Warning(e, "Uncaught exception while downloading oodle dll from OodleUE");
+            CUE4ParseLog.Logger.Warning(e, "Uncaught exception while downloading oodle dll from OodleUE");
         }
 
         return false;

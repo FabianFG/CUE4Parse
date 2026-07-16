@@ -10,14 +10,12 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
     [SkipObjectRegistration]
     public sealed class Package : AbstractUePackage
     {
-        private static readonly ILogger Log = Serilog.Log.ForContext<Package>();
         
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
@@ -298,7 +296,7 @@ namespace CUE4Parse.UE4.Assets
                         }
                     }
 #if DEBUG
-                    Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, ioPackage.GetFullName());
+                    CUE4ParseLog.Logger.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, ioPackage.GetFullName());
 #endif
                     return new ResolvedImportObject(import, this);
                 }
@@ -308,7 +306,7 @@ namespace CUE4Parse.UE4.Assets
             if (importPackage == null)
             {
 #if DEBUG
-                Log.Error("Missing native package ({0}) for import of {1} in {2}.", outerMostImport.ObjectName, import.ObjectName, Name);
+                CUE4ParseLog.Logger.Error("Missing native package ({0}) for import of {1} in {2}.", outerMostImport.ObjectName, import.ObjectName, Name);
 #endif
                 return new ResolvedImportObject(import, this);
             }
@@ -321,7 +319,7 @@ namespace CUE4Parse.UE4.Assets
                 if (outer == null)
                 {
 #if DEBUG
-                    Log.Fatal("Missing outer for import of ({0}): {1} in {2} was not found, but the package exists.", Name, outerImport.ObjectName, importPackage.GetFullName());
+                    CUE4ParseLog.Logger.Fatal("Missing outer for import of ({0}): {1} in {2} was not found, but the package exists.", Name, outerImport.ObjectName, importPackage.GetFullName());
 #endif
                     return new ResolvedImportObject(import, this);
                 }
@@ -338,7 +336,7 @@ namespace CUE4Parse.UE4.Assets
             }
 
 #if DEBUG
-            Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, importPackage.GetFullName());
+            CUE4ParseLog.Logger.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, importPackage.GetFullName());
 #endif
             return new ResolvedImportObject(import, this);
         }

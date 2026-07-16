@@ -139,7 +139,7 @@ public partial class PakFileReader
                     var index = -offset - 1;
                     if (index < 0 || index >= NonEncodedEntries.Length)
                     {
-                        Log.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", index, path);
+                        CUE4ParseLog.Logger.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", index, path);
                         continue;
                     }
 

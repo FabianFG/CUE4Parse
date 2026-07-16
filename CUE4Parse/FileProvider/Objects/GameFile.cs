@@ -6,13 +6,11 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.FileProvider.Objects;
 
 public abstract class GameFile
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<GameFile>();
     
     public static readonly string[] UePackageExtensions = ["uasset", "umap"];
     public static readonly string[] UePackagePayloadExtensions = ["uexp", "ubulk", "uptnl"];
@@ -98,7 +96,7 @@ public abstract class GameFile
         }
         catch (Exception e)
         {
-            Log.Error(e, $"Could not read GameFile {this}");
+            CUE4ParseLog.Logger.Error(e, $"Could not read GameFile {this}");
             data = null;
         }
         return data != null;
@@ -113,7 +111,7 @@ public abstract class GameFile
         }
         catch (Exception e)
         {
-            Log.Error(e, $"Could not create reader for GameFile {this}");
+            CUE4ParseLog.Logger.Error(e, $"Could not create reader for GameFile {this}");
             reader = null;
         }
         return reader != null;

@@ -4,7 +4,6 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
@@ -20,7 +19,6 @@ public enum ESkinVertexColorChannel : byte
 [JsonConverter(typeof(FSkelMeshSectionConverter))]
 public class FSkelMeshSection
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FSkelMeshSection>();
     
     public short MaterialIndex;
     public int BaseIndex;
@@ -155,7 +153,7 @@ public class FSkelMeshSection
 
                 if (dummyNumRigidVerts + dummyNumSoftVerts != SoftVertices.Length)
                 {
-                    Log.Error("Legacy NumSoftVerts + NumRigidVerts != SoftVertices.Num()");
+                    CUE4ParseLog.Logger.Error("Legacy NumSoftVerts + NumRigidVerts != SoftVertices.Num()");
                 }
             }
 

@@ -1,5 +1,4 @@
 using System.Text;
-using Serilog;
 
 namespace CUE4Parse.UE4.FMod;
 
@@ -64,7 +63,6 @@ namespace CUE4Parse.UE4.FMod;
 /// </summary>
 public class Fsb5Decryption
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<Fsb5Decryption>();
     
     private static readonly string FSB5Header = "FSB5";
     private static readonly byte[] ReverseBitsTable =
@@ -110,7 +108,7 @@ public class Fsb5Decryption
         }
 
 #if DEBUG
-        Log.Debug("Decrypted FSB5 successfully");
+        CUE4ParseLog.Logger.Debug("Decrypted FSB5 successfully");
 #endif
 
         decryptedStream.Position = 0;

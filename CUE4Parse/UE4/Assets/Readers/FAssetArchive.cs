@@ -7,13 +7,11 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Readers
 {
     public class FAssetArchive : FArchive
     {
-        private static readonly ILogger Log = Serilog.Log.ForContext<FAssetArchive>();
         
         private readonly Dictionary<PayloadType, Func<FByteBulkDataHeader?, FAssetArchive?>> _payloads;
         private FArchive _baseArchive;
@@ -82,19 +80,19 @@ namespace CUE4Parse.UE4.Assets.Readers
                         // Silent this as it is expected to not have an object
                         return null;
                     }
-                    Log.Warning("Failed to resolve index {Index}", index);
+                    CUE4ParseLog.Logger.Warning("Failed to resolve index {Index}", index);
                     return null;
                 }
 
                 if (Owner?.Provider == null)
                 {
-                    Log.Warning("Can't load object {Resolved} without a file provider", resolved.Name);
+                    CUE4ParseLog.Logger.Warning("Can't load object {Resolved} without a file provider", resolved.Name);
                     return null;
                 }
 
                 if (!resolved.TryLoad(out var obj))
                 {
-                    Log.Warning("Failed to load object {Obj}", resolved.Name);
+                    CUE4ParseLog.Logger.Warning("Failed to load object {Obj}", resolved.Name);
                     return null;
                 }
 
@@ -102,7 +100,7 @@ namespace CUE4Parse.UE4.Assets.Readers
                 {
                     return cast;
                 }
-                Log.Warning("Object has unexpected type {ObjType}, expected type {Type}", obj.GetType().Name, typeof(T).Name);
+                CUE4ParseLog.Logger.Warning("Object has unexpected type {ObjType}, expected type {Type}", obj.GetType().Name, typeof(T).Name);
 
                 return null;
             });

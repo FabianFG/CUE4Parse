@@ -2,14 +2,12 @@ using System.Diagnostics;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
 [JsonConverter(typeof(HierarchyConverter))]
 public readonly struct Hierarchy
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<Hierarchy>();
     
     public readonly EAKBKHircType Type;
     public readonly uint Length;
@@ -26,7 +24,7 @@ public readonly struct Hierarchy
         Type = rawType.MapToCurrent(Ar.Version);
 
         if (Type is 0)
-            Log.Warning("Failed to map hierarchy type {Type}", rawType);
+            CUE4ParseLog.Logger.Warning("Failed to map hierarchy type {Type}", rawType);
 
         // Try/Catch is done to allow for extracting audio even if this fails
         // Due to their complexity it's very likely hierarchies will fail to parse if unsupported
@@ -64,7 +62,7 @@ public readonly struct Hierarchy
         }
         catch (Exception ex) when (!Debugger.IsAttached)
         {
-            Log.Error(ex, "Failed to parse HIRC type {Type}. Falling back to generic.", Type);
+            CUE4ParseLog.Logger.Error(ex, "Failed to parse HIRC type {Type}. Falling back to generic.", Type);
             Ar.Position = hierarchyStartPosition;
             Data = new HierarchyGeneric(Ar);
         }
@@ -75,10 +73,10 @@ public readonly struct Hierarchy
 #if DEBUG
                 Ar.Position = hierarchyStartPosition;
                 var id = Length >= 4 ? Ar.Read<uint>() : 0;
-                Log.Warning($"Didn't read hierarchy {Type} {id} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
+                CUE4ParseLog.Logger.Warning($"Didn't read hierarchy {Type} {id} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
                 if (Data is HierarchyEventAction action)
                 {
-                    Log.Warning($"EventAction type: {action.EventActionType}");
+                    CUE4ParseLog.Logger.Warning($"EventAction type: {action.EventActionType}");
                 }
 #endif
                 Ar.Position = hierarchyEndPosition;

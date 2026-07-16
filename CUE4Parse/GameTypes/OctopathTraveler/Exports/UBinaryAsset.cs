@@ -9,13 +9,11 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.OctopathTraveler.Exports;
 
 public class UBinaryAsset : UObject
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<UBinaryAsset>();
     
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -49,14 +47,14 @@ public class UBinaryAsset : UObject
                 Tag = ReadOctopathPropertyTagType(dataAr),
             };
             if (dataAr.Position != dataAr.Length)
-                Log.Warning("Did not read the full UBinaryAsset data for {0}, read {1} of {2} bytes", Name, dataAr.Position, dataAr.Length);
+                CUE4ParseLog.Logger.Warning("Did not read the full UBinaryAsset data for {0}, read {1} of {2} bytes", Name, dataAr.Position, dataAr.Length);
 
             Properties.Clear();
             Properties.Add(tag);
         }
         catch (Exception e)
         {
-            Log.Error(e,"Failed to parse OctopathTraveler0 UBinaryAsset {0}", Name);
+            CUE4ParseLog.Logger.Error(e,"Failed to parse OctopathTraveler0 UBinaryAsset {0}", Name);
         }
     }
 

@@ -13,13 +13,11 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using GenericReader;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.Vfs;
 
 public sealed class HoKdbFileReader : AbstractAesVfsReader
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<HoKdbFileReader>();
     
     public static readonly ConcurrentDictionary<ulong, string> HashMap = [];
     private static readonly ConcurrentDictionary<ulong, string> _indexFiles = [];
@@ -82,7 +80,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         }
         catch
         {
-            Log.Error("Failed to read file hashes from {0}", path);
+            CUE4ParseLog.Logger.Error("Failed to read file hashes from {0}", path);
         }
 
         return path;
@@ -160,7 +158,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         }
         catch
         {
-            Log.Error("Failed to write hashes file {0}", hashesFile);
+            CUE4ParseLog.Logger.Error("Failed to write hashes file {0}", hashesFile);
         }
 
         Dispose();
@@ -176,7 +174,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to write index file {IndexFile}", indexFile);
+            CUE4ParseLog.Logger.Error(ex, "Failed to write index file {IndexFile}", indexFile);
         }
     }
 
@@ -259,7 +257,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         }
 
         if (unknownFiles.Count > 0)
-            Log.Warning("Found {count} unknown entries", unknownFiles.Count);
+            CUE4ParseLog.Logger.Warning("Found {count} unknown entries", unknownFiles.Count);
 
         foreach (var hash in unknownFiles.Keys.Except(usedHashes))
         {
@@ -311,7 +309,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", in {elapsed}");
-            Log.Information(sb.ToString());
+            CUE4ParseLog.Logger.Information(sb.ToString());
         }
     }
 

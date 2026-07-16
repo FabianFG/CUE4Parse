@@ -4,13 +4,11 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Objects.NavigationSystem.NavMesh;
 
 public class URecastNavMeshDataChunk : Assets.Exports.UObject
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<URecastNavMeshDataChunk>();
 
     public ENavMeshVersion NavMeshVersion;
     public FRecastTileData[] Tiles = [];
@@ -26,12 +24,12 @@ public class URecastNavMeshDataChunk : Assets.Exports.UObject
 
         if (NavMeshVersion < ENavMeshVersion.NAVMESHVER_MIN_COMPATIBLE)
         {
-            Log.Error("NavMeshVersion is too old and not supported: '{0}'", NavMeshVersion);
+            CUE4ParseLog.Logger.Error("NavMeshVersion is too old and not supported: '{0}'", NavMeshVersion);
             Ar.Position = recastNavMeshSizePos + recastNavMeshSizeBytes;
         }
         else if (NavMeshVersion > ENavMeshVersion.Latest)
         {
-            Log.Error("NavMeshVersion is too new and not supported: '{0}'", NavMeshVersion);
+            CUE4ParseLog.Logger.Error("NavMeshVersion is too new and not supported: '{0}'", NavMeshVersion);
             Ar.Position = recastNavMeshSizePos + recastNavMeshSizeBytes;
         }
         else if (recastNavMeshSizeBytes > 4)

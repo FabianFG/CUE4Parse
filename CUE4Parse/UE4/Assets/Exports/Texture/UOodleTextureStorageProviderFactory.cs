@@ -2,7 +2,6 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -33,7 +32,6 @@ public class FOodleTexture2DMipMap : FTexture2DMipMap
 
 public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFactory
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<UOodleTextureStorageProviderFactory>();
 
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FOodleTexture2DMipMap[] Mips { get; private set; } = [];
@@ -49,7 +47,7 @@ public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFac
         while (!pixelFormatName.IsNone)
         {
             if (!Enum.TryParse(pixelFormatName.Text, ignoreCase: true, out EPixelFormat pixelFormat))
-                Log.Warning("Failed to parse pixel format: {PixelFormat}", pixelFormatName.Text);
+                CUE4ParseLog.Logger.Warning("Failed to parse pixel format: {PixelFormat}", pixelFormatName.Text);
 
             var skipOffset = Ar.Game switch
             {
@@ -65,7 +63,7 @@ public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFac
                
                 if (Ar.AbsolutePosition != skipOffset)
                 {
-                    Log.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
+                    CUE4ParseLog.Logger.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
                     Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
                 }
 
@@ -74,7 +72,7 @@ public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFac
             else
             {
 #if DEBUG
-                Log.Debug("Skipping data for format {Format}", pixelFormatName);
+                CUE4ParseLog.Logger.Debug("Skipping data for format {Format}", pixelFormatName);
 #endif
                 Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
             }

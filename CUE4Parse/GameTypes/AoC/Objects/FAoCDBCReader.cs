@@ -10,7 +10,6 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.AoC.Objects;
 
@@ -27,7 +26,6 @@ public struct FAoCDataChunk
 [JsonConverter(typeof(FAoCDBCReaderConverter))]
 public sealed class FAoCDBCReader : FAssetArchive
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FAoCDBCReader>();
     
     private Dictionary<int, string> NameMap = [];
     public FAoCDataChunk[] Chunks = [];
@@ -64,7 +62,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         Position = Chunks[index].Offset;
         if (!TypeMap.TryGetValue(Chunks[index].Hash, out var filetype))
         {
-            Log.Warning($"Unknown AoC DBC Chunk Type Hash: {Chunks[index].Hash}");
+            CUE4ParseLog.Logger.Warning($"Unknown AoC DBC Chunk Type Hash: {Chunks[index].Hash}");
             return false;
         }
 
@@ -86,7 +84,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         }
         catch (Exception e)
         {
-            Log.Warning(e, "Failed to read CacheDB Chunk Type: {Type}", category);
+            CUE4ParseLog.Logger.Warning(e, "Failed to read CacheDB Chunk Type: {Type}", category);
             return false;
         }
 
@@ -106,7 +104,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         }
         catch
         {
-            Log.Warning("Failed to read FInstancedStruct of type {0}, skipping it", strucPath);
+            CUE4ParseLog.Logger.Warning("Failed to read FInstancedStruct of type {0}, skipping it", strucPath);
         }
         finally
         {

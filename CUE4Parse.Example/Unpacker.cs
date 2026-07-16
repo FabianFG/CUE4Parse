@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using CUE4Parse;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
@@ -15,7 +16,6 @@ namespace CUE4Parse.Example;
 
 public static class Unpacker
 {
-    private static ILogger Log => Serilog.Log.ForContext(typeof(Unpacker));
 
     private const string _archiveDirectory = "D:\\Games\\Fortnite\\FortniteGame\\Content\\Paks";
     private const string _aesKey = "0x61D4FD0F3AC7768A08E82A99D275A13762A299FCC28CCF53C46BB221BB90D2B8";
@@ -25,6 +25,7 @@ public static class Unpacker
     public static void Unpack()
     {
         Serilog.Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+        CUE4ParseLog.UseLogger(Serilog.Log.Logger);
 
         ZlibHelper.Initialize();
         OodleHelper.Initialize();
@@ -42,7 +43,7 @@ public static class Unpacker
         watch.Start();
         foreach (var (folder, packages) in files)
         {
-            Log.Information("unpacking {Folder} ({Count} packages)", folder, packages.Length);
+            CUE4ParseLog.Logger.Information("unpacking {Folder} ({Count} packages)", folder, packages.Length);
 
             Parallel.ForEach(packages, package =>
             {
@@ -56,7 +57,7 @@ public static class Unpacker
         }
         watch.Stop();
 
-        Log.Information("unpacked {PackageCount} packages in {FolderCount} folders in {Time}",
+        CUE4ParseLog.Logger.Information("unpacked {PackageCount} packages in {FolderCount} folders in {Time}",
             files.Values.Sum(it => it.Length),
             files.Count,
             watch.Elapsed);

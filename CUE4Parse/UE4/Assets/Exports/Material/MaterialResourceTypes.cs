@@ -11,7 +11,6 @@ using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -19,7 +18,6 @@ public class FMaterialResource : FMaterial;
 
 public class FMaterial
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FMaterial>();
     
     public FMaterialShaderMap? LoadedShaderMap;
 
@@ -38,7 +36,7 @@ public class FMaterial
         }
         else
         {
-            Log.Warning("Loading a material resource '{0}' with an invalid ShaderMap!", Ar.Name);
+            CUE4ParseLog.Logger.Warning("Loading a material resource '{0}' with an invalid ShaderMap!", Ar.Name);
         }
     }
 }

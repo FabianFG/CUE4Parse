@@ -43,13 +43,11 @@ using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using OffiUtils;
-using Serilog;
 
 namespace CUE4Parse.FileProvider.Vfs
 {
     public abstract class AbstractVfsFileProvider : AbstractFileProvider, IVfsFileProvider
     {
-        private static readonly ILogger Log = Serilog.Log.ForContext<AbstractVfsFileProvider>();
         
         protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs => (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
@@ -166,7 +164,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
             catch (Exception e)
             {
-                Log.Warning(e.ToString());
+                CUE4ParseLog.Logger.Warning(e.ToString());
             }
         }
         public void RegisterRandomAccessVfs(FArchive pakOrUtocArchive, FArchive? utocArchive, Func<string, FArchive>? openContainerStreamFunc = null)
@@ -201,7 +199,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
             catch (Exception e)
             {
-                Log.Warning(e.ToString());
+                CUE4ParseLog.Logger.Warning(e.ToString());
             }
         }
         public void RegisterRandomAccessVfs(FArchive pakOrUtocArchive, RandomAccessStream? utocStream, Func<string, FArchive>? openContainerStreamFunc = null)
@@ -234,7 +232,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
             catch (Exception e)
             {
-                Log.Warning(e.ToString());
+                CUE4ParseLog.Logger.Warning(e.ToString());
             }
         }
 
@@ -256,7 +254,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to load on-demand UTOC for container {ContainerContainerName}", container.ContainerName);
+                    CUE4ParseLog.Logger.Error(e, "Failed to load on-demand UTOC for container {ContainerContainerName}", container.ContainerName);
                 }
             }
         }
@@ -313,7 +311,7 @@ namespace CUE4Parse.FileProvider.Vfs
                     }
                     catch (Exception e)
                     {
-                        Log.Warning(e, $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
+                        CUE4ParseLog.Logger.Warning(e, $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
                     }
                     return null;
                 }));
@@ -365,7 +363,7 @@ namespace CUE4Parse.FileProvider.Vfs
                         }
                         catch (Exception e)
                         {
-                            Log.Warning(e, $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
+                            CUE4ParseLog.Logger.Warning(e, $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
                         }
                         return null;
                     }));

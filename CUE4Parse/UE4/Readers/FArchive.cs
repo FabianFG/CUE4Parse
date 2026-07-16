@@ -10,7 +10,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using OffiUtils;
-using Serilog;
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 using static CUE4Parse.UE4.Objects.UObject.FPackageFileSummary;
@@ -19,7 +18,6 @@ namespace CUE4Parse.UE4.Readers
 {
     public abstract class FArchive : RandomAccessStream, ICloneable
     {
-        private static readonly ILogger Log = Serilog.Log.ForContext<FArchive>();
         
         public VersionContainer Versions;
         public EGame Game
@@ -614,7 +612,7 @@ namespace CUE4Parse.UE4.Readers
                 // upgrade old flag method
                 if (flags.HasFlag(COMPRESS_DeprecatedFormatFlagsMask))
                 {
-                    Log.Warning("Old style compression flags are being used with FAsyncCompressionChunk, please update any code using this!");
+                    CUE4ParseLog.Logger.Warning("Old style compression flags are being used with FAsyncCompressionChunk, please update any code using this!");
                     //compressionFormatToDecode = FCompression.GetCompressionFormatFromDeprecatedFlags(flags);
                     throw new NotImplementedException();
                 }
@@ -756,7 +754,7 @@ namespace CUE4Parse.UE4.Readers
             using var fs = f.OpenWrite();
             fs.Write(bytes, 0, bytes.Length);
             fs.Close();
-            Log.Information("Dumped {Name} to {Path}", Name, f.FullName);
+            CUE4ParseLog.Logger.Information("Dumped {Name} to {Path}", Name, f.FullName);
             Process.Start("explorer.exe", $"/select,\"{f.FullName}\"");
 #endif
         }

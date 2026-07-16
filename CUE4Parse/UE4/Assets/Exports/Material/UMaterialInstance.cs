@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -18,7 +17,6 @@ public class UMaterialInstanceTimeVarying : UMaterialInstance;
 
 public class UMaterialInstance : UMaterialInterface
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<UMaterialInstance>();
     
     private ResolvedObject? _parent;
     private bool bHasNonUPropertyStaticParameters = false;
@@ -60,7 +58,7 @@ public class UMaterialInstance : UMaterialInterface
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e, "Failed to deserialize inline shader maps.");
+                    CUE4ParseLog.Logger.Error(e, "Failed to deserialize inline shader maps.");
                     Ar.Position = saved;
                 }
             }

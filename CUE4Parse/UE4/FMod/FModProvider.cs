@@ -9,7 +9,6 @@ using CUE4Parse.UE4.FMod.Utils;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.Utils;
 using Fmod5Sharp.FmodTypes;
-using Serilog;
 using UE4Config.Parsing;
 
 namespace CUE4Parse.UE4.FMod;
@@ -25,7 +24,6 @@ public class FModExtractedSound
 
 public class FModProvider
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FModProvider>();
     
     private Dictionary<FModGuid, List<FmodSample>> _resolvedEventsCache = [];
     private Dictionary<FModGuid, bool> _eventResolutionStatus = [];
@@ -56,7 +54,7 @@ public class FModProvider
                 if (!provider.TrySaveAsset(file, out var data)) continue;
                 if (!TryLoadBank(new MemoryStream(data), file.Name, out var fmodBank))
                 {
-                    Log.Error("Failed to serialize FMOD Bank file {bank}", file);
+                    CUE4ParseLog.Logger.Error("Failed to serialize FMOD Bank file {bank}", file);
                     continue;
                 }
 
@@ -107,7 +105,7 @@ public class FModProvider
 
         if (fmodDir is null)
         {
-            Log.Warning("FMOD Desktop directory not found under {0}", gameDirectory);
+            CUE4ParseLog.Logger.Warning("FMOD Desktop directory not found under {0}", gameDirectory);
             return;
         }
 
@@ -121,7 +119,7 @@ public class FModProvider
             {
                 if (!TryLoadBank(File.OpenRead(file), Path.GetFileNameWithoutExtension(file), out var fmodBank))
                 {
-                    Log.Error("Failed to serialize FMOD Bank file {bank}", file);
+                    CUE4ParseLog.Logger.Error("Failed to serialize FMOD Bank file {bank}", file);
                     continue;
                 }
 
@@ -173,12 +171,12 @@ public class FModProvider
         if (!string.IsNullOrEmpty(token?.Value))
         {
             _encryptionKey = Encoding.UTF8.GetBytes(Regex.Unescape(token.Value.Trim('"')));
-            Log.Information($"FMod encryption key found: {token.Value}");
+            CUE4ParseLog.Logger.Information($"FMod encryption key found: {token.Value}");
         }
         else
         {
 #if DEBUG
-            Log.Debug("FMod encryption key not found in DefaultEngine.ini. Soundbanks might not be encrypted");
+            CUE4ParseLog.Logger.Debug("FMod encryption key not found in DefaultEngine.ini. Soundbanks might not be encrypted");
 #endif
         }
     }
@@ -194,7 +192,7 @@ public class FModProvider
         }
         catch (Exception e)
         {
-            Log.Error(e, "Can't load FMOD bank");
+            CUE4ParseLog.Logger.Error(e, "Can't load FMOD bank");
             return false;
         }
     }
@@ -242,11 +240,11 @@ public class FModProvider
             // only if all samples were resolved because if they weren't it might be an issue on our side
             if (_eventResolutionStatus.TryGetValue(eventGuid, out var isResolved) && isResolved)
             {
-                Log.Debug("FMODEvent with guid {0} wasn't found in events cache, but all waveforms were resolved, using Sound Table instead", eventGuid);
+                CUE4ParseLog.Logger.Debug("FMODEvent with guid {0} wasn't found in events cache, but all waveforms were resolved, using Sound Table instead", eventGuid);
                 return ExtractBankSoundTable(_mergedReaders[_eventToReaderMap[eventGuid]]);
             }
 
-            Log.Warning("Can't find FMODEvent with the guid {0}", eventGuid);
+            CUE4ParseLog.Logger.Warning("Can't find FMODEvent with the guid {0}", eventGuid);
             return [];
         }
 
@@ -260,7 +258,7 @@ public class FModProvider
 
         if (!_mergedReaders.TryGetValue(bankGuid, out var bank))
         {
-            Log.Warning("Can't find FMODBank with the guid {0}", bankGuid);
+            CUE4ParseLog.Logger.Warning("Can't find FMODBank with the guid {0}", bankGuid);
             return [];
         }
 

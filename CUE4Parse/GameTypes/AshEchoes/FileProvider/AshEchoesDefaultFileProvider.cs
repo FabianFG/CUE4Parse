@@ -13,14 +13,12 @@ using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using GenericReader;
-using Serilog;
 using static CUE4Parse.Compression.Compression;
 
 namespace CUE4Parse.GameTypes.AshEchoes.FileProvider;
 
 public class AEDefaultFileProvider : DefaultFileProvider
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<AEDefaultFileProvider>();
     
     public AEDefaultFileProvider(string directory, SearchOption searchOption, VersionContainer? versions = null,
         StringComparer? pathComparer = null) : base(directory, searchOption, versions, pathComparer)
@@ -88,7 +86,7 @@ public class AEDefaultFileProvider : DefaultFileProvider
 
         if (string.IsNullOrEmpty(indexPath))
         {
-            Log.Warning("Index file not found, using only ordinary pak files.");
+            CUE4ParseLog.Logger.Warning("Index file not found, using only ordinary pak files.");
             return osFiles;
         }
 
@@ -124,7 +122,7 @@ public class AEDefaultFileProvider : DefaultFileProvider
             var path = Path.Combine(repoPath, entry.Folder, entry.FileName);
             if (!File.Exists(path))
             {
-                Log.Warning($"File not found: {path}");
+                CUE4ParseLog.Logger.Warning($"File not found: {path}");
                 continue;
             }
 
@@ -206,7 +204,6 @@ public class FAEPakEntry : FPakEntry
 
 public class AEPakFileReader : AbstractAesVfsReader
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<AEPakFileReader>();
 
     private readonly string _indexName;
     public readonly FArchive Ar;
@@ -284,7 +281,7 @@ public class AEPakFileReader : AbstractAesVfsReader
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", in {elapsed}");
-            Log.Information(sb.ToString());
+            CUE4ParseLog.Logger.Information(sb.ToString());
         }
     }
 

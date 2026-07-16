@@ -9,14 +9,12 @@ using CUE4Parse.UE4.Objects.UObject.Editor;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Objects.UObject;
 
 [SkipObjectRegistration]
 public class UClass : UStruct
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<UClass>();
     
     /** Used to check if the class was cooked or not */
     public bool bCooked;
@@ -92,12 +90,12 @@ public class UClass : UStruct
                 }
                 else
                 {
-                    Log.Warning("Class {Type} did have a valid constructor but does not inherit UObject", type);
+                    CUE4ParseLog.Logger.Warning("Class {Type} did have a valid constructor but does not inherit UObject", type);
                 }
             }
             catch (Exception e)
             {
-                Log.Warning(e, "Class {Type} could not be constructed", type);
+                CUE4ParseLog.Logger.Warning(e, "Class {Type} could not be constructed", type);
             }
         }
 

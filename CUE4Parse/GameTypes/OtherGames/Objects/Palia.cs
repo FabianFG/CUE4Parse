@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.OtherGames.Objects;
 
@@ -42,7 +41,6 @@ public class UVAL_PremiumItemAsset : UPrimaryDataAsset
 
 public class FVAL_CharacterCustomizationVariantOptionsArray : IUStruct
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FVAL_CharacterCustomizationVariantOptionsArray>();
     
     public FPackageIndex OptionStruct;
     public IUStruct[] Options = [];
@@ -60,12 +58,12 @@ public class FVAL_CharacterCustomizationVariantOptionsArray : IUStruct
             }
             else
             {
-                Log.Warning("Failed to read FVAL_CharacterCustomizationVariantOptionsArray of type {0}, skipping it", OptionStruct.ResolvedObject?.GetFullName());
+                CUE4ParseLog.Logger.Warning("Failed to read FVAL_CharacterCustomizationVariantOptionsArray of type {0}, skipping it", OptionStruct.ResolvedObject?.GetFullName());
             }
         }
         catch (ParserException e)
         {
-            Log.Warning(e, "Failed to read FVAL_CharacterCustomizationVariantOptionsArray of type {0}, skipping it", OptionStruct.ResolvedObject?.GetFullName());
+            CUE4ParseLog.Logger.Warning(e, "Failed to read FVAL_CharacterCustomizationVariantOptionsArray of type {0}, skipping it", OptionStruct.ResolvedObject?.GetFullName());
         }
     }
 }

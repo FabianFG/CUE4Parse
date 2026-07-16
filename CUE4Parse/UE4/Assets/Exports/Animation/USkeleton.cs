@@ -6,13 +6,11 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation;
 
 public class USkeleton : UObject
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<USkeleton>();
 
     public EBoneTranslationRetargetingMode[] BoneTree;
     public FReferenceSkeleton ReferenceSkeleton;
@@ -63,7 +61,7 @@ public class USkeleton : UObject
         }
         else
         {
-            Log.Warning(""); // not sure what to put here
+            CUE4ParseLog.Logger.Warning(""); // not sure what to put here
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_GUID_SERIALIZATION)

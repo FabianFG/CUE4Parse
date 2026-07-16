@@ -10,14 +10,12 @@ using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.FMod.Utils;
 using Fmod5Sharp.FmodTypes;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.FMod;
 
 [JsonConverter(typeof(FModConverter))]
 public class FModReader
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FModReader>();
     
     public readonly string BankName;
     public static int Version => FormatInfo.FileVersion;
@@ -78,7 +76,7 @@ public class FModReader
         if (actualSize < expectedSize)
             throw new Exception($"Truncated file: expected {expectedSize} bytes, got {actualSize}");
         else if (actualSize > expectedSize)
-            Log.Warning($"File larger than RIFF size (expected {expectedSize}, got {actualSize})");
+            CUE4ParseLog.Logger.Warning($"File larger than RIFF size (expected {expectedSize}, got {actualSize})");
     }
 
     private void ParseNodes(BinaryReader Ar, long start, long end)
@@ -295,7 +293,7 @@ public class FModReader
                 break;
 
                 default:
-                    Log.Warning($"Unknown chunk {nodeId} at {nodeStart}, size={nodeSize}, skipped");
+                    CUE4ParseLog.Logger.Warning($"Unknown chunk {nodeId} at {nodeStart}, size={nodeSize}, skipped");
                     break;
             }
 
@@ -308,7 +306,7 @@ public class FModReader
             if (Ar.BaseStream.Position != nextNode)
             {
                 if (nodeId is not ERIFFID.CHUNKID_LIST)
-                    Log.Warning($"Chunk {nodeId} did not parse fully (at {Ar.BaseStream.Position}, should be {nextNode})");
+                    CUE4ParseLog.Logger.Warning($"Chunk {nodeId} did not parse fully (at {Ar.BaseStream.Position}, should be {nextNode})");
 
                 Ar.BaseStream.Position = nextNode;
             }
@@ -608,7 +606,7 @@ public class FModReader
         sample = null;
         if (SoundTable is null || SoundBankData is null)
         {
-            Log.Warning("Sound table or sound bank data is missing, cannot retrieve sound info");
+            CUE4ParseLog.Logger.Warning("Sound table or sound bank data is missing, cannot retrieve sound info");
             return false;
         }
 
@@ -617,7 +615,7 @@ public class FModReader
 
         if (subsoundIndex is -1)
         {
-            Log.Warning($"Sound with key '{key}' (hash {hash:X}) not found in sound table");
+            CUE4ParseLog.Logger.Warning($"Sound with key '{key}' (hash {hash:X}) not found in sound table");
             return false;
         }
 

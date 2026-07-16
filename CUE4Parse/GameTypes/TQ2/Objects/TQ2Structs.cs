@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.TQ2.Objects;
 
@@ -225,7 +224,6 @@ public struct FArticyId(FAssetArchive Ar) : IUStruct
 
 public class FGrimInstancedObjectPtr : IUStruct
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FGrimInstancedObjectPtr>();
     
     public int Type;
     public int Index;
@@ -251,7 +249,7 @@ public class FGrimInstancedObjectPtr : IUStruct
         }
         else
         {
-            Log.Warning("Failed to read FGrimInstancedObjectPtr of type {0}, skipping it", StructType.ResolvedObject?.GetFullName());
+            CUE4ParseLog.Logger.Warning("Failed to read FGrimInstancedObjectPtr of type {0}, skipping it", StructType.ResolvedObject?.GetFullName());
         }
 
         Ar.Position += 4; // zero

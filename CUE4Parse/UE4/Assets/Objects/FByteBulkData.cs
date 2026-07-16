@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
-using Serilog;
 using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -26,7 +25,6 @@ public sealed class FByteArrayData : TBulkData<byte>
 [JsonConverter(typeof(FByteBulkDataConverter))]
 public sealed class FByteBulkData : TBulkData<byte>
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FByteBulkData>();
     
     public FByteBulkData(FAssetArchive Ar) : base(Ar) { }
 
@@ -68,7 +66,7 @@ public sealed class FByteBulkData : TBulkData<byte>
         }
         catch (Exception e)
         {
-            Log.Error(e, "Could not create {0} reader for FByteBulkData", name);
+            CUE4ParseLog.Logger.Error(e, "Could not create {0} reader for FByteBulkData", name);
             reader = null!;
         }
         return reader != null && reader.Length > 0;
@@ -86,7 +84,7 @@ public sealed class FByteBulkData : TBulkData<byte>
         var read = archive.ReadAt(position, data, 0, (int) Header.SizeOnDisk);
         if (read != Header.SizeOnDisk)
         {
-            Log.Warning("Read {read} bytes, expected {Header.SizeOnDisk}", read, Header.SizeOnDisk);
+            CUE4ParseLog.Logger.Warning("Read {read} bytes, expected {Header.SizeOnDisk}", read, Header.SizeOnDisk);
         }
 
         if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))

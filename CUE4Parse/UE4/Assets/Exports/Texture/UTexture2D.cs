@@ -3,13 +3,11 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public class UTexture2D : UTexture
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<UTexture2D>();
     
     public FIntPoint ImportedSize { get; private set; }
     public TextureAddress AddressX { get; private set; }
@@ -30,7 +28,7 @@ public class UTexture2D : UTexture
         var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
         if (Ar.Ver < EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR)
         {
-            Log.Warning("Untested code: UTexture2D::LegacySerialize");
+            CUE4ParseLog.Logger.Warning("Untested code: UTexture2D::LegacySerialize");
             // https://github.com/EpicGames/UnrealEngine/blob/2092a941a52c55750072f24cd4757176dfaa8326/Engine/Source/Runtime/Engine/Private/Texture2D.cpp
 
             var legacyMips = Array.Empty<FTexture2DMipMap>();

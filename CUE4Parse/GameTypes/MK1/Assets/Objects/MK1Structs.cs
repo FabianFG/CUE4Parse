@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.MK1.Assets.Objects;
 
@@ -84,7 +83,6 @@ public class FTimelinePredicateState(FAssetArchive Ar) : IUStruct
 
 public class FCompiledTimelinePredicate(FAssetArchive Ar) : IUStruct
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FCompiledTimelinePredicate>();
 
     public byte[] Unknown = Ar.ReadArray<byte>();
     public object[] Parameters = Ar.ReadArray(() => ReadParameterValue(Ar));
@@ -104,7 +102,7 @@ public class FCompiledTimelinePredicate(FAssetArchive Ar) : IUStruct
         };
         if (res is null)
         {
-            Log.Warning("Unknown MK1 parameter type {0}", type);
+            CUE4ParseLog.Logger.Warning("Unknown MK1 parameter type {0}", type);
         }
         return res;
     }

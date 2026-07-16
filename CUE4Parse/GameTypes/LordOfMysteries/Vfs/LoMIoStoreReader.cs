@@ -5,13 +5,11 @@ using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.LordOfMysteries.Vfs;
 
 public sealed class LoMIoStoreReader(LoMIoStoreManifest manifest, LoMDirectoryIndex directoryIndex, VersionContainer versions) : IoStoreReader(manifest.TocArchive, path => new FRandomAccessFileStreamArchive(path, versions))
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<LoMIoStoreReader>();
 
     private readonly LoMDirectoryIndex _directoryIndex = directoryIndex;
 
@@ -60,7 +58,7 @@ public sealed class LoMIoStoreReader(LoMIoStoreManifest manifest, LoMDirectoryIn
             sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", version {(int) TocResource.Header.Version} in {watch.Elapsed}");
-            Log.Information(sb.ToString());
+            CUE4ParseLog.Logger.Information(sb.ToString());
         }
     }
 }
