@@ -11,6 +11,8 @@ namespace CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 
 public sealed class Aion2DatFileAes
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<Aion2DatFileAes>();
+
     public static Dictionary<ulong, FAesKey> AesKeys = [];
     private static readonly Lock _instanceLock = new();
 

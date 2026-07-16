@@ -63,6 +63,8 @@ public class Struct
 
 public class SerializedStruct : Struct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<SerializedStruct>();
+
     public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
     {
         Super = new Lazy<Struct?>(() =>

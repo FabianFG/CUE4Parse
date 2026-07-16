@@ -12,6 +12,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 /// </summary>
 public static class BC7PrepDecoder
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(BC7PrepDecoder));
+
     private const int ModeCount = 10;
     private const uint FlagSplit0 = 1;
     private const uint FlagSwitchColorspace = 1 << 16;

@@ -9,6 +9,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 
 public class FLandscapeComponentGrassData
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FLandscapeComponentGrassData>();
+
     public int NumElements;
     public Dictionary<FPackageIndex, int>? WeightOffsets;
     public Dictionary<FName, int>? WeightOffsetsNew;

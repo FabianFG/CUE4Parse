@@ -17,6 +17,8 @@ namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureDecoder
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(TextureDecoder));
+
     public static bool UseAssetRipperTextureDecoder { get; set; } = false;
 
     public static CTexture? Decode(this UTexture texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetMipIndexByMaxSize(maxMipSize), platform);

@@ -206,6 +206,8 @@ public class FAEPakEntry : FPakEntry
 
 public class AEPakFileReader : AbstractAesVfsReader
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<AEPakFileReader>();
+
     private readonly string _indexName;
     public readonly FArchive Ar;
 
