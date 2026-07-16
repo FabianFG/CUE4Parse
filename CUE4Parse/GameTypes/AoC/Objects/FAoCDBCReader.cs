@@ -62,7 +62,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         Position = Chunks[index].Offset;
         if (!TypeMap.TryGetValue(Chunks[index].Hash, out var filetype))
         {
-            Log.Warning($"Unknown AoC DBC Chunk Type Hash: {Chunks[index].Hash}");
+            Log.Warning("Unknown AoC DBC Chunk Type Hash: {ChunkTypeHash}", Chunks[index].Hash);
             return false;
         }
 

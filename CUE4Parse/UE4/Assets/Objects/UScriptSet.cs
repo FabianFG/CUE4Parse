@@ -77,7 +77,7 @@ public class UScriptSet
             if (property != null)
                 Properties.Add(property);
             else
-                Log.Debug($"Failed to read element for index {i} in set");
+                Log.Debug("Failed to read element for index {Index} in set", i);
         }
     }
 }

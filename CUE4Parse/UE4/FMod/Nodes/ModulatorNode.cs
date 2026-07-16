@@ -57,7 +57,7 @@ public class ModulatorNode
                 Subnode = new SpectralSidechainModulatorNode(Ar);
                 break;
             default:
-                Log.Error($"Unhandled modulator type {Type} ({(int) Type}) at stream position {Ar.BaseStream.Position}");
+                Log.Error("Unhandled modulator type {ModulatorType} ({ModulatorTypeValue}) at stream position {Position}", Type, (int) Type, Ar.BaseStream.Position);
                 break;
         }
     }

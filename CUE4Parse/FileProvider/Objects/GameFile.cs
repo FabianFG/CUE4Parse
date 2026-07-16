@@ -96,7 +96,7 @@ public abstract class GameFile
         }
         catch (Exception e)
         {
-            Log.Error(e, $"Could not read GameFile {this}");
+            Log.Error(e, "Could not read GameFile {GameFile}", this);
             data = null;
         }
         return data != null;
@@ -111,7 +111,7 @@ public abstract class GameFile
         }
         catch (Exception e)
         {
-            Log.Error(e, $"Could not create reader for GameFile {this}");
+            Log.Error(e, "Could not create reader for GameFile {GameFile}", this);
             reader = null;
         }
         return reader != null;

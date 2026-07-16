@@ -921,7 +921,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                Log.Warning($"EPropertyType {propertyTag.TagData?.Type} is currently not implemented");
+                Log.Warning("EPropertyType {PropertyType} is currently not implemented", propertyTag.TagData?.Type);
                 return false;
             }
         }

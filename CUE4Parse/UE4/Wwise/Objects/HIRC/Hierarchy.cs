@@ -73,10 +73,10 @@ public readonly struct Hierarchy
 #if DEBUG
                 Ar.Position = hierarchyStartPosition;
                 var id = Length >= 4 ? Ar.Read<uint>() : 0;
-                Log.Warning($"Didn't read hierarchy {Type} {id} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
+                Log.Warning("Didn't read hierarchy {Type} {Id} correctly (at {Position}, should be {ExpectedPosition})", Type, id, Ar.Position, hierarchyEndPosition);
                 if (Data is HierarchyEventAction action)
                 {
-                    Log.Warning($"EventAction type: {action.EventActionType}");
+                    Log.Warning("EventAction type: {EventActionType}", action.EventActionType);
                 }
 #endif
                 Ar.Position = hierarchyEndPosition;

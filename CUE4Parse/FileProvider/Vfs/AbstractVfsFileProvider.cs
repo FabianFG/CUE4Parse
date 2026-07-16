@@ -297,7 +297,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
             catch (Exception e)
             {
-                Log.Warning(e, $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
+                Log.Warning(e, "Uncaught exception while loading file {FileName}", reader.Path.SubstringAfterLast('/'));
             }
         }
 
@@ -377,7 +377,7 @@ namespace CUE4Parse.FileProvider.Vfs
                         }
                         catch (Exception e)
                         {
-                            Log.Warning(e, $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
+                            Log.Warning(e, "Uncaught exception while loading pak file {FileName}", reader.Path.SubstringAfterLast('/'));
                         }
                         return null;
                     }));

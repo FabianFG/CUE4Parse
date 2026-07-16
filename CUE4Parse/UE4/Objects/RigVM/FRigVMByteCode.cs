@@ -32,7 +32,7 @@ public class FRigVMByteCode
             }
             catch (Exception e)
             {
-                Log.Warning(e, $"Failed to serialize RigVM bytecode");
+                Log.Warning(e, "Failed to serialize RigVM bytecode");
             }
 
             return;

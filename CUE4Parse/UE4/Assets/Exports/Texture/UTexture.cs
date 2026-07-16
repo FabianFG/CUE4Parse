@@ -137,7 +137,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
                 if (Ar.AbsolutePosition != skipOffset)
                 {
-                    Log.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
+                    Log.Warning("Texture2D read incorrectly. Offset {Offset}, Skip Offset {SkipOffset}, Bytes remaining {BytesRemaining}", Ar.AbsolutePosition, skipOffset, skipOffset - Ar.AbsolutePosition);
                     Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
                 }
 

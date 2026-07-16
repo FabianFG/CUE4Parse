@@ -171,7 +171,7 @@ public class FModProvider
         if (!string.IsNullOrEmpty(token?.Value))
         {
             _encryptionKey = Encoding.UTF8.GetBytes(Regex.Unescape(token.Value.Trim('"')));
-            Log.Information($"FMod encryption key found: {token.Value}");
+            Log.Information("FMod encryption key found: {EncryptionKey}", token.Value);
         }
         else
         {

@@ -122,7 +122,7 @@ public class AEDefaultFileProvider : DefaultFileProvider
             var path = Path.Combine(repoPath, entry.Folder, entry.FileName);
             if (!File.Exists(path))
             {
-                Log.Warning($"File not found: {path}");
+                Log.Warning("File not found: {Path}", path);
                 continue;
             }
 

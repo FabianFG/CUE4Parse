@@ -20,7 +20,7 @@ public partial class WwiseProvider
         {
             if (!_bl4SoundTagsMap.TryGetValue(audioEventName.Text, out var soundTagData))
             {
-                Log.Warning($"Couldn't find Sound Tag '{audioEventName.Text}' in the Sound Tags map");
+                Log.Warning("Couldn't find Sound Tag '{SoundTag}' in the Sound Tags map", audioEventName.Text);
                 return [];
             }
 

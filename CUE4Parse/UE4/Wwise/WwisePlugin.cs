@@ -152,19 +152,19 @@ public class WwisePlugin
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with Wwise version {Ar.Version}");
+            Log.Error(ex, "Error while parsing Wwise plugin '{PluginId}' with Wwise version {Version}", pluginId, Ar.Version);
         }
         finally
         {
 #if DEBUG
             if (Params is CAkDefaultParams)
             {
-                Log.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping {size} bytes");
+                Log.Warning("Handler for Wwise plugin '{PluginId}' wasn't added, skipping {Size} bytes", pluginId, size);
             }
 
             if (Ar.Position != endPosition)
             {
-                Log.Warning($"Didn't read Wwise plugin '{pluginId}' with Wwise version {Ar.Version} correctly (at {Ar.Position}, should be {endPosition})");
+                Log.Warning("Didn't read Wwise plugin '{PluginId}' with Wwise version {Version} correctly (at {Position}, should be {ExpectedPosition})", pluginId, Ar.Version, Ar.Position, endPosition);
             }
 #endif
             Ar.Position = endPosition;

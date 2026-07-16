@@ -83,7 +83,7 @@ public class NGRLuaReader
         Header = new FadeFaceHeader(Ar);
         if (Header.Magic != NGR_LUA_MAGIC)
         {
-            Log.Warning($"Invalid magic: 0x{Header.Magic:X}, expected: 0x{NGR_LUA_MAGIC:X}");
+            Log.Warning("Invalid magic: 0x{Magic:X}, expected: 0x{ExpectedMagic:X}", Header.Magic, NGR_LUA_MAGIC);
             return data;
         }
 
