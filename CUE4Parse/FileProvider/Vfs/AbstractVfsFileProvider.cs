@@ -279,7 +279,44 @@ namespace CUE4Parse.FileProvider.Vfs
             VfsRegistered?.Invoke(reader, _unloadedVfs.Count);
         }
 
-        public int Mount() => MountAsync().Result;
+        private void TryMountReader(IAesVfsReader reader, ref int countNewMounts)
+        {
+            if ((reader.IsEncrypted && CustomEncryption == null) || !reader.HasDirectoryIndex)
+                return;
+
+            try
+            {
+                reader.MountTo(Files, PathComparer, VfsMounted);
+                _unloadedVfs.TryRemove(reader, out _);
+                _mountedVfs[reader] = null;
+                Interlocked.Increment(ref countNewMounts);
+            }
+            catch (InvalidAesKeyException)
+            {
+                // Ignore this
+            }
+            catch (Exception e)
+            {
+                CUE4ParseLog.Logger.Warning(e, $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
+            }
+        }
+
+        public int Mount()
+        {
+            var countNewMounts = 0;
+            var readers = _unloadedVfs.Keys.ToArray();
+            Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader =>
+                (!reader.IsEncrypted || CustomEncryption != null) && reader.HasDirectoryIndex)));
+
+            foreach (var reader in readers)
+            {
+                VerifyGlobalData(reader);
+                TryMountReader(reader, ref countNewMounts);
+            }
+
+            return countNewMounts;
+        }
+
         public async Task<int> MountAsync()
         {
             var countNewMounts = 0;
@@ -291,30 +328,7 @@ namespace CUE4Parse.FileProvider.Vfs
             foreach (var reader in readers)
             {
                 VerifyGlobalData(reader);
-
-                if (reader.IsEncrypted && CustomEncryption == null || !reader.HasDirectoryIndex)
-                    continue;
-
-                tasks.AddLast(Task.Run(() =>
-                {
-                    try
-                    {
-                        reader.MountTo(Files, PathComparer, VfsMounted);
-                        _unloadedVfs.TryRemove(reader, out _);
-                        _mountedVfs[reader] = null;
-                        Interlocked.Increment(ref countNewMounts);
-                        return reader;
-                    }
-                    catch (InvalidAesKeyException)
-                    {
-                        // Ignore this
-                    }
-                    catch (Exception e)
-                    {
-                        CUE4ParseLog.Logger.Warning(e, $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
-                    }
-                    return null;
-                }));
+                tasks.AddLast(Task.Run(() => TryMountReader(reader, ref countNewMounts)));
             }
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
