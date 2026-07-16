@@ -57,23 +57,6 @@ public sealed class FByteBulkData : TBulkData<byte>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetDataSize() => Header.ElementCount;
 
-    /// <summary>
-    /// Reads bulk data once without storing it in this instance.
-    /// If data is already cached, optionally returns a copy of a cached data.
-    /// </summary>
-    public byte[]? ReadDataOnce(bool returnCachedData = true)
-    {
-        if (_data is { IsValueCreated: true })
-        {
-            var cached = _data.Value;
-            if (cached is null) return null;
-
-            return returnCachedData ? cached : (byte[]) cached.Clone();
-        }
-
-        return ReadBulkDataInto(out var data) ? data : null;
-    }
-
     public bool TryCreateReader(string name, [NotNullWhen(true)] out FArchive reader, bool useCachedData = true)
     {
         try

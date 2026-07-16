@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -21,7 +22,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     public TextureGroup LODGroup { get; private set; }
     public TextureFilter Filter { get; private set; }
     public bool SRGB { get; private set; }
-    public FPackageIndex[] AssetUserData { get; private set; } = Array.Empty<FPackageIndex>();
+    public FPackageIndex[] AssetUserData { get; private set; } = [];
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
     public FEditorBulkData? EditorData { get; private set; }
@@ -42,21 +43,17 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     public virtual TextureAddress GetTextureAddressZ() => TextureAddress.TA_Wrap;
 
     private UTextureAllMipDataProviderFactory? _mipDataProvider;
-    private bool _mipDataProviderLoaded;
-    private bool _externalPlatformDataApplied;
     public UTextureAllMipDataProviderFactory? MipDataProvider
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if (!_mipDataProviderLoaded)
+            if (_mipDataProvider is null)
             {
-                _mipDataProviderLoaded = true;
                 foreach (var aud in AssetUserData)
                 {
                     if (aud.TryLoad<UTextureAllMipDataProviderFactory>(out _mipDataProvider))
                     {
-                        TryApplyExternalPlatformData(_mipDataProvider);
                         break;
                     }
                 }
@@ -65,44 +62,19 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void EnsureExternalPlatformDataApplied()
-    {
-        if (!_externalPlatformDataApplied && PlatformData.Mips.Length == 0)
-            _ = MipDataProvider;
-    }
-
-    private void TryApplyExternalPlatformData(UTextureAllMipDataProviderFactory provider)
-    {
-        if (_externalPlatformDataApplied)
-            return;
-
-        _externalPlatformDataApplied = true;
-        if (PlatformData.Mips.Length > 0)
-            return;
-
-        if (provider is UOodleTextureStorageProviderFactory oodleProvider &&
-            oodleProvider.TryCreatePlatformData(out var platformData, out var format))
-        {
-            PlatformData = platformData;
-            Format = format;
-        }
-    }
-
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game is EGame.GAME_WorldofJadeDynasty or EGame.GAME_RocoKingdomWorld)
-            Ar.Position += 16;
+        if (Ar.Game is GAME_WorldofJadeDynasty or GAME_RocoKingdomWorld) Ar.Position += 16;
         base.Deserialize(Ar, validPos);
         LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
         CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);
         LODGroup = GetOrDefault(nameof(LODGroup), TextureGroup.TEXTUREGROUP_World);
         Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Nearest);
         SRGB = GetOrDefault(nameof(SRGB), true);
-        AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), Array.Empty<FPackageIndex>());
+        AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
         CookPlatformTilingSettings = GetOrDefault<ETextureCookPlatformTilingSettings>(nameof(CookPlatformTilingSettings));
 
-        if (Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.Game < GAME_UE4_0)
         {
             SourceArt = new FByteBulkData(Ar);
             return;
@@ -110,6 +82,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
         var stripFlags = new FStripDataFlags(Ar);
 
+        // If archive is has editor only data
         if (!stripFlags.IsEditorDataStripped())
         {
             if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.VirtualizedBulkDataHaveUniqueGuids)
@@ -132,31 +105,35 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
     protected void DeserializeCookedPlatformData(FAssetArchive Ar, bool bSerializeMipData = true)
     {
-        var pixelFormatName = ReadCookedPixelFormatName(Ar);
-        if (pixelFormatName.Text == "PF_BC6H_Signed")
-            pixelFormatName = "PF_BC6H";
+        if (Ar.Game is GAME_WutheringWaves)
+        {
+            var data = Ar.Peek<FIntVector>();
+            bSerializeMipData = data.X > 0 && data.Y == 0 && data.Z > 0 || Ar.ReadBoolean();
+        }
+        var pixelFormatName = Ar.ReadFName();
+        if (pixelFormatName.Text == "PF_BC6H_Signed") pixelFormatName = "PF_BC6H";
         while (!pixelFormatName.IsNone)
         {
-            var pixelFormatText = NormalizeCookedPixelFormat(Ar.Game, pixelFormatName.Text);
-            Enum.TryParse(pixelFormatText, out EPixelFormat pixelFormat);
+            if (!Enum.TryParse(pixelFormatName.Text, ignoreCase: true, out EPixelFormat pixelFormat))
+                Log.Warning("Failed to parse pixel format: {PixelFormat}", pixelFormatName.Text);
 
             var skipOffset = Ar.Game switch
             {
-                EGame.GAME_WutheringWaves => Ar.AbsolutePosition + Ar.Read<long>(),
-                >= EGame.GAME_UE5_0 => Ar.AbsolutePosition + Ar.Read<long>(),
-                >= EGame.GAME_UE4_20 => Ar.Read<long>(),
+                GAME_WutheringWaves => Ar.AbsolutePosition + Ar.Read<long>(),
+                >= GAME_UE5_0 => Ar.AbsolutePosition + Ar.Read<long>(),
+                >= GAME_UE4_20 => Ar.Read<long>(),
                 _ => Ar.Read<int>()
             };
 
             if (Format == EPixelFormat.PF_Unknown)
             {
+                //?? check whether we can support this pixel format
 #if DEBUG
                 //Log.Debug("Loading data for format {Format}", pixelFormatName);
 #endif
                 PlatformData = new FTexturePlatformData(Ar, this, bSerializeMipData);
 
-                if (Ar.Game is EGame.GAME_SeaOfThieves or EGame.GAME_DeltaForce)
-                    Ar.Position += 4;
+                if (Ar.Game is GAME_SeaOfThieves or GAME_DeltaForce) Ar.Position += 4;
 
                 if (Ar.AbsolutePosition != skipOffset)
                 {
@@ -174,92 +151,21 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
                 Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
             }
 
-            pixelFormatName = ReadCookedPixelFormatName(Ar);
+            pixelFormatName = Ar.ReadFName();
         }
-    }
-
-    private static FName ReadCookedPixelFormatName(FAssetArchive Ar)
-    {
-        if (Ar.Game != EGame.GAME_WutheringWaves)
-            return Ar.ReadFName();
-
-        var position = Ar.Position;
-        if (TryReadCookedPixelFormatName(Ar, out var pixelFormatName))
-            return pixelFormatName;
-
-        Ar.Position = position + sizeof(int);
-        if (TryReadCookedPixelFormatName(Ar, out pixelFormatName))
-            return pixelFormatName;
-
-        Ar.Position = position;
-        return Ar.ReadFName();
-    }
-
-    private static bool TryReadCookedPixelFormatName(FAssetArchive Ar, out FName pixelFormatName)
-    {
-        var position = Ar.Position;
-        if (Ar.TestReadFName())
-        {
-            var candidate = Ar.ReadFName();
-            if (candidate.IsNone || IsCookedPixelFormatName(Ar.Game, candidate.Text))
-            {
-                pixelFormatName = candidate;
-                return true;
-            }
-        }
-
-        Ar.Position = position;
-        pixelFormatName = default;
-        return false;
-    }
-
-    private static bool IsCookedPixelFormatName(EGame game, string pixelFormatName)
-    {
-        return Enum.TryParse(NormalizeCookedPixelFormat(game, pixelFormatName), out EPixelFormat format) &&
-               format != EPixelFormat.PF_Unknown;
-    }
-
-    private static string NormalizeCookedPixelFormat(EGame game, string pixelFormatName)
-    {
-        var text = pixelFormatName;
-        if (game == EGame.GAME_WutheringWaves && text.StartsWith("OODLE_", StringComparison.Ordinal))
-        {
-            text = text["OODLE_".Length..];
-        }
-
-        if (text == "PF_BC6H_Signed")
-            return "PF_BC6H";
-
-        if (!text.StartsWith("PF_", StringComparison.Ordinal) && Enum.TryParse($"PF_{text}", out EPixelFormat _))
-            return $"PF_{text}";
-
-        return text;
-    }
-
-    protected bool TryLoadOodleTextureStorageProvider()
-    {
-        if (Format != EPixelFormat.PF_Unknown || PlatformData.Mips.Length > 0)
-            return false;
-
-        if (MipDataProvider is not UOodleTextureStorageProviderFactory oodleProvider)
-            return false;
-
-        PlatformData = new FTexturePlatformData(oodleProvider.SizeX, oodleProvider.SizeY, EPixelFormat.PF_BC7, new Lazy<byte[]?>(oodleProvider.DecodeTopMip));
-        Format = EPixelFormat.PF_BC7;
-        return true;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName("SizeX");
+        writer.WritePropertyName(nameof(PlatformData.SizeX));
         writer.WriteValue(PlatformData.SizeX);
 
-        writer.WritePropertyName("SizeY");
+        writer.WritePropertyName(nameof(PlatformData.SizeY));
         writer.WriteValue(PlatformData.SizeY);
 
-        writer.WritePropertyName("PackedData");
+        writer.WritePropertyName(nameof(PlatformData.PackedData));
         writer.WriteValue(PlatformData.PackedData);
 
         writer.WritePropertyName("PixelFormat");
@@ -267,46 +173,38 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
         if (PlatformData.OptData.ExtData != 0 && PlatformData.OptData.NumMipsInTail != 0)
         {
-            writer.WritePropertyName("OptData");
+            writer.WritePropertyName(nameof(PlatformData.OptData));
             serializer.Serialize(writer, PlatformData.OptData);
         }
 
-        writer.WritePropertyName("FirstMipToSerialize");
+        writer.WritePropertyName(nameof(PlatformData.FirstMipToSerialize));
         writer.WriteValue(PlatformData.FirstMipToSerialize);
 
         if (PlatformData.Mips is { Length: > 0 })
         {
-            writer.WritePropertyName("Mips");
+            writer.WritePropertyName(nameof(PlatformData.Mips));
             serializer.Serialize(writer, PlatformData.Mips);
         }
 
         if (PlatformData.VTData != null)
         {
-            writer.WritePropertyName("VTData");
+            writer.WritePropertyName(nameof(PlatformData.VTData));
             serializer.Serialize(writer, PlatformData.VTData);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FTexture2DMipMap? GetMip(int index)
-    {
-        EnsureExternalPlatformDataApplied();
-        return index >= 0 && index < PlatformData.Mips.Length && PlatformData.Mips[index].EnsureValidBulkData(MipDataProvider, index)
+    public FTexture2DMipMap? GetMip(int index) =>
+        index >= 0 && index < PlatformData.Mips.Length && PlatformData.Mips[index].EnsureValidBulkData(MipDataProvider, index)
             ? PlatformData.Mips[index]
             : null;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FTexture2DMipMap? GetFirstMip()
-    {
-        EnsureExternalPlatformDataApplied();
-        return PlatformData.Mips.Where((t, i) => t.EnsureValidBulkData(MipDataProvider, i)).FirstOrDefault();
-    }
+    public FTexture2DMipMap? GetFirstMip() => PlatformData.Mips.Where((t, i) => t.EnsureValidBulkData(MipDataProvider, i)).FirstOrDefault();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetFirstMipIndex()
     {
-        EnsureExternalPlatformDataApplied();
         for (var i = 0; i < PlatformData.Mips.Length; i++)
         {
             var mip = PlatformData.Mips[i];
@@ -319,7 +217,6 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
     public int GetMipIndexByMaxSize(int maxXSize, int maxYSize = -1)
     {
-        EnsureExternalPlatformDataApplied();
         if (maxYSize == -1)
             maxYSize = maxXSize;
 
@@ -349,7 +246,6 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetMipByMaxSize(int maxSize)
     {
-        EnsureExternalPlatformDataApplied();
         for (var i = 0; i < PlatformData.Mips.Length; i++)
         {
             var mip = PlatformData.Mips[i];
@@ -363,7 +259,6 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FTexture2DMipMap? GetMipBySize(int sizeX, int sizeY)
     {
-        EnsureExternalPlatformDataApplied();
         for (var i = 0; i < PlatformData.Mips.Length; i++)
         {
             var mip = PlatformData.Mips[i];
@@ -376,9 +271,13 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
     public override void GetParams(CMaterialParams parameters)
     {
+        // Default empty method
+        // ???
     }
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
     {
+        // Default empty method
+        // ???
     }
 }

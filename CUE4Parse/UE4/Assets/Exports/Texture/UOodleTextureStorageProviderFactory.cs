@@ -1,140 +1,96 @@
-using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
+public class FOodleTexture2DMipMap : FTexture2DMipMap
+{
+    public int Version;
+    public uint OodleFlags;
+    public int[] Modes = [];
+
+    private const int ModeCountCount = 10;
+
+    public FOodleTexture2DMipMap(FAssetArchive Ar)
+    {
+        SizeX = Ar.Read<int>();
+        SizeY = Ar.Read<int>();
+        SizeZ = Ar.Read<int>();
+        if (!Ar.ReadBoolean())
+        {
+            BulkData = new FByteBulkData(Ar);
+            return;
+        }
+        Version = Ar.Read<int>();
+        OodleFlags = Ar.Read<uint>();
+        Modes = Ar.ReadArray<int>(ModeCountCount);
+        BulkData = new FByteBulkData(Ar);
+    }
+}
+
 public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFactory
 {
-    public int SizeX { get; private set; }
-    public int SizeY { get; private set; }
-    public int Version { get; private set; }
-    public uint OodleFlags { get; private set; }
-    public int[] ModeCounts { get; private set; } = [];
-
-    public uint BulkDataFlags { get; private set; }
-    public int ElementCount { get; private set; }
-    public int SizeOnDisk { get; private set; }
-    public long OffsetInFile { get; private set; }
-
-    [JsonIgnore]
-    public byte[] CompressedData { get; private set; } = [];
-
-    private const int SizeXOffset = 20;
-    private const int SizeYOffset = 24;
-    private const int VersionOffset = 36;
-    private const int FlagsOffset = 40;
-    private const int ModeCountsOffset = 44;
-    private const int ModeCountCount = 10;
-    private const int BulkFlagsOffset = 84;
-    private const int PayloadOffset = 104;
-    private const int TrailerSize = 12;
+    public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
+    public FOodleTexture2DMipMap[] Mips { get; private set; } = [];
+    public FPackageIndex Texture { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Game != EGame.GAME_WutheringWaves)
+        if (Ar.Game != GAME_WutheringWaves) return;
+
+        var pixelFormatName = Ar.ReadFName();
+        if (pixelFormatName.Text == "PF_BC6H_Signed") pixelFormatName = "PF_BC6H";
+        while (!pixelFormatName.IsNone)
         {
-            Ar.Position = validPos;
-            return;
+            if (!Enum.TryParse(pixelFormatName.Text, ignoreCase: true, out EPixelFormat pixelFormat))
+                Log.Warning("Failed to parse pixel format: {PixelFormat}", pixelFormatName.Text);
+
+            var skipOffset = Ar.Game switch
+            {
+                GAME_WutheringWaves => Ar.AbsolutePosition + Ar.Read<long>(),
+                >= GAME_UE5_0 => Ar.AbsolutePosition + Ar.Read<long>(),
+                >= GAME_UE4_20 => Ar.Read<long>(),
+                _ => Ar.Read<int>()
+            };
+
+            if (Format == EPixelFormat.PF_Unknown)
+            {
+                Mips = Ar.ReadArray( () => new FOodleTexture2DMipMap(Ar));
+               
+                if (Ar.AbsolutePosition != skipOffset)
+                {
+                    Log.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
+                    Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
+                }
+
+                Format = pixelFormat;
+            }
+            else
+            {
+#if DEBUG
+                Log.Debug("Skipping data for format {Format}", pixelFormatName);
+#endif
+                Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
+            }
+
+            pixelFormatName = Ar.ReadFName();
         }
 
-        var remaining = (int) (validPos - Ar.Position);
-        if (remaining < PayloadOffset + TrailerSize)
-        {
-            Ar.Position = validPos;
-            return;
-        }
-
-        var buf = Ar.ReadBytes(remaining);
-
-        int I32(int o) => System.BitConverter.ToInt32(buf, o);
-        uint U32(int o) => System.BitConverter.ToUInt32(buf, o);
-
-        SizeX = I32(SizeXOffset);
-        SizeY = I32(SizeYOffset);
-        Version = I32(VersionOffset);
-        OodleFlags = U32(FlagsOffset);
-
-        ModeCounts = new int[ModeCountCount];
-        for (var i = 0; i < ModeCounts.Length; i++)
-            ModeCounts[i] = I32(ModeCountsOffset + i * 4);
-
-        int bulkHeaderOffset = ModeCountsOffset + ModeCountCount * 4;
-        Ar.Position = Ar.Position - buf.Length + bulkHeaderOffset;
-
-        var bulkData = new FByteBulkData(Ar);
-        CompressedData = bulkData.Data;
-    }
-
-    public byte[] DecodeTopMip()
-    {
-        if (CompressedData.Length == 0 || SizeX <= 0 || SizeY <= 0)
-            throw new ParserException("Oodle texture storage provider has no BC7Prep payload");
-
-        var topMipSize = GetBc7MipSize(SizeX, SizeY);
-        var decoded = BC7PrepDecoder.Decode(CompressedData, ModeCounts, OodleFlags, SizeX, SizeY);
-        if (decoded == null || decoded.Length != topMipSize)
-            throw new ParserException("BC7Prep decode failed");
-        return decoded;
-    }
-
-    public bool TryCreatePlatformData(out FTexturePlatformData platformData, out EPixelFormat format)
-    {
-        platformData = new FTexturePlatformData();
-        format = EPixelFormat.PF_Unknown;
-
-        if (CompressedData.Length == 0 || SizeX <= 0 || SizeY <= 0)
-            return false;
-
-        platformData = new FTexturePlatformData(SizeX, SizeY, EPixelFormat.PF_BC7, new Lazy<byte[]?>(DecodeTopMip));
-        format = EPixelFormat.PF_BC7;
-        return true;
-    }
-
-    public bool TryGetMipData(int mipLevel, out byte[]? data, out int sizeX, out int sizeY, out int sizeZ)
-    {
-        data = null;
-        sizeX = SizeX;
-        sizeY = SizeY;
-        sizeZ = 1;
-
-        if (mipLevel != 0 || CompressedData.Length == 0 || SizeX <= 0 || SizeY <= 0)
-            return false;
-
-        try
-        {
-            data = DecodeTopMip();
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static int GetBc7MipSize(int sizeX, int sizeY)
-    {
-        var blocksX = (sizeX + 3) / 4;
-        var blocksY = (sizeY + 3) / 4;
-        return blocksX * blocksY * 16;
+        Texture = new FPackageIndex(Ar);
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
-        writer.WritePropertyName("SizeX");
-        writer.WriteValue(SizeX);
-        writer.WritePropertyName("SizeY");
-        writer.WriteValue(SizeY);
-        writer.WritePropertyName("OodleFlags");
-        writer.WriteValue($"0x{OodleFlags:X}");
-        writer.WritePropertyName("SizeOnDisk");
-        writer.WriteValue(SizeOnDisk);
-        writer.WritePropertyName("ModeCounts");
-        serializer.Serialize(writer, ModeCounts);
+        writer.WritePropertyName(nameof(Texture));
+        serializer.Serialize(writer, Texture);
+        writer.WritePropertyName(nameof(Format));
+        writer.WriteValue(Format);
+        writer.WritePropertyName(nameof(Mips));
+        serializer.Serialize(writer, Mips);
     }
 }

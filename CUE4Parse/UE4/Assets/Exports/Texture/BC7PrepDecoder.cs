@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -17,10 +16,10 @@ public static class BC7PrepDecoder
     private const uint FlagSplit0 = 1;
     private const uint FlagSwitchColorspace = 1 << 16;
 
-    private static readonly int[] ModeSizes = { 16, 16, 16, 16, 16, 16, 16, 16, 16, 4 };
+    private static readonly int[] ModeSizes = [16, 16, 16, 16, 16, 16, 16, 16, 16, 4];
 
     // Raw per-mode split byte offsets (BC7PREP_MODEx_SPLIT constants). 0 means "never split".
-    private static readonly int[] SplitPoint = { 8, 8, 12, 12, 6, 8, 8, 12, 0, 0 };
+    private static readonly int[] SplitPoint = [8, 8, 12, 12, 6, 8, 8, 12, 0, 0];
 
     private delegate void ModeDecoderFn(byte[] output, byte[] payload, int firstOffset, int secondOffset,
         int stride0, int stride1, List<int> indices, bool switchColorspace);
@@ -35,35 +34,38 @@ public static class BC7PrepDecoder
     /// Decode a BC7Prep payload to raw BC7 blocks (16 bytes each). Returns null on any
     /// structural inconsistency (corrupt/unrecognized data).
     /// </summary>
-    public static byte[]? Decode(byte[] payload, int[] modeCounts, uint flags, int sizeX, int sizeY)
+    public static byte[]? Decode(FOodleTexture2DMipMap mip)
     {
-        if (modeCounts.Length != ModeCount)
-            return null;
+        if (mip.Modes.Length != ModeCount) return mip.BulkData?.Data;
 
-        if (!ReadHeader(modeCounts, out var numBlocks, out var expectedPayloadSize))
+        var modes = mip.Modes;
+        if (!ReadHeader(modes, out var numBlocks, out var payloadSize))
             return null;
 
         if (numBlocks == 0)
             return [];
 
-        if (payload.Length < expectedPayloadSize)
+        if (mip.BulkData is null || mip.BulkData.GetDataSize() < payloadSize || mip.BulkData.ReadDataOnce() is not { Length: >= 1 } payload)
+        {
+            Log.Warning("Bulk data is corrupted or missing");
             return null;
+        }
 
         var decoded = new byte[numBlocks * 16];
 
         var modePos = new int[ModeCount + 1];
         for (var i = 0; i < ModeCount; i++)
-            modePos[i + 1] = modePos[i] + modeCounts[i] * ModeSizes[i];
+            modePos[i + 1] = modePos[i] + modes[i] * ModeSizes[i];
 
         var modeNibbleOffset = modePos[ModeCount];
 
         var modeIndices = new List<int>[ModeCount];
         for (var i = 0; i < ModeCount; i++)
-            modeIndices[i] = new List<int>(modeCounts[i]);
+            modeIndices[i] = new List<int>(modes[i]);
 
         SortByMode(modeIndices, payload, modeNibbleOffset, numBlocks);
 
-        var switchColorspace = (flags & FlagSwitchColorspace) != 0;
+        var switchColorspace = (mip.OodleFlags & FlagSwitchColorspace) != 0;
 
         for (var mode = 0; mode < ModeCount; mode++)
         {
@@ -71,12 +73,12 @@ public static class BC7PrepDecoder
             if (indices.Count == 0)
                 continue;
 
-            if (indices.Count != modeCounts[mode])
+            if (indices.Count != modes[mode])
                 return null; // corrupt: nibble stream disagrees with header counts
 
             var splitPoint = SplitPoint[mode];
             var modeSize = ModeSizes[mode];
-            var isSplit = (flags & (FlagSplit0 << mode)) != 0;
+            var isSplit = (mip.OodleFlags & (FlagSplit0 << mode)) != 0;
 
             var firstOffset = modePos[mode];
             int stride0, stride1, secondOffset;
@@ -84,7 +86,7 @@ public static class BC7PrepDecoder
             {
                 stride0 = splitPoint;
                 stride1 = modeSize - splitPoint;
-                secondOffset = firstOffset + splitPoint * modeCounts[mode];
+                secondOffset = firstOffset + splitPoint * modes[mode];
             }
             else
             {
