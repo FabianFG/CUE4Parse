@@ -40,12 +40,13 @@ public sealed class LoMIoStoreReader(LoMIoStoreManifest manifest, LoMDirectoryIn
                 entry = new FIoStoreEntry(this, i);
             }
 
-            if (entry.IsEncrypted) EncryptedFileCount++;
-            if (entry.IsUePackage) PackageIdIndex[entry.ChunkId.AsPackageId()] = entry;
+            if (entry.IsPackageData && chunkId._chunkIndex == 0 && !entry.IsOptionalPackage)
+                PackageIdIndex[chunkId.AsPackageId()] = entry;
             files[entry.Path] = entry;
         }
 
         Files = files;
+        EncryptedFileCount = IsEncrypted ? files.Count : 0;
         InitializeContainerHeader();
 
         if (Globals.LogVfsMounts)
