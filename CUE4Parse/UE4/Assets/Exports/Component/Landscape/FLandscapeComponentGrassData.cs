@@ -3,20 +3,40 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 
 public class FLandscapeComponentGrassData
 {
     public int NumElements;
-    public Dictionary<FPackageIndex, int> WeightOffsets;
-    public byte[] HeightWeightData;
-    public ushort[] HeightData;
-    public Dictionary<FPackageIndex, byte[]> WeightData;
+    public Dictionary<FPackageIndex, int>? WeightOffsets;
+    public Dictionary<FName, int>? WeightOffsetsNew;
+    public byte[]? HeightWeightData;
+    public ushort[]? HeightData;
+    public Dictionary<FPackageIndex, byte[]>? WeightData;
 
-    public FLandscapeComponentGrassData(FAssetArchive Ar)
+    public FLandscapeComponentGrassData(FAssetArchive Ar, Dictionary<FName, FPackageIndex> namedGrassTypes)
     {
-        if (Ar.Game >= GAME_UE5_0)
+        if (Ar.Game >= GAME_UE5_8)
+        {
+            NumElements = Ar.Read<int>();
+            WeightOffsetsNew = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
+            HeightWeightData = Ar.ReadArray<byte>();
+            foreach (var kvp in WeightOffsetsNew)
+            {
+                WeightOffsets ??= new Dictionary<FPackageIndex, int>(WeightOffsetsNew.Count);
+                if (namedGrassTypes.TryGetValue(kvp.Key, out var packageIndex))
+                {
+                    WeightOffsets[packageIndex] = kvp.Value;
+                }
+                else
+                {
+                    Log.Warning("Could not find package index for grass type {0}", kvp.Key);
+                }
+            }
+        }
+        else if (Ar.Game >= GAME_UE5_0)
         {
             NumElements = Ar.Read<int>();
             WeightOffsets = Ar.ReadMap(() => new FPackageIndex(Ar), Ar.Read<int>);
