@@ -283,7 +283,11 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             var countNewMounts = 0;
             var tasks = new LinkedList<Task>();
-            foreach (var reader in _unloadedVfs.Keys)
+            var readers = _unloadedVfs.Keys.ToArray();
+            Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader =>
+                (!reader.IsEncrypted || CustomEncryption != null) && reader.HasDirectoryIndex)));
+
+            foreach (var reader in readers)
             {
                 VerifyGlobalData(reader);
 
@@ -327,9 +331,14 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             var countNewMounts = 0;
             var tasks = new LinkedList<Task<IAesVfsReader?>>();
-            foreach (var (guid, key) in keys)
+            var submittedKeys = keys as IReadOnlyCollection<KeyValuePair<FGuid, FAesKey>> ?? keys.ToArray();
+            var submittedKeyGuids = submittedKeys.Select(x => x.Key).ToHashSet();
+            var readers = _unloadedVfs.Keys.Where(reader => submittedKeyGuids.Contains(reader.EncryptionKeyGuid)).ToArray();
+            Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader => reader.HasDirectoryIndex)));
+
+            foreach (var (guid, key) in submittedKeys)
             {
-                foreach (var reader in _unloadedVfs.Keys.Where(it => it.EncryptionKeyGuid == guid))
+                foreach (var reader in readers.Where(it => it.EncryptionKeyGuid == guid))
                 {
                     if (reader.Game == GAME_FragPunk && reader.Name.Contains("global")) reader.AesKey = key;
                     VerifyGlobalData(reader);
@@ -370,6 +379,18 @@ namespace CUE4Parse.FileProvider.Vfs
             }
 
             return countNewMounts;
+        }
+
+        private static int EstimatePackageIndexCapacity(IEnumerable<IAesVfsReader> readers)
+        {
+            long capacity = 0;
+            foreach (var reader in readers)
+            {
+                if (reader is IoStoreReader ioStoreReader)
+                    capacity += ioStoreReader.GetPackageDataChunkCount();
+            }
+
+            return (int) Math.Min(capacity, int.MaxValue);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -109,11 +109,19 @@ namespace CUE4Parse.UE4.IO.Objects
 
             // Compression blocks
             var isFragPunk = archive.Game == GAME_FragPunk;
-            CompressionBlocks = new FIoStoreTocCompressedBlockEntry[Header.TocCompressedBlockEntryCount];
-            for (int i = 0; i < Header.TocCompressedBlockEntryCount; i++)
+            if (!isFragPunk)
             {
-                CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
-                if (isFragPunk) archive.Position += 4;
+                CompressionBlocks = archive.ReadArray<FIoStoreTocCompressedBlockEntry>(
+                    (int) Header.TocCompressedBlockEntryCount);
+            }
+            else
+            {
+                CompressionBlocks = new FIoStoreTocCompressedBlockEntry[Header.TocCompressedBlockEntryCount];
+                for (var i = 0; i < Header.TocCompressedBlockEntryCount; i++)
+                {
+                    CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
+                    archive.Position += 4;
+                }
             }
 
             // Compression methods
