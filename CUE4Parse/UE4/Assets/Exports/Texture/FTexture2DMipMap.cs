@@ -15,6 +15,15 @@ public class FTexture2DMipMap
     public int SizeY;
     public int SizeZ;
 
+    public FTexture2DMipMap() { }
+    
+    public FTexture2DMipMap(int sizeX, int sizeY, int sizeZ)
+    {
+        SizeX = sizeX;
+        SizeY = sizeY;
+        SizeZ = sizeZ;
+    }
+
     public FTexture2DMipMap(TBulkData<byte> bulkData, int sizeX, int sizeY, int sizeZ)
     {
         BulkData = bulkData;
@@ -80,6 +89,15 @@ public class FTexture2DMipMap
                 });
 
                 BulkData = new FByteArrayData(data);
+                return true;
+            }
+            case UOodleTextureStorageProviderFactory oodleProvider:
+            {
+                if (mipLevel >= oodleProvider.Mips.Length)
+                    throw new ArgumentException("UOodleTextureStorageProviderFactory has no data to work with");
+                var data = oodleProvider.Mips[mipLevel];
+                var decoded = new Lazy<byte[]?>(() => BC7PrepDecoder.Decode(data));
+                BulkData = new FByteArrayData(decoded);
                 return true;
             }
             // default: throw new NotImplementedException("unknown mip data provider");

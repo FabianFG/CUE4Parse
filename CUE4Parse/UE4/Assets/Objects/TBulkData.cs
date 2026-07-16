@@ -63,6 +63,23 @@ public abstract class TBulkData<T> where T: struct
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual int GetDataSize() => Header.ElementCount * Unsafe.SizeOf<T>();
 
+    /// <summary>
+    /// Reads bulk data once without storing it in this instance.
+    /// If data is already cached, optionally returns a copy of a cached data.
+    /// </summary>
+    public T[]? ReadDataOnce(bool returnCachedData = true)
+    {
+        if (_data is { IsValueCreated: true })
+        {
+            var cached = _data.Value;
+            if (cached is null) return null;
+
+            return returnCachedData ? cached : (T[]) cached.Clone();
+        }
+
+        return ReadBulkDataInto(out var data) ? data : null;
+    }
+
     protected virtual bool ReadBulkDataInto(out T[] data)
     {
         data = [];

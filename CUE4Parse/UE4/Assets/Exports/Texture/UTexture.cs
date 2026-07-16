@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -104,6 +105,11 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
     protected void DeserializeCookedPlatformData(FAssetArchive Ar, bool bSerializeMipData = true)
     {
+        if (Ar.Game is GAME_WutheringWaves)
+        {
+            var data = Ar.Peek<FIntVector>();
+            bSerializeMipData = data.X > 0 && data.Y == 0 && data.Z > 0 || Ar.ReadBoolean();
+        }
         var pixelFormatName = Ar.ReadFName();
         if (pixelFormatName.Text == "PF_BC6H_Signed") pixelFormatName = "PF_BC6H";
         while (!pixelFormatName.IsNone)
@@ -113,6 +119,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
             var skipOffset = Ar.Game switch
             {
+                GAME_WutheringWaves => Ar.AbsolutePosition + Ar.Read<long>(),
                 >= GAME_UE5_0 => Ar.AbsolutePosition + Ar.Read<long>(),
                 >= GAME_UE4_20 => Ar.Read<long>(),
                 _ => Ar.Read<int>()
@@ -152,13 +159,13 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     {
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName("SizeX");
+        writer.WritePropertyName(nameof(PlatformData.SizeX));
         writer.WriteValue(PlatformData.SizeX);
 
-        writer.WritePropertyName("SizeY");
+        writer.WritePropertyName(nameof(PlatformData.SizeY));
         writer.WriteValue(PlatformData.SizeY);
 
-        writer.WritePropertyName("PackedData");
+        writer.WritePropertyName(nameof(PlatformData.PackedData));
         writer.WriteValue(PlatformData.PackedData);
 
         writer.WritePropertyName("PixelFormat");
@@ -166,22 +173,22 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
         if (PlatformData.OptData.ExtData != 0 && PlatformData.OptData.NumMipsInTail != 0)
         {
-            writer.WritePropertyName("OptData");
+            writer.WritePropertyName(nameof(PlatformData.OptData));
             serializer.Serialize(writer, PlatformData.OptData);
         }
 
-        writer.WritePropertyName("FirstMipToSerialize");
+        writer.WritePropertyName(nameof(PlatformData.FirstMipToSerialize));
         writer.WriteValue(PlatformData.FirstMipToSerialize);
 
         if (PlatformData.Mips is { Length: > 0 })
         {
-            writer.WritePropertyName("Mips");
+            writer.WritePropertyName(nameof(PlatformData.Mips));
             serializer.Serialize(writer, PlatformData.Mips);
         }
 
         if (PlatformData.VTData != null)
         {
-            writer.WritePropertyName("VTData");
+            writer.WritePropertyName(nameof(PlatformData.VTData));
             serializer.Serialize(writer, PlatformData.VTData);
         }
     }

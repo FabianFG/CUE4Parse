@@ -54,7 +54,7 @@ public class UTexture2D : UTexture
             var bSerializeMipData = true;
             if (Ar.Game >= GAME_UE5_3 || Ar.Game == GAME_TheFirstDescendant)
             {
-                // Controls whether FByteBulkData is serialized??
+                // Controls whether FByteBulkData
                 bSerializeMipData = Ar.ReadBoolean();
             }
 
