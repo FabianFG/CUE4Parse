@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -20,10 +21,10 @@ public abstract class GameFile
         "wem", "bnk", "pck", "bank", "awb", "acb"
     ];
 
-    // hashset for quick lookup
-    public static readonly HashSet<string> UePackageExtensionsSet = UePackageExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
-    public static readonly HashSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
-    public static readonly HashSet<string> UeKnownExtensionsSet = UeKnownExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    // Immutable lookup tables optimized once during startup.
+    public static readonly FrozenSet<string> UePackageExtensionsSet = UePackageExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+    public static readonly FrozenSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+    public static readonly FrozenSet<string> UeKnownExtensionsSet = UeKnownExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     // so we don't end up with a lot of duplicate "uasset"s in memory
     private static readonly ConcurrentDictionary<string, string> _internedExtensions = new(StringComparer.OrdinalIgnoreCase);
