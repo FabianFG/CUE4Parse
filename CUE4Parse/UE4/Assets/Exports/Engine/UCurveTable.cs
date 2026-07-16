@@ -53,13 +53,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
         {
             if (rowName.IsNone)
             {
-                if (bWarnIfNotFound) CUE4ParseLog.Logger.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
+                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
                 return null;
             }
 
             if (!RowMap.TryGetValue(rowName, out var foundCurve))
             {
-                if (bWarnIfNotFound) CUE4ParseLog.Logger.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
+                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
                 return null;
             }
 
@@ -75,14 +75,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
         {
             if (rowName.IsNone)
             {
-                if (bWarnIfNotFound) CUE4ParseLog.Logger.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
+                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
                 outCurve = null;
                 return false;
             }
 
             if (!RowMap.TryGetValue(rowName, out var foundCurve))
             {
-                if (bWarnIfNotFound) CUE4ParseLog.Logger.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
+                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
                 outCurve = null;
                 return false;
             }

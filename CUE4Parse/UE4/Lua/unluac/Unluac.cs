@@ -50,7 +50,7 @@ public class Unluac : IDisposable
         IntPtr thread = _createIsolate();
         if (thread == IntPtr.Zero)
         {
-            CUE4ParseLog.Logger.Error("Failed to create isolated thread");
+            Log.Error("Failed to create isolated thread");
             return rc;
         }
 
@@ -75,7 +75,7 @@ public class Unluac : IDisposable
         catch (Exception e)
         {
             if (rc == EUnluacErrorCode.Ok) rc = EUnluacErrorCode.Error;
-            CUE4ParseLog.Logger.Error(e, "Failed to decompile lua buffer.");
+            Log.Error(e, "Failed to decompile lua buffer.");
         }
         finally
         {

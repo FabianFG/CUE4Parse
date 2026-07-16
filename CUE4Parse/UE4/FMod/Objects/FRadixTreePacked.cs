@@ -10,11 +10,11 @@ namespace CUE4Parse.UE4.FMod.Objects;
 // if (fmodReader.StringData?.RadixTree is { } tree &&
 //     tree.TryGetString(guid, out var path))
 // {
-//     CUE4ParseLog.Logger.Information($"GUID {guid} -> {path}");
+//     Log.Information($"GUID {guid} -> {path}");
 // }
 // else
 // {
-//     CUE4ParseLog.Logger.Warning($"Could not resolve GUID {guid}.");
+//     Log.Warning($"Could not resolve GUID {guid}.");
 // }
 public partial class FRadixTreePacked
 {

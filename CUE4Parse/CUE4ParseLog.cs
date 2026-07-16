@@ -14,7 +14,7 @@ public static class CUE4ParseLog
     /// <summary>
     /// Gets the logger used internally by CUE4Parse.
     /// </summary>
-    public static ILogger Logger => Volatile.Read(ref _logger);
+    public static ILogger Log => Volatile.Read(ref _logger);
 
     /// <summary>
     /// Configures CUE4Parse to use <paramref name="logger"/> while identifying all

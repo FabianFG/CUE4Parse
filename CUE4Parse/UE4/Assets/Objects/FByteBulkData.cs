@@ -66,7 +66,7 @@ public sealed class FByteBulkData : TBulkData<byte>
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Error(e, "Could not create {0} reader for FByteBulkData", name);
+            Log.Error(e, "Could not create {0} reader for FByteBulkData", name);
             reader = null!;
         }
         return reader != null && reader.Length > 0;
@@ -84,7 +84,7 @@ public sealed class FByteBulkData : TBulkData<byte>
         var read = archive.ReadAt(position, data, 0, (int) Header.SizeOnDisk);
         if (read != Header.SizeOnDisk)
         {
-            CUE4ParseLog.Logger.Warning("Read {read} bytes, expected {Header.SizeOnDisk}", read, Header.SizeOnDisk);
+            Log.Warning("Read {read} bytes, expected {Header.SizeOnDisk}", read, Header.SizeOnDisk);
         }
 
         if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))

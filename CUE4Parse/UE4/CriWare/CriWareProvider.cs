@@ -129,7 +129,7 @@ public class CriWareProvider
             {
                 if (wave.EncodeType is not (EEncodeType.HCA or EEncodeType.HCA_ALT))
                 {
-                    CUE4ParseLog.Logger.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
+                    Log.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
                     continue;
                 }
 
@@ -189,7 +189,7 @@ public class CriWareProvider
                         continue;
                     if (!TryGetSupportedExtension(wave.EncodeType, out var extension))
                     {
-                        CUE4ParseLog.Logger.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
+                        Log.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
                         continue;
                     }
 
@@ -210,7 +210,7 @@ public class CriWareProvider
             int waveformsCount = memoryAwb?.Waves.Count ?? 0 + streamingAwb?.Waves.Count ?? 0;
             if (visitedWaveforms.Count < waveformsCount)
             {
-                CUE4ParseLog.Logger.Warning($"Not all waveforms were extracted from ACB '{baseName}'. Extracted {visitedWaveforms.Count} out of {waveformsCount}.");
+                Log.Warning($"Not all waveforms were extracted from ACB '{baseName}'. Extracted {visitedWaveforms.Count} out of {waveformsCount}.");
             }
         }
         else
@@ -331,7 +331,7 @@ public class CriWareProvider
         if (!string.IsNullOrEmpty(token?.Value))
         {
             _criWareContentDir = token.Value.Replace('\\', '/');
-            CUE4ParseLog.Logger.Information($"CriWare content directory found at: {token.Value}");
+            Log.Information($"CriWare content directory found at: {token.Value}");
         }
     }
 

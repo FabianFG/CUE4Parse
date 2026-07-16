@@ -57,7 +57,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                                     || (Ar.Game >= GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
         if (hasUnsupportedVersion && !UsingCustomPakVersion())
         {
-            CUE4ParseLog.Logger.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
+            Log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
         }
     }
 
@@ -279,7 +279,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         if (!IsEncrypted && EncryptedFileCount > 0)
         {
-            CUE4ParseLog.Logger.Warning($"Pak file \"{Name}\" is not encrypted but contains encrypted files");
+            Log.Warning($"Pak file \"{Name}\" is not encrypted but contains encrypted files");
         }
 
         if (Globals.LogVfsMounts)
@@ -292,7 +292,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", version {(int) Info.Version} in {elapsed}");
-            CUE4ParseLog.Logger.Information(sb.ToString());
+            Log.Information(sb.ToString());
         }
     }
 
@@ -462,7 +462,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                     var index = -offset - 1;
                     if (index <0 || index >= NonEncodedEntries.Length)
                     {
-                        CUE4ParseLog.Logger.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", index, path);
+                        Log.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", index, path);
                         continue;
                     }
 
@@ -553,7 +553,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                     var entryIndex = -location - 1;
                     if (entryIndex < 0 || entryIndex >= nonEncodedEntries.Length)
                     {
-                        CUE4ParseLog.Logger.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", entryIndex, path);
+                        Log.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", entryIndex, path);
                         continue;
                     }
 

@@ -27,8 +27,8 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using static CUE4Parse.CUE4ParseLog;
 
 namespace CUE4Parse.Example;
 
@@ -55,7 +55,9 @@ public static class Exporter
 
     private static void Export(ExportType type)
     {
-        Serilog.Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+        var loggerConfiguration = new Serilog.LoggerConfiguration();
+        Serilog.ConsoleLoggerConfigurationExtensions.Console(loggerConfiguration.WriteTo, theme: AnsiConsoleTheme.Literate);
+        Serilog.Log.Logger = loggerConfiguration.CreateLogger();
         CUE4ParseLog.UseLogger(Serilog.Log.Logger);
 
         ZlibHelper.Initialize();
@@ -93,7 +95,7 @@ public static class Exporter
         watch.Start();
         foreach (var (folder, packages) in files)
         {
-            CUE4ParseLog.Logger.Information("scanning {Folder} ({Count} packages)", folder, packages.Length);
+            Log.Information("scanning {Folder} ({Count} packages)", folder, packages.Length);
 
             Parallel.ForEach(packages, package =>
             {
@@ -112,12 +114,12 @@ public static class Exporter
                         {
                             try
                             {
-                                CUE4ParseLog.Logger.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
+                                Log.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
                                 SaveTexture(folder, texture, version.Platform, options, ref exportCount);
                             }
                             catch (Exception e)
                             {
-                                CUE4ParseLog.Logger.Warning(e, "failed to decode {TextureName}", texture.Name);
+                                Log.Warning(e, "failed to decode {TextureName}", texture.Name);
                                 return;
                             }
                             break;
@@ -125,7 +127,7 @@ public static class Exporter
                         case USoundWave when type.HasFlag(ExportType.Sound):
                         case UAkMediaAssetData when type.HasFlag(ExportType.Sound):
                         {
-                            CUE4ParseLog.Logger.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
+                            Log.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
 
                             pointer.Object.Value.Decode(true, out var format, out var bytes);
                             if (bytes is not null)
@@ -141,7 +143,7 @@ public static class Exporter
                         case UStaticMesh when type.HasFlag(ExportType.Mesh):
                         case USkeleton when type.HasFlag(ExportType.Mesh):
                         {
-                            CUE4ParseLog.Logger.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
+                            Log.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
 
                             var exporter = new CUE4Parse_Conversion.Exporter(pointer.Object.Value, options);
                             if (exporter.TryWriteToDir(new DirectoryInfo(_exportDirectory), out _, out var filePath))
@@ -156,7 +158,7 @@ public static class Exporter
         }
         watch.Stop();
 
-        CUE4ParseLog.Logger.Information("exported {ExportCount} files ({Types}) in {Time}",
+        Log.Information("exported {ExportCount} files ({Types}) in {Time}",
             exportCount,
             type.ToStringBitfield(),
             watch.Elapsed);
@@ -194,7 +196,7 @@ public static class Exporter
 
     private static void WriteToLog(string folder, string logMessage, ref int exportCount)
     {
-        CUE4ParseLog.Logger.Information("exported {LogMessage} out of {Folder}", logMessage, folder);
+        Log.Information("exported {LogMessage} out of {Folder}", logMessage, folder);
         exportCount++;
     }
 }

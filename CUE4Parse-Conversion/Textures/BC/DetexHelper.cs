@@ -69,7 +69,7 @@ public static class DetexHelper
 
             if (File.Exists(dllPath))
             {
-                CUE4ParseLog.Logger.Information($"Detex DLL already exists at \"{dllPath}\".");
+                Log.Information($"Detex DLL already exists at \"{dllPath}\".");
                 return true;
             }
 
@@ -82,12 +82,12 @@ public static class DetexHelper
             await using var dllFs = File.Create(dllPath);
             await stream.CopyToAsync(dllFs).ConfigureAwait(false);
 
-            CUE4ParseLog.Logger.Information($"Successfully loaded Detex DLL from embedded resources to \"{dllPath}\"");
+            Log.Information($"Successfully loaded Detex DLL from embedded resources to \"{dllPath}\"");
             return true;
         }
         catch (Exception ex)
         {
-            CUE4ParseLog.Logger.Warning(ex, "Uncaught exception while loading Detex DLL");
+            Log.Warning(ex, "Uncaught exception while loading Detex DLL");
             return false;
         }
     }

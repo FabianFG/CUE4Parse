@@ -310,7 +310,7 @@ public class UObject : AbstractPropertyHolder
                 }
                 else
                 {
-                    CUE4ParseLog.Logger.Warning(
+                    Log.Warning(
                         "{0}: Unknown property with value {1} but it's zero so we are good",
                         type, val);
                 }
@@ -351,7 +351,7 @@ public class UObject : AbstractPropertyHolder
         if (propMappings is null)
         {
             if (Ar.HasUnversionedProperties) throw new ParserException(Ar, "Missing prop mappings for type " + type);
-            CUE4ParseLog.Logger.Warning("Couldn't find {type} struct definition", type);
+            Log.Warning("Couldn't find {type} struct definition", type);
             return;
         }
 

@@ -86,7 +86,7 @@ public class AEDefaultFileProvider : DefaultFileProvider
 
         if (string.IsNullOrEmpty(indexPath))
         {
-            CUE4ParseLog.Logger.Warning("Index file not found, using only ordinary pak files.");
+            Log.Warning("Index file not found, using only ordinary pak files.");
             return osFiles;
         }
 
@@ -122,7 +122,7 @@ public class AEDefaultFileProvider : DefaultFileProvider
             var path = Path.Combine(repoPath, entry.Folder, entry.FileName);
             if (!File.Exists(path))
             {
-                CUE4ParseLog.Logger.Warning($"File not found: {path}");
+                Log.Warning($"File not found: {path}");
                 continue;
             }
 
@@ -281,7 +281,7 @@ public class AEPakFileReader : AbstractAesVfsReader
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", in {elapsed}");
-            CUE4ParseLog.Logger.Information(sb.ToString());
+            Log.Information(sb.ToString());
         }
     }
 

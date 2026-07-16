@@ -104,14 +104,14 @@ public class FControlRigOverrideValue
                 }
                 else
                 {
-                    CUE4ParseLog.Logger.Warning("Failed to find property {Property} in struct {Struct} via mappings", property.Property, struc.Name);
+                    Log.Warning("Failed to find property {Property} in struct {Struct} via mappings", property.Property, struc.Name);
                 }
             }
 
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Error(e, "Error reading FControlRigOverrideValue properties");
+            Log.Error(e, "Error reading FControlRigOverrideValue properties");
         }
         finally
         {

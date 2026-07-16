@@ -47,7 +47,7 @@ public static class BC7PrepDecoder
 
         if (mip.BulkData is null || mip.BulkData.GetDataSize() < payloadSize || mip.BulkData.ReadDataOnce() is not { Length: >= 1 } payload)
         {
-            CUE4ParseLog.Logger.Warning("Bulk data is corrupted or missing");
+            Log.Warning("Bulk data is corrupted or missing");
             return null;
         }
 

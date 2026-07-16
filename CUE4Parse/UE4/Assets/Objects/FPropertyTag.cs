@@ -210,7 +210,7 @@ public class FPropertyTag
 #if DEBUG
             if (finalPos != Ar.Position)
             {
-                CUE4ParseLog.Logger.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, Ar.Position, finalPos);
+                Log.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, Ar.Position, finalPos);
             }
 #endif
         }
@@ -219,7 +219,7 @@ public class FPropertyTag
 #if DEBUG
             if (finalPos != Ar.Position)
             {
-                CUE4ParseLog.Logger.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
+                Log.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
             }
 #endif
         }
@@ -253,7 +253,7 @@ public class FPropertyTag
     {
         if (!BlueprintDecompilerUtils.GetPropertyTagVariable(this, out var variableType, out var variableValue))
         {
-            CUE4ParseLog.Logger.Warning("Unable to get property type or value for {PropertyType} of type {Name}", PropertyType, Name);
+            Log.Warning("Unable to get property type or value for {PropertyType} of type {Name}", PropertyType, Name);
         }
 
         return $"{variableType} {Name.Text} = {variableValue};";

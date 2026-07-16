@@ -93,7 +93,7 @@ public class FNaniteResources
 #if DEBUG
             if (NumInputTriangles > 0)
             {
-                CUE4ParseLog.Logger.Debug("Nanite mesh has {NumInputTriangles} triangles", NumInputTriangles);
+                Log.Debug("Nanite mesh has {NumInputTriangles} triangles", NumInputTriangles);
             }
 #endif
             NumInputVertices = Ar.Read<uint>();
@@ -139,7 +139,7 @@ public class FNaniteResources
     {
         if (pageIndex >= LoadedPages.Length)
         {
-            CUE4ParseLog.Logger.Error("PageIndex {pageIndex} is out of range!", pageIndex);
+            Log.Error("PageIndex {pageIndex} is out of range!", pageIndex);
             outPage = null;
             return false;
         }
@@ -175,7 +175,7 @@ public class FNaniteResources
         }
         catch (Exception ex)
         {
-            CUE4ParseLog.Logger.Error(ex, "Failed to load Nanite page {pageIndex}!", pageIndex);
+            Log.Error(ex, "Failed to load Nanite page {pageIndex}!", pageIndex);
             outPage = null;
         }
         finally

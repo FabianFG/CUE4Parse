@@ -152,19 +152,19 @@ public class WwisePlugin
         }
         catch (Exception ex)
         {
-            CUE4ParseLog.Logger.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with Wwise version {Ar.Version}");
+            Log.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with Wwise version {Ar.Version}");
         }
         finally
         {
 #if DEBUG
             if (Params is CAkDefaultParams)
             {
-                CUE4ParseLog.Logger.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping {size} bytes");
+                Log.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping {size} bytes");
             }
 
             if (Ar.Position != endPosition)
             {
-                CUE4ParseLog.Logger.Warning($"Didn't read Wwise plugin '{pluginId}' with Wwise version {Ar.Version} correctly (at {Ar.Position}, should be {endPosition})");
+                Log.Warning($"Didn't read Wwise plugin '{pluginId}' with Wwise version {Ar.Version} correctly (at {Ar.Position}, should be {endPosition})");
             }
 #endif
             Ar.Position = endPosition;

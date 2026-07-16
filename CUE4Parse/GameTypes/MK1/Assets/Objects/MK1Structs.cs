@@ -102,7 +102,7 @@ public class FCompiledTimelinePredicate(FAssetArchive Ar) : IUStruct
         };
         if (res is null)
         {
-            CUE4ParseLog.Logger.Warning("Unknown MK1 parameter type {0}", type);
+            Log.Warning("Unknown MK1 parameter type {0}", type);
         }
         return res;
     }

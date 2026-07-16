@@ -153,7 +153,7 @@ public class FSkelMeshSection
 
                 if (dummyNumRigidVerts + dummyNumSoftVerts != SoftVertices.Length)
                 {
-                    CUE4ParseLog.Logger.Error("Legacy NumSoftVerts + NumRigidVerts != SoftVertices.Num()");
+                    Log.Error("Legacy NumSoftVerts + NumRigidVerts != SoftVertices.Num()");
                 }
             }
 

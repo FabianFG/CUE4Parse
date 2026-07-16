@@ -28,7 +28,7 @@ public class UTexture2D : UTexture
         var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
         if (Ar.Ver < EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR)
         {
-            CUE4ParseLog.Logger.Warning("Untested code: UTexture2D::LegacySerialize");
+            Log.Warning("Untested code: UTexture2D::LegacySerialize");
             // https://github.com/EpicGames/UnrealEngine/blob/2092a941a52c55750072f24cd4757176dfaa8326/Engine/Source/Runtime/Engine/Private/Texture2D.cpp
 
             var legacyMips = Array.Empty<FTexture2DMipMap>();

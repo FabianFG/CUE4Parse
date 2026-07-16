@@ -35,7 +35,7 @@ public class FAion2MapDataFile : FAion2DataFile
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Error(e, "Failed to parse FAion2MapDataFile {0}", file.Path);
+            Log.Error(e, "Failed to parse FAion2MapDataFile {0}", file.Path);
         }
     }
 }

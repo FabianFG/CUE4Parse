@@ -69,7 +69,7 @@ public class FOW2FPropertyTag : FPropertyTag
 #if DEBUG
             if (objectAr.Position != objectAr.Length)
             {
-                CUE4ParseLog.Logger.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, objectAr.Position, objectAr.Length);
+                Log.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, objectAr.Position, objectAr.Length);
             }
 #endif
         }
@@ -78,7 +78,7 @@ public class FOW2FPropertyTag : FPropertyTag
 #if DEBUG
             if (objectAr.Position != objectAr.Length)
             {
-                CUE4ParseLog.Logger.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
+                Log.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
             }
 #endif
         }

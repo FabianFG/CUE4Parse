@@ -45,7 +45,7 @@ public static class UnluacHelper
         var dllPath = Path.GetFullPath(string.IsNullOrWhiteSpace(path) ? DllName : path);
         if (!await DownloadDllAsync(dllPath, null, cancellationToken).ConfigureAwait(false))
         {
-            CUE4ParseLog.Logger.Warning("Unable to download unluac dll");
+            Log.Warning("Unable to download unluac dll");
             return;
         }
 
@@ -89,12 +89,12 @@ public static class UnluacHelper
                                               UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
             }
 
-            CUE4ParseLog.Logger.Information("Successfully downloaded unluac dll at {0}", dllPath);
+            Log.Information("Successfully downloaded unluac dll at {0}", dllPath);
             return true;
         }
         catch (Exception ex)
         {
-            CUE4ParseLog.Logger.Warning(ex, "Uncaught exception while downloading unluac dll");
+            Log.Warning(ex, "Uncaught exception while downloading unluac dll");
         }
         return false;
     }

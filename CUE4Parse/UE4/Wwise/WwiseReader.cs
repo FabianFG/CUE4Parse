@@ -109,7 +109,7 @@ public class WwiseReader
                     Ar.HasFeedback = Header.FeedbackInBank;
 
                     if (!Ar.IsSupported())
-                        CUE4ParseLog.Logger.Warning($"Wwise version {Ar.Version} is not supported");
+                        Log.Warning($"Wwise version {Ar.Version} is not supported");
                     break;
                 case EChunkID.BankInit:
                     LoadedSize += sectionLength;
@@ -175,7 +175,7 @@ public class WwiseReader
                     // For example: ADM3 codec (Crankcase Audio), AK Convolution Reverb impulse response (currently not supported https://github.com/vgmstream/vgmstream/issues/1638)
                     Ar.Position -= 8;
 #if DEBUG
-                    CUE4ParseLog.Logger.Debug($"Found Wwise plugin section with length {sectionLength}");
+                    Log.Debug($"Found Wwise plugin section with length {sectionLength}");
 #endif
                     WemFile = ReadDeferredByteData(Ar, _source, Ar.Position, 8 + sectionLength);
                     LoadedSize += WemFile.LoadedSize;
@@ -188,7 +188,7 @@ public class WwiseReader
                     break;
                 default:
 #if DEBUG
-                    CUE4ParseLog.Logger.Warning($"Unknown section {sectionIdentifier:X} at {position - sizeof(uint) - sizeof(uint)}");
+                    Log.Warning($"Unknown section {sectionIdentifier:X} at {position - sizeof(uint) - sizeof(uint)}");
 #endif
                     break;
             }
@@ -197,7 +197,7 @@ public class WwiseReader
             {
                 var shouldBe = position + sectionLength;
 #if DEBUG
-                CUE4ParseLog.Logger.Warning($"Didn't read {sectionIdentifier} correctly (at {Ar.Position}, should be {shouldBe})");
+                Log.Warning($"Didn't read {sectionIdentifier} correctly (at {Ar.Position}, should be {shouldBe})");
 #endif
                 Ar.Position = shouldBe;
             }

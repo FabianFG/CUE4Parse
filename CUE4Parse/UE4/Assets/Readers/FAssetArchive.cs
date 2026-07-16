@@ -80,19 +80,19 @@ namespace CUE4Parse.UE4.Assets.Readers
                         // Silent this as it is expected to not have an object
                         return null;
                     }
-                    CUE4ParseLog.Logger.Warning("Failed to resolve index {Index}", index);
+                    Log.Warning("Failed to resolve index {Index}", index);
                     return null;
                 }
 
                 if (Owner?.Provider == null)
                 {
-                    CUE4ParseLog.Logger.Warning("Can't load object {Resolved} without a file provider", resolved.Name);
+                    Log.Warning("Can't load object {Resolved} without a file provider", resolved.Name);
                     return null;
                 }
 
                 if (!resolved.TryLoad(out var obj))
                 {
-                    CUE4ParseLog.Logger.Warning("Failed to load object {Obj}", resolved.Name);
+                    Log.Warning("Failed to load object {Obj}", resolved.Name);
                     return null;
                 }
 
@@ -100,7 +100,7 @@ namespace CUE4Parse.UE4.Assets.Readers
                 {
                     return cast;
                 }
-                CUE4ParseLog.Logger.Warning("Object has unexpected type {ObjType}, expected type {Type}", obj.GetType().Name, typeof(T).Name);
+                Log.Warning("Object has unexpected type {ObjType}, expected type {Type}", obj.GetType().Name, typeof(T).Name);
 
                 return null;
             });

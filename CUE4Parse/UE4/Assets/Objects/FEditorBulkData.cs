@@ -60,7 +60,7 @@ public class FEditorBulkData
             }
             else
             {
-                CUE4ParseLog.Logger.Warning("BulkData marked as stored in package trailer, but package has no trailer");
+                Log.Warning("BulkData marked as stored in package trailer, but package has no trailer");
                 Payload = new FCompressedBuffer();
                 return;
             }
@@ -84,7 +84,7 @@ public class FEditorBulkData
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Error(e, "Failed to read to EditorBulkData payload at offset {OffsetInFile}", OffsetInFile);
+            Log.Error(e, "Failed to read to EditorBulkData payload at offset {OffsetInFile}", OffsetInFile);
             Payload = new FCompressedBuffer();
             return;
         }

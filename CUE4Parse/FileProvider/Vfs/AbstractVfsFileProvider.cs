@@ -164,7 +164,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
             catch (Exception e)
             {
-                CUE4ParseLog.Logger.Warning(e.ToString());
+                Log.Warning(e.ToString());
             }
         }
         public void RegisterRandomAccessVfs(FArchive pakOrUtocArchive, FArchive? utocArchive, Func<string, FArchive>? openContainerStreamFunc = null)
@@ -199,7 +199,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
             catch (Exception e)
             {
-                CUE4ParseLog.Logger.Warning(e.ToString());
+                Log.Warning(e.ToString());
             }
         }
         public void RegisterRandomAccessVfs(FArchive pakOrUtocArchive, RandomAccessStream? utocStream, Func<string, FArchive>? openContainerStreamFunc = null)
@@ -232,7 +232,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
             catch (Exception e)
             {
-                CUE4ParseLog.Logger.Warning(e.ToString());
+                Log.Warning(e.ToString());
             }
         }
 
@@ -254,7 +254,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 }
                 catch (Exception e)
                 {
-                    CUE4ParseLog.Logger.Error(e, "Failed to load on-demand UTOC for container {ContainerContainerName}", container.ContainerName);
+                    Log.Error(e, "Failed to load on-demand UTOC for container {ContainerContainerName}", container.ContainerName);
                 }
             }
         }
@@ -297,7 +297,7 @@ namespace CUE4Parse.FileProvider.Vfs
             }
             catch (Exception e)
             {
-                CUE4ParseLog.Logger.Warning(e, $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
+                Log.Warning(e, $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
             }
         }
 
@@ -377,7 +377,7 @@ namespace CUE4Parse.FileProvider.Vfs
                         }
                         catch (Exception e)
                         {
-                            CUE4ParseLog.Logger.Warning(e, $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
+                            Log.Warning(e, $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
                         }
                         return null;
                     }));

@@ -90,12 +90,12 @@ public class UClass : UStruct
                 }
                 else
                 {
-                    CUE4ParseLog.Logger.Warning("Class {Type} did have a valid constructor but does not inherit UObject", type);
+                    Log.Warning("Class {Type} did have a valid constructor but does not inherit UObject", type);
                 }
             }
             catch (Exception e)
             {
-                CUE4ParseLog.Logger.Warning(e, "Class {Type} could not be constructed", type);
+                Log.Warning(e, "Class {Type} could not be constructed", type);
             }
         }
 

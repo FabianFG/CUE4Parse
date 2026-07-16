@@ -61,7 +61,7 @@ public class FStructFallback : AbstractPropertyHolder, IUStruct
         }
         else
         {
-            CUE4ParseLog.Logger.Warning("Failed to read Struct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
+            Log.Warning("Failed to read Struct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
         }
         return result;
     }

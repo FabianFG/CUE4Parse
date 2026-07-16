@@ -21,7 +21,7 @@ public sealed class HashedNamesProvider
             using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse.Resources.ShaderHashedNames.json");
             if (stream == null)
             {
-                CUE4ParseLog.Logger.Error("Couldn't find ShaderHashedNames.json in Embedded Resources");
+                Log.Error("Couldn't find ShaderHashedNames.json in Embedded Resources");
                 return;
             }
 
@@ -30,7 +30,7 @@ public sealed class HashedNamesProvider
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Error(e, "Failed to load ShaderHashedNames.json from Embedded Resources");
+            Log.Error(e, "Failed to load ShaderHashedNames.json from Embedded Resources");
         }
     }
 

@@ -28,7 +28,7 @@ public class UDataTable : UObject
             }
             else
             {
-                CUE4ParseLog.Logger.Warning("Can't find or load RowStruct type to serialize DataTable");
+                Log.Warning("Can't find or load RowStruct type to serialize DataTable");
                 return;
             }
         }

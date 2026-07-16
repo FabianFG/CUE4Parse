@@ -85,7 +85,7 @@ public class FAion2DataTableFile : FAion2DataFile
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Error(e, "Failed to parse FAion2DatFile FAion2DataTableFile {0}", file.Name);
+            Log.Error(e, "Failed to parse FAion2DatFile FAion2DataTableFile {0}", file.Name);
         }
     }
 }

@@ -76,7 +76,7 @@ public class FModReader
         if (actualSize < expectedSize)
             throw new Exception($"Truncated file: expected {expectedSize} bytes, got {actualSize}");
         else if (actualSize > expectedSize)
-            CUE4ParseLog.Logger.Warning($"File larger than RIFF size (expected {expectedSize}, got {actualSize})");
+            Log.Warning($"File larger than RIFF size (expected {expectedSize}, got {actualSize})");
     }
 
     private void ParseNodes(BinaryReader Ar, long start, long end)
@@ -293,7 +293,7 @@ public class FModReader
                 break;
 
                 default:
-                    CUE4ParseLog.Logger.Warning($"Unknown chunk {nodeId} at {nodeStart}, size={nodeSize}, skipped");
+                    Log.Warning($"Unknown chunk {nodeId} at {nodeStart}, size={nodeSize}, skipped");
                     break;
             }
 
@@ -306,7 +306,7 @@ public class FModReader
             if (Ar.BaseStream.Position != nextNode)
             {
                 if (nodeId is not ERIFFID.CHUNKID_LIST)
-                    CUE4ParseLog.Logger.Warning($"Chunk {nodeId} did not parse fully (at {Ar.BaseStream.Position}, should be {nextNode})");
+                    Log.Warning($"Chunk {nodeId} did not parse fully (at {Ar.BaseStream.Position}, should be {nextNode})");
 
                 Ar.BaseStream.Position = nextNode;
             }
@@ -606,7 +606,7 @@ public class FModReader
         sample = null;
         if (SoundTable is null || SoundBankData is null)
         {
-            CUE4ParseLog.Logger.Warning("Sound table or sound bank data is missing, cannot retrieve sound info");
+            Log.Warning("Sound table or sound bank data is missing, cannot retrieve sound info");
             return false;
         }
 
@@ -615,7 +615,7 @@ public class FModReader
 
         if (subsoundIndex is -1)
         {
-            CUE4ParseLog.Logger.Warning($"Sound with key '{key}' (hash {hash:X}) not found in sound table");
+            Log.Warning($"Sound with key '{key}' (hash {hash:X}) not found in sound table");
             return false;
         }
 

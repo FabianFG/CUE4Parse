@@ -392,7 +392,7 @@ public class FQueryEvaluator
             return Query.QueryTokenStream[CurStreamIdx++];
         }
 
-        CUE4ParseLog.Logger.Error("Failed to parse FGameplayQuery!");
+        Log.Error("Failed to parse FGameplayQuery!");
         bReadError = true;
         return 0;
     }

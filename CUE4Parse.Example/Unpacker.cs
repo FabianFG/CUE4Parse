@@ -9,8 +9,8 @@ using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using static CUE4Parse.CUE4ParseLog;
 
 namespace CUE4Parse.Example;
 
@@ -24,7 +24,9 @@ public static class Unpacker
 
     public static void Unpack()
     {
-        Serilog.Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+        var loggerConfiguration = new Serilog.LoggerConfiguration();
+        Serilog.ConsoleLoggerConfigurationExtensions.Console(loggerConfiguration.WriteTo, theme: AnsiConsoleTheme.Literate);
+        Serilog.Log.Logger = loggerConfiguration.CreateLogger();
         CUE4ParseLog.UseLogger(Serilog.Log.Logger);
 
         ZlibHelper.Initialize();
@@ -43,7 +45,7 @@ public static class Unpacker
         watch.Start();
         foreach (var (folder, packages) in files)
         {
-            CUE4ParseLog.Logger.Information("unpacking {Folder} ({Count} packages)", folder, packages.Length);
+            Log.Information("unpacking {Folder} ({Count} packages)", folder, packages.Length);
 
             Parallel.ForEach(packages, package =>
             {
@@ -57,7 +59,7 @@ public static class Unpacker
         }
         watch.Stop();
 
-        CUE4ParseLog.Logger.Information("unpacked {PackageCount} packages in {FolderCount} folders in {Time}",
+        Log.Information("unpacked {PackageCount} packages in {FolderCount} folders in {Time}",
             files.Values.Sum(it => it.Length),
             files.Count,
             watch.Elapsed);

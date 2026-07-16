@@ -142,7 +142,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 }
                 else
                 {
-                    CUE4ParseLog.Logger.Warning("Unknown curve compression codec {0}", CurveCodecPath);
+                    Log.Warning("Unknown curve compression codec {0}", CurveCodecPath);
                 }
             }
         }
@@ -221,7 +221,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 var compressedSegments = Ar.ReadArray<FCompressedSegment>();
                 if (compressedSegments.Length > 0)
                 {
-                    CUE4ParseLog.Logger.Information("animation has CompressedSegments!");
+                    Log.Information("animation has CompressedSegments!");
                 }
             }
 
@@ -325,7 +325,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             }
             else
             {
-                CUE4ParseLog.Logger.Warning("Unknown bone compression codec {0}", BoneCodecDDCHandle);
+                Log.Warning("Unknown bone compression codec {0}", BoneCodecDDCHandle);
             }
         }
 

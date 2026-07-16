@@ -1,6 +1,6 @@
-using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using static CUE4Parse.CUE4ParseLog;
 
 namespace CUE4Parse.Tests;
 
@@ -10,18 +10,18 @@ public class SourceContextTest
     public void NamespaceOverrideFiltersCUE4ParseLogs()
     {
         var sink = new CollectingSink();
-        using var logger = new LoggerConfiguration()
+        using var logger = new Serilog.LoggerConfiguration()
             .MinimumLevel.Verbose()
             .MinimumLevel.Override("CUE4Parse", LogEventLevel.Error)
             .WriteTo.Sink(sink)
             .CreateLogger();
 
-        var previousLogger = CUE4ParseLog.Logger;
+        var previousLogger = Log;
         try
         {
             CUE4ParseLog.UseLogger(logger);
-            CUE4ParseLog.Logger.Warning("Filtered warning");
-            CUE4ParseLog.Logger.Error("Retained error");
+            Log.Warning("Filtered warning");
+            Log.Error("Retained error");
         }
         finally
         {

@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Localization
             else
             {
                 Ar.Position = 0;
-                CUE4ParseLog.Logger.Warning("LocMeta '{name}' failed the magic number check!", Ar.Name);
+                Log.Warning("LocMeta '{name}' failed the magic number check!", Ar.Name);
             }
 
             // Is this LocRes file too new to load?

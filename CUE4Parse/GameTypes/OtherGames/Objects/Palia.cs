@@ -58,12 +58,12 @@ public class FVAL_CharacterCustomizationVariantOptionsArray : IUStruct
             }
             else
             {
-                CUE4ParseLog.Logger.Warning("Failed to read FVAL_CharacterCustomizationVariantOptionsArray of type {0}, skipping it", OptionStruct.ResolvedObject?.GetFullName());
+                Log.Warning("Failed to read FVAL_CharacterCustomizationVariantOptionsArray of type {0}, skipping it", OptionStruct.ResolvedObject?.GetFullName());
             }
         }
         catch (ParserException e)
         {
-            CUE4ParseLog.Logger.Warning(e, "Failed to read FVAL_CharacterCustomizationVariantOptionsArray of type {0}, skipping it", OptionStruct.ResolvedObject?.GetFullName());
+            Log.Warning(e, "Failed to read FVAL_CharacterCustomizationVariantOptionsArray of type {0}, skipping it", OptionStruct.ResolvedObject?.GetFullName());
         }
     }
 }

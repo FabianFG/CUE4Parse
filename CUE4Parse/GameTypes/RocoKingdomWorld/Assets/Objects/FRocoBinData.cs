@@ -163,7 +163,7 @@ public class FRocoBinData
                 continue;
             if (entry.Offset != Ar.Position)
             {
-                CUE4ParseLog.Logger.Warning("Entry {0} offset mismatch, expected {1}, actual {2}", i, entry.Offset, Ar.Position);
+                Log.Warning("Entry {0} offset mismatch, expected {1}, actual {2}", i, entry.Offset, Ar.Position);
                 Ar.Position = entry.Offset;
             }
 
@@ -234,7 +234,7 @@ public class FRocoBinData
         }
         else
         {
-            CUE4ParseLog.Logger.Warning("Expected localization string with index {index}, but it wasn't present in localization table", stringIndex);
+            Log.Warning("Expected localization string with index {index}, but it wasn't present in localization table", stringIndex);
             return string.Empty;
         }
     }

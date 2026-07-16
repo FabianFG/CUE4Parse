@@ -51,7 +51,7 @@ public sealed class AcbReader : IDisposable
     {
         if (_awbLength <= 0)
         {
-            CUE4ParseLog.Logger.Warning("ACB has no AWB in memory, skipping");
+            Log.Warning("ACB has no AWB in memory, skipping");
             return null;
         }
 

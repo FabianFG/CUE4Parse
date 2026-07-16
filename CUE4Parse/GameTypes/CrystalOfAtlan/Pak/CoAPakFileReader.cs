@@ -217,7 +217,7 @@ public partial class PakFileReader
                 }
                 else if (warning)
                 {
-                    CUE4ParseLog.Logger.Warning("Missing {0} file for package {1}", extension, path);
+                    Log.Warning("Missing {0} file for package {1}", extension, path);
                 }
             }
 
@@ -280,7 +280,7 @@ public partial class PakFileReader
 
                 if (!entry.TryRead(out var data) || entry.UncompressedSize < 4)
                 {
-                    CUE4ParseLog.Logger.Warning("Failed to create reader for pathhash {0} with offset {1}", hash, offset);
+                    Log.Warning("Failed to create reader for pathhash {0} with offset {1}", hash, offset);
                     files[hash.ToString()] = entry;
                     continue;
                 }
@@ -338,7 +338,7 @@ public partial class PakFileReader
                     mainExport = exports.FirstOrDefault(exp => (exp.ObjectFlags & 2) == 2);
                     if (mainExport is null)
                     {
-                        CUE4ParseLog.Logger.Warning("Can't find export name for {0} pathhash", hash);
+                        Log.Warning("Can't find export name for {0} pathhash", hash);
                         continue;
                     }
                 }
@@ -407,7 +407,7 @@ public partial class PakFileReader
 
                 if (!found)
                 {
-                    CUE4ParseLog.Logger.Warning("Can't find package name for {0} pathhash in {1}", hash, Name);
+                    Log.Warning("Can't find package name for {0} pathhash in {1}", hash, Name);
                     continue;
                 }
 
@@ -441,7 +441,7 @@ public partial class PakFileReader
                 if (entry.IsEncrypted)
                     EncryptedFileCount++;
                 files[path] = entry;
-                CUE4ParseLog.Logger.Warning("Can't find corresponding name for {0} pathhash", hash);
+                Log.Warning("Can't find corresponding name for {0} pathhash", hash);
             }
 
             Files = files;

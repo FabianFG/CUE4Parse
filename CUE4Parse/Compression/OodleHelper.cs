@@ -52,7 +52,7 @@ public static class OodleHelper
             return;
         }
 
-        CUE4ParseLog.Logger.Warning("Oodle decompression failed: unable to download oodle dll");
+        Log.Warning("Oodle decompression failed: unable to download oodle dll");
     }
 
     public static void Initialize(Oodle instance)
@@ -90,7 +90,7 @@ public static class OodleHelper
         if (decodedSize < uncompressedSize)
         {
             // Not sure whether this should be an exception or not
-            CUE4ParseLog.Logger.Warning("Oodle decompression just decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
+            Log.Warning("Oodle decompression just decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
         }
     }
 
@@ -137,7 +137,7 @@ public static class OodleHelper
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Warning(e, "Uncaught exception while downloading oodle dll from OodleUE");
+            Log.Warning(e, "Uncaught exception while downloading oodle dll from OodleUE");
         }
 
         return false;

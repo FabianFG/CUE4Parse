@@ -305,7 +305,7 @@ public sealed class IoPackage : AbstractUePackage
                     // this  should not happen for regular packages, but can be the case for editor only data
                     mainAssetStoreEntry = (provider as AbstractVfsFileProvider)?.TryFindStoreEntry(packageId);
                     if (mainAssetStoreEntry == null)
-                        CUE4ParseLog.Logger.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
+                        Log.Warning("Couldn't find store entry for package {0}, its data will not be fully read", Name);
                 }
             }
         }
@@ -525,7 +525,7 @@ public sealed class IoPackage : AbstractUePackage
 
         if (Globals.WarnMissingImportPackage)
         {
-            CUE4ParseLog.Logger.Warning("Missing {0} import 0x{1:X} for package {2}", index.IsScriptImport ? "script" : "package", index.Value, Name);
+            Log.Warning("Missing {0} import 0x{1:X} for package {2}", index.IsScriptImport ? "script" : "package", index.Value, Name);
         }
 
         return null;

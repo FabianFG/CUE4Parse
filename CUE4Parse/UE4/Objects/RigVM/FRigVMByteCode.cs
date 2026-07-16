@@ -32,7 +32,7 @@ public class FRigVMByteCode
             }
             catch (Exception e)
             {
-                CUE4ParseLog.Logger.Warning(e, $"Failed to serialize RigVM bytecode");
+                Log.Warning(e, $"Failed to serialize RigVM bytecode");
             }
 
             return;

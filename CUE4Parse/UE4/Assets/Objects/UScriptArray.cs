@@ -79,7 +79,7 @@ public class UScriptArray
                 if (property != null)
                     Properties.Add(property);
                 else
-                    CUE4ParseLog.Logger.Debug($"Failed to read array property of type {InnerType} at {Ar.Position}, index {i}");
+                    Log.Debug($"Failed to read array property of type {InnerType} at {Ar.Position}, index {i}");
             }
             return;
         }
@@ -90,7 +90,7 @@ public class UScriptArray
             if (property != null)
                 Properties.Add(property);
             else
-                CUE4ParseLog.Logger.Debug($"Failed to read array property of type {InnerType} at {Ar.Position}, index {i}");
+                Log.Debug($"Failed to read array property of type {InnerType} at {Ar.Position}, index {i}");
         }
     }
 

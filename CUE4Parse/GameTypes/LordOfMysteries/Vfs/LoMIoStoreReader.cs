@@ -58,7 +58,7 @@ public sealed class LoMIoStoreReader(LoMIoStoreManifest manifest, LoMDirectoryIn
             sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", version {(int) TocResource.Header.Version} in {watch.Elapsed}");
-            CUE4ParseLog.Logger.Information(sb.ToString());
+            Log.Information(sb.ToString());
         }
     }
 }

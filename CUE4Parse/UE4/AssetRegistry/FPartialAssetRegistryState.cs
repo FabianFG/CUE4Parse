@@ -17,7 +17,7 @@ public class FPartialAssetRegistryState
         switch (header.Version)
         {
             case < FAssetRegistryVersionType.AddAssetRegistryState:
-                CUE4ParseLog.Logger.Warning("Cannot read registry state before {Version}", header.Version);
+                Log.Warning("Cannot read registry state before {Version}", header.Version);
                 break;
             case < FAssetRegistryVersionType.FixedTags:
                 {

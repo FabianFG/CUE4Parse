@@ -89,11 +89,11 @@ public abstract class AbstractUePackage : UObject, IPackage
             switch (remaining)
             {
                 case > 0:
-                    CUE4ParseLog.Logger.Warning("Did not read {0} correctly, {1} bytes remaining ({2}%)", obj.ExportType, remaining,
+                    Log.Warning("Did not read {0} correctly, {1} bytes remaining ({2}%)", obj.ExportType, remaining,
                         Math.Round((decimal)remaining / validPos * 100, 2));
                     break;
                 case < 0:
-                    CUE4ParseLog.Logger.Warning("Did not read {0} correctly, {1} bytes exceeded", obj.ExportType, Math.Abs(remaining));
+                    Log.Warning("Did not read {0} correctly, {1} bytes exceeded", obj.ExportType, Math.Abs(remaining));
                     break;
                 default:
                     break;
@@ -106,7 +106,7 @@ public abstract class AbstractUePackage : UObject, IPackage
             {
                 throw new ParserException($"Could not read {obj.ExportType} correctly", e);
             }
-            CUE4ParseLog.Logger.Error(e, "Could not read {0} correctly", obj.ExportType);
+            Log.Error(e, "Could not read {0} correctly", obj.ExportType);
         }
     }
 

@@ -78,7 +78,7 @@ public class SerializedStruct : Struct
                         return scriptStruct;
                     }
 
-                    CUE4ParseLog.Logger.Warning("Missing prop mappings for type {0}", superStruct.Name);
+                    Log.Warning("Missing prop mappings for type {0}", superStruct.Name);
                     return null;
                 }
 

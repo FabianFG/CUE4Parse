@@ -35,7 +35,7 @@ public static class ZlibHelper
         var dllPath = Path.GetFullPath(string.IsNullOrWhiteSpace(path) ? DllName : path);
         if (!await DownloadDllAsync(dllPath, null, cancellationToken).ConfigureAwait(false))
         {
-            CUE4ParseLog.Logger.Warning("Zlib decompression failed: unable to download zlib-ng dll");
+            Log.Warning("Zlib decompression failed: unable to download zlib-ng dll");
             return;
         }
 
@@ -72,7 +72,7 @@ public static class ZlibHelper
         if (decodedSize < uncompressedSize)
         {
             // Not sure whether this should be an exception or not
-            CUE4ParseLog.Logger.Warning("Zlib decompression only decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
+            Log.Warning("Zlib decompression only decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
         }
     }
 
@@ -112,12 +112,12 @@ public static class ZlibHelper
                                               UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
             }
 
-            CUE4ParseLog.Logger.Information("Successfully downloaded Zlib-ng dll at {0}", dllPath);
+            Log.Information("Successfully downloaded Zlib-ng dll at {0}", dllPath);
             return true;
         }
         catch (Exception ex)
         {
-            CUE4ParseLog.Logger.Warning(ex, "Uncaught exception while downloading Zlib-ng dll");
+            Log.Warning(ex, "Uncaught exception while downloading Zlib-ng dll");
         }
         return false;
     }

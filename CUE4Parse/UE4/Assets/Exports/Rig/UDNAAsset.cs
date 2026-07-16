@@ -43,7 +43,7 @@ public class UDNAAsset : UObject
 
             Version = new DNAVersion(endianAr);
 #if DEBUG
-            CUE4ParseLog.Logger.Warning("DNAAsset Version {0}", Version.FileVersion.ToString());
+            Log.Warning("DNAAsset Version {0}", Version.FileVersion.ToString());
 #endif
             if (Version.FileVersion < FileVersion.v23)
             {
@@ -113,7 +113,7 @@ public class UDNAAsset : UObject
             catch (Exception e)
             {
                 result = false;
-                CUE4ParseLog.Logger.Error(e, "Failed to read DNA layer '{0}' correctly.", entry.Id);
+                Log.Error(e, "Failed to read DNA layer '{0}' correctly.", entry.Id);
             }
             finally
             {
@@ -126,10 +126,10 @@ public class UDNAAsset : UObject
                     switch (remaining)
                     {
                         case > 0:
-                            CUE4ParseLog.Logger.Debug("Did not read layer '{0}' correctly. {1} bytes remaining", entry.Id, remaining);
+                            Log.Debug("Did not read layer '{0}' correctly. {1} bytes remaining", entry.Id, remaining);
                             break;
                         case < 0:
-                            CUE4ParseLog.Logger.Debug("Did not read layer '{0}' correctly. Read {1} extra bytes", entry.Id, Math.Abs(remaining));
+                            Log.Debug("Did not read layer '{0}' correctly. Read {1} extra bytes", entry.Id, Math.Abs(remaining));
                             break;
                     }
                 }

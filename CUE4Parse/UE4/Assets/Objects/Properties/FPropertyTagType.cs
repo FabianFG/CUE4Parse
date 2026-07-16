@@ -88,7 +88,7 @@ public abstract class FPropertyTagType
             case OptionalProperty optionalProperty:
                 return optionalProperty.Value?.GetValue(type);
             default:
-                CUE4ParseLog.Logger.Warning("Incorrect type conversion from {0} to {1}", this, type);
+                Log.Warning("Incorrect type conversion from {0} to {1}", this, type);
                 return null;
         }
     }
@@ -201,7 +201,7 @@ public abstract class FPropertyTagType
 #if DEBUG
         if (tagType == null)
         {
-            CUE4ParseLog.Logger.Warning("Couldn't read property type {0} at {1}", propertyType, Ar.Position);
+            Log.Warning("Couldn't read property type {0} at {1}", propertyType, Ar.Position);
         }
 #endif
         return tagType;

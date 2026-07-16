@@ -458,7 +458,7 @@ public partial class FPakInfo
                         continue;
                     if (!Enum.TryParse(name, true, out CompressionMethod method))
                     {
-                        CUE4ParseLog.Logger.Warning("Unknown compression method '{CompressionMethod}' in {ArchiveName}", name, Ar.Name);
+                        Log.Warning("Unknown compression method '{CompressionMethod}' in {ArchiveName}", name, Ar.Name);
                         method = CompressionMethod.Unknown;
                     }
                     CompressionMethods.Add(method);

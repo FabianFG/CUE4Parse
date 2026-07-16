@@ -47,14 +47,14 @@ public class UBinaryAsset : UObject
                 Tag = ReadOctopathPropertyTagType(dataAr),
             };
             if (dataAr.Position != dataAr.Length)
-                CUE4ParseLog.Logger.Warning("Did not read the full UBinaryAsset data for {0}, read {1} of {2} bytes", Name, dataAr.Position, dataAr.Length);
+                Log.Warning("Did not read the full UBinaryAsset data for {0}, read {1} of {2} bytes", Name, dataAr.Position, dataAr.Length);
 
             Properties.Clear();
             Properties.Add(tag);
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Error(e,"Failed to parse OctopathTraveler0 UBinaryAsset {0}", Name);
+            Log.Error(e,"Failed to parse OctopathTraveler0 UBinaryAsset {0}", Name);
         }
     }
 

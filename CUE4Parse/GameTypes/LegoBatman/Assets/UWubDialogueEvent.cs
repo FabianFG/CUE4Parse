@@ -89,7 +89,7 @@ public class UWubDialogueEvent : UObject
             TriggerChance = Ar.Read<float>();
             AssociatedActor = Ar.ReadFName();
             var count = Ar.Read<int>();
-            CUE4ParseLog.Logger.Information("FStruct2 {0} {1} {2} {3}, inner {4}", EventId, AssociatedActor, DelayInSeconds, TriggerChance, count);
+            Log.Information("FStruct2 {0} {1} {2} {3}, inner {4}", EventId, AssociatedActor, DelayInSeconds, TriggerChance, count);
             InnerSequence = Ar.ReadArray(count, () => ReadStruct(Ar, wems));
         }
     }

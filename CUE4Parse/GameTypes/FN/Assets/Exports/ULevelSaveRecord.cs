@@ -139,7 +139,7 @@ public class FActorTemplateRecord
             DataHash = Ar.Read<uint>();
             if (DataHash != hash)
             {
-                CUE4ParseLog.Logger.Error("FActorTemplateRecord::Serialize failed to deserialize data for: {0} dropping corrupted data.", ActorClass.ToString());
+                Log.Error("FActorTemplateRecord::Serialize failed to deserialize data for: {0} dropping corrupted data.", ActorClass.ToString());
                 ActorData = null;
                 DataHash = 0;
             }
@@ -221,7 +221,7 @@ public class FActorComponentRecord
             DataHash = Ar.Read<uint>();
             if (DataHash != hash)
             {
-                CUE4ParseLog.Logger.Error("FActorComponentRecord::Serialize failed to deserialize data for: {0} dropping corrupted data.", ComponentClass.ToString());
+                Log.Error("FActorComponentRecord::Serialize failed to deserialize data for: {0} dropping corrupted data.", ComponentClass.ToString());
                 ComponentData = null;
                 DataHash = 0;
             }
@@ -513,7 +513,7 @@ public class ULevelSaveRecord : UObject
 
         if (SaveVersion > ELevelSaveRecordVersion.LatestVersion)
         {
-            CUE4ParseLog.Logger.Warning("Unsupported level save record version " + (short) SaveVersion);
+            Log.Warning("Unsupported level save record version " + (short) SaveVersion);
         }
 
         bCompressed = Ar.ReadBoolean();

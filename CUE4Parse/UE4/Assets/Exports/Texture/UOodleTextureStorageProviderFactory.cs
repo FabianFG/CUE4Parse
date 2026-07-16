@@ -47,7 +47,7 @@ public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFac
         while (!pixelFormatName.IsNone)
         {
             if (!Enum.TryParse(pixelFormatName.Text, ignoreCase: true, out EPixelFormat pixelFormat))
-                CUE4ParseLog.Logger.Warning("Failed to parse pixel format: {PixelFormat}", pixelFormatName.Text);
+                Log.Warning("Failed to parse pixel format: {PixelFormat}", pixelFormatName.Text);
 
             var skipOffset = Ar.Game switch
             {
@@ -63,7 +63,7 @@ public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFac
                
                 if (Ar.AbsolutePosition != skipOffset)
                 {
-                    CUE4ParseLog.Logger.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
+                    Log.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
                     Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
                 }
 
@@ -72,7 +72,7 @@ public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFac
             else
             {
 #if DEBUG
-                CUE4ParseLog.Logger.Debug("Skipping data for format {Format}", pixelFormatName);
+                Log.Debug("Skipping data for format {Format}", pixelFormatName);
 #endif
                 Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
             }

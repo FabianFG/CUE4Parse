@@ -57,7 +57,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             {
                 if (Globals.LogVfsMounts)
                 {
-                    CUE4ParseLog.Logger.Warning($"\"{Name}\" has strange mount point \"{mountPoint}\", mounting to root");
+                    Log.Warning($"\"{Name}\" has strange mount point \"{mountPoint}\", mounting to root");
                 }
 
                 mountPoint = "/";

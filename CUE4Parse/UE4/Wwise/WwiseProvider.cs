@@ -248,7 +248,7 @@ public partial class WwiseProvider
         };
 
         if (data is null)
-            CUE4ParseLog.Logger.Error("Failed to load data for '{WemFileName}' wem loose file", wemFileName);
+            Log.Error("Failed to load data for '{WemFileName}' wem loose file", wemFileName);
 
         var mediaDebugName = !string.IsNullOrEmpty(media.DebugName.Text) && !media.DebugName.IsNone
             ? media.DebugName.Text.SubstringBeforeLast('.')
@@ -318,11 +318,11 @@ public partial class WwiseProvider
             }
             catch (Exception e)
             {
-                CUE4ParseLog.Logger.Warning(e, $"Failed to read soundbank file '{file.Key}'");
+                Log.Warning(e, $"Failed to read soundbank file '{file.Key}'");
             }
         }
 
-        CUE4ParseLog.Logger.Warning("Soundbank with ID {ID} wasn't found", soundBankId);
+        Log.Warning("Soundbank with ID {ID} wasn't found", soundBankId);
 
         return null;
     }
@@ -446,7 +446,7 @@ public partial class WwiseProvider
                         break;
 
                     default:
-                        CUE4ParseLog.Logger.Warning("Unhandled hierarchy type {0}, while traversing through Event {1}", hierarchy.Type, eventId);
+                        Log.Warning("Unhandled hierarchy type {0}, while traversing through Event {1}", hierarchy.Type, eventId);
                         break;
                 }
             }
@@ -478,7 +478,7 @@ public partial class WwiseProvider
             }
             else
             {
-                CUE4ParseLog.Logger.Error("Failed to load data for '{WemId}' wem file during event resolution", wemId);
+                Log.Error("Failed to load data for '{WemId}' wem file during event resolution", wemId);
             }
         }
     }
@@ -498,7 +498,7 @@ public partial class WwiseProvider
 
         if (wwiseDir is null)
         {
-            CUE4ParseLog.Logger.Warning($"Wwise directory not found under '{searchDirectory}', external Wwise files might not exist");
+            Log.Warning($"Wwise directory not found under '{searchDirectory}', external Wwise files might not exist");
             return 0;
         }
 
@@ -550,7 +550,7 @@ public partial class WwiseProvider
             {
                 // TEMP: Init bnk was found, but caching isn't supported yet, prevent exception from throwing
                 _completedWwiseFullBnkInit = true;
-                CUE4ParseLog.Logger.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size in bytes {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
+                Log.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size in bytes {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
                 return;
             }
         }
@@ -578,7 +578,7 @@ public partial class WwiseProvider
             totalLoadedBanks += 1;
         }
 
-        CUE4ParseLog.Logger.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size in bytes {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
+        Log.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size in bytes {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
         _completedWwiseFullBnkInit = totalLoadedBanks > 0;
     }
 
@@ -599,7 +599,7 @@ public partial class WwiseProvider
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Warning(e, "Failed to cache Wwise sound bank file {0}", gameFile.Name);
+            Log.Warning(e, "Failed to cache Wwise sound bank file {0}", gameFile.Name);
             return false;
         }
 
@@ -704,7 +704,7 @@ public partial class WwiseProvider
             var totalSize = 0L;
             if (wwiseAssetLib == null)
             {
-                CUE4ParseLog.Logger.Warning("No UWwiseAssetLibrary found in the package {0}", assetFile.Path);
+                Log.Warning("No UWwiseAssetLibrary found in the package {0}", assetFile.Path);
                 return;
             }
 
@@ -724,12 +724,12 @@ public partial class WwiseProvider
             }
             _totalLoadedWwiseSize += loadedSize;
             _totalWwiseBanksSize += totalSize;
-            CUE4ParseLog.Logger.Information("Loaded {Name} and cached {Count} packaged files, loaded size in bytes {size}/{total}", assetFile.Name,
+            Log.Information("Loaded {Name} and cached {Count} packaged files, loaded size in bytes {size}/{total}", assetFile.Name,
                 filesCount, loadedSize, totalSize);
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Error(e, "Failed to load {Name}", assetFile.Name);
+            Log.Error(e, "Failed to load {Name}", assetFile.Name);
         }
     }
 

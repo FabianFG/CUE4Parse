@@ -139,7 +139,7 @@ namespace CUE4Parse.UE4.IO.Objects
                         continue;
                     if (!Enum.TryParse(name, true, out CompressionMethod method))
                     {
-                        CUE4ParseLog.Logger.Warning($"Unknown compression method '{name}' in {Ar.Name}");
+                        Log.Warning($"Unknown compression method '{name}' in {Ar.Name}");
                         method = CompressionMethod.Unknown;
                     }
 

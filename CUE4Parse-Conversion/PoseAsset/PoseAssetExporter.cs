@@ -13,7 +13,7 @@ public class PoseAssetExporter : ExporterBase
     {
         if (!poseAsset.TryConvert(out var convertedPoseAsset))
         {
-            CUE4ParseLog.Logger.Warning($"PoseAsset '{ExportName}' failed to convert");
+            Log.Warning($"PoseAsset '{ExportName}' failed to convert");
             return;
         }
 

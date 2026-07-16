@@ -51,7 +51,7 @@ public class UStruct : UField
             }
             catch (Exception e)
             {
-                CUE4ParseLog.Logger.Warning(e, $"Failed to serialize script bytecode in {Name}");
+                Log.Warning(e, $"Failed to serialize script bytecode in {Name}");
             }
             finally
             {

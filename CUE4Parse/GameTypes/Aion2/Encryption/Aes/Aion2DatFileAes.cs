@@ -31,7 +31,7 @@ public sealed class Aion2DatFileAes
         }
         catch
         {
-            CUE4ParseLog.Logger.Error("Failed to read key_manifest.dat");
+            Log.Error("Failed to read key_manifest.dat");
         }
     }
 

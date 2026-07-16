@@ -76,14 +76,14 @@ public class NGRLuaReader
         using var Ar = new FNGRLuaArchive(name, data, null);
         if (Ar.Length < 0x14)
         {
-            CUE4ParseLog.Logger.Warning("Fade Face header is too small");
+            Log.Warning("Fade Face header is too small");
             return data;
         }
 
         Header = new FadeFaceHeader(Ar);
         if (Header.Magic != NGR_LUA_MAGIC)
         {
-            CUE4ParseLog.Logger.Warning($"Invalid magic: 0x{Header.Magic:X}, expected: 0x{NGR_LUA_MAGIC:X}");
+            Log.Warning($"Invalid magic: 0x{Header.Magic:X}, expected: 0x{NGR_LUA_MAGIC:X}");
             return data;
         }
 

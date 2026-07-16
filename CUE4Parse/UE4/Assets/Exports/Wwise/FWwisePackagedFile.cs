@@ -81,13 +81,13 @@ public class FWwisePackagedFile : FStructFallback
                     }
                     catch
                     {
-                        CUE4ParseLog.Logger.Error("Failed to read Wwise bank data for {Name} from combined bulk data", name);
+                        Log.Error("Failed to read Wwise bank data for {Name} from combined bulk data", name);
                     }
                 }
             }
             catch
             {
-                CUE4ParseLog.Logger.Error("Failed to read Wwise bank data for {Name} from bulk data", name);
+                Log.Error("Failed to read Wwise bank data for {Name} from bulk data", name);
             }
         }
         else if (PackagingStrategy is EWwisePackagingStrategy.External or EWwisePackagingStrategy.AdditionalFile) // maybe in AssetLibrary or an asset
@@ -95,7 +95,7 @@ public class FWwisePackagedFile : FStructFallback
         }
         else
         {
-            CUE4ParseLog.Logger.Warning("Wwise bank data for {Name} uses unsupported packaging strategy {stategy}", name,
+            Log.Warning("Wwise bank data for {Name} uses unsupported packaging strategy {stategy}", name,
                 PackagingStrategy.ToString());
         }
     }

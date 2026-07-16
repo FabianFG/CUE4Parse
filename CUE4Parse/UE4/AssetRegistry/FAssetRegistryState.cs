@@ -28,7 +28,7 @@ public class FAssetRegistryState
         switch (version)
         {
             case < FAssetRegistryVersionType.AddAssetRegistryState:
-                CUE4ParseLog.Logger.Warning("Cannot read registry state before {Version}", version);
+                Log.Warning("Cannot read registry state before {Version}", version);
                 break;
             case < FAssetRegistryVersionType.FixedTags:
             {
@@ -86,7 +86,7 @@ public class FAssetRegistryState
             }
             catch (Exception e)
             {
-                CUE4ParseLog.Logger.Error(e, "Failed to load PreallocatedDependsNodeDataBuffers");
+                Log.Error(e, "Failed to load PreallocatedDependsNodeDataBuffers");
             }
 
             Ar.Position = dependencySectionEnd;

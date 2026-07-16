@@ -61,7 +61,7 @@ public class USkeleton : UObject
         }
         else
         {
-            CUE4ParseLog.Logger.Warning(""); // not sure what to put here
+            Log.Warning(""); // not sure what to put here
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_GUID_SERIALIZATION)

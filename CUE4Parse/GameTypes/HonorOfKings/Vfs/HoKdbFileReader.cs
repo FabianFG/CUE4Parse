@@ -80,7 +80,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         }
         catch
         {
-            CUE4ParseLog.Logger.Error("Failed to read file hashes from {0}", path);
+            Log.Error("Failed to read file hashes from {0}", path);
         }
 
         return path;
@@ -158,7 +158,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         }
         catch
         {
-            CUE4ParseLog.Logger.Error("Failed to write hashes file {0}", hashesFile);
+            Log.Error("Failed to write hashes file {0}", hashesFile);
         }
 
         Dispose();
@@ -174,7 +174,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         }
         catch (Exception ex)
         {
-            CUE4ParseLog.Logger.Error(ex, "Failed to write index file {IndexFile}", indexFile);
+            Log.Error(ex, "Failed to write index file {IndexFile}", indexFile);
         }
     }
 
@@ -257,7 +257,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
         }
 
         if (unknownFiles.Count > 0)
-            CUE4ParseLog.Logger.Warning("Found {count} unknown entries", unknownFiles.Count);
+            Log.Warning("Found {count} unknown entries", unknownFiles.Count);
 
         foreach (var hash in unknownFiles.Keys.Except(usedHashes))
         {
@@ -309,7 +309,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", in {elapsed}");
-            CUE4ParseLog.Logger.Information(sb.ToString());
+            Log.Information(sb.ToString());
         }
     }
 

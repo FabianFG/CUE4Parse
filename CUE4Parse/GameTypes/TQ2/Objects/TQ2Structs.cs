@@ -249,7 +249,7 @@ public class FGrimInstancedObjectPtr : IUStruct
         }
         else
         {
-            CUE4ParseLog.Logger.Warning("Failed to read FGrimInstancedObjectPtr of type {0}, skipping it", StructType.ResolvedObject?.GetFullName());
+            Log.Warning("Failed to read FGrimInstancedObjectPtr of type {0}, skipping it", StructType.ResolvedObject?.GetFullName());
         }
 
         Ar.Position += 4; // zero

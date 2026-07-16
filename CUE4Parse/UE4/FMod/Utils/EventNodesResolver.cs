@@ -176,24 +176,24 @@ public static class EventNodesResolver
 
     public static void LogMissingSamples(FModReader reader, Dictionary<FModGuid, List<FmodSample>> resolvedEvents)
     {
-        CUE4ParseLog.Logger.Debug("----------------");
+        Log.Debug("----------------");
         int sampleCount = resolvedEvents.Values.Sum(samples => samples?.Count ?? 0);
 
-        CUE4ParseLog.Logger.Debug($"+ Resolved {sampleCount} audio sample(s)");
+        Log.Debug($"+ Resolved {sampleCount} audio sample(s)");
 
         var allResolved = GetAllResolvedSampleNames(resolvedEvents);
         var unreferencedSamples = GetUnreferencedSamplesWithGuids(reader, allResolved);
 
         if (unreferencedSamples.Count == 0)
         {
-            CUE4ParseLog.Logger.Debug("All audio samples were resolved");
+            Log.Debug("All audio samples were resolved");
             return;
         }
 
-        CUE4ParseLog.Logger.Debug($"- Unresolved {unreferencedSamples.Count} audio sample(s):");
+        Log.Debug($"- Unresolved {unreferencedSamples.Count} audio sample(s):");
         foreach (var sample in unreferencedSamples)
         {
-            CUE4ParseLog.Logger.Debug($"'{sample.Value.Name}' sample wasn't resolved (GUID: {sample.Key})");
+            Log.Debug($"'{sample.Value.Name}' sample wasn't resolved (GUID: {sample.Key})");
         }
     }
 #endif

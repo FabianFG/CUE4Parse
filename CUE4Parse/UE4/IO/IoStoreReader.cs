@@ -134,7 +134,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
 #endif
         if (TocResource.Header.Version > EIoStoreTocVersion.Latest)
         {
-            CUE4ParseLog.Logger.Warning("Io Store \"{0}\" has unsupported version {1}", Path, (int) TocResource.Header.Version);
+            Log.Warning("Io Store \"{0}\" has unsupported version {1}", Path, (int) TocResource.Header.Version);
         }
     }
 
@@ -445,7 +445,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", version {(int) TocResource.Header.Version} in {elapsed}");
-            CUE4ParseLog.Logger.Information(sb.ToString());
+            Log.Information(sb.ToString());
         }
     }
 

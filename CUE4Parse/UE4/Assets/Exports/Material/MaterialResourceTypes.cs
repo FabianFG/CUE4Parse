@@ -36,7 +36,7 @@ public class FMaterial
         }
         else
         {
-            CUE4ParseLog.Logger.Warning("Loading a material resource '{0}' with an invalid ShaderMap!", Ar.Name);
+            Log.Warning("Loading a material resource '{0}' with an invalid ShaderMap!", Ar.Name);
         }
     }
 }

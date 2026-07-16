@@ -480,12 +480,12 @@ public class FScriptStruct
             }
             else
             {
-                CUE4ParseLog.Logger.Warning("Failed to load FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
+                Log.Warning("Failed to load FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
             }
         }
         catch (Exception e)
         {
-            CUE4ParseLog.Logger.Warning(e, "Failed to read FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
+            Log.Warning(e, "Failed to read FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
         }
         finally
         {

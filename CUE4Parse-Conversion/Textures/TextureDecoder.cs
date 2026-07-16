@@ -189,7 +189,7 @@ public static class TextureDecoder
                         }
                         catch (ParserException e)
                         {
-                            CUE4ParseLog.Logger.Error(e, "Failed to decompress crunch codec texture");
+                            Log.Error(e, "Failed to decompress crunch codec texture");
                             break;
                         }
                     }

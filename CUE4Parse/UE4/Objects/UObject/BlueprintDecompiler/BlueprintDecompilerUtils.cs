@@ -440,7 +440,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                CUE4ParseLog.Logger.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
+                Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
                 break;
             }
         }
@@ -554,7 +554,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                CUE4ParseLog.Logger.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
+                Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
                 break;
             }
         }
@@ -578,7 +578,7 @@ public static class BlueprintDecompilerUtils
 
         if (!Enum.TryParse<EPropertyType>(propertyTag.PropertyType.ToString(), out var propertyType))
         {
-            CUE4ParseLog.Logger.Warning("Unable to Parse {0} while trying to get PropertyEnum Type",
+            Log.Warning("Unable to Parse {0} while trying to get PropertyEnum Type",
                 propertyTag.PropertyType.ToString());
             return false;
         }
@@ -676,7 +676,7 @@ public static class BlueprintDecompilerUtils
                                 new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData),
                                 out type, out var innerValue))
                         {
-                            CUE4ParseLog.Logger.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
+                            Log.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
                             continue;
                         }
 
@@ -703,7 +703,7 @@ public static class BlueprintDecompilerUtils
                 var structType = propertyTag.GetGenericValue<FScriptStruct>();
                 if (!GetPropertyTagVariable(structType, out value))
                 {
-                    CUE4ParseLog.Logger.Error("Unable to get struct value or type for FScriptStruct type {structType}",
+                    Log.Error("Unable to get struct value or type for FScriptStruct type {structType}",
                         structType.GetType().Name);
                     return false;
                 }
@@ -836,7 +836,7 @@ public static class BlueprintDecompilerUtils
 
                         if (!GetPropertyTagVariable(keyProperty, out keyType, out var keyValue))
                         {
-                            CUE4ParseLog.Logger.Warning("Unable to get KeyValue for UScriptMap of type: {type}", mapKey.GetType().Name);
+                            Log.Warning("Unable to get KeyValue for UScriptMap of type: {type}", mapKey.GetType().Name);
                             continue;
                         }
 
@@ -845,7 +845,7 @@ public static class BlueprintDecompilerUtils
 
                         if (!GetPropertyTagVariable(valueProperty, out valueType, out var valueValue))
                         {
-                            CUE4ParseLog.Logger.Warning("Unable to get MapValue for UScriptMap of type: {type}",
+                            Log.Warning("Unable to get MapValue for UScriptMap of type: {type}",
                                 mapValue.GetType().Name);
                         }
 
@@ -921,7 +921,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                CUE4ParseLog.Logger.Warning($"EPropertyType {propertyTag.TagData?.Type} is currently not implemented");
+                Log.Warning($"EPropertyType {propertyTag.TagData?.Type} is currently not implemented");
                 return false;
             }
         }
@@ -1152,7 +1152,7 @@ public static class BlueprintDecompilerUtils
             default:
             {
                 value = uStruct.ToString() ?? string.Empty;
-                CUE4ParseLog.Logger.Warning("Property Type '{type}' is currently not supported for FScriptStruct", uStruct.GetType().Name);
+                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct", uStruct.GetType().Name);
                 break;
             }
         }

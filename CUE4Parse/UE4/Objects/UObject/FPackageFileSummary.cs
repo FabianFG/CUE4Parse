@@ -176,7 +176,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION ||
                     FileVersionUE > EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
                 {
-                    CUE4ParseLog.Logger.Warning("File version is too new or too old");
+                    Log.Warning("File version is too new or too old");
                 }
 
                 if (FileVersionUE.FileVersionUE4 == 0 && FileVersionUE.FileVersionUE5 == 0 && FileVersionLicenseeUE == 0)

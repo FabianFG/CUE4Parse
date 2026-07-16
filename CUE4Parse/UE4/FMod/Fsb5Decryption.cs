@@ -108,7 +108,7 @@ public class Fsb5Decryption
         }
 
 #if DEBUG
-        CUE4ParseLog.Logger.Debug("Decrypted FSB5 successfully");
+        Log.Debug("Decrypted FSB5 successfully");
 #endif
 
         decryptedStream.Position = 0;

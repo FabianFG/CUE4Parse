@@ -28,7 +28,7 @@ public struct FAnyValue : IUStruct
         }
         else
         {
-            CUE4ParseLog.Logger.Warning("Failed to read FAnyValue of type {0}, skipping it", strucindex.ResolvedObject?.GetFullName());
+            Log.Warning("Failed to read FAnyValue of type {0}, skipping it", strucindex.ResolvedObject?.GetFullName());
         }
     }
 }

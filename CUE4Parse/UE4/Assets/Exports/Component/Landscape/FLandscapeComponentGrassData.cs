@@ -32,7 +32,7 @@ public class FLandscapeComponentGrassData
                 }
                 else
                 {
-                    CUE4ParseLog.Logger.Warning("Could not find package index for grass type {0}", kvp.Key);
+                    Log.Warning("Could not find package index for grass type {0}", kvp.Key);
                 }
             }
         }

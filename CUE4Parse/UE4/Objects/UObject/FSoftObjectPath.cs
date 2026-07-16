@@ -41,7 +41,7 @@ public readonly struct FSoftObjectPath : IUStruct
             var index = Ar.Read<int>();
             if (index < 0 || index >= softObjectPaths.Length)
             {
-                CUE4ParseLog.Logger.Warning("SoftObjectProperty: Invalid SoftObjectPath index {Index} in package {PackageName}", index, Ar.Name);
+                Log.Warning("SoftObjectProperty: Invalid SoftObjectPath index {Index} in package {PackageName}", index, Ar.Name);
             }
             else
             {
@@ -223,7 +223,7 @@ public readonly struct FSoftObjectPath : IUStruct
             var foundExport = current.Owner.GetExportOrNull(part);
             if (foundExport == null)
             {
-                CUE4ParseLog.Logger.Warning("SoftObjectPath: Could not find subobject '{ObjectName}' in path '{SubPath}' for asset '{AssetPath}'", part, SubPathString, AssetPathName.Text);
+                Log.Warning("SoftObjectPath: Could not find subobject '{ObjectName}' in path '{SubPath}' for asset '{AssetPath}'", part, SubPathString, AssetPathName.Text);
                 export = null;
                 return false;
             }

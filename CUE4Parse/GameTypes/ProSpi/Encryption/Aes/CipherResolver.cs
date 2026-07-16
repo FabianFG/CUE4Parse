@@ -110,7 +110,7 @@ public static partial class ProSpiEncryption
 
         if (_missingDescriptorLookupKeys.TryAdd(descriptorLookupKey, 0))
         {
-            CUE4ParseLog.Logger.Information("ProSpi descriptor key lookup missing: descriptorLookupKey=0x{DescriptorLookupKey:X16}, trailer={Trailer}", descriptorLookupKey, Convert.ToHexString(trailer));
+            Log.Information("ProSpi descriptor key lookup missing: descriptorLookupKey=0x{DescriptorLookupKey:X16}, trailer={Trailer}", descriptorLookupKey, Convert.ToHexString(trailer));
         }
 
         return false;

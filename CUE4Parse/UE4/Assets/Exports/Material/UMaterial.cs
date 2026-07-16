@@ -88,7 +88,7 @@ public class UMaterial : UMaterialInterface
                 }
                 catch (Exception e)
                 {
-                    CUE4ParseLog.Logger.Error(e, "Failed to deserialize inline shader maps.");
+                    Log.Error(e, "Failed to deserialize inline shader maps.");
                     Ar.Position = saved;
                 }
             }

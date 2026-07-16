@@ -34,12 +34,12 @@ public class ARecastNavMesh : ANavigationData
 
         if (NavMeshVersion < ENavMeshVersion.NAVMESHVER_MIN_COMPATIBLE)
         {
-            CUE4ParseLog.Logger.Error("NavMeshVersion is too old and not supported: '{0}'", NavMeshVersion);
+            Log.Error("NavMeshVersion is too old and not supported: '{0}'", NavMeshVersion);
             Ar.Position = recastNavMeshSizePos + recastNavMeshSizeBytes;
         }
         else if (NavMeshVersion > ENavMeshVersion.Latest)
         {
-            CUE4ParseLog.Logger.Error("NavMeshVersion is too new and not supported: '{0}'", NavMeshVersion);
+            Log.Error("NavMeshVersion is too new and not supported: '{0}'", NavMeshVersion);
             Ar.Position = recastNavMeshSizePos + recastNavMeshSizeBytes;
         }
         else if (recastNavMeshSizeBytes > 4)

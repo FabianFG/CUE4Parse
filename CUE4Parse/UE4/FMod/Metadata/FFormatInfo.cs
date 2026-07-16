@@ -12,12 +12,12 @@ public readonly struct FFormatInfo
     {
         FileVersion = Ar.ReadInt32();
 #if DEBUG
-        CUE4ParseLog.Logger.Debug($"FMod soundbank version: 0x{FileVersion:X}");
+        Log.Debug($"FMod soundbank version: 0x{FileVersion:X}");
 #endif
         var latestVersion = (int) EFModVersion.NEWEST_SUPPORTED_FILEVERSION;
         if (FileVersion > latestVersion)
         {
-            CUE4ParseLog.Logger.Warning($"FMod version 0x{FileVersion:X} is not supported, latest supported version is 0x{latestVersion:X}");
+            Log.Warning($"FMod version 0x{FileVersion:X} is not supported, latest supported version is 0x{latestVersion:X}");
         }
         CompatVersion = Ar.ReadInt32();
     }

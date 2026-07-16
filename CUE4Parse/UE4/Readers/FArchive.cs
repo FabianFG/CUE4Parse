@@ -612,7 +612,7 @@ namespace CUE4Parse.UE4.Readers
                 // upgrade old flag method
                 if (flags.HasFlag(COMPRESS_DeprecatedFormatFlagsMask))
                 {
-                    CUE4ParseLog.Logger.Warning("Old style compression flags are being used with FAsyncCompressionChunk, please update any code using this!");
+                    Log.Warning("Old style compression flags are being used with FAsyncCompressionChunk, please update any code using this!");
                     //compressionFormatToDecode = FCompression.GetCompressionFormatFromDeprecatedFlags(flags);
                     throw new NotImplementedException();
                 }
@@ -754,7 +754,7 @@ namespace CUE4Parse.UE4.Readers
             using var fs = f.OpenWrite();
             fs.Write(bytes, 0, bytes.Length);
             fs.Close();
-            CUE4ParseLog.Logger.Information("Dumped {Name} to {Path}", Name, f.FullName);
+            Log.Information("Dumped {Name} to {Path}", Name, f.FullName);
             Process.Start("explorer.exe", $"/select,\"{f.FullName}\"");
 #endif
         }

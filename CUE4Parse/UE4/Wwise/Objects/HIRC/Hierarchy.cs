@@ -24,7 +24,7 @@ public readonly struct Hierarchy
         Type = rawType.MapToCurrent(Ar.Version);
 
         if (Type is 0)
-            CUE4ParseLog.Logger.Warning("Failed to map hierarchy type {Type}", rawType);
+            Log.Warning("Failed to map hierarchy type {Type}", rawType);
 
         // Try/Catch is done to allow for extracting audio even if this fails
         // Due to their complexity it's very likely hierarchies will fail to parse if unsupported
@@ -62,7 +62,7 @@ public readonly struct Hierarchy
         }
         catch (Exception ex) when (!Debugger.IsAttached)
         {
-            CUE4ParseLog.Logger.Error(ex, "Failed to parse HIRC type {Type}. Falling back to generic.", Type);
+            Log.Error(ex, "Failed to parse HIRC type {Type}. Falling back to generic.", Type);
             Ar.Position = hierarchyStartPosition;
             Data = new HierarchyGeneric(Ar);
         }
@@ -73,10 +73,10 @@ public readonly struct Hierarchy
 #if DEBUG
                 Ar.Position = hierarchyStartPosition;
                 var id = Length >= 4 ? Ar.Read<uint>() : 0;
-                CUE4ParseLog.Logger.Warning($"Didn't read hierarchy {Type} {id} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
+                Log.Warning($"Didn't read hierarchy {Type} {id} correctly (at {Ar.Position}, should be {hierarchyEndPosition})");
                 if (Data is HierarchyEventAction action)
                 {
-                    CUE4ParseLog.Logger.Warning($"EventAction type: {action.EventActionType}");
+                    Log.Warning($"EventAction type: {action.EventActionType}");
                 }
 #endif
                 Ar.Position = hierarchyEndPosition;

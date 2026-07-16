@@ -28,7 +28,7 @@ public class FTextLocalizationResource
         else // Legacy LocRes files lack the magic number, assume that's what we're dealing with, and seek back to the start of the file
         {
             Ar.Position = 0;
-            CUE4ParseLog.Logger.Warning($"LocRes '{Ar.Name}' failed the magic number check! Assuming this is a legacy resource");
+            Log.Warning($"LocRes '{Ar.Name}' failed the magic number check! Assuming this is a legacy resource");
         }
 
         // Is this LocRes file too new to load?
@@ -91,7 +91,7 @@ public class FTextLocalizationResource
                     }
                     else
                     {
-                        CUE4ParseLog.Logger.Warning($"LocRes '{newEntry.LocResName}' has an invalid localized string index for namespace '{namespce.Str}' and key '{key.Str}'. This entry will have no translation.");
+                        Log.Warning($"LocRes '{newEntry.LocResName}' has an invalid localized string index for namespace '{namespce.Str}' and key '{key.Str}'. This entry will have no translation.");
                     }
 
                     if (Ar.Game == GAME_StellarBlade && versionNumber > ELocResVersion.Latest) Ar.Position += 4;

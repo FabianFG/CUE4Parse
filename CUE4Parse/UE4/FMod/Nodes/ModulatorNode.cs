@@ -57,7 +57,7 @@ public class ModulatorNode
                 Subnode = new SpectralSidechainModulatorNode(Ar);
                 break;
             default:
-                CUE4ParseLog.Logger.Error($"Unhandled modulator type {Type} ({(int) Type}) at stream position {Ar.BaseStream.Position}");
+                Log.Error($"Unhandled modulator type {Type} ({(int) Type}) at stream position {Ar.BaseStream.Position}");
                 break;
         }
     }

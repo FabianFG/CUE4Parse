@@ -21,7 +21,7 @@ public class SoundDataNode
         if (!Fsb5Decryption.IsFSB5Header(Ar.BaseStream))
         {
 #if DEBUG
-            CUE4ParseLog.Logger.Debug($"Encrypted FSB5 header at {fsbOffset}");
+            Log.Debug($"Encrypted FSB5 header at {fsbOffset}");
 #endif
             fsbStream = Fsb5Decryption.Decrypt(fsbStream, FModReader.EncryptionKey);
         }
@@ -33,20 +33,20 @@ public class SoundDataNode
                 SoundBank = bank;
                 Ar.BaseStream.Position = fsbOffset - relativeOffset + size;
 #if DEBUG
-                CUE4ParseLog.Logger.Debug($"FSB5 parsed successfully, samples: {bank.Samples.Count}");
+                Log.Debug($"FSB5 parsed successfully, samples: {bank.Samples.Count}");
 #endif
                 var audioType = bank.Header.AudioType;
                 if (!audioType.IsSupported())
-                    CUE4ParseLog.Logger.Error($"Soundbank uses unsupported audio format: {audioType}");
+                    Log.Error($"Soundbank uses unsupported audio format: {audioType}");
             }
             else
             {
-                CUE4ParseLog.Logger.Error($"Failed to parse FSB5 at {fsbOffset}");
+                Log.Error($"Failed to parse FSB5 at {fsbOffset}");
             }
         }
         catch (Exception ex)
         {
-            CUE4ParseLog.Logger.Error($"Exception thrown while parsing FSB5 at {fsbOffset}: {ex.Message}");
+            Log.Error($"Exception thrown while parsing FSB5 at {fsbOffset}: {ex.Message}");
         }
     }
 }

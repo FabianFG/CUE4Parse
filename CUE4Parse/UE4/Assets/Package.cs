@@ -296,7 +296,7 @@ namespace CUE4Parse.UE4.Assets
                         }
                     }
 #if DEBUG
-                    CUE4ParseLog.Logger.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, ioPackage.GetFullName());
+                    Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, ioPackage.GetFullName());
 #endif
                     return new ResolvedImportObject(import, this);
                 }
@@ -306,7 +306,7 @@ namespace CUE4Parse.UE4.Assets
             if (importPackage == null)
             {
 #if DEBUG
-                CUE4ParseLog.Logger.Error("Missing native package ({0}) for import of {1} in {2}.", outerMostImport.ObjectName, import.ObjectName, Name);
+                Log.Error("Missing native package ({0}) for import of {1} in {2}.", outerMostImport.ObjectName, import.ObjectName, Name);
 #endif
                 return new ResolvedImportObject(import, this);
             }
@@ -319,7 +319,7 @@ namespace CUE4Parse.UE4.Assets
                 if (outer == null)
                 {
 #if DEBUG
-                    CUE4ParseLog.Logger.Fatal("Missing outer for import of ({0}): {1} in {2} was not found, but the package exists.", Name, outerImport.ObjectName, importPackage.GetFullName());
+                    Log.Fatal("Missing outer for import of ({0}): {1} in {2} was not found, but the package exists.", Name, outerImport.ObjectName, importPackage.GetFullName());
 #endif
                     return new ResolvedImportObject(import, this);
                 }
@@ -336,7 +336,7 @@ namespace CUE4Parse.UE4.Assets
             }
 
 #if DEBUG
-            CUE4ParseLog.Logger.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, importPackage.GetFullName());
+            Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, importPackage.GetFullName());
 #endif
             return new ResolvedImportObject(import, this);
         }
