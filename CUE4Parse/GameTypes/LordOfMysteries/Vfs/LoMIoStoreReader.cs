@@ -40,8 +40,8 @@ public sealed class LoMIoStoreReader(LoMIoStoreManifest manifest, LoMDirectoryIn
                 entry = new FIoStoreEntry(this, i);
             }
 
-            if (entry.IsPackageData && !entry.IsOptionalPackage)
-                PackageIdIndex[entry.ChunkId.AsPackageId()] = entry;
+            if (entry.IsPackageData && chunkId._chunkIndex == 0 && !entry.IsOptionalPackage)
+                PackageIdIndex[chunkId.AsPackageId()] = entry;
             files[entry.Path] = entry;
         }
 
