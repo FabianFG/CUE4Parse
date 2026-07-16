@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.ControlRig;
 using CUE4Parse.UE4.Assets.Exports.ControlRig.Rigs.Elements;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -335,20 +334,20 @@ public struct FRigControlValue
     public float Float33_2;
 }
 
-public struct FRigControlElementCustomization
+public class FRigControlElementCustomization
 {
-    public FRigElementKey[] AvailableSpaces;
+    public FRigElementKeyWithLabel[] AvailableSpaces = [];
+    public FRigElementKey[] AvailableSpaces_Old = [];
     public FRigElementKey[] RemovedSpaces = [];
+
+    public FRigControlElementCustomization() { }
 
     public FRigControlElementCustomization(FArchive Ar)
     {
-        AvailableSpaces = Ar.ReadArray(() => new FRigElementKey(Ar));
-    }
-
-    public FRigControlElementCustomization(FRigElementKey[] availableSpaces, FRigElementKey[] removedSpaces)
-    {
-        AvailableSpaces = availableSpaces;
-        RemovedSpaces = removedSpaces;
+        if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyParentContraintWithLabel)
+            AvailableSpaces = Ar.ReadArray(() => new FRigElementKeyWithLabel(Ar));
+        else if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyControlSpaceFavorites)
+            AvailableSpaces_Old = Ar.ReadArray(() => new FRigElementKey(Ar));
     }
 }
 
@@ -418,7 +417,6 @@ public struct FRigControlSettings
         DisplayName = Ar.ReadFName();
         PrimaryAxisName = Ar.ReadFName();
         bIsCurve = Ar.ReadBoolean();
-
 
         if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.ControlAnimationType)
         {
@@ -508,14 +506,8 @@ public struct FRigControlSettings
         //	}
         //}
 
-        if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyControlSpaceFavorites)
-        {
-            Customization = new FRigControlElementCustomization(Ar);
-        }
-        else
-        {
-            Customization = new FRigControlElementCustomization([], []);
-        }
+
+        Customization = new FRigControlElementCustomization(Ar);
 
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.ControlAnimationType)
         {

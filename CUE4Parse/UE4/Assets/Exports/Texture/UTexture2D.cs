@@ -1,15 +1,14 @@
-using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public class UTexture2D : UTexture
 {
+    
     public FIntPoint ImportedSize { get; private set; }
     public TextureAddress AddressX { get; private set; }
     public TextureAddress AddressY { get; private set; }
@@ -19,7 +18,7 @@ public class UTexture2D : UTexture
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
         ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
         AddressX = GetOrDefault<TextureAddress>(nameof(AddressX));
@@ -29,7 +28,7 @@ public class UTexture2D : UTexture
         var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
         if (Ar.Ver < EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR)
         {
-            Log.Warning("Untested code: UTexture2D::LegacySerialize");
+            CUE4ParseLog.Logger.Warning("Untested code: UTexture2D::LegacySerialize");
             // https://github.com/EpicGames/UnrealEngine/blob/2092a941a52c55750072f24cd4757176dfaa8326/Engine/Source/Runtime/Engine/Private/Texture2D.cpp
 
             var legacyMips = Array.Empty<FTexture2DMipMap>();
@@ -53,11 +52,13 @@ public class UTexture2D : UTexture
         if (bCooked)
         {
             var bSerializeMipData = true;
-            if (Ar.Game >= EGame.GAME_UE5_3 || Ar.Game == EGame.GAME_TheFirstDescendant)
+            if (Ar.Game >= GAME_UE5_3 || Ar.Game == GAME_TheFirstDescendant)
             {
-                // Controls whether FByteBulkData is serialized??
+                // Controls whether FByteBulkData
                 bSerializeMipData = Ar.ReadBoolean();
             }
+
+            if (Ar.Position >= validPos) return;
 
             DeserializeCookedPlatformData(Ar, bSerializeMipData);
         }

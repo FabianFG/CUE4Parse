@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 
 namespace CUE4Parse.UE4.Versions;
@@ -948,14 +947,14 @@ public enum EUnrealEngineObjectUE3Version
     DeprecatedHeritageTable = 68,
     PanUVRemovedFromPoly = 78,
     CompMipsDeprecated = 84,
+    PlaneAddedToPoly = 86,
     AddedHideCategoriesToUClass = 99,
+    LightMapIndexRemovedFromPoly = 101,
     LightMapScaleAddedToPoly = 106,
     Release119 = 119,
     AddedCppTextToUStruct = 120,
     Release122 = 122,
-
     // only comments exist for these three
-
     // Merge in skeletal collision stuff for SVehicle support.
     temp1 = 122,
     // removed InclusiveSphereBound from FBSPNode
@@ -974,12 +973,27 @@ public enum EUnrealEngineObjectUE3Version
     temp8 = 128,
     // StaticMeshActor Socket Type Added
     temp9 = 128,
-
+    AddedIsValidToFBox = 146,
     MovedFriendlyNameToUFunction = 160,
     TextureDeprecatedFromPoly = 170,
+    // Deprecated FCompactIndex
     DeprecatedCompactIndex = 178,
+    AddedComponentMapToExports = 178, // needs actual version
+    // Change InterpData to being a subclass of SequenceVariable attached to SeqAct_Interps
+    temp10 = 179,
+    // Removed UPrimitive
     DeprecatedPointer = 180,
+    // Store precomputed streaming data in ULevel
+    temp11 = 181,
+    // Removed UStatickMesh::StreamingTextureFactor
+    temp12 = 182,
+    // Changed static mesh lightmaps to be a UTexture2D and create mipmaps based on coverage
+    temp13 = 183,
+    // Cleaned up the mess I created when I clobbered Scott's change in the first "183"
+    temp14 = 184,
+    // Added "AutoExpandCategories" array to UClass
     AddedDelegateSourceToUDelegateProperty = 185,
+    // Removed FDependency
     DeprecatedClassDependencies = 186,
     DisplacedHideCategories = 187, // todo
     AddedStateStackToUStateFrame = 189,
@@ -995,11 +1009,9 @@ public enum EUnrealEngineObjectUE3Version
     AddedRawTriangles = 218,
     AddedArcheType = 220,
     AddedBulkLod = 221,
-    AddedComponentMapToExports,
     AddedInterfacesFeature = 222,
-
+    RefactoredPropertyTags = 223,
     // lowest found version for UE3 packages
-
     // Removing Length, XSize, YSize and ZSize from VJointPos
     REMOVE_SIZE_VJOINTPOS = 224,
     // Added BackfaceShadowTexCoord to FVert.
@@ -1266,7 +1278,6 @@ public enum EUnrealEngineObjectUE3Version
     EMISSIVE_OPTIMIZATIONS_SHADER_RECOMPILE = 352,
     // Only bloom positive scene color values on PC to mimic XBOX
     DOFBLOOMGATHER_SHADER_RECOMPILE = 353,
-
     //	354,355
     // Recompile fog shader
     HEIGHTFOG_SHADER_RECOMPILE = 355,
@@ -1504,16 +1515,13 @@ public enum EUnrealEngineObjectUE3Version
     // Terrain patch bounds get generated 'on-demand'
     TERRAIN_PATCHBOUNDS_ONDEMAND = 471,
     // ===
-
     MovedColorFromUVItem = 472,
     AddedCastShadow = 473,
     AddedFullPrecisionUV = 474,
     AddedPackageFlags = 475,
     AddedRemovedNormal = 477,
     AddedPackageSource = 482,
-
     // === versions missing (LMK if you find it)
-
     // Min version for content resave
     CONTENT_RESAVE_AUGUST_2007_QA_BUILD = 491,
     // Static mesh version bump, package version bumped to ease resaving
@@ -1537,6 +1545,8 @@ public enum EUnrealEngineObjectUE3Version
     SM2_BLENDING_SHADER_FIXES = 500,
     // Terrain material fallback support
     ADDED_TERRAIN_MATERIAL_FALLBACK = 501,
+    // Modified shaders to support D3D10, and upgraded to August DirectX SDK
+    D3D10_SHADER_PARAMETER_CHANGES = 502,
     // Added support for multi-column collections to UIDynamicFieldProvider
     ADDED_MULTICOLUMN_SUPPORT = 503,
     // Serialize cached displacement values for terrain
@@ -1556,6 +1566,10 @@ public enum EUnrealEngineObjectUE3Version
     TEXTURE2DCOMPOSITE_BASE_CHANGE = 510,
     // Fixed fonts serializing all members twice.
     FIXED_FONTS_SERIALIZATION = 511,
+    // Bump to break full version content to work with demo
+    FULL_VERSION_OF_UT3_BUMP = 512,
+    // Throw away Atrac3 data, create MP3 data
+    UPGRADE_TO_MP3 = 513,
     // -
     STATICMESH_FRAGMENTINDEX = 514,
     // Added Draw SkelTree Manager. Added FColor to FMeshBone serialization.
@@ -1572,6 +1586,8 @@ public enum EUnrealEngineObjectUE3Version
     FRAGMENT_EXT_NORMAL_NEIGH_DIM = 520,
     // Add core mesh 3d offset and scale
     FRACTURE_CORE_SCALE_OFFSET = 521,
+    // Updated mp3 format to account for multichannel sounds
+    MP3_FORMAT_UPDATE = 522,
     // Moved particle SpawnRate and Burst info into their own module.
     PARTICLE_SPAWN_AND_BURST_MOVE = 523,
     // Share modules across particle LOD levels where possible.
@@ -1582,6 +1598,8 @@ public enum EUnrealEngineObjectUE3Version
     FRACTURE_SAVE_PLANEBIAS = 526,
     // Fixing up LOD distributions... (incorrect archetypes caused during Spawn conversion)
     PARTICLE_LOD_DIST_FIXUP = 527,
+    // Added DiffusePower to material inputs
+    DIFFUSEPOWER = 528,
     // Changed default DiffusePower value
     DIFFUSEPOWER_DEFAULT = 529,
     // Allow for '0' in the particle burst list CountLow slot...
@@ -1604,6 +1622,8 @@ public enum EUnrealEngineObjectUE3Version
     GLOBAL_SHADER_FILE = 538,
     // Using MSEnc to encode mp3s rather than MP3Enc
     MP3ENC_TO_MSENC = 539,
+    // Fixing up LODValidity...
+    EMITTER_LODVALIDITY_FIX = 540,
     // Added optional external specification of static vertex normals.
     STATICMESH_EXTERNAL_VERTEX_NORMALS = 541,
     // Removed 2x2 normal transform for decal materials
@@ -1618,6 +1638,8 @@ public enum EUnrealEngineObjectUE3Version
     ADDED_FLUID_LIGHTMAPS = 546,
     // Fixing up LODValidity and spawn module outers...
     EMITTER_LODVALIDITY_FIX2 = 547,
+    // Fixing incorrect default properties for new foliage parameters
+    FIX_DEFAULT_FOLIAGE_PARAMETERS = 548,
     // Add FSM core rotation and 'no physics' flag on chunks
     FRACTURE_CORE_ROTATION_PERCHUNKPHYS = 549,
     // New curve auto-tangent calculations; Clamped auto tangent support
@@ -1626,6 +1648,8 @@ public enum EUnrealEngineObjectUE3Version
     DECAL_REMOVED_2X2_NORMAL_TRANSFORM = 551,
     // Updated decal vertex factories
     DECAL_VERTEX_FACTORY_VER1 = 552,
+    // Updated fluid vertex factories
+    FLUID_VERTEX_FACTORY = 553,
     // Updated decal vertex factories
     DECAL_VERTEX_FACTORY_VER2 = 554,
     // Updated the fluid detail normalmap
@@ -1644,6 +1668,8 @@ public enum EUnrealEngineObjectUE3Version
     OVERRIDETANGENTBASIS = 563,
     // Made LightComponent bounced lighting settings multiplicative with direct lighting.
     BOUNCEDLIGHTING_DIRECTMODULATION = 564,
+    // Added a shader parameter to the FDistortionApplyScreenPixelShader
+    DISTORTIONAPPLYPIXELSHADER_UPDATE = 565,
     // Reduced FStateFrame::LatentAction to WORD
     REDUCED_STATEFRAME_LATENTACTION_SIZE = 566,
     // Added GUIDs for updating texture file cache
@@ -1656,6 +1682,8 @@ public enum EUnrealEngineObjectUE3Version
     EMITTER_INTERPOLATIONMETHOD_FIXUP = 570,
     // Fixing up LensFlare ScreenPercentageMaps
     LENSFLARE_SCREENPERCENTAGEMAP_FIXUP = 571,
+    // Updated decal vertex factories
+    DECAL_VERTEX_FACTORY_VER3 = 572,
     // Reimplemented particle LOD check distance time
     PARTICLE_LOD_CHECK_DISTANCE_TIME_FIX = 573,
     // Decal physical material entry fixups
@@ -1669,6 +1697,10 @@ public enum EUnrealEngineObjectUE3Version
     NATIVE_RAWANIMDATA_SERIALIZATION = 577,
     // deprecated sound attenuation ranges
     DEPRECATE_SOUND_RANGES = 578,
+    // ambient sound update
+    AMBIENT_SOUND_UPDATE = 579,
+    // new conversion required for multichannel sounds
+    XAUDIO2_MULTICHANNEL_UPDATE = 580,
     // new format stored in the XMA2 file to avoid runtime calcs
     XAUDIO2_FORMAT_UPDATE = 581,
     // flip the normal for meshes with negative non-uniform scaling
@@ -1681,6 +1713,8 @@ public enum EUnrealEngineObjectUE3Version
     PYLONLIST_IN_ULEVEL = 585,
     // Added local object version number to ULevel and NavMesh
     NAVMESH_COVERREF = 586,
+    // Updates and replaces several kismet objects
+    CONVERT_KISMET_OBJECTS = 587,
     // poly height var added to polygons in navmesh
     NAVMESH_POLYHEIGHT = 588,
     // simple element shader recompile
@@ -1727,6 +1761,10 @@ public enum EUnrealEngineObjectUE3Version
     ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_MAPPING = 609,
     // Fix bad AnimSequences.
     REMOVE_BAD_ANIMSEQ = 610,
+    // added dual quaternion for skeletalmesh skinning
+    SKELETAL_MESH_DUAL_QUATERNION_SKINNING = 611,
+    // disabled dual quaternion and need to bump this again for shader
+    SKELETAL_MESH_DISABLE_DQ_SKINNING = 612,
     // added editor data to sound classes
     SOUND_CLASS_SERIALISATION_UPDATE = 613,
     // older maps may have improper ProcBuilding textures
@@ -1775,6 +1813,10 @@ public enum EUnrealEngineObjectUE3Version
     ADDED_ANIM_METADATA_FIXED_QUATERROR = 638,
     // Changed UStruct serialization to include both on-disk and in-memory bytecode size
     USTRUCT_SERIALIZE_ONDISK_SCRIPTSIZE = 639,
+    // Added new ShadowmapCoordinateScaleBias shader parameter for mesh instancing
+    INSTANCED_MESH_SHADOWMAPS = 640,
+    // Changed the default distance model for the SoundNodeAttenuation class from ATTENUATION_Logarithmic to ATTENUATION_Linear.
+    SOUNDNODEATTENUATION_DISTANCEMODEL_CHANGE = 641,
     // Added support for spline mesh offsetting
     ADDED_SPLINE_MESH_OFFSET = 642,
     // Speedtree 5.0 integration
@@ -1834,6 +1876,10 @@ public enum EUnrealEngineObjectUE3Version
     PROPERTYTAG_BOOL_OPTIMIZATION = 673,
     // Added iPhone cached data (PVRTC textures)
     ADDED_CACHED_IPHONE_DATA = 674,
+    // Added DOFParameters to BasePassVertexShader for translucency DoF
+    ADDED_BASE_PASS_VS_DOF_PARAMETERS = 675,
+    // Added TextureUsageInfos to UPersistentCookerData for stats tracking
+    ADDED_TEXTURE_USAGE_INFO = 676,
     // Fixup for ForceFeedbackSerialization
     FORCEFEEDBACKWAVERFORM_NOEXPORT_CHANGE = 677,
     // Changed type OverrideVertexColors from TArray<FColor> to FColorVertexBuffer *
@@ -1846,6 +1892,10 @@ public enum EUnrealEngineObjectUE3Version
     APEX_DESTRUCTION = 681,
     // Added spotlight dominant shadow transition handling
     SPOTLIGHT_DOMINANTSHADOW_TRANSITION = 682,
+    // Added common game type package object lists to GPCD
+    PREFIX_GAMETYPE_OBJECTS_IN_GPCD = 683,
+    // Added PMap forced object lists to GPCD
+    PMAP_FORCED_OBJECTS_IN_GPCD = 684,
     // Added support for preshadows on translucency
     TRANSLUCENT_PRESHADOWS = 685,
     // Removed shadow volume support
@@ -1864,6 +1914,12 @@ public enum EUnrealEngineObjectUE3Version
     ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_CUSTOM_MAPPING = 694,
     // Changed GDO lighting defaults to be cheap
     CHANGED_GDO_LIGHTING_DEFAULTS2 = 696,
+    // Half resolution scene and depth for DOF, Bloom, MotionBlur
+    HALFRESSCENEPOSTPROCESS = 697,
+    // Changed light shaft shaders
+    LIGHTSHAFT_SHADER_CHANGES2 = 698,
+    // Exponential Height Fog
+    EXPONENTIAL_HEIGHT_FOG = 699,
     // Added chunks/sections when swapping to a vertex influence using IWU_FullSwap
     ADDED_CHUNKS_SECTIONS_VERTEX_INFLUENCE = 700,
     // Half scene depth parameter got serialized
@@ -1888,16 +1944,34 @@ public enum EUnrealEngineObjectUE3Version
     ADDED_USAGE_VERTEX_INFLUENCE = 715,
     // Added support for camera offset particles
     PARTICLE_ADDED_CAMERA_OFFSET = 716,
+    // Merged scalar parameters
+    COMBINED_SCALAR_PARAMETERS = 717,
+    // Added AngleBased SSAO option
+    ANGLEBASED_SSAO = 718,
+    // AngleBasedSSAO 4x4 dither pattern instead of 2x2
+    ANGLEBASED_SSAO_DITHER = 719,
     // Resolution independent light shafts
     RES_INDEPENDENT_LIGHTSHAFTS = 720,
     // Lightmaps on GDOs
     GDO_LIGHTMAPS = 721,
+    // MotionBlurSeperatePass
+    MOTIONBLUR_SEPERATE_PASS = 722,
     // Explicit normal support for static meshes
     STATIC_MESH_EXPLICIT_NORMALS = 723,
+    // Fix HalfRes MotionBlur&DOF issues
+    HALFRES_MOTIONBLURDOF = 724,
+    // Fix more HalfRes MotionBlur&DOF issues
+    HALFRES_MOTIONBLURDOF2 = 725,
+    // Fix more HalfRes MotionBlur&DOF issues
+    HALFRES_MOTIONBLURDOF3 = 726,
     // Reverted HalfRes MotionBlur&DOF for now
     HALFRES_MOTIONBLURDOF4 = 727,
+    // Add parameters to LandscapeVertexFactory
+    LANDSCAPEVERTEXFACTORY_ADDPARAMS = 728,
     // MotionBlurSeperatePass back in again
     HALFRES_MOTIONBLURDOF5 = 729,
+    // remove SeparateBloom option (Bloom/DOF radius)
+    REMOVED_SEPARATEBLOOM = 730,
     // bump the version to prevent error message
     REMOVED_SEPARATEBLOOM2 = 731,
     // Fixed GDO FLightmapRef handling
@@ -1928,10 +2002,20 @@ public enum EUnrealEngineObjectUE3Version
     FORCE_SCRIPT_DEFINED_ORDER_PER_CLASS = 749,
     // Optimized SSAO SmartBlur making 2 pass
     OPTIMIZEDSSAO = 750,
+    // Tonemapper now interprets negative colors as black
+    TONEMAPPERBEHAVIOR = 751,
+    // Motion blur not leaking colors outside of the object bound
+    MOTIONBLURANTILEAK = 752,
     // One pass approximate lighting for translucency
     ONEPASS_TRANSLUCENCY_LIGHTING = 754,
     // Moved UField::SuperField to UStruct
     MOVED_SUPERFIELD_TO_USTRUCT = 756,
+    // Refactor uber post processing now support image grain
+    ADDED_IMAGEGRAIN = 757,
+    // Added scale for ImageGrain and tone mapper
+    ADDED_SCALES = 758,
+    // Changed Tonemapper scale to be before tone mapping
+    ADDED_SCALES2 = 759,
     // Support AnimNodeSlot dynamic sequence node allocation on demand
     ADDED_ANIMNODESLOTPOOL = 760,
     // Optimized UAnimSequence storage
@@ -1954,6 +2038,14 @@ public enum EUnrealEngineObjectUE3Version
     UBERPOST_REFACTOR2 = 773,
     // Added XY offset parameters to Landscape vertex factory
     LANDSCAPEVERTEXFACTORY_ADD_XYOFFSET_PARAMS = 774,
+    // Fixed clamping of non tonemapped case
+    FIXCLAMP_NON_TONEMAP = 775,
+    // Update uberpostprocess with smaller DOF radius to not reach instruction limit on SM3
+    UBERPOSTPROCESS_UPDATE = 776,
+    // Clamped specular pow to prevent image artifacts (see comment in shader)
+    CLAMP_SPECULAR_POWER = 777,
+    // Adjusted experimental tonemapper
+    TONEMAPPER2ADJUST = 778,
     // Replaced tonemapper checkbox by combobox
     TONEMAPPER_ENUM = 779,
     // Fix distortion effect wrong color leaking in
@@ -2112,22 +2204,23 @@ public enum EUnrealEngineObjectUE3Version
     IPHONE_STEREO_ADPCM_COMPRRESION_BUG_FIX = 865,
     // Added undo support to Substance
     ALG_SBS_INPUT_INDEX = 866,
-
     //-IPhone adpcm compression now has a variable block size based on the quality setting in SoundNodeWave
     IPHONE_AUDIO_VARIABLE_BLOCK_SIZE_COMPRESSION = 867,
     // -----<new versions can be added before this line>-------------------------------------------------
 
     // this needs to be the last line (see note below)
     AUTOMATIC_VERSION_PLUS_ONE,
-    AUTOMATIC_VERSION = AUTOMATIC_VERSION_PLUS_ONE - 1
+    AUTOMATIC_VERSION = AUTOMATIC_VERSION_PLUS_ONE - 1,
+
+    LegacyUE3Version = ANDROID_ETC_SEPARATED
 }
 
 public enum EUnrealEngineObjectLicenseeUEVersion
 {
-    VER_LIC_NONE = 0,
+    LIC_NONE = 0,
     // this needs to be the last line (see note below)
-    VER_LIC_AUTOMATIC_VERSION_PLUS_ONE,
-    VER_LIC_AUTOMATIC_VERSION = VER_LIC_AUTOMATIC_VERSION_PLUS_ONE - 1
+    LIC_AUTOMATIC_VERSION_PLUS_ONE,
+    LIC_AUTOMATIC_VERSION = LIC_AUTOMATIC_VERSION_PLUS_ONE - 1
 }
 
 /// <summary>
@@ -2160,7 +2253,7 @@ public struct FPackageFileVersion :
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FPackageFileVersion(int ue4Version, int ue5Version)
     {
-        FileVersionUE3 = (int)EUnrealEngineObjectUE3Version.AUTOMATIC_VERSION;
+        FileVersionUE3 = (int) EUnrealEngineObjectUE3Version.LegacyUE3Version;
         FileVersionUE4 = ue4Version;
         FileVersionUE5 = ue5Version;
     }
@@ -2298,7 +2391,7 @@ public struct FPackageFileVersion :
 
         if (FileVersionUE4 >= (int)EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE)
             return ((EUnrealEngineObjectUE4Version)FileVersionUE4).ToString();
-            
+
         return ((EUnrealEngineObjectUE3Version)FileVersionUE3).ToString();
     }
 }

@@ -1,0 +1,96 @@
+using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Objects.Actions;
+using Newtonsoft.Json;
+
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
+
+// CAkAction::Create
+// CAkAction::SetInitialValues
+public class HierarchyEventAction : AbstractHierarchy
+{
+    public readonly EAkActionScope EventActionScope;
+    public readonly EAkActionType EventActionType;
+    public readonly bool IsBus;
+    public readonly uint ReferencedId;
+    public readonly AkPropBundle PropBundle;
+    public readonly object? ActionData;
+
+    public HierarchyEventAction(FWwiseArchive Ar) : base()
+    {
+        Id = Ar.Read<uint>();
+        EventActionScope = Ar.Read<EAkActionScope>();
+        EventActionType = Ar.Read<EAkActionType>();
+        ReferencedId = Ar.Read<uint>();
+        if (Ar.Version > 65)
+        {
+            IsBus = Ar.ReadBool();
+        }
+
+        PropBundle = new AkPropBundle(Ar);
+
+        ActionData = (EventActionType, Ar.Version) switch
+        {
+            (EAkActionType.Play, _) => new CAkActionPlay(Ar),
+            (EAkActionType.Stop, _) => new CAkActionStop(Ar),
+            (EAkActionType.SetGameParameter or
+                EAkActionType.ResetGameParameter, _) => new CAkActionSetGameParameter(Ar),
+            (EAkActionType.SetHighPassFilter or
+                EAkActionType.ResetHighPassFilter or
+                EAkActionType.ResetVoiceLowPassFilter or
+                EAkActionType.ResetBusVolume or
+                EAkActionType.SetVoiceVolume or
+                EAkActionType.SetVoicePitch or
+                EAkActionType.SetBusVolume or
+                EAkActionType.SetVoiceLowPassFilter or
+                EAkActionType.ResetVoiceVolume or
+                EAkActionType.ResetVoicePitch, _) => new CAkActionSetAkProp(Ar),
+            (EAkActionType.Seek, _) => new CAkActionSeek(Ar),
+            (EAkActionType.SetSwitch, _) => new CAkActionSetSwitch(Ar),
+            (EAkActionType.SetState, _) => new CAkActionSetState(Ar),
+            (EAkActionType.SetEffect or
+                EAkActionType.ResetEffect, _) => new CAkActionSetFX(Ar),
+            (EAkActionType.Mute or
+                EAkActionType.UnMute or
+                EAkActionType.ResetPlaylist, _) => new CAkActionBase(Ar),
+            (EAkActionType.Resume, _) => new CAkActionResume(Ar),
+            (EAkActionType.Pause, _) => new CAkActionPause(Ar),
+            (EAkActionType.Break or
+                EAkActionType.Trigger, < 150) => new CAkActionBypassFX(Ar),
+            (EAkActionType.SetBypassEffectSlot or EAkActionType.SetBypassAllEffects or
+                EAkActionType.ResetBypassEffectSlot or EAkActionType.ResetBypassEffects, _) => new CAkActionBypassFX(Ar),
+            // TODO: add all action types
+            _ => null,
+        };
+    }
+
+    public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(EventActionScope));
+        writer.WriteValue(EventActionScope.ToString());
+
+        writer.WritePropertyName(nameof(EventActionType));
+        writer.WriteValue(EventActionType.ToVersionString(WwiseConverter.WwiseVersion.Value));
+
+        if (ReferencedId != 0)
+        {
+            writer.WritePropertyName(nameof(ReferencedId));
+            writer.WriteValue(ReferencedId);
+        }
+
+        writer.WritePropertyName(nameof(IsBus));
+        writer.WriteValue(IsBus);
+
+        writer.WritePropertyName(nameof(PropBundle));
+        serializer.Serialize(writer, PropBundle);
+
+        if (ActionData != null)
+        {
+            writer.WritePropertyName(nameof(ActionData));
+            serializer.Serialize(writer, ActionData);
+        }
+
+        writer.WriteEndObject();
+    }
+}

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Objects;
@@ -122,6 +121,19 @@ public struct FRichCurveKey : IUStruct
         ArriveTangentWeight = 0.0f;
         LeaveTangent = leaveTangent;
         LeaveTangentWeight = 0.0f;
+    }
+
+    public FRichCurveKey(FMutableArchive Ar)
+    {
+        Time = Ar.Read<float>();
+        Value = Ar.Read<float>();
+        ArriveTangent = Ar.Read<float>();
+        ArriveTangentWeight = Ar.Read<float>();
+        LeaveTangent = Ar.Read<float>();
+        LeaveTangentWeight = Ar.Read<float>();
+        InterpMode = Ar.Read<ERichCurveInterpMode>();
+        TangentMode = Ar.Read<ERichCurveTangentMode>();
+        TangentWeightMode = Ar.Read<ERichCurveTangentWeightMode>();
     }
 }
 

@@ -1,20 +1,26 @@
-using System;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
 
 public class FAion2DataTableFile : FAion2DataFile
 {
+    
     public FAion2DataTableFile(GameFile file, IFileProvider provider)
     {
         var data = file.SafeRead();
         ArgumentNullException.ThrowIfNull(data);
 
         if (!file.Directory.EndsWith("Data/Table", StringComparison.OrdinalIgnoreCase)) return;
+
+        if (data.Length >= 8 && BitConverter.ToUInt32(data, 0) == 13 && BitConverter.ToUInt32(data, 4) is 2 or 3)
+        {
+            Aion2DatFileAes.Initialize(provider);
+            data = Aion2DatFileAes.DecryptDataTable(data);
+        }
 
         using var Ar = new FAion2DatFileArchive(data, provider.Versions);
         Version = Ar.Read<int>();
@@ -79,7 +85,7 @@ public class FAion2DataTableFile : FAion2DataFile
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to parse FAion2DatFile FAion2DataTableFile {0}", file.Name);
+            CUE4ParseLog.Logger.Error(e, "Failed to parse FAion2DatFile FAion2DataTableFile {0}", file.Name);
         }
     }
 }

@@ -7,7 +7,7 @@ public class UAkMediaAssetData : UObject
 {
     public bool IsStreamed { get; private set; } = false;
     public bool UseDeviceMemory { get; private set; } = false;
-    public FAkMediaDataChunk[] DataChunks { get; private set; }
+    public FAkMediaDataChunk[] DataChunks { get; private set; } = [];
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -23,7 +23,7 @@ public class UAkMediaAssetData : UObject
     {
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName("DataChunks");
+        writer.WritePropertyName(nameof(DataChunks));
         writer.WriteStartArray();
         {
             foreach (var dataChunk in DataChunks)

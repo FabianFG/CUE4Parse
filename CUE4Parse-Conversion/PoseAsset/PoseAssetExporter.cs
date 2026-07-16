@@ -1,24 +1,22 @@
-using System;
-using System.IO;
 using CUE4Parse_Conversion.PoseAsset.UEFormat;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Writers;
-using Serilog;
 
 namespace CUE4Parse_Conversion.PoseAsset;
 
 public class PoseAssetExporter : ExporterBase
 {
+    
     public PoseAsset PoseAsset;
 
     public PoseAssetExporter(UPoseAsset poseAsset, ExporterOptions options) : base(poseAsset, options)
     {
         if (!poseAsset.TryConvert(out var convertedPoseAsset))
         {
-            Log.Warning($"PoseAsset '{ExportName}' failed to convert");
+            CUE4ParseLog.Logger.Warning($"PoseAsset '{ExportName}' failed to convert");
             return;
         }
-        
+
         using var Ar = new FArchiveWriter();
         string ext;
         switch (Options.PoseFormat)
@@ -33,7 +31,7 @@ public class PoseAssetExporter : ExporterBase
 
         PoseAsset = new PoseAsset($"{GetExportSavePath()}.{ext}", Ar.GetBuffer());
     }
-    
+
     public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
     {
         throw new NotImplementedException();

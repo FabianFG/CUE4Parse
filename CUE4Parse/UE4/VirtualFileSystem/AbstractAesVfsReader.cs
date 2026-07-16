@@ -32,9 +32,22 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     public abstract byte[] MountPointCheckBytes();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TestAesKey(byte[] bytes, FAesKey key)
+    protected bool TestAesKey(byte[] bytes, FAesKey key)
     {
-        return IsValidIndex(bytes.Decrypt(key));
+        byte[] result;
+        if (CustomEncryption != null)
+        {
+            var backupKey = AesKey;
+            AesKey = key;
+            try { result = CustomEncryption(bytes, 0, bytes.Length, true, this); }
+            finally { AesKey = backupKey; }
+        }
+        else
+        {
+            result = bytes.Decrypt(key);
+        }
+
+        return IsValidIndex(result);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -94,6 +107,12 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
 
     protected byte[] ReadAndDecryptAt(long position, int length, FArchive reader, bool isEncrypted) =>
         DecryptIfEncrypted(reader.ReadBytesAt(position, length), isEncrypted);
+
+    protected byte[] ReadAndDecryptAt(byte[] buffer, long position, int length, FArchive reader, bool isEncrypted)
+    {
+        reader.ReadAt(position, buffer, 0, length);
+        return DecryptIfEncrypted(buffer, isEncrypted);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected byte[] ReadAndDecryptIndex(int length, FArchive reader, bool isEncrypted) =>

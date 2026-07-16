@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using static CUE4Parse.UE4.CriWare.Decoders.HCA.Constants;
 //using static ClHcaSharp.Header;
 using static CUE4Parse.UE4.CriWare.Decoders.HCA.Tables;

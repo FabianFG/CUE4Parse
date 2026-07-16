@@ -1,17 +1,14 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -19,6 +16,7 @@ public class UBinkMediaTexture : UTexture;
 
 public abstract class UTexture : UUnrealMaterial, IAssetUserData
 {
+    
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
     public TextureGroup LODGroup { get; private set; }
@@ -28,6 +26,8 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
     public FEditorBulkData? EditorData { get; private set; }
+    public FByteBulkData? SourceArt { get; private set; }
+    public ETextureCookPlatformTilingSettings CookPlatformTilingSettings { get; private set; }
 
     public bool RenderNearestNeighbor => LODGroup == TextureGroup.TEXTUREGROUP_Pixels2D || Filter == TextureFilter.TF_Nearest;
     public bool IsNormalMap => CompressionSettings == TextureCompressionSettings.TC_Normalmap;
@@ -64,7 +64,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 16;
+        if (Ar.Game is GAME_WorldofJadeDynasty or GAME_RocoKingdomWorld) Ar.Position += 16;
         base.Deserialize(Ar, validPos);
         LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
         CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);
@@ -72,6 +72,13 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
         Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Nearest);
         SRGB = GetOrDefault(nameof(SRGB), true);
         AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
+        CookPlatformTilingSettings = GetOrDefault<ETextureCookPlatformTilingSettings>(nameof(CookPlatformTilingSettings));
+
+        if (Ar.Game < GAME_UE4_0)
+        {
+            SourceArt = new FByteBulkData(Ar);
+            return;
+        }
 
         var stripFlags = new FStripDataFlags(Ar);
 
@@ -98,16 +105,23 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
     protected void DeserializeCookedPlatformData(FAssetArchive Ar, bool bSerializeMipData = true)
     {
+        if (Ar.Game is GAME_WutheringWaves)
+        {
+            var data = Ar.Peek<FIntVector>();
+            bSerializeMipData = data.X > 0 && data.Y == 0 && data.Z > 0 || Ar.ReadBoolean();
+        }
         var pixelFormatName = Ar.ReadFName();
         if (pixelFormatName.Text == "PF_BC6H_Signed") pixelFormatName = "PF_BC6H";
         while (!pixelFormatName.IsNone)
         {
-            Enum.TryParse(pixelFormatName.Text, out EPixelFormat pixelFormat);
+            if (!Enum.TryParse(pixelFormatName.Text, ignoreCase: true, out EPixelFormat pixelFormat))
+                CUE4ParseLog.Logger.Warning("Failed to parse pixel format: {PixelFormat}", pixelFormatName.Text);
 
             var skipOffset = Ar.Game switch
             {
-                >= EGame.GAME_UE5_0 => Ar.AbsolutePosition + Ar.Read<long>(),
-                >= EGame.GAME_UE4_20 => Ar.Read<long>(),
+                GAME_WutheringWaves => Ar.AbsolutePosition + Ar.Read<long>(),
+                >= GAME_UE5_0 => Ar.AbsolutePosition + Ar.Read<long>(),
+                >= GAME_UE4_20 => Ar.Read<long>(),
                 _ => Ar.Read<int>()
             };
 
@@ -115,15 +129,15 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             {
                 //?? check whether we can support this pixel format
 #if DEBUG
-                Log.Debug("Loading data for format {Format}", pixelFormatName);
+                //CUE4ParseLog.Logger.Debug("Loading data for format {Format}", pixelFormatName);
 #endif
                 PlatformData = new FTexturePlatformData(Ar, this, bSerializeMipData);
 
-                if (Ar.Game is EGame.GAME_SeaOfThieves or EGame.GAME_DeltaForceHawkOps) Ar.Position += 4;
+                if (Ar.Game is GAME_SeaOfThieves or GAME_DeltaForce) Ar.Position += 4;
 
                 if (Ar.AbsolutePosition != skipOffset)
                 {
-                    Log.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
+                    CUE4ParseLog.Logger.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
                     Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
                 }
 
@@ -132,7 +146,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             else
             {
 #if DEBUG
-                Log.Debug("Skipping data for format {Format}", pixelFormatName);
+                CUE4ParseLog.Logger.Debug("Skipping data for format {Format}", pixelFormatName);
 #endif
                 Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
             }
@@ -145,13 +159,13 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
     {
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName("SizeX");
+        writer.WritePropertyName(nameof(PlatformData.SizeX));
         writer.WriteValue(PlatformData.SizeX);
 
-        writer.WritePropertyName("SizeY");
+        writer.WritePropertyName(nameof(PlatformData.SizeY));
         writer.WriteValue(PlatformData.SizeY);
 
-        writer.WritePropertyName("PackedData");
+        writer.WritePropertyName(nameof(PlatformData.PackedData));
         writer.WriteValue(PlatformData.PackedData);
 
         writer.WritePropertyName("PixelFormat");
@@ -159,22 +173,22 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
         if (PlatformData.OptData.ExtData != 0 && PlatformData.OptData.NumMipsInTail != 0)
         {
-            writer.WritePropertyName("OptData");
+            writer.WritePropertyName(nameof(PlatformData.OptData));
             serializer.Serialize(writer, PlatformData.OptData);
         }
 
-        writer.WritePropertyName("FirstMipToSerialize");
+        writer.WritePropertyName(nameof(PlatformData.FirstMipToSerialize));
         writer.WriteValue(PlatformData.FirstMipToSerialize);
 
         if (PlatformData.Mips is { Length: > 0 })
         {
-            writer.WritePropertyName("Mips");
+            writer.WritePropertyName(nameof(PlatformData.Mips));
             serializer.Serialize(writer, PlatformData.Mips);
         }
 
         if (PlatformData.VTData != null)
         {
-            writer.WritePropertyName("VTData");
+            writer.WritePropertyName(nameof(PlatformData.VTData));
             serializer.Serialize(writer, PlatformData.VTData);
         }
     }
@@ -212,7 +226,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             for (var i = 0; i < vt.NumMips; i++)
             {
                 var tileOffsetData = vt.GetTileOffsetData(i);
-                if ((tileOffsetData.Width * tileSize <= maxXSize || tileOffsetData.Height * tileSize <= maxYSize))
+                if (tileOffsetData.Width * tileSize <= maxXSize || tileOffsetData.Height * tileSize <= maxYSize)
                     return i;
 
             }

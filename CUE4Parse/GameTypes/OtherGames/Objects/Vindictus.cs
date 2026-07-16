@@ -2,12 +2,12 @@ using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.OtherGames.Objects;
 
 public struct FAnyValue : IUStruct
 {
+    
     public readonly FStructFallback? NonConstStruct;
 
     public FAnyValue(FAssetArchive Ar)
@@ -28,7 +28,7 @@ public struct FAnyValue : IUStruct
         }
         else
         {
-            Log.Warning("Failed to read FAnyValue of type {0}, skipping it", strucindex.ResolvedObject?.GetFullName());
+            CUE4ParseLog.Logger.Warning("Failed to read FAnyValue of type {0}, skipping it", strucindex.ResolvedObject?.GetFullName());
         }
     }
 }

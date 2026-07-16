@@ -1,12 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using CUE4Parse_Conversion.Textures;
+﻿using CUE4Parse_Conversion.Textures;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-
 
 namespace CUE4Parse_Conversion.Materials
 {
@@ -73,12 +69,12 @@ namespace CUE4Parse_Conversion.Materials
 
         public override bool TryWriteToZip(out byte[] zipFile)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public override void AppendToZip()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

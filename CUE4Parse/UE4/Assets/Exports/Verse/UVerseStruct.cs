@@ -8,7 +8,7 @@ public class UVerseStruct : UScriptStruct
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        var bIsNativeCooked = Ar.Game >= EGame.GAME_UE5_6 && Ar.ReadBoolean();
+        var bIsNativeCooked = Ar.Game >= GAME_UE5_6 && Ar.ReadBoolean();
         if (!bIsNativeCooked) base.Deserialize(Ar, validPos);
     }
 }

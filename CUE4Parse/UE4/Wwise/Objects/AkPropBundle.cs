@@ -1,112 +1,69 @@
-using System.Collections.Generic;
-using CUE4Parse.UE4.Readers;
+using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkPropBundle
+public readonly struct AkPropBundle(FWwiseArchive Ar)
 {
-    public readonly List<AkProp> Props;
-    public readonly List<AkPropRange> PropRanges;
+    public readonly AkProp[] Props = ReadSequentialAkProp(Ar);
+    public readonly AkPropRange[] PropRanges = ReadSequentialAkPropRange(Ar);
 
-    public AkPropBundle(FArchive Ar)
+    public static AkProp[] ReadSequentialAkProp(FWwiseArchive Ar)
     {
         int propCount = Ar.Read<byte>();
-        Props = new List<AkProp>(propCount);
+        var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
+
+        var props = new AkProp[propCount];
         for (int i = 0; i < propCount; i++)
-        {
-            Props.Add(new AkProp(Ar));
-        }
-
-        int rangeCount = Ar.Read<byte>();
-        PropRanges = new List<AkPropRange>(rangeCount);
-        for (int i = 0; i < rangeCount; i++)
-        {
-            PropRanges.Add(new AkPropRange(Ar));
-        }
-    }
-
-    public static List<AkProp> ReadLinearAkProp(FArchive Ar)
-    {
-        int propCount = Ar.Read<byte>();
-        var ids = new List<byte>(propCount);
-        var values = new List<float>(propCount);
-
-        for (int i = 0; i < propCount; i++)
-        {
-            ids.Add(Ar.Read<byte>());
-        }
-
-        for (int i = 0; i < propCount; i++)
-        {
-            values.Add(Ar.Read<float>());
-        }
-
-        List<AkProp> props = new(propCount);
-        for (int i = 0; i < propCount; i++)
-        {
-            props.Add(new AkProp(ids[i], values[i]));
-        }
+            props[i] = new AkProp(ids[i], AkUnionValue.Read(Ar));
 
         return props;
     }
 
-    public static List<AkPropRange> ReadLinearAkPropRange(FArchive Ar)
+    public static AkPropRange[] ReadSequentialAkPropRange(FWwiseArchive Ar)
     {
         int propCount = Ar.Read<byte>();
-        var ids = new List<byte>(propCount);
+        var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
 
+        var ranges = new AkPropRange[propCount];
         for (int i = 0; i < propCount; i++)
         {
-            ids.Add(Ar.Read<byte>());
-        }
-
-        var ranges = new List<AkPropRange>(propCount);
-        for (int i = 0; i < propCount; i++)
-        {
-            float min = Ar.Read<float>();
-            float max = Ar.Read<float>();
-            ranges.Add(new AkPropRange(ids[i], min, max));
+            AkUnionValue min = AkUnionValue.Read(Ar);
+            AkUnionValue max = AkUnionValue.Read(Ar);
+            ranges[i] = new AkPropRange(ids[i], min, max);
         }
 
         return ranges;
     }
 }
 
-public class AkProp
+public readonly struct AkProp(byte id, AkUnionValue value)
 {
-    public readonly byte Id;
-    public readonly float Value;
-
-    public AkProp(FArchive Ar)
-    {
-        Id = Ar.Read<byte>();
-        Value = Ar.Read<float>();
-    }
-
-    public AkProp(byte id, float value)
-    {
-        Id = id;
-        Value = value;
-    }
+    public readonly byte Id = id;
+    public readonly AkUnionValue Value = value;
 }
 
-public class AkPropRange
+public readonly struct AkPropRange(byte id, AkUnionValue min, AkUnionValue max)
 {
-    public readonly byte Id;
-    public readonly float Min;
-    public readonly float Max;
+    public readonly byte Id = id;
+    public readonly AkUnionValue Min = min;
+    public readonly AkUnionValue Max = max;
+}
 
-    public AkPropRange(FArchive Ar)
-    {
-        Id = Ar.Read<byte>();
-        Min = Ar.Read<float>();
-        Max = Ar.Read<float>();
-    }
+[JsonConverter(typeof(AkPropValueConverter))]
+[StructLayout(LayoutKind.Explicit)]
+public struct AkUnionValue
+{
+    [FieldOffset(0)] public float f32;
+    [FieldOffset(0)] public uint u32;
+    // Guessing value type, in Wwise it's determined by the subclass, this is simply more convenient
+    public readonly object Value => u32 > 0x10000000 ? f32 : u32;
 
-    public AkPropRange(byte id, float min, float max)
+    public AkUnionValue(uint val) : this() => u32 = val;
+
+    public static AkUnionValue Read(FWwiseArchive Ar)
     {
-        Id = id;
-        Min = min;
-        Max = max;
+        uint raw = Ar.Read<uint>();
+        return new AkUnionValue(raw);
     }
 }

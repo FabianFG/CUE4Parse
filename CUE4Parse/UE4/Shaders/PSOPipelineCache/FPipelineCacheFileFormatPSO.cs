@@ -1,10 +1,11 @@
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports.Texture;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.RHI;
 using CUE4Parse.UE4.Readers;
-using Org.BouncyCastle.Crypto;
-using System.Runtime.InteropServices;
+using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Shaders;
 
@@ -41,13 +42,13 @@ public sealed class FPipelineCacheFileFormatPSO
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct ComputeDescriptor(FArchive Ar)
 {
-    public readonly FSHAHash ComputeShader = new FSHAHash(Ar);
+    public readonly FSHAHash ComputeShader = new FSHAHash(Ar, Ar.Game >= GAME_UE5_8 ? 8 : FSHAHash.SIZE);
 };
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct FPipelineFileCacheRayTracingDesc(FArchive Ar)
 {
-    public readonly FSHAHash ShaderHash = new(Ar);
+    public readonly FSHAHash ShaderHash = new FSHAHash(Ar, Ar.Game >= GAME_UE5_8 ? 8 : FSHAHash.SIZE);
     public readonly uint MaxPayloadSizeInBytes = Ar.Read<uint>();
     //public readonly EShaderFrequency Frequency;
     public readonly uint Frequency = Ar.Read<uint>();
@@ -94,9 +95,9 @@ public readonly struct GraphicsDescriptor
 
     public GraphicsDescriptor(FArchive Ar, EPipelineCacheFileFormatVersions version)
     {
-        VertexShader = new FSHAHash(Ar);
-        FragmentShader = new FSHAHash(Ar);
-        GeometryShader = new FSHAHash(Ar);
+        VertexShader = new FSHAHash(Ar, Ar.Game >= GAME_UE5_8 ? 8 : FSHAHash.SIZE);
+        FragmentShader = new FSHAHash(Ar, Ar.Game >= GAME_UE5_8 ? 8 : FSHAHash.SIZE);
+        GeometryShader = new FSHAHash(Ar, Ar.Game >= GAME_UE5_8 ? 8 : FSHAHash.SIZE);
 
         if (version < EPipelineCacheFileFormatVersions.RemovingTessellationShaders)
         {
@@ -105,8 +106,8 @@ public readonly struct GraphicsDescriptor
         }
         if (version >= EPipelineCacheFileFormatVersions.AddingMeshShaders)
         {
-            MeshShader = new FSHAHash(Ar);
-            AmplificationShader = new FSHAHash(Ar);
+            MeshShader = new FSHAHash(Ar, Ar.Game >= GAME_UE5_8 ? 8 : FSHAHash.SIZE);
+            AmplificationShader = new FSHAHash(Ar, Ar.Game >= GAME_UE5_8 ? 8 : FSHAHash.SIZE);
         }
         if (version == EPipelineCacheFileFormatVersions.LibraryID)
         {
@@ -267,8 +268,13 @@ public enum DescriptorType : uint
     RayTracing = 2,
 };
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EShaderFrequency : byte
 {
+    SF_NumBits          = 4,
+    SF_NumGraphicsFrequencies = 5,
+    SF_NumStandardFrequencies = 6,
+
     SF_Vertex			= 0,
     SF_Mesh				= 1,
     SF_Amplification	= 2,
@@ -282,8 +288,4 @@ public enum EShaderFrequency : byte
     SF_WorkGraphRoot    = 10,
     SF_WorkGraphComputeNode = 11,
     SF_NumFrequencies	= 12,
-    //
-    SF_NumGraphicsFrequencies = 5,
-    SF_NumStandardFrequencies = 6,
-    SF_NumBits			= 4,
 };

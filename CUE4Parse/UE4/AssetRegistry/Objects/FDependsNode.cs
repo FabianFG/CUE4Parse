@@ -15,7 +15,7 @@ public class FDependsNode
     private const int PackageFlagWidth = 3;
     private const int PackageFlagSetWidth = 5; // FPropertyCombinationPack3::StorageBitCount
     private const int ManageFlagWidth = 1;
-    private int ManageFlagSetWidth(FArchive Ar) => Ar.Game >= EGame.GAME_UE5_7 ? 3 : 1;
+    private int ManageFlagSetWidth(FArchive Ar) => Ar.Game >= GAME_UE5_7 ? 3 : 1;
 
     public FAssetIdentifier? Identifier;
     public int[] PackageDependencies;

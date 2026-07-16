@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -18,7 +16,7 @@ public class AInstancedFoliageActor : AISMPartitionActor
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         if (FFoliageCustomVersion.Get(Ar) < FFoliageCustomVersion.Type.CrossLevelBase)
         {
             FoliageMeshes_Deprecated = Ar.ReadMap(() => new FPackageIndex(Ar), () => new FFoliageMeshInfo_Deprecated(Ar));
@@ -29,7 +27,7 @@ public class AInstancedFoliageActor : AISMPartitionActor
         }
         else
         {
-            if (Ar.Game == EGame.GAME_MafiaTheOldCountry) Ar.Position += 4;
+            if (Ar.Game == GAME_MafiaTheOldCountry) Ar.Position += 4;
             FoliageInfos = Ar.ReadMap(() => new FPackageIndex(Ar), () => new FFoliageInfo(Ar));
         }
     }

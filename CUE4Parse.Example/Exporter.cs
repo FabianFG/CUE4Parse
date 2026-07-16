@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using CUE4Parse;
 using CUE4Parse_Conversion;
 using CUE4Parse_Conversion.Animations;
 using CUE4Parse_Conversion.Meshes;
@@ -13,6 +14,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
+using CUE4Parse.MappingsProvider.Usmap;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
@@ -42,6 +44,7 @@ public enum ExportType
 
 public static class Exporter
 {
+
     private const string _archiveDirectory = "D:\\Games\\Fortnite\\FortniteGame\\Content\\Paks";
     private const string _aesKey = "0x61D4FD0F3AC7768A08E82A99D275A13762A299FCC28CCF53C46BB221BB90D2B8";
     private const string _mapping = "./++Fortnite+Release-33.20-CL-39082670-Windows_oo.usmap";
@@ -52,11 +55,11 @@ public static class Exporter
 
     private static void Export(ExportType type)
     {
-        Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+        Serilog.Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+        CUE4ParseLog.UseLogger(Serilog.Log.Logger);
 
-        // same with ZlibHelper
-        OodleHelper.DownloadOodleDll();
-        OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
+        ZlibHelper.Initialize();
+        OodleHelper.Initialize();
 
         var version = new VersionContainer(EGame.GAME_UE5_6, ETexturePlatform.DesktopMobile);
         var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, version)
@@ -90,7 +93,7 @@ public static class Exporter
         watch.Start();
         foreach (var (folder, packages) in files)
         {
-            Log.Information("scanning {Folder} ({Count} packages)", folder, packages.Length);
+            CUE4ParseLog.Logger.Information("scanning {Folder} ({Count} packages)", folder, packages.Length);
 
             Parallel.ForEach(packages, package =>
             {
@@ -102,19 +105,19 @@ public static class Exporter
                     var pointer = new FPackageIndex(pkg, i + 1).ResolvedObject;
                     if (pointer?.Object is null) continue;
 
-                    var dummy = ((AbstractUePackage) pkg).ConstructObject(pointer.Class?.Object?.Value as UStruct, pkg);
+                    var dummy = ((AbstractUePackage) pkg).ConstructObject(pointer.Class, pkg);
                     switch (dummy)
                     {
                         case UTexture when type.HasFlag(ExportType.Texture) && pointer.Object.Value is UTexture texture:
                         {
                             try
                             {
-                                Log.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
+                                CUE4ParseLog.Logger.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
                                 SaveTexture(folder, texture, version.Platform, options, ref exportCount);
                             }
                             catch (Exception e)
                             {
-                                Log.Warning(e, "failed to decode {TextureName}", texture.Name);
+                                CUE4ParseLog.Logger.Warning(e, "failed to decode {TextureName}", texture.Name);
                                 return;
                             }
                             break;
@@ -122,7 +125,7 @@ public static class Exporter
                         case USoundWave when type.HasFlag(ExportType.Sound):
                         case UAkMediaAssetData when type.HasFlag(ExportType.Sound):
                         {
-                            Log.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
+                            CUE4ParseLog.Logger.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
 
                             pointer.Object.Value.Decode(true, out var format, out var bytes);
                             if (bytes is not null)
@@ -138,7 +141,7 @@ public static class Exporter
                         case UStaticMesh when type.HasFlag(ExportType.Mesh):
                         case USkeleton when type.HasFlag(ExportType.Mesh):
                         {
-                            Log.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
+                            CUE4ParseLog.Logger.Information("{ExportType} found in {PackageName}", dummy.ExportType, package.Name);
 
                             var exporter = new CUE4Parse_Conversion.Exporter(pointer.Object.Value, options);
                             if (exporter.TryWriteToDir(new DirectoryInfo(_exportDirectory), out _, out var filePath))
@@ -153,7 +156,7 @@ public static class Exporter
         }
         watch.Stop();
 
-        Log.Information("exported {ExportCount} files ({Types}) in {Time}",
+        CUE4ParseLog.Logger.Information("exported {ExportCount} files ({Types}) in {Time}",
             exportCount,
             type.ToStringBitfield(),
             watch.Elapsed);
@@ -191,7 +194,7 @@ public static class Exporter
 
     private static void WriteToLog(string folder, string logMessage, ref int exportCount)
     {
-        Log.Information("exported {LogMessage} out of {Folder}", logMessage, folder);
+        CUE4ParseLog.Logger.Information("exported {LogMessage} out of {Folder}", logMessage, folder);
         exportCount++;
     }
 }

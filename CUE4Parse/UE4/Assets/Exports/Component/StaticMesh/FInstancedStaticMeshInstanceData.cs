@@ -1,6 +1,5 @@
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 
@@ -16,14 +15,26 @@ public class FInstancedStaticMeshInstanceData
 
         Ar.Position += Ar.Game switch
         {
-            EGame.GAME_HogwartsLegacy => Ar.Read<int>() * sizeof(int) + 4,
-            EGame.GAME_AWayOut or EGame.GAME_PlayerUnknownsBattlegrounds or EGame.GAME_SeaOfThieves or EGame.GAME_AceCombat7
-                or EGame.GAME_DaysGone or EGame.GAME_InfinityNikki or EGame.GAME_NarutotoBorutoShinobiStriker
-                or EGame.GAME_DragonQuestXI or EGame.GAME_WeHappyFew or EGame.GAME_CodeVein => 16, // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
-            EGame.GAME_SilentHill2Remake or EGame.GAME_StateOfDecay2 => 32,// probably LightmapUVBias, ShadowmapUVBias as FVector2d * 2
+            GAME_HogwartsLegacy => Ar.Read<int>() * sizeof(int) + 4,
+            GAME_AWayOut or GAME_PlayerUnknownsBattlegrounds or GAME_SeaOfThieves or GAME_AceCombat7
+                or GAME_DaysGone or GAME_InfinityNikki or GAME_NarutotoBorutoShinobiStriker or GAME_eFootball
+                or GAME_DragonQuestXI or GAME_WeHappyFew or GAME_CodeVein or GAME_TheDivisionResurgence or < GAME_UE4_0 => 16, // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
+            GAME_SilentHill2Remake or GAME_StateOfDecay2 or GAME_ThePathless or GAME_Abzu => 32,// probably LightmapUVBias, ShadowmapUVBias as FVector2d * 2
             _ => 0,
         };
         TransformData.SetFromMatrix(Transform);
+    }
+
+    public FInstancedStaticMeshInstanceData(FMatrix matrix)
+    {
+        Transform = matrix;
+        TransformData.SetFromMatrix(Transform);
+    }
+
+    public FInstancedStaticMeshInstanceData(FTransform transform)
+    {
+        Transform = null!;
+        TransformData = transform;
     }
 
     public override string ToString()

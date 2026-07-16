@@ -1,7 +1,7 @@
-﻿using CUE4Parse.UE4.Readers;
-using CUE4Parse.Utils;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Readers;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.IO.Objects
 {

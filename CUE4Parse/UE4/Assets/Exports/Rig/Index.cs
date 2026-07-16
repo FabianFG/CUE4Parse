@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
@@ -16,5 +16,13 @@ public class Index
         Version = new DNAVersion(Ar);
         Offset = Ar.Read<uint>();
         Size = Ar.Read<uint>();
+    }
+
+    public Index(string id, DNAVersion version, uint offset, uint size)
+    {
+        Id = id;
+        Version = version;
+        Offset = offset;
+        Size = size;
     }
 }

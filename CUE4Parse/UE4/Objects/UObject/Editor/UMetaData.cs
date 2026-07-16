@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using CUE4Parse.UE4.Assets.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -11,7 +10,7 @@ namespace CUE4Parse.UE4.Objects.UObject.Editor;
 public class UMetaData : Assets.Exports.UObject
 {
     private Dictionary<FPackageIndex, Dictionary<FName, string>> ObjectMetaDataMap;
-    private Dictionary<FName, string> RootMetaDataMap;
+    private Dictionary<FName, string>? RootMetaDataMap;
     
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -35,7 +34,7 @@ public class UMetaData : Assets.Exports.UObject
             serializer.Serialize(writer, ObjectMetaDataMap);
         }
 
-        if (RootMetaDataMap.Count > 0)
+        if (RootMetaDataMap?.Count > 0)
         {
             writer.WritePropertyName("RootMetaDataMap");
             serializer.Serialize(writer, RootMetaDataMap);

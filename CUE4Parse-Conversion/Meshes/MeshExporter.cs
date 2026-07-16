@@ -1,27 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
-using CUE4Parse.UE4.Writers;
 using CUE4Parse_Conversion.DNA;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.glTF;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat;
-using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Rig;
-using CUE4Parse.UE4.Objects.PhysicsEngine;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes
 {
     public class MeshExporter : ExporterBase
     {
+
         public readonly List<Mesh> MeshLods;
         public readonly List<DNAExporter> DNAAssets = [];
 
@@ -31,7 +26,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             if (!originalSkeleton.TryConvert(out var bones, out _) || bones.Count == 0)
             {
-                Log.Warning($"Skeleton '{ExportName}' has no bone");
+                CUE4ParseLog.Logger.Warning($"Skeleton '{ExportName}' has no bone");
                 return;
             }
 
@@ -48,7 +43,6 @@ namespace CUE4Parse_Conversion.Meshes
                     new UEModel(originalSkeleton.Name, originalSkeleton, bones, originalSkeleton.Sockets, originalSkeleton.VirtualBones, Options).Save(Ar);
                     break;
                 case EMeshFormat.Gltf2:
-                    throw new NotImplementedException();
                 case EMeshFormat.OBJ:
                     throw new NotImplementedException();
                 default:
@@ -64,9 +58,9 @@ namespace CUE4Parse_Conversion.Meshes
         {
             MeshLods = new List<Mesh>();
 
-            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, options.NaniteMeshFormat) || convertedMesh.LODs.Count == 0)
+            if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, options.NaniteMeshFormat, options.LodFormat) || convertedMesh.LODs.Count == 0)
             {
-                Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
+                CUE4ParseLog.Logger.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
             }
 
@@ -89,7 +83,7 @@ namespace CUE4Parse_Conversion.Meshes
                 i++;
                 if (lod.SkipLod)
                 {
-                    Log.Warning($"LOD {i} in mesh '{ExportName}' should be skipped");
+                    CUE4ParseLog.Logger.Warning($"LOD {i} in mesh '{ExportName}' should be skipped");
                     continue;
                 }
 
@@ -130,16 +124,19 @@ namespace CUE4Parse_Conversion.Meshes
 
             if (!originalMesh.TryConvert(out var convertedMesh) || convertedMesh.LODs.Count == 0)
             {
-                Log.Warning($"Mesh '{ExportName}' has no LODs");
+                CUE4ParseLog.Logger.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
             }
 
-            foreach (var userData in originalMesh.AssetUserData)
+            if (originalMesh.AssetUserData != null)
             {
-                if (userData.TryLoad<UDNAAsset>(out var originalDNA))
+                foreach (var userData in originalMesh.AssetUserData)
                 {
-                    var dna = new DNAExporter(originalDNA, options);
-                    DNAAssets.Add(dna);
+                    if (userData.TryLoad<UDNAAsset>(out var originalDNA))
+                    {
+                        var dna = new DNAExporter(originalDNA, options);
+                        DNAAssets.Add(dna);
+                    }
                 }
             }
 
@@ -158,7 +155,7 @@ namespace CUE4Parse_Conversion.Meshes
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalMesh.Name, convertedMesh, originalMesh.MorphTargets, totalSockets.ToArray(), originalMesh.Skeleton, originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
+                new UEModel(originalMesh.Name, convertedMesh, Options.ExportMorphTargets ? originalMesh.MorphTargets : null, totalSockets.ToArray(), originalMesh.Skeleton, originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
                 MeshLods.Add(new Mesh($"{GetExportSavePath()}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
                 return;
             }
@@ -169,7 +166,7 @@ namespace CUE4Parse_Conversion.Meshes
                 var lod = convertedMesh.LODs[lodIndex];
                 if (lod.SkipLod)
                 {
-                    Log.Warning($"LOD {i} in mesh '{ExportName}' should be skipped");
+                    CUE4ParseLog.Logger.Warning($"LOD {i} in mesh '{ExportName}' should be skipped");
                     continue;
                 }
 
@@ -182,17 +179,19 @@ namespace CUE4Parse_Conversion.Meshes
                         ext = convertedMesh.LODs[i].NumVerts > 65536 ? "pskx" : "psk";
                         new ActorXMesh(lod, convertedMesh.RefSkeleton, materialExports,
                             Options.ExportMorphTargets ? originalMesh.MorphTargets : null,
-                            totalSockets.ToArray(), lodIndex, Options).Save(Ar);
+                            totalSockets.ToArray(), lod.LODIndex, Options).Save(Ar);
                         break;
                     case EMeshFormat.Gltf2:
                         ext = "glb";
                         new Gltf(ExportName, lod, convertedMesh.RefSkeleton, materialExports, Options,
                             Options.ExportMorphTargets ? originalMesh.MorphTargets : null,
-                            lodIndex).Save(Options.MeshFormat, Ar);
+                            lod.LODIndex).Save(Options.MeshFormat, Ar);
                         break;
                     case EMeshFormat.OBJ:
                         ext = "obj";
-                        new Gltf(ExportName, lod, convertedMesh.RefSkeleton, materialExports, Options).Save(Options.MeshFormat, Ar);
+                        new Gltf(ExportName, lod, convertedMesh.RefSkeleton, materialExports, Options,
+                            Options.ExportMorphTargets ? originalMesh.MorphTargets : null,
+                            lod.LODIndex).Save(Options.MeshFormat, Ar);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);

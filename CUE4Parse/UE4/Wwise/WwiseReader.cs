@@ -1,131 +1,194 @@
-using System;
-using System.Collections.Generic;
 using System.Text;
+using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
 public class RIFFSectionSizeException : Exception;
 
+public abstract record WwiseDataSource;
+public sealed record WwiseArchiveSource : WwiseDataSource;
+public sealed record WwiseGameFileSource(GameFile File) : WwiseDataSource;
+public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkData bulkData) : WwiseDataSource;
+
 [JsonConverter(typeof(WwiseConverter))]
 public class WwiseReader
 {
-    public readonly string Path;
-    private uint Version => Header.Version;
+    
+    public string Path;
+    private readonly WwiseDataSource? _source;
 
-    public BankHeader Header { get; }
-    public AkFolder[]? Folders { get; }
+    public AkBankHeader Header { get; }
+    public List<WwiseReader>? AKPKBankEntries { get; }
+    public List<AkEntry>? AKPKWemEntries { get; }
     public Dictionary<uint, string>? AKPluginList { get; }
     public MediaHeader[]? WemIndexes { get; }
-    public byte[][]? WemSounds { get; }
     public Hierarchy[]? Hierarchies { get; }
     public Dictionary<uint, string> BankIDToFileName { get; } = [];
     public string? Platform { get; }
-    public Dictionary<string, byte[]> WwiseEncodedMedias { get; } = [];
+    public Dictionary<string, FDeferredByteData> WwiseEncodedMedias { get; } = [];
     public GlobalSettings? GlobalSettings { get; }
-    public EnvSettings? EnvSettings { get; }
-    public byte[] WemFile { get; } = [];
+    public CAkEnvironmentsMgr? EnvSettings { get; }
+    public FDeferredByteData? WemFile { get; }
+    public FDeferredByteData? MidiData { get; }
+    public bool IsPlugin { get; }
+    public long LoadedSize { get; }
+    public long TotalSize { get; }
 
-    public WwiseReader(FArchive Ar)
+    public WwiseReader(FWwiseArchive Ar, WwiseDataSource source, long size = -1)
     {
         Path = Ar.Name;
-        while (Ar.Position < Ar.Length)
+        _source = source;
+        TotalSize = size == -1 ? Ar.Length : size;
+        var end = size == -1 ? Ar.Length : Ar.Position + size;
+
+        while (Ar.Position < end)
         {
-            var sectionIdentifier = Ar.Read<ChunkID>();
+            var sectionIdentifier = Ar.Read<EChunkID>();
             var sectionLength = Ar.Read<int>();
             var position = Ar.Position;
 
             switch (sectionIdentifier)
             {
-                case ChunkID.AKPK:
-                    if (!Ar.ReadBoolean())
+                case EChunkID.AKPK:
+                    var akpkHeader = new FAKPKHeader(Ar);
+                    if (!akpkHeader.Endianness)
                         throw new ParserException(Ar, $"'{Ar.Name}' has unsupported endianness.");
 
-                    long entriesOffset = Ar.Read<int>();
-                    Ar.Position += 12;
-                    var namesOffset = Ar.Position;
-                    entriesOffset += namesOffset + sizeof(int);
-                    Folders = Ar.ReadArray(() => new AkFolder(Ar));
-                    foreach (var folder in Folders)
-                        folder.PopulateName(Ar, namesOffset);
-                    Ar.Position = entriesOffset;
-                    foreach (var folder in Folders)
+                    Ar.Position = FAKPKHeader.NamesOffset;
+                    var folders = Ar.ReadArray(() => new AkFolder(Ar));
+                    foreach (var folder in folders)
+                        folder.PopulateName(Ar, FAKPKHeader.NamesOffset);
+
+                    Ar.Position = akpkHeader.BanksOffset;
+                    var bankEntries = Ar.ReadArray(() => new AkEntry(Ar, true, false));
+
+                    AKPKWemEntries = [];
+                    Ar.Position = akpkHeader.WemsOffset;
+                    AKPKWemEntries.AddRange(Ar.ReadArray(() => new AkEntry(Ar, false, false)));
+                    Ar.Position = akpkHeader.ExternalWemsOffset;
+                    AKPKWemEntries.AddRange(Ar.ReadArray(() => new AkEntry(Ar, false, true)));
+
+                    var saved = Ar.Position;
+                    AKPKBankEntries = [];
+                    foreach (var entry in bankEntries)
                     {
-                        folder.Entries = new AkEntry[Ar.Read<uint>()];
-                        for (var i = 0; i < folder.Entries.Length; i++)
+                        entry.ReadAudioPath(folders);
+                        Ar.Position = entry.Offset * entry.OffsetMultiplier;
+                        var bank = new WwiseReader(Ar, _source, entry.Size) { Path = entry.AudioPath };
+                        LoadedSize += bank.LoadedSize;
+                        AKPKBankEntries.Add(bank);
+
+                        foreach (var embeddedWem in bank.WwiseEncodedMedias)
                         {
-                            var entry = new AkEntry(Ar);
-                            entry.Path = Folders[entry.FolderId].Name;
-                            folder.Entries[i] = entry;
+                            WwiseEncodedMedias[embeddedWem.Key] = embeddedWem.Value;
                         }
                     }
+
+                    foreach (var entry in AKPKWemEntries)
+                    {
+                        entry.ReadAudioPath(folders);
+                        LoadedSize += entry.ReadData(Ar, _source);
+                        WwiseEncodedMedias[entry.Name] = entry.Data;
+                    }
+
+                    // return cause we got everything else from entries
+                    return;
+                case EChunkID.BankHeader:
+                    LoadedSize += sectionLength;
+                    Header = new AkBankHeader(Ar, sectionLength);
+
+                    Ar.Version = Header.Version;
+                    Ar.HasFeedback = Header.FeedbackInBank;
+
+                    if (!Ar.IsSupported())
+                        CUE4ParseLog.Logger.Warning($"Wwise version {Ar.Version} is not supported");
                     break;
-                case ChunkID.BankHeader:
-                    Header = new BankHeader(Ar, sectionLength);
-                    WwiseVersions.SetVersion(Version);
-                    if (!WwiseVersions.IsSupported())
-                        Log.Warning($"Wwise version {Version} is not supported");
+                case EChunkID.BankInit:
+                    LoadedSize += sectionLength;
+                    AKPluginList = Ar.ReadMap(Ar.Read<uint>, () => Ar.Version <= 136 ? Ar.ReadFString() : Ar.ReadStzString());
                     break;
-                case ChunkID.BankInit:
-                    AKPluginList = Ar.ReadMap(Ar.Read<uint>, () => Version <= 136 ? Ar.ReadFString() : ReadStzString(Ar));
-                    break;
-                case ChunkID.BankDataIndex:
+                case EChunkID.BankDataIndex:
+                    LoadedSize += sectionLength;
                     WemIndexes = Ar.ReadArray(sectionLength / 12, Ar.Read<MediaHeader>);
                     break;
-                case ChunkID.BankData:
+                case EChunkID.BankData:
                     if (WemIndexes == null)
                         break;
-                    WemSounds = new byte[WemIndexes.Length][];
-                    for (var i = 0; i < WemSounds.Length; i++)
+
+                    for (var i = 0; i < WemIndexes.Length; i++)
                     {
-                        Ar.Position = position + WemIndexes[i].Offset;
-                        WemSounds[i] = Ar.ReadBytes(WemIndexes[i].Size);
-                        WwiseEncodedMedias[WemIndexes[i].Id.ToString()] = WemSounds[i];
+                        var wemData = WemIndexes[i];
+                        if (wemData.Id == 0)
+                            continue;
+
+                        var temp = ReadDeferredByteData(Ar, _source, position + wemData.Offset, wemData.Size);
+                        LoadedSize += temp.LoadedSize;
+                        WwiseEncodedMedias[wemData.Id.ToString()] = temp;
                     }
                     break;
-                case ChunkID.BankHierarchy:
+                case EChunkID.BankHierarchy:
+                    LoadedSize += sectionLength;
                     Hierarchies = Ar.ReadArray(() => new Hierarchy(Ar));
                     break;
-                case ChunkID.RIFF:
+                case EChunkID.RIFF:
                     if (Ar.Position + sectionLength > Ar.Length)
                         throw new RIFFSectionSizeException();
                     Ar.Position -= 8;
-                    var wemData = Ar.ReadBytes(8 + sectionLength);
-                    WemFile = wemData;
+                    WemFile = ReadDeferredByteData(Ar, _source, Ar.Position, 8 + sectionLength);
+                    LoadedSize += WemFile.LoadedSize;
                     break;
-                case ChunkID.BankStrMap:
+                case EChunkID.BankStrMap:
+                    LoadedSize += sectionLength;
                     Ar.Position += 4; //var type = Ar.Read<AKBKStringType>;
                     BankIDToFileName = Ar.ReadMap(Ar.Read<uint>, Ar.ReadString);
                     break;
-                case ChunkID.BankStateMg:
-                    // TODO:
-                    // if (WwiseVersions.IsSupported())
-                    // {
-                    //     GlobalSettings = new GlobalSettings(Ar);
-                    // }
-                    break;
-                case ChunkID.BankEnvSetting:
-                    if (WwiseVersions.IsSupported()) // Let's guard this just in case
+                case EChunkID.BankStateMg:
+                    if (Ar.IsSupported()) // Let's guard this just in case
                     {
-                        EnvSettings = new EnvSettings(Ar);
+                        LoadedSize += sectionLength;
+                        GlobalSettings = new GlobalSettings(Ar);
                     }
                     break;
-                case ChunkID.FXPR:
+                case EChunkID.BankEnvSetting:
+                    if (Ar.IsSupported()) // Let's guard this just in case
+                    {
+                        LoadedSize += sectionLength;
+                        EnvSettings = new CAkEnvironmentsMgr(Ar);
+                    }
                     break;
-                case ChunkID.BankCustomPlatformName:
-                    Platform = Version <= 136 ? Encoding.ASCII.GetString(Ar.ReadArray<byte>()) : ReadStzString(Ar);
+                case EChunkID.FXPR:
                     break;
-                case ChunkID.PLUGIN:
+                case EChunkID.BankCustomPlatformName:
+                    LoadedSize += sectionLength;
+                    Platform = Ar.Version <= 136 ? Encoding.ASCII.GetString(Ar.ReadArray<byte>()).TrimEnd('\0') : Ar.ReadStzString();
+                    break;
+                case EChunkID.PLUGIN:
+                    // Plugin container holds audio data encoded specifically for a given Wwise plugin
+                    // For example: ADM3 codec (Crankcase Audio), AK Convolution Reverb impulse response (currently not supported https://github.com/vgmstream/vgmstream/issues/1638)
+                    Ar.Position -= 8;
+#if DEBUG
+                    CUE4ParseLog.Logger.Debug($"Found Wwise plugin section with length {sectionLength}");
+#endif
+                    WemFile = ReadDeferredByteData(Ar, _source, Ar.Position, 8 + sectionLength);
+                    LoadedSize += WemFile.LoadedSize;
+                    IsPlugin = true;
+                    break;
+                case EChunkID.MIDI:
+                    Ar.Position -= 8;
+                    MidiData = ReadDeferredByteData(Ar, _source, Ar.Position, 8 + sectionLength);
+                    LoadedSize += MidiData.LoadedSize;
                     break;
                 default:
 #if DEBUG
-                    Log.Warning($"Unknown section {sectionIdentifier:X} at {position - sizeof(uint) - sizeof(uint)}");
+                    CUE4ParseLog.Logger.Warning($"Unknown section {sectionIdentifier:X} at {position - sizeof(uint) - sizeof(uint)}");
 #endif
                     break;
             }
@@ -134,23 +197,28 @@ public class WwiseReader
             {
                 var shouldBe = position + sectionLength;
 #if DEBUG
-                Log.Warning($"Didn't read {sectionIdentifier} correctly (at {Ar.Position}, should be {shouldBe})");
+                CUE4ParseLog.Logger.Warning($"Didn't read {sectionIdentifier} correctly (at {Ar.Position}, should be {shouldBe})");
 #endif
                 Ar.Position = shouldBe;
             }
         }
+    }
 
-        if (Folders is null) return;
-
-        foreach (var folder in Folders)
+    public static FDeferredByteData ReadDeferredByteData(FArchive Ar, WwiseDataSource source, long offset, int size)
+    {
+        switch (source)
         {
-            foreach (var entry in folder.Entries)
-            {
-                if (entry.IsSoundBank || entry.Data == null)
-                    continue;
-
-                WwiseEncodedMedias[entry.NameHash.ToString()] = entry.Data;
-            }
+            case WwiseBulkDataSource bulkDataSource when Ar.SupportPartialReads && bulkDataSource.AssetAr is { } assetAr && bulkDataSource.bulkData is { } bulkData:
+                var newBulkData = new FBulkDataDeferredByteData(assetAr, bulkData, offset, size);
+                Ar.Position = offset + size;
+                return newBulkData;
+            case WwiseGameFileSource gameFileSource when Ar.SupportPartialReads && gameFileSource.File is { } file:
+                var gameFileData = new FGameFileDeferredByteData(file, offset, size);
+                Ar.Position = offset + size;
+                return gameFileData;
+            default:
+                Ar.Position = offset;
+                return new FArrayDeferredByteData(Ar.ReadBytes(size));
         }
     }
 
@@ -160,15 +228,14 @@ public class WwiseReader
     {
         while (Ar.Position < Ar.Length)
         {
-            var sectionIdentifier = Ar.Read<ChunkID>();
+            var sectionIdentifier = Ar.Read<EChunkID>();
             var sectionLength = Ar.Read<int>();
             var sectionStart = Ar.Position;
 
-            if (sectionIdentifier is ChunkID.BankHeader)
+            if (sectionIdentifier is EChunkID.BankHeader)
             {
                 Ar.Read<uint>(); // Version
-                var soundBankId = Ar.Read<uint>();
-                return soundBankId;
+                return Ar.Read<uint>(); // SoundBankId
             }
 
             Ar.Position = sectionStart + sectionLength;
@@ -176,41 +243,4 @@ public class WwiseReader
 
         return null;
     }
-
-    #region Readers
-    public static string ReadStzString(FArchive Ar)
-    {
-        var bytes = new List<byte>(16);
-
-        while (true)
-        {
-            var b = Ar.Read<byte>();
-            if (b == 0) break;
-            bytes.Add(b);
-
-            if (bytes.Count >= 255)
-                throw new ArgumentException("ReadStz: string too long (no terminator within 255 bytes).");
-        }
-        return Encoding.UTF8.GetString([.. bytes]);
-    }
-
-    public static int Read7BitEncodedIntBE(FArchive Ar)
-    {
-        int max = 0;
-
-        byte cur = Ar.Read<byte>();
-        int value = cur & 0x7F;
-
-        while ((cur & 0x80) != 0)
-        {
-            if (++max >= 10)
-                throw new FormatException("Unexpected variable loop count");
-
-            cur = Ar.Read<byte>();
-            value = (value << 7) | (cur & 0x7F);
-        }
-
-        return value;
-    }
-    #endregion
 }

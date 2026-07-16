@@ -1,0 +1,71 @@
+using CUE4Parse.UE4.Wwise.Enums;
+using Newtonsoft.Json;
+
+namespace CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
+
+// CAkSwitchCntr
+public class HierarchySwitchContainer : AbstractHierarchy
+{
+    public readonly BaseHierarchy BaseParams;
+    public readonly EAkGroupType GroupType;
+    public readonly uint GroupId;
+    public readonly uint DefaultSwitch;
+    public readonly bool IsContinuousValidation;
+    public readonly uint[] ChildIds;
+    public readonly AkSwitchPackage[] SwitchPackages;
+    public readonly AkSwitchParams[] SwitchParams;
+
+    // CAkSwitchCntr::SetInitialValues
+    public HierarchySwitchContainer(FWwiseArchive Ar) : base()
+    {
+        Id = Ar.Read<uint>();
+        BaseParams = new BaseHierarchy(Ar);
+        if (Ar.Version <= 89)
+        {
+            GroupType = (EAkGroupType) Ar.Read<uint>();
+        }
+        else
+        {
+            GroupType = Ar.Read<EAkGroupType>();
+        }
+        GroupId = Ar.Read<uint>();
+        DefaultSwitch = Ar.Read<uint>();
+        IsContinuousValidation = Ar.ReadBool();
+        ChildIds = new AkChildren(Ar).ChildIds;
+        SwitchPackages = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkSwitchPackage(Ar));
+        SwitchParams = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkSwitchParams(Ar));
+    }
+
+    public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        writer.WritePropertyName(nameof(BaseParams));
+        writer.WriteStartObject();
+        BaseParams.WriteJson(writer, serializer);
+        writer.WriteEndObject();
+
+        writer.WritePropertyName(nameof(GroupType));
+        writer.WriteValue(GroupType);
+
+        writer.WritePropertyName(nameof(GroupId));
+        writer.WriteValue(GroupId);
+
+        writer.WritePropertyName(nameof(DefaultSwitch));
+        writer.WriteValue(DefaultSwitch);
+
+        writer.WritePropertyName(nameof(IsContinuousValidation));
+        writer.WriteValue(IsContinuousValidation);
+
+        writer.WritePropertyName(nameof(ChildIds));
+        serializer.Serialize(writer, ChildIds);
+
+        writer.WritePropertyName(nameof(SwitchPackages));
+        serializer.Serialize(writer, SwitchPackages);
+
+        writer.WritePropertyName(nameof(SwitchParams));
+        serializer.Serialize(writer, SwitchParams);
+
+        writer.WriteEndObject();
+    }
+}

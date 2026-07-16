@@ -2,16 +2,15 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Wwise;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 
 [JsonConverter(typeof(FWwisePackagedFileConverter))]
 public class FWwisePackagedFile : FStructFallback
 {
+    
     public EWwisePackagingStrategy PackagingStrategy;
     public FName PathName;
     public FName ModularGameplayName;
@@ -60,43 +59,43 @@ public class FWwisePackagedFile : FStructFallback
         if (PackagingStrategy is EWwisePackagingStrategy.BulkData)
         {
             var bulkData = new FByteBulkData(Ar);
-            if (bulkData.Data is null) return;
-
-            if (!bulkData.Header.BulkDataFlags.HasFlag(EBulkDataFlags.BULKDATA_PayloadInSeperateFile))
-                Ar.Position += bulkData.Data.Length;
+            if (!bulkData.TryCreateReader("AkAssetData", out FArchive dataAr)) return;
 
             try
             {
-                using var reader = new FByteArchive("AkAssetData", bulkData.Data, Ar.Versions);
-                BulkData = new WwiseReader(reader);
+                using var reader = new FWwiseArchive(dataAr);
+                BulkData = new WwiseReader(reader, new WwiseBulkDataSource(Ar, bulkData));
             }
             // i know it's ugly, but i don't see other solution without rewriting everything
-            catch (RIFFSectionSizeException e)
+            catch (RIFFSectionSizeException)
             {
-                if (bulkData.TryCombineBulkData(Ar, out var combinedData))
+                if (bulkData.TryCombineBulkData(Ar, out var combinedData, out var fullBulkData))
                 {
                     try
                     {
-                        using var reader = new FByteArchive("AkAssetData", combinedData, Ar.Versions);
-                        BulkData = new WwiseReader(reader);
+                        using var reader = new FWwiseArchive("AkAssetData", combinedData, Ar.Versions);
+                        if (fullBulkData != null)
+                            BulkData = new WwiseReader(reader, new WwiseBulkDataSource(Ar, fullBulkData));
+                        else
+                            BulkData = new WwiseReader(reader, new WwiseArchiveSource());
                     }
                     catch
                     {
-                        Log.Error("Failed to read Wwise bank data for {Name} from combined bulk data", name);
+                        CUE4ParseLog.Logger.Error("Failed to read Wwise bank data for {Name} from combined bulk data", name);
                     }
                 }
             }
             catch
             {
-                Log.Error("Failed to read Wwise bank data for {Name} from bulk data", name);
+                CUE4ParseLog.Logger.Error("Failed to read Wwise bank data for {Name} from bulk data", name);
             }
         }
-        else if (PackagingStrategy is EWwisePackagingStrategy.External)
+        else if (PackagingStrategy is EWwisePackagingStrategy.External or EWwisePackagingStrategy.AdditionalFile) // maybe in AssetLibrary or an asset
         {
         }
         else
         {
-            Log.Warning("Wwise bank data for {Name} uses unsupported packaging strategy {stategy}", name,
+            CUE4ParseLog.Logger.Warning("Wwise bank data for {Name} uses unsupported packaging strategy {stategy}", name,
                 PackagingStrategy.ToString());
         }
     }

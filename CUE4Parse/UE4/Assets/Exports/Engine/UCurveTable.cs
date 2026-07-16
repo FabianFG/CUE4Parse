@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine
 {
     public class UCurveTable : UObject
     {
+        
         public Dictionary<FName, FStructFallback> RowMap { get; private set; } // FStructFallback is FRealCurve aka FSimpleCurve if CurveTableMode is SimpleCurves else FRichCurve
         public ECurveTableMode CurveTableMode { get; private set; }
 
@@ -54,13 +53,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
         {
             if (rowName.IsNone)
             {
-                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
+                if (bWarnIfNotFound) CUE4ParseLog.Logger.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
                 return null;
             }
 
             if (!RowMap.TryGetValue(rowName, out var foundCurve))
             {
-                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
+                if (bWarnIfNotFound) CUE4ParseLog.Logger.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
                 return null;
             }
 
@@ -76,14 +75,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
         {
             if (rowName.IsNone)
             {
-                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
+                if (bWarnIfNotFound) CUE4ParseLog.Logger.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
                 outCurve = null;
                 return false;
             }
 
             if (!RowMap.TryGetValue(rowName, out var foundCurve))
             {
-                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
+                if (bWarnIfNotFound) CUE4ParseLog.Logger.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
                 outCurve = null;
                 return false;
             }

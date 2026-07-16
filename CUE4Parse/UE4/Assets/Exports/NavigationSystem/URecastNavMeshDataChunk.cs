@@ -1,35 +1,35 @@
+using CUE4Parse.UE4.Assets.Exports.NavigationSystem;
+using CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
-using CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
-using CUE4Parse.UE4.Assets.Exports.NavigationSystem;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.NavigationSystem.NavMesh;
 
 public class URecastNavMeshDataChunk : Assets.Exports.UObject
 {
+
     public ENavMeshVersion NavMeshVersion;
     public FRecastTileData[] Tiles = [];
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Game is EGame.GAME_OuterWorlds2) return;
+        if (Ar.Game is GAME_OuterWorlds2) return;
 
         NavMeshVersion = Ar.Read<ENavMeshVersion>();
         var recastNavMeshSizePos = Ar.Position;
-        var recastNavMeshSizeBytes = Ar.Read<long>();
+        var recastNavMeshSizeBytes = Ar.Game != GAME_WutheringWaves ? Ar.Read<long>() : 8;
 
         if (NavMeshVersion < ENavMeshVersion.NAVMESHVER_MIN_COMPATIBLE)
         {
-            Log.Error("NavMeshVersion is too old and not supported: '{0}'", NavMeshVersion);
+            CUE4ParseLog.Logger.Error("NavMeshVersion is too old and not supported: '{0}'", NavMeshVersion);
             Ar.Position = recastNavMeshSizePos + recastNavMeshSizeBytes;
         }
         else if (NavMeshVersion > ENavMeshVersion.Latest)
         {
-            Log.Error("NavMeshVersion is too new and not supported: '{0}'", NavMeshVersion);
+            CUE4ParseLog.Logger.Error("NavMeshVersion is too new and not supported: '{0}'", NavMeshVersion);
             Ar.Position = recastNavMeshSizePos + recastNavMeshSizeBytes;
         }
         else if (recastNavMeshSizeBytes > 4)

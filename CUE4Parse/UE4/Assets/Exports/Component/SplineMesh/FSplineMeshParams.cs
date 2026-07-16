@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using CUE4Parse.UE4.Assets.Objects;
@@ -44,7 +43,7 @@ public class FSplineMeshParams : IUStruct
 
     public FSplineMeshParams(FStructFallback fallback)
     {
-        StartPos = fallback.GetOrDefault("StartPos", new FVector(-1000, 0, 0));
+        StartPos = fallback.GetOrDefault("StartPos", FVector.ZeroVector);
         StartTangent = fallback.GetOrDefault("StartTangent", new FVector(100, 0, 0));
         StartScale = fallback.GetOrDefault("StartScale", new FVector2D(1, 1));
         StartRoll = fallback.GetOrDefault<float>("StartRoll");

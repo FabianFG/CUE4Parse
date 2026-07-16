@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -22,6 +20,17 @@ namespace CUE4Parse_Conversion.Animations
         private static CAnimSet ConvertToAnimSet(this USkeleton skeleton)
         {
             return new CAnimSet(skeleton);
+        }
+
+        public static CAnimSet ConvertAnims(this UAnimationAsset asset)
+        {
+            return asset switch
+            {
+                UAnimSequence animSequence when asset.Skeleton.TryLoad<USkeleton>(out var skeleton) => skeleton.ConvertAnims(animSequence),
+                UAnimMontage animMontage when asset.Skeleton.TryLoad<USkeleton>(out var skeleton) => skeleton.ConvertAnims(animMontage),
+                UAnimComposite animComposite when asset.Skeleton.TryLoad<USkeleton>(out var skeleton) => skeleton.ConvertAnims(animComposite),
+                _ => throw new ArgumentException("Unknown animation type")
+            };
         }
 
         public static CAnimSet ConvertAnims(this USkeleton skeleton, UAnimComposite? animComposite)

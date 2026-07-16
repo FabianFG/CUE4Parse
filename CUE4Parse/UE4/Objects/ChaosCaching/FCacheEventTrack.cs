@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -14,7 +13,7 @@ public class FCacheEventTrack : FStructFallback
     public FCacheEventTrack(FAssetArchive Ar) : base(Ar, "CacheEventTrack")
     {
         var strukt = GetOrDefault<FPackageIndex>("Struct");
-        var count = GetOrDefault<float[]>("TimeStamps")?.Length ?? 0;
+        var count = GetOrDefault<float[]>("Timestamps", [], StringComparison.OrdinalIgnoreCase)?.Length ?? 0;
         if (strukt.TryLoad<UStruct>(out var Struct))
         {
             Events = Ar.ReadArray(count, () => new FStructFallback(Ar, Struct));

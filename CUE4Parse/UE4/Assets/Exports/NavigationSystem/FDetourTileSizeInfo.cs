@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.NavigationSystem;
 
@@ -9,16 +10,16 @@ public class FDetourTileSizeInfo
     public int MaxLinkCount;
     public int DetailMeshCount;
     public int DetailVertCount;
-    public int DetailTriCount; 
+    public int DetailTriCount;
     public int BvNodeCount;
     public int OffMeshConCount;
     public int OffMeshSegConCount;
     public int ClusterCount;
     public int OffMeshBase;
-    
+
     public FDetourTileSizeInfo(FArchive Ar)
     {
-        if (Ar.Game >= Versions.EGame.GAME_UE5_0)
+        if (Ar.Game >= GAME_UE5_0)
         {
             VertCount = Ar.Read<ushort>();
             PolyCount = Ar.Read<ushort>();
@@ -33,6 +34,7 @@ public class FDetourTileSizeInfo
         }
         else
         {
+            if (Ar.Game is GAME_WutheringWaves) Ar.Position += 4;
             VertCount = Ar.Read<int>();
             PolyCount = Ar.Read<int>();
             MaxLinkCount = Ar.Read<int>();

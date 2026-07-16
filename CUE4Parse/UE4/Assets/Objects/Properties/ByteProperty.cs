@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
@@ -14,7 +13,7 @@ public class ByteProperty : FPropertyTagType<byte>
         Value = type switch
         {
             ReadType.ZERO => 0,
-            ReadType.NORMAL => Ar.Read<byte>(),
+            ReadType.NORMAL or ReadType.OPTIONAL => Ar.Read<byte>(),
             ReadType.MAP when Ar.Versions["ByteProperty.TMap64Bit"] => (byte) Ar.Read<ulong>(),
             ReadType.MAP when Ar.Versions["ByteProperty.TMap16Bit"] => (byte) Ar.Read<ushort>(),
             ReadType.MAP when Ar.Versions["ByteProperty.TMap8Bit"] => Ar.Read<byte>(),

@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Text;
 using static CUE4Parse.UE4.CriWare.Decoders.HCA.Constants;
 

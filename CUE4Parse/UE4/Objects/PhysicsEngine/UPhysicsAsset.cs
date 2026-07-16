@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -12,7 +10,7 @@ public class UPhysicsAsset : Assets.Exports.UObject
     public int[] BoundsBodies;
     public FPackageIndex[] SkeletalBodySetups; // USkeletalBodySetup
     public FPackageIndex[] ConstraintSetup; // UPhysicsConstraintTemplate
-    
+
     public Dictionary<FRigidBodyIndexPair, bool>? CollisionDisableTable;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)

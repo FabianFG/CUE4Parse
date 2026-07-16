@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -8,7 +6,6 @@ using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Objects.GameplayTags;
 
@@ -91,7 +88,7 @@ public readonly struct FGameplayTagContainer : IUStruct, IEnumerable<FGameplayTa
 
 [StructFallback]
 [JsonConverter(typeof(FGameplayTagConverter))]
-public struct FGameplayTag
+public struct FGameplayTag : IUStruct
 {
     public FName TagName;
 
@@ -197,6 +194,7 @@ public enum EGameplayTagQueryExprType
 
 public class FQueryEvaluator
 {
+    
     private readonly FGameplayTagQuery Query;
     private int CurStreamIdx;
     private EGameplayTagQueryStreamVersion Version;
@@ -394,7 +392,7 @@ public class FQueryEvaluator
             return Query.QueryTokenStream[CurStreamIdx++];
         }
 
-        Log.Error("Failed to parse FGameplayQuery!");
+        CUE4ParseLog.Logger.Error("Failed to parse FGameplayQuery!");
         bReadError = true;
         return 0;
     }

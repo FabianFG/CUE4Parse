@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using CUE4Parse_Conversion.Materials;
+﻿using CUE4Parse_Conversion.Materials;
 
 namespace CUE4Parse_Conversion.Meshes
 {

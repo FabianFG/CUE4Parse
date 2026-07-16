@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -30,7 +30,7 @@ public readonly struct FExportMapEntry
         ClassIndex = Ar.Read<FPackageObjectIndex>();
         SuperIndex = Ar.Read<FPackageObjectIndex>();
         TemplateIndex = Ar.Read<FPackageObjectIndex>();
-        if (Ar.Game >= EGame.GAME_UE5_0)
+        if (Ar.Game >= GAME_UE5_0)
         {
             GlobalImportIndex = FPackageObjectIndex.InvalidObjectIndex;
             PublicExportHash = Ar.Read<ulong>();

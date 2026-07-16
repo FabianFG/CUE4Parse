@@ -6,9 +6,11 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
     {
         [Description("Desktop / Mobile")]
         DesktopMobile,
-        [Description("Xbox One/Series / Playstation 4/5")]
-        XboxAndPlaystation,
+        [Description("Xbox One/Series / Playstation 4")]
+        XboxAndPlaystation4,
         [Description("Nintendo Switch")]
-        NintendoSwitch
+        NintendoSwitch,
+        [Description("Playstation 5")]
+        Playstation5
     }
 }

@@ -6,9 +6,9 @@ using CUE4Parse.UE4.Objects.UObject;
 namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 
 [StructFallback]
-public readonly struct FWwiseSoundBankCookedData
+public class FWwiseSoundBankCookedData
 {
-    public readonly int SoundBankId;
+    public readonly uint SoundBankId;
     public readonly FName SoundBankPathName;
     public readonly int MemoryAlignment;
     public readonly bool bDeviceMemory;
@@ -19,7 +19,7 @@ public readonly struct FWwiseSoundBankCookedData
 
     public FWwiseSoundBankCookedData(FStructFallback fallback)
     {
-        SoundBankId = fallback.GetOrDefault<int>(nameof(SoundBankId));
+        SoundBankId = (uint)fallback.GetOrDefault<int>(nameof(SoundBankId));
         SoundBankPathName = fallback.GetOrDefault<FName>(nameof(SoundBankPathName));
         MemoryAlignment = fallback.GetOrDefault<int>(nameof(MemoryAlignment));
         bDeviceMemory = fallback.GetOrDefault<bool>(nameof(bDeviceMemory));
@@ -29,7 +29,7 @@ public readonly struct FWwiseSoundBankCookedData
         PackagedFile = FWwisePackagedFile.CreatePackagedFile(fallback, nameof(PackagedFile));
     }
 
-    public void SerializeBulkData(FAssetArchive Ar)
+    public virtual void SerializeBulkData(FAssetArchive Ar)
     {
         PackagedFile?.SerializeBulkData(Ar);
     }

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -30,7 +29,7 @@ public struct FSharedImage
         GammaSpace = Ar.Read<byte>();
         var RawData = Ar.ReadArray<byte>((int)Ar.Read<long>());
 
-        var bulkdata = new FByteBulkData(RawData);
+        var bulkdata = new FByteArrayData(RawData);
         Mip = new FTexture2DMipMap(bulkdata, SizeX, SizeY, this.SizeZ);
     }
 }
@@ -67,21 +66,20 @@ public class FTexturePlatformData
     public FTexturePlatformData(FAssetArchive Ar, UTexture Owner, bool bSerializeMipData = true)
     {
         const long PlaceholderDerivedDataSize = 16;
-        if (Ar.Game is >= EGame.GAME_UE5_2)
+        if (Ar.Game >= GAME_UE5_2)
         {
-            if (Ar.ReadFlag() && Ar.Game != EGame.GAME_InfinityNikki) // bUsingDerivedData
+            if (Ar.ReadFlag() && Ar.Game != GAME_InfinityNikki) // bUsingDerivedData
                 throw new NotImplementedException("FTexturePlatformData deserialization using derived data is not implemented.");
-            else
-                Ar.Position += PlaceholderDerivedDataSize - 1;
+            Ar.Position += PlaceholderDerivedDataSize - 1;
         }
-        else if (Ar is { Game: >= EGame.GAME_UE5_0, IsFilterEditorOnly: true })
+        else if (Ar is { Game: >= GAME_UE5_0, IsFilterEditorOnly: true })
         {
             Ar.Position += PlaceholderDerivedDataSize;
         }
 
-        if (Ar.Game == EGame.GAME_InfinityNikki) Ar.Position += 4;
+        if (Ar.Game == GAME_InfinityNikki) Ar.Position += 4;
 
-        if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
+        if (Ar.Game == GAME_PlayerUnknownsBattlegrounds)
         {
             SizeX = Ar.Read<short>();
             SizeY = Ar.Read<short>();
@@ -95,10 +93,10 @@ public class FTexturePlatformData
             PackedData = Ar.Read<uint>();
         }
 
-        PixelFormat = Ar.Game == EGame.GAME_GearsOfWar4 ? Ar.ReadFName().Text : Ar.ReadFString();
+        PixelFormat = Ar.Game == GAME_GearsOfWar4 ? Ar.ReadFName().Text : Ar.ReadFString();
 
-        if (Ar.Game == EGame.GAME_DragonQuestXI) Ar.Position += 4;
-        if (Ar.Game == EGame.GAME_FinalFantasy7Remake && (PackedData & 0xffff) == 16384)
+        if (Ar.Game == GAME_DragonQuestXI) Ar.Position += 4;
+        if (Ar.Game == GAME_FinalFantasy7Remake && (PackedData & 0xffff) == 16384)
         {
             var unk0 = Ar.Read<int>();
             var unk1 = Ar.Read<int>();
@@ -107,8 +105,8 @@ public class FTexturePlatformData
 
         if (HasOptData())
         {
-            if (Ar.Game == EGame.GAME_MidnightSuns) Ar.Position += 4;
-            if (Ar.Game == EGame.GAME_Psychonauts2) Ar.Position += 24;
+            if (Ar.Game == GAME_MidnightSuns) Ar.Position += 4;
+            if (Ar.Game == GAME_Psychonauts2) Ar.Position += 24;
             OptData = Ar.Read<FOptTexturePlatformData>();
         }
 
@@ -121,7 +119,7 @@ public class FTexturePlatformData
 
         var mipCount = Ar.Read<int>();
 
-        if (Ar.Game == EGame.GAME_FinalFantasy7Remake)
+        if (Ar.Game == GAME_FinalFantasy7Remake)
         {
             var firstMip = new FTexture2DMipMap(Ar);
             var val = Ar.Read<int>();
@@ -133,7 +131,7 @@ public class FTexturePlatformData
             Ar.Position += 4;
         }
 
-        if (Ar.Game == EGame.GAME_DaysGone) Ar.Position += 8;
+        if (Ar.Game == GAME_DaysGone) Ar.Position += 8;
 
         Mips = new FTexture2DMipMap[mipCount];
         for (var i = 0; i < Mips.Length; i++)
@@ -143,7 +141,7 @@ public class FTexturePlatformData
             if (Owner is UVolumeTexture or UTextureCube)
             {
                 var slices = GetNumSlices();
-                if (Ar.Game == EGame.GAME_Borderlands4) slices = slices != 1 ? slices >> 1 : 1;
+                if (Ar.Game == GAME_Borderlands4) slices = slices != 1 ? slices >> 1 : 1;
                 Mips[i].SizeY *= slices;
                 Mips[i].SizeZ = Mips[i].SizeZ == slices ? 1 : Mips[i].SizeZ;
             }
@@ -159,7 +157,7 @@ public class FTexturePlatformData
             }
         }
 
-        if (Ar.Game is EGame.GAME_AssaultFireFuture && Ar.ReadBoolean()) Ar.Position += 112; 
+        if (Ar.Game is GAME_AssaultFireFuture && Ar.ReadBoolean()) Ar.Position += 112;
 
         if (Mips.Length > 0)
         {

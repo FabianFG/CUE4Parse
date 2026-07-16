@@ -20,7 +20,7 @@ public class FPageStreamingState
         BulkSize = Ar.Read<uint>();
         PageSize = Ar.Read<uint>();
         DependenciesStart = Ar.Read<uint>();
-        if (Ar.Game >= EGame.GAME_UE5_3)
+        if (Ar.Game >= GAME_UE5_3)
         {
             DependenciesNum = Ar.Read<ushort>();
             MaxHierarchyDepth = Ar.Read<byte>();

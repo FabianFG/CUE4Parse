@@ -1,19 +1,23 @@
-using System;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.Material.Parameters;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
-public class UMaterialInstanceDynamic: UMaterialInstance;
+public class UMaterialInstanceDynamic : UMaterialInstance;
+public class UMaterialInstanceTimeVarying : UMaterialInstance;
 
 public class UMaterialInstance : UMaterialInterface
 {
+    
     private ResolvedObject? _parent;
     private bool bHasNonUPropertyStaticParameters = false;
     public UUnrealMaterial? Parent => _parent?.Load<UUnrealMaterial>();
@@ -24,7 +28,7 @@ public class UMaterialInstance : UMaterialInterface
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         _parent = GetOrDefault<ResolvedObject>(nameof(Parent));
         bHasStaticPermutationResource = GetOrDefault<bool>("bHasStaticPermutationResource");
@@ -45,19 +49,17 @@ public class UMaterialInstance : UMaterialInterface
                 bHasNonUPropertyStaticParameters = true;
             }
 
-            if (Ar is { Game: >= EGame.GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
+            if (Ar is { Game: >= GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
             {
+                var saved = Ar.Position;
                 try
                 {
                     DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
                 }
                 catch (Exception e)
                 {
-                    Log.Warning(e, "Failed to deserialize inline shader maps.");
-                }
-                finally
-                {
-                    Ar.Position = validPos;
+                    CUE4ParseLog.Logger.Error(e, "Failed to deserialize inline shader maps.");
+                    Ar.Position = saved;
                 }
             }
             else
@@ -66,7 +68,16 @@ public class UMaterialInstance : UMaterialInterface
             }
         }
 
-        if (Ar.Game == EGame.GAME_Valorant && !bHasStaticPermutationResource) Ar.Position += 8; // 0.0f and 1.0f, for all
+        if (Ar.Game is GAME_DeadByDaylight && Ar.Position < validPos && Ar is { Owner.Provider.ReadShaderMaps: true })
+            CustomGameData = Ar.ReadArray(() => new FStructFallback(Ar, "BHVRVariantConfigurator", FRawHeader.FullRead, ReadType.RAW));
+        if (Ar.Game == GAME_Valorant && !bHasStaticPermutationResource)
+            Ar.Position += 8; // 0.0f and 1.0f, for all
+        if (Ar.Game is GAME_RocoKingdomWorld && bHasStaticPermutationResource)
+        {
+            // Additional DynamicSwitchParameters
+            CustomGameData = Ar.ReadArray(() => new FRKWStaticSwitchParameter(Ar));
+            Ar.Position += 4;
+        }
     }
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
@@ -113,9 +124,16 @@ public class FStaticParameterSet
 
     public FStaticParameterSet(FArchive Ar)
     {
+        if (Ar.Game < GAME_UE4_0)
+        {
+            Ar.Read<FGuid>(); // BaseMaterialId
+        }
         StaticSwitchParameters = Ar.ReadArray(() => new FStaticSwitchParameter(Ar));
         StaticComponentMaskParameters = Ar.ReadArray(() => new FStaticComponentMaskParameter(Ar));
-        TerrainLayerWeightParameters = Ar.ReadArray(() => new FStaticTerrainLayerWeightParameter(Ar));
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_TERRAINLAYERWEIGHT_PARAMETERS)
+        {
+            TerrainLayerWeightParameters = Ar.ReadArray(() => new FStaticTerrainLayerWeightParameter(Ar));
+        }
 
         if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.MaterialLayersParameterSerializationRefactor)
         {

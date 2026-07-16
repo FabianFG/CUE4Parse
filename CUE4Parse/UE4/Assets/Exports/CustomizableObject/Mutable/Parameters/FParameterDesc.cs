@@ -1,7 +1,10 @@
-using System;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -9,6 +12,7 @@ namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Parameters;
 
 public class FParameterDesc
 {
+    [JsonIgnore] public int Version = 10;
     public string Name;
     // Unique id (provided externally, so no actual guarantee that it is unique.)
     public FGuid UID;
@@ -18,14 +22,29 @@ public class FParameterDesc
     public uint[] Ranges;
     // For integer parameters, this contains the description of the possible values. If empty, the integer may have any value.
     public FIntValueDesc[] PossibleValues;
-   
+
     public FParameterDesc(FMutableArchive Ar)
     {
-        Name = Ar.ReadFString();
-        UID = Ar.Read<FGuid>();
-        Type = Ar.Read<EParameterType>();
+        if (Ar.Game < GAME_UE5_6) Version = Ar.Read<int>();
 
-        var index = Ar.Read<byte>();
+        if (Ar.Game >= GAME_UE5_4)
+        {
+            Name = Ar.ReadFString();
+            UID = Ar.Read<FGuid>();
+        }
+        else
+        {
+            Name = Ar.ReadString();
+            UID = new FGuid(Ar.ReadString());
+        }
+
+        Type = ReadMaterialParameterType(Ar);
+
+        if (Ar.Game >= GAME_UE5_2)
+        {
+            var index = Ar.Read<byte>(); // index into TVariant
+        }
+        var saved = Ar.Position;
         DefaultValue = Type switch
         {
             EParameterType.None => null,
@@ -37,14 +56,53 @@ public class FParameterDesc
             EParameterType.Texture => null,
             EParameterType.SkeletalMesh => null,
             EParameterType.Material => null,
-            EParameterType.String => Ar.ReadFString(),
+            EParameterType.String => Ar.Game >= GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString(),
             EParameterType.Matrix => new FMatrix(Ar, false),
             EParameterType.InstancedStruct => null,
+            // for older versions
+            EParameterType.Image => Ar.Game >= GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString(),
             _ => throw new NotSupportedException("Serialization for parameter type " + Type + " is not supported")
         };
+        if (Ar.Game < GAME_UE5_3)
+            Ar.Position = saved + Unsafe.SizeOf<FProjector>();
 
         Ranges = Ar.ReadArray<uint>();
+        if (Version < 6)
+            Ar.SkipFixedArray(sizeof(int)); // UnusedDescImages
         PossibleValues = Ar.ReadArray(() => new FIntValueDesc(Ar));
+    }
+
+    public EParameterType ReadMaterialParameterType(FArchive Ar)
+    {
+        var value = Ar.Read<uint>();
+        return Ar.Game switch
+        {
+            >= GAME_UE5_7 => (EParameterType) value,
+            >= GAME_UE5_6 => value switch
+            {
+                >= 10 => throw new ParserException("Unsupported parameter type"),
+                9 => EParameterType.Matrix,
+                8 => EParameterType.String,
+                7 => EParameterType.SkeletalMesh,
+                6 => EParameterType.Image,
+                _ => (EParameterType) value,
+            },
+            >= GAME_UE5_5 => value switch
+            {
+                >= 9 => throw new ParserException("Unsupported parameter type"),
+                8 => EParameterType.Matrix,
+                7 => EParameterType.String,
+                6 => EParameterType.Image,
+                _ => (EParameterType) value,
+            },
+            _ => value switch
+            {
+                >= 8 => throw new ParserException("Unsupported parameter type"),
+                7 => EParameterType.String,
+                6 => EParameterType.Image,
+                _ => (EParameterType) value,
+            }
+        };
     }
 }
 
@@ -74,7 +132,7 @@ public enum EParameterType : uint
 
     /** An externally provided mesh. */
     SkeletalMesh,
-        
+
     /** An externally provided material*/
     Material,
 
@@ -87,5 +145,8 @@ public enum EParameterType : uint
     InstancedStruct,
 
     /** Utility enumeration value, not really a parameter type. */
-    Count
+    Count,
+
+    // used in older versions
+    Image,
 }

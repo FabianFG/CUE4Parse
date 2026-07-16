@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace CUE4Parse_Conversion.Textures.ASTC

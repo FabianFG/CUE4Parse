@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.GameTypes.OuterWorlds2.Objects;
 using CUE4Parse.GameTypes.OuterWorlds2.Readers;
 using CUE4Parse.UE4.Assets.Objects;
@@ -7,7 +6,6 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.OuterWorlds2.Properties;
 
@@ -24,6 +22,7 @@ public class FOW2ObjectProperty : ObjectProperty
 
 public class FOW2FPropertyTag : FPropertyTag
 {
+    
     public FPropertryDataObjectContainer Objects;
     public bool bHasVersion;
     public bool bIsDefault;
@@ -70,7 +69,7 @@ public class FOW2FPropertyTag : FPropertyTag
 #if DEBUG
             if (objectAr.Position != objectAr.Length)
             {
-                Log.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, objectAr.Position, objectAr.Length);
+                CUE4ParseLog.Logger.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, objectAr.Position, objectAr.Length);
             }
 #endif
         }
@@ -79,7 +78,7 @@ public class FOW2FPropertyTag : FPropertyTag
 #if DEBUG
             if (objectAr.Position != objectAr.Length)
             {
-                Log.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
+                CUE4ParseLog.Logger.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
             }
 #endif
         }

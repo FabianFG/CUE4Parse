@@ -72,6 +72,21 @@ public static class FRigVMObjectVersion
         // The VM stores a relative seek offset to be able to skip the registry during load
         LocalizedRegistryWithRelativeSeekOffset,
 
+        // Function arguments can now represent an input variable (an external variable passed into a function)
+        FunctionArgumentCanRepresentInputVariable,
+
+        // Object archive is now storing the version container
+        ObjectArchiveVersionContainerSerialization,
+
+        // Debug operand mapping simplified and moved to context only
+        DebugOperandMappingSimplified,
+
+        // Introduction of callables to the rigvm bytecode
+        RigVMCallables,
+
+        // Referencing variables through Guids
+        GuidForVariables,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1,
@@ -87,13 +102,13 @@ public static class FRigVMObjectVersion
 
         return Ar.Game switch
         {
-              EGame.GAME_Aion2 => Type.VMMemoryStorageDefaultsGeneratedAtVM,
-            < EGame.GAME_UE5_3 => (Type) (-1),
-            < EGame.GAME_UE5_4 => Type.PredicatesAddedToExecuteOps,
-            < EGame.GAME_UE5_5 => Type.VMRemoveTooltipFromFunctionHeader,
-            < EGame.GAME_UE5_6 => Type.FunctionHeaderLayoutStoresCategoryExpansion,
-            < EGame.GAME_UE5_7 => Type.ByteCodeCleanup,
-            < EGame.GAME_UE5_8 => Type.LocalizedRegistry,
+              GAME_Aion2 => Type.VMMemoryStorageDefaultsGeneratedAtVM,
+            < GAME_UE5_3 => (Type) (-1),
+            < GAME_UE5_4 => Type.PredicatesAddedToExecuteOps,
+            < GAME_UE5_5 => Type.VMRemoveTooltipFromFunctionHeader,
+            < GAME_UE5_6 => Type.FunctionHeaderLayoutStoresCategoryExpansion,
+            < GAME_UE5_7 => Type.ByteCodeCleanup,
+            < GAME_UE5_8 => Type.LocalizedRegistry,
             _ => Type.LatestVersion
         };
     }

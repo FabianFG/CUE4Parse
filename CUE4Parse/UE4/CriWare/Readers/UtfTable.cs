@@ -1,9 +1,6 @@
+using System.Text;
 using CUE4Parse.UE4.CriWare.Readers.Common;
 using CUE4Parse.UE4.Exceptions;
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace CUE4Parse.UE4.CriWare.Readers;
 

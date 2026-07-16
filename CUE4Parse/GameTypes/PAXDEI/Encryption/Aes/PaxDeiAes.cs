@@ -1,10 +1,9 @@
-using System;
 using System.Runtime.Intrinsics;
+using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.VirtualFileSystem;
 using static System.Runtime.Intrinsics.X86.Aes;
 using static System.Runtime.Intrinsics.X86.Sse2;
 using static System.Runtime.Intrinsics.Vector128;
-using CUE4Parse.Encryption.Aes;
 
 namespace CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 

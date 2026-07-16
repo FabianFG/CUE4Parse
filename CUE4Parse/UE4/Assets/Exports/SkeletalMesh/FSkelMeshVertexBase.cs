@@ -20,15 +20,17 @@ public class FSkelMeshVertexBase
 
     public void SerializeForGPU(FArchive Ar, bool bExtraBoneInfluences)
     {
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.SKELETAL_MESH_SUPPORT_PACKED_POSITION) Pos = Ar.Read<FVector>();
         Normal = new FPackedNormal[3];
         Normal[0] = new FPackedNormal(Ar);
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.SKELETAL_MESH_REMOVE_BINORMAL_TANGENT_VECTOR) Normal[1] = new FPackedNormal(Ar);
         Normal[2] = new FPackedNormal(Ar);
         if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.UseSeparateSkinWeightBuffer)
         {
             // serialized as separate buffer starting with UE4.15
             Infs = new FSkinWeightInfo(Ar, bExtraBoneInfluences);
         }
-        Pos = Ar.Read<FVector>();
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELETAL_MESH_SUPPORT_PACKED_POSITION) Pos = Ar.Read<FVector>();
     }
 
     public void SerializeForEditor(FArchive Ar)

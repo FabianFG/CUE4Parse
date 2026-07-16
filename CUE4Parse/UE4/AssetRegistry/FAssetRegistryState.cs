@@ -1,16 +1,15 @@
-using System;
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.AssetRegistry;
 
 [JsonConverter(typeof(FAssetRegistryStateConverter))]
 public class FAssetRegistryState
 {
+    
     public FAssetData[] PreallocatedAssetDataBuffers;
     public FDependsNode[] PreallocatedDependsNodeDataBuffers;
     public FAssetPackageData[] PreallocatedPackageDataBuffers;
@@ -29,7 +28,7 @@ public class FAssetRegistryState
         switch (version)
         {
             case < FAssetRegistryVersionType.AddAssetRegistryState:
-                Log.Warning("Cannot read registry state before {Version}", version);
+                CUE4ParseLog.Logger.Warning("Cannot read registry state before {Version}", version);
                 break;
             case < FAssetRegistryVersionType.FixedTags:
             {
@@ -87,7 +86,7 @@ public class FAssetRegistryState
             }
             catch (Exception e)
             {
-                Log.Error(e, "Failed to load PreallocatedDependsNodeDataBuffers");
+                CUE4ParseLog.Logger.Error(e, "Failed to load PreallocatedDependsNodeDataBuffers");
             }
 
             Ar.Position = dependencySectionEnd;

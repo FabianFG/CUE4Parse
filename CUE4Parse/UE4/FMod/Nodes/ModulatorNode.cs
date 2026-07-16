@@ -1,14 +1,14 @@
-using System.IO;
 using CUE4Parse.UE4.FMod.Enums;
 using CUE4Parse.UE4.FMod.Nodes.ModulatorSubnodes;
 using CUE4Parse.UE4.FMod.Objects;
-using Serilog;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Nodes;
 
 public class ModulatorNode
 {
-    public readonly FModGuid BaseGuid;
+    
+    [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly FModGuid OwnerGuid;
     public readonly int PropertyIndex;
     public readonly EModulatorType Type;
@@ -57,7 +57,7 @@ public class ModulatorNode
                 Subnode = new SpectralSidechainModulatorNode(Ar);
                 break;
             default:
-                Log.Error($"Unhandled modulator type {Type} ({(int) Type}) at stream position {Ar.BaseStream.Position}");
+                CUE4ParseLog.Logger.Error($"Unhandled modulator type {Type} ({(int) Type}) at stream position {Ar.BaseStream.Position}");
                 break;
         }
     }

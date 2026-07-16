@@ -1,7 +1,7 @@
-using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -10,6 +10,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Sound;
 
 public class USoundWave : USoundBase
 {
+    public FSubtitleCue[] Subtitles { get; set; } = [];
     public bool bStreaming { get; private set; } = true;
     public FFormatContainer? CompressedFormatData { get; private set; }
     public FByteBulkData? RawData { get; private set; }
@@ -20,13 +21,15 @@ public class USoundWave : USoundBase
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        Subtitles = GetOrDefault<FSubtitleCue[]>(nameof(Subtitles), []);
         bStreaming = Ar.Versions["SoundWave.UseAudioStreaming"];
         if (TryGetValue(out bool s, nameof(bStreaming))) // will return false if not found
             bStreaming = s;
         else if (TryGetValue(out FName loadingBehavior, "LoadingBehavior"))
         {
             bStreaming = !loadingBehavior.IsNone && loadingBehavior.Text != "ESoundWaveLoadingBehavior::ForceInline";
-            if (Ar.Game == EGame.GAME_Stray && bStreaming)
+            if (Ar.Game == GAME_Stray && bStreaming)
                 bStreaming = loadingBehavior.Text != "ESoundWaveLoadingBehavior::RetainOnLoad";
         }
 
@@ -38,7 +41,7 @@ public class USoundWave : USoundBase
 
         var bCooked = flags.HasFlag(ESoundWaveFlag.CookedFlag);
 
-        if (Ar.Game >= EGame.GAME_UE5_4 && bCooked)
+        if (Ar.Game >= GAME_UE5_4 && bCooked)
         {
             SerializeCuePoints(Ar);
         }

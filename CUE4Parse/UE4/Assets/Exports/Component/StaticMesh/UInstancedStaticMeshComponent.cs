@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -25,7 +24,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             bCooked = Ar.ReadBoolean();
         }
 
-        if (Ar.Game is EGame.GAME_WutheringWaves && Ar.ReadFlag())
+        if (Ar.Game is GAME_WutheringWaves && Ar.ReadFlag())
         {
             Ar.Position += 12;
             var len = Ar.Read<int>();
@@ -42,16 +41,22 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             return;
         }
 
-        var bHasSkipSerializationPropertiesData = FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
+        var bHasSkipSerializationPropertiesData = Ar.Ver >= EUnrealEngineObjectUE3Version.BULKSERIALIZE_INSTANCE_DATA && FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ISMComponentEditableWhenInheritedSkipSerialization || Ar.ReadBoolean();
+        if (Ar.Game is GAME_HonorofKingsWorld)
+        {
+            CustomGameData = Ar.ReadBoolean();
+            bHasSkipSerializationPropertiesData = Ar.ReadBoolean();
+        }
+
         if (bHasSkipSerializationPropertiesData)
         {
             switch (Ar.Game)
             {
-                case EGame.GAME_Stalker2:
+                case GAME_Stalker2:
                     Ar.Position += 4;
                     PerInstanceSMData = Ar.ReadBulkArray(128, Ar.Read<int>(), () => new FInstancedStaticMeshInstanceData(Ar));
                     break;
-                case EGame.GAME_ThroneAndLiberty:
+                case GAME_ThroneAndLiberty:
                     var elementSize = Ar.Read<int>();
                     var elementCount = Ar.Read<int>();
                     Ar.Position -= 2 * sizeof(int);
@@ -72,7 +77,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                             throw new ParserException(Ar, $"Unknown element size {elementSize}");
                     }
                     break;
-                case EGame.GAME_PlayerUnknownsBattlegrounds:
+                case GAME_PlayerUnknownsBattlegrounds:
                     elementSize = Ar.Read<int>();
                     Ar.Position -= sizeof(int);
                     if (elementSize is 100)
@@ -92,14 +97,14 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                     break;
             };
 
-            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData || Ar.Game == EGame.GAME_DeltaForceHawkOps)
+            if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData || Ar.Game == GAME_DeltaForce)
             {
                 PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
             }
         }
 
         // MOTO GP 24
-        if (Ar.Game == EGame.GAME_MotoGP24)
+        if (Ar.Game == GAME_MotoGP24)
         {
             var elemSize = Ar.Read<int>();
             var elemCount = Ar.Read<int>();
@@ -111,12 +116,26 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             }
             MotoGP24Data = data.ToArray();
         }
-        if (Ar.Game == EGame.GAME_SuicideSquad) Ar.SkipBulkArrayData();
+        if (Ar.Game == GAME_SuicideSquad) Ar.SkipBulkArrayData();
+        if (Ar.Game is GAME_LordOfMysteries)
+        {
+            Ar.SkipBulkArrayData();
+            Ar.Position += Ar.Read<long>() + 4;
+
+            if (Ar.ReadBoolean())
+            {
+                Ar.SkipBulkArrayData();
+                Ar.Position += 4;
+                Ar.Position += Ar.Read<int>() * 4;
+                Ar.Position += 4;
+            }    
+            return;
+        }
 
         if (bCooked && (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData ||
                         FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.SerializeInstancedStaticMeshRenderData))
         {
-            if (Ar.Game >= EGame.GAME_UE5_4)
+            if (Ar.Game >= GAME_UE5_4)
             {
                 var bHasCookedData = Ar.ReadBoolean();
                 if (!bHasCookedData) return;
@@ -126,13 +145,15 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                 return;
             }
 
-            if (Ar.Game is EGame.GAME_AssaultFireFuture) Ar.SkipBulkArrayData();
+            if (Ar.Game is GAME_AssaultFireFuture) Ar.SkipBulkArrayData();
+            if (Ar.Game is GAME_NeedForSpeedMobile) Ar.SkipMultipleBulkArrayData(2);
 
             var renderDataSizeBytes = Ar.Read<ulong>();
             Ar.Position += (long) renderDataSizeBytes;
+            if (Ar.Game is GAME_Lego2KDrive) Ar.SkipBulkArrayData();
         }
 
-        if (Ar.Game is EGame.GAME_Valorant) Ar.Position += 4;
+        if (Ar.Game is GAME_Valorant) Ar.Position += 4;
     }
 
     public FInstancedStaticMeshInstanceData[] GetInstances() // PerInstanceSMData

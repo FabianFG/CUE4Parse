@@ -16,6 +16,7 @@ public class FControlRigOverrideContainer : IUStruct
     public FControlRigOverrideContainer(FAssetArchive Ar)
     {
         bUsesKeyForSubject = Ar.ReadBoolean();
+        // bool bStoresOnlyPathAndLeafProperty = FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.OverridesStorePathAndLeafPropertyOnly;
         Values = Ar.ReadArray(() => new FControlRigOverrideValue(Ar));
     }
 }

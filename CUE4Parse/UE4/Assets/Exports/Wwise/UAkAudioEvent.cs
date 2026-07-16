@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Wwise;
@@ -25,6 +26,8 @@ public class UAkAudioEvent : UAkAudioType
         MinimumDuration = Ar.Read<float>();
         IsInfinite = Ar.ReadBoolean();
         MaxAttenuationRadius = Ar.Read<float>();
+
+        if (Ar.Game is GAME_MortalKombat1) CustomGameData = Ar.ReadMap(Ar.Read<uint>, () => Ar.ReadMap(Ar.Read<uint>, Ar.Read<float>));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -33,19 +36,22 @@ public class UAkAudioEvent : UAkAudioType
 
         if (EventCookedData is null) return;
 
-        writer.WritePropertyName("EventCookedData");
+        writer.WritePropertyName(nameof(EventCookedData));
         serializer.Serialize(writer, EventCookedData);
 
-        writer.WritePropertyName("MaximumDuration");
+        writer.WritePropertyName(nameof(MaximumDuration));
         writer.WriteValue(MaximumDuration);
 
-        writer.WritePropertyName("MinimumDuration");
+        writer.WritePropertyName(nameof(MinimumDuration));
         writer.WriteValue(MinimumDuration);
 
-        writer.WritePropertyName("IsInfinite");
+        writer.WritePropertyName(nameof(IsInfinite));
         writer.WriteValue(IsInfinite);
 
-        writer.WritePropertyName("MaxAttenuationRadius");
+        writer.WritePropertyName(nameof(MaxAttenuationRadius));
         writer.WriteValue(MaxAttenuationRadius);
     }
 }
+
+public class UWuiEvent : UAkAudioEvent; // The Awesome Adventures of Captain Spirit
+public class UWwiseEvent : UAkAudioEvent; // Borderlands 3
