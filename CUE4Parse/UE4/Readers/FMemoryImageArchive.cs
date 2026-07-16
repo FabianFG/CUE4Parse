@@ -1,7 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.UE4.Assets.Exports.Material;
@@ -25,7 +22,7 @@ public struct FFrozenMemoryImagePtr
     {
         _packed = Ar.Read<ulong>();
         IsFrozen = (_packed & 1) != 0;
-        if (Ar.Game >= EGame.GAME_UE5_0)
+        if (Ar.Game >= GAME_UE5_0)
         {
             OffsetFromThis = (long)_packed >> 24;
             TypeIndex = (int) ((_packed & TypeIndexMask) >> 1) - 1;
@@ -41,6 +38,7 @@ public class FMemoryImageArchive : FArchive
 {
     public readonly FArchive InnerArchive;
     public IReadOnlyDictionary<int, (FName, bool)>? Names;
+    public FPointerTableBase? PointerTable;
     private readonly int ArrayAlign = 4;
 
     public FMemoryImageArchive(FArchive Ar) : base(Ar.Versions)
@@ -132,6 +130,33 @@ public class FMemoryImageArchive : FArchive
         {
             data[i] = getter();
             Position = Position.Align(ArrayAlign);
+        }
+        Position = continuePos;
+        return data;
+    }
+
+    public T[] ReadArray<T>(Func<T> getter, bool realignAfterElement)
+    {
+        var initialPos = Position;
+        var dataPtr = new FFrozenMemoryImagePtr(this);
+        var arrayNum = Read<int>();
+        var arrayMax = Read<int>();
+        if (arrayNum != arrayMax)
+        {
+            throw new ParserException(this, $"Num ({arrayNum}) != Max ({arrayMax})");
+        }
+        if (arrayNum == 0)
+        {
+            return [];
+        }
+
+        var continuePos = Position;
+        Position = initialPos + dataPtr.OffsetFromThis;
+        var data = new T[arrayNum];
+        for (int i = 0; i < data.Length; i++)
+        {
+            data[i] = getter();
+            if (realignAfterElement) Position = Position.Align(ArrayAlign);
         }
         Position = continuePos;
         return data;
@@ -289,13 +314,13 @@ public class FMemoryImageArchive : FArchive
         var value = Read<byte>();
         return Game switch
         {
-            >= EGame.GAME_UE5_7 => (EMaterialParameterType) value,
-            >= EGame.GAME_UE5_5 => value switch
+            >= GAME_UE5_7 => (EMaterialParameterType) value,
+            >= GAME_UE5_5 => value switch
             {
                 9 => EMaterialParameterType.StaticComponentMask,
                 _ => (EMaterialParameterType) value,
             },
-            >= EGame.GAME_UE5_2 => value switch
+            >= GAME_UE5_2 => value switch
             {
                 4 => EMaterialParameterType.Font,
                 5 => EMaterialParameterType.RuntimeVirtualTexture,
@@ -319,9 +344,9 @@ public class FMemoryImageArchive : FArchive
     {
         return Game switch
         {
-            >= EGame.GAME_UE5_8 => new FMaterialUniformPreshaderHeader_5_8(this),
-            >= EGame.GAME_UE5_1 => new FMaterialUniformPreshaderHeader_5_1(this),
-            >= EGame.GAME_UE5_0 => new FMaterialUniformPreshaderHeader_5_0(this),
+            >= GAME_UE5_8 => new FMaterialUniformPreshaderHeader_5_8(this),
+            >= GAME_UE5_1 => new FMaterialUniformPreshaderHeader_5_1(this),
+            >= GAME_UE5_0 => new FMaterialUniformPreshaderHeader_5_0(this),
             _ => new FMaterialUniformPreshaderHeader(this),
         };
     }

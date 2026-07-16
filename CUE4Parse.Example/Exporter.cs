@@ -13,6 +13,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
+using CUE4Parse.MappingsProvider.Usmap;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Material;
@@ -54,9 +55,8 @@ public static class Exporter
     {
         Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
 
-        // same with ZlibHelper
-        OodleHelper.DownloadOodleDll();
-        OodleHelper.Initialize(OodleHelper.OODLE_DLL_NAME);
+        ZlibHelper.Initialize();
+        OodleHelper.Initialize();
 
         var version = new VersionContainer(EGame.GAME_UE5_6, ETexturePlatform.DesktopMobile);
         var provider = new DefaultFileProvider(_archiveDirectory, SearchOption.TopDirectoryOnly, version)
@@ -102,7 +102,7 @@ public static class Exporter
                     var pointer = new FPackageIndex(pkg, i + 1).ResolvedObject;
                     if (pointer?.Object is null) continue;
 
-                    var dummy = ((AbstractUePackage) pkg).ConstructObject(pointer.Class?.Object?.Value as UStruct, pkg);
+                    var dummy = ((AbstractUePackage) pkg).ConstructObject(pointer.Class, pkg);
                     switch (dummy)
                     {
                         case UTexture when type.HasFlag(ExportType.Texture) && pointer.Object.Value is UTexture texture:

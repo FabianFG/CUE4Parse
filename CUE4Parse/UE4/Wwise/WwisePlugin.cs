@@ -1,87 +1,198 @@
-using System;
-using System.Collections.Generic;
-using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Plugins;
+using CUE4Parse.UE4.Wwise.Plugins.atmoky;
+using CUE4Parse.UE4.Wwise.Plugins.Auro;
+using CUE4Parse.UE4.Wwise.Plugins.Bitcrush;
+using CUE4Parse.UE4.Wwise.Plugins.CrankcaseAudioREVModelPlayer;
+using CUE4Parse.UE4.Wwise.Plugins.iZotope;
+using CUE4Parse.UE4.Wwise.Plugins.MasteringSuite;
+using CUE4Parse.UE4.Wwise.Plugins.McDSP;
+using CUE4Parse.UE4.Wwise.Plugins.MetaXRAudio;
+using CUE4Parse.UE4.Wwise.Plugins.Mindseye;
+using CUE4Parse.UE4.Wwise.Plugins.OculusSpatializer;
+using CUE4Parse.UE4.Wwise.Plugins.PolyspectralMBC;
+using CUE4Parse.UE4.Wwise.Plugins.ResonanceAudio;
+using Newtonsoft.Json;
+using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
 public class WwisePlugin
 {
-    public static void ParsePluginParams(FArchive Ar, uint pluginId, bool always=false)
+    public static IAkPluginParam? TryParsePluginParams(FWwiseArchive Ar, AkPlugin plugin, bool always = false)
     {
-        if (pluginId == 0)
-            return;
-
+        var pluginId = plugin.PluginId;
+        if (pluginId is EAkPluginId.None)
+            return null;
         if ((int) pluginId < 0 && !always)
-            return;
+            return null;
 
         uint size = Ar.Read<uint>();
         if (size == 0)
-            return;
+            return null;
 
-        if (PluginDispatch.TryGetValue(pluginId, out var dispatch))
+        var saved = Ar.Position;
+        var endPosition = saved + size;
+        IAkPluginParam? Params = null;
+        try
         {
-            dispatch(Ar, size);
+            Params = pluginId switch
+            {
+                // Built-in Wwise plugins
+                EAkPluginId.AkFxSrcSineSource => new CAkFxSrcSineParams(Ar),
+                EAkPluginId.AkFxSrcSilenceSource => new CAkFxSrcSilenceParams(Ar),
+                EAkPluginId.AkToneSource => new CAkToneGenParams(Ar),
+                EAkPluginId.AkParameterEQFX => new CAkParameterEQFXParams(Ar),
+                EAkPluginId.AkDelayFX => new CAkDelayFXParams(Ar),
+                EAkPluginId.AkCompressorFX => new CAkCompressorFXParams(Ar),
+                EAkPluginId.AkExpanderFX => new CAkExpanderFXParams(Ar),
+                EAkPluginId.AkPeakLimiterFX => new CAkPeakLimiterFXParams(Ar),
+
+                EAkPluginId.AkMatrixReverbFX => new CAkFDNReverbFXParams(Ar),
+                EAkPluginId.AkSoundSeedImpactFX => new CAkModalSynthParams(Ar),
+                EAkPluginId.AkRoomVerbFX => new CAkRoomVerbFXParams(Ar),
+                EAkPluginId.AkSoundSeedWind => new CAkSoundSeedWindParams(Ar),
+                EAkPluginId.AkSoundSeedWoosh => new CAkSoundSeedWooshParams(Ar),
+                EAkPluginId.AkFlangerFX => new CAkFlangerFXParams(Ar),
+                EAkPluginId.AkGuitarDistortionFX => new CAkGuitarDistortionFXParams(Ar),
+                EAkPluginId.AkConvolutionReverbFX => new CAkConvolutionReverbFXParams(Ar),
+
+                EAkPluginId.AkMeterFX => new CAkMeterFXParams(Ar),
+                EAkPluginId.AkTimeStretchFX => new CAkTimeStretchFXParams(Ar),
+                EAkPluginId.AkTremoloFX => new CAkTremoloFXParams(Ar),
+                EAkPluginId.AkRecorderFX => new CAkRecorderFXParams(Ar, (int) size),
+                EAkPluginId.AkStereoDelayFX => new CAkStereoDelayFXParams(Ar),
+                EAkPluginId.AkPitchShifterFX => new CAkPitchShifterFXParams(Ar),
+                EAkPluginId.AkHarmonizerFX => new CAkHarmonizerFXParams(Ar),
+                EAkPluginId.AkGainFX => new CAkGainFXParams(Ar),
+
+                EAkPluginId.AkSynthOne => new CAkSynthOneParams(Ar),
+
+                EAkPluginId.ASIOSink => new CAkAsioSinkParams(Ar),
+                EAkPluginId.MicrosoftHRTFSink => new CMicrosoftHRTFSinkParams(Ar),
+                EAkPluginId.AkReflectFX => new CAkReflectFXParams(Ar),
+                // EAkPluginId.AkRouterMixer
+
+                EAkPluginId.SystemSink => new CAkSystemSinkParams(Ar),
+                EAkPluginId.DVRByPassSink => new CAkDVRSinkParams(Ar),
+                EAkPluginId.CommunicationSink or EAkPluginId.ControllerHeadphonesSink or  EAkPluginId.VoiceSink or
+                    EAkPluginId.ControllerSpeakerSink or EAkPluginId.AuxiliarySink or EAkPluginId.NoOutputSink or
+                    EAkPluginId.RemoteSystemSink => new CAkDefaultSinkParams(),
+
+                EAkPluginId.AkSoundSeedGrain => new CAkGranularSynthParams(Ar),
+                EAkPluginId.AkImpacterSource => new CAkImpacterParams(Ar),
+                EAkPluginId.MasteringSuiteFX => new CMasteringSuiteFXParams(Ar),
+                EAkPluginId.Ak3DAudioBedMixerFX => new CAk3DAudioBedMixerFXParams(Ar),
+                EAkPluginId.AkChannelRouterFX => new CAkChannelRouterFXParams(Ar),
+
+                EAkPluginId.AkSidechainSendFX => new CAkSidechainSendFXParams(Ar),
+                EAkPluginId.AkSidechainRecvFX => new CAkSidechainRecvFXParams(Ar),
+                EAkPluginId.AkMultibandMeterFX => new CAkMultibandMeterFXParams(Ar),
+                EAkPluginId.AkRecorder_ADM => new CAkRecorderADMFXParams(Ar),
+                EAkPluginId.AkAudioInputSource => new CAkFxSrcAudioInputParams(Ar),
+                EAkPluginId.ASIOSource => new CAkAsioSourceParams(Ar),
+
+                EAkPluginId.AkMotionGeneratorSource or EAkPluginId.AkMotionGeneratorMotionSource => new CAkMotionGeneratorParams(Ar),
+                EAkPluginId.AkMotionSourceSource or EAkPluginId.AkMotionSource => new CAkMotionSourceParams(Ar),
+                EAkPluginId.AkMotionSink => new CAkDefaultSinkParams(),
+
+                EAkPluginId.AkSystemOutputMeta => new CAkSystemOutputParams(Ar),
+                EAkPluginId.AkChannelRouterMeta => new CAkChannelRouterMetaParams(Ar),
+
+                EAkPluginId.atmokyEars => new CAtmokyEarsFXParams(Ar),
+
+                // EAkPluginId.AudioSpectrumFX
+                EAkPluginId.AuroHeadphoneFX => new CAuroHPFXParams(Ar),
+                EAkPluginId.AuroPannerFX => new CAuroPannerFXParams(Ar),
+                EAkPluginId.AuroPannerMixer => new CAuroPannerMixerParams(Ar),
+
+                // EAkPluginId.bnsRadio
+
+                EAkPluginId.Bitcrush => new CBitcrushFXParams(Ar),
+                EAkPluginId.CrankcaseAudioREVModelPlayer => new CREVSourceModelPlayerParams(Ar, (int)size),
+
+                EAkPluginId.iZHybridReverbFX => new CiZHybridReverbFXParams(Ar),
+                EAkPluginId.iZTrashDistortionFX => new CiZTrashDistortionFXParams(Ar),
+                EAkPluginId.iZTrashDelayFX => new CiZTrashDelayFXParams(Ar),
+                EAkPluginId.iZTrashDynamicsFX => new CiZTrashDynamicsFXParams(Ar),
+                EAkPluginId.iZTrashFiltersFX => new CiZTrashFiltersFXParams(Ar),
+                EAkPluginId.iZTrashBoxModelerFX => new CiZTrashBoxModelerFXParams(Ar),
+                EAkPluginId.iZTrashMultibandDistortionFX => new CiZTrashMultibandDistortionFXParams(Ar),
+
+                EAkPluginId.AudioDataPassbackFX => new AudioDataPassbackFXParams(Ar),
+                EAkPluginId.BarbDelayFX => new BarbDelayFXParams(Ar),
+                EAkPluginId.BarbRecorderFX => new BarbRecorderFXParams(Ar),
+                EAkPluginId.DrunkPMSource => new DrunkPMSourceParams(Ar),
+
+                EAkPluginId.MsSpatialSink => new CAkDefaultSinkParams(),
+
+                EAkPluginId.McDSPLimiterFX => new CMcDSPLimiterFXParams(Ar),
+                EAkPluginId.McDSPFutzBoxFX => new CMcDSPFutzBoxFXParams(Ar),
+
+                EAkPluginId.OculusAttachableMixerInputFX => new COculusSpatializerFXAttachmentParams(Ar),
+                EAkPluginId.OculusEndpointSink => new OculusEndpointSinkParams(Ar),
+                EAkPluginId.OculusEndpointMetadata => new OculusEndpointMetadataParams(Ar),
+                EAkPluginId.OculusEndpointExperimentalMetadata => new OculusEndpointExperimentalMetadataParams(Ar),
+                EAkPluginId.OculusSpatializerMixer => new COculusSpatializerFXParams(Ar),
+
+                EAkPluginId.PolyspectralMBC => new CMBCRuntimeParams(Ar, (int)size),
+
+                EAkPluginId.ResonanceAudioRendererFX or EAkPluginId.ResonanceAudioRoomEffectMixer or
+                    EAkPluginId.ResonanceAudioRoomEffectFX => new ResonanceAudioParams(Ar),
+
+                // EAkPluginId.IgniterLive
+                // EAkPluginId.IgniterLiveSynth
+
+                EAkPluginId.TencentGMESendFX or EAkPluginId.TencentGMESource or
+                    EAkPluginId.TencentGMEReceiveSource => new CAkDefaultSinkParams(),
+                // EAkPluginId.TencentGMESessionFX
+
+                _ => new CAkDefaultParams(Ar, (int)size),
+            };
         }
-        else
+        catch (Exception ex)
         {
-            ParseChunkDefault(Ar, size);
+            Log.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with Wwise version {Ar.Version}");
         }
+        finally
+        {
+#if DEBUG
+            if (Params is CAkDefaultParams)
+            {
+                Log.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping {size} bytes");
+            }
+
+            if (Ar.Position != endPosition)
+            {
+                Log.Warning($"Didn't read Wwise plugin '{pluginId}' with Wwise version {Ar.Version} correctly (at {Ar.Position}, should be {endPosition})");
+            }
+#endif
+            Ar.Position = endPosition;
+        }
+
+        return Params;
     }
 
-    public static uint ParsePlugin(FArchive Ar)
+    public static AkPlugin GetPluginId(FWwiseArchive Ar)
     {
-        var fxId = Ar.Read<uint>();
-        if (fxId == uint.MaxValue)
-        {
-            return uint.MaxValue; // Plugin ID == -1 (invalid)
-        }
+        uint rawId = Ar.Read<uint>();
+        if (rawId is uint.MaxValue || rawId is 0)
+            return AkPlugin.None;
 
-        //var type = // (fld >> 0) & 0x000F
-        //var company = // (fld >> 4) & 0x03FF
-
-        return fxId;
+        return new AkPlugin(rawId);
     }
+}
 
-    private static void ParseChunkDefault(FArchive Ar, uint size)
-    {
-        // Skip the size of the chunk (gap)
-        Ar.Position += size;
-    }
+public readonly struct AkPlugin(uint rawId)
+{
+    private readonly uint _raw = rawId;
 
-    // TODO: add plugins
-    private static readonly Dictionary<uint, Action<FArchive, uint>> PluginDispatch = new Dictionary<uint, Action<FArchive, uint>>
-    {
-        //{ 0x00640002, CAkFxSrcSine },
-        { 0x00650002, CAkFxSrcSilence },
-        //{ 0x00660002, CAkToneGen },
-        //{ 0x00690003, CAkParameterEQFX },
-        //{ 0x006A0003, CAkDelayFX },
-        //{ 0x006E0003, CAkPeakLimiterFX },
-        //{ 0x00730003, CAkFDNReverbFX },
-        //{ 0x00760003, CAkRoomVerbFX },
-        //{ 0x007D0003, CAkFlangerFX },
-        //{ 0x007E0003, CAkGuitarDistortionFX },
-        //{ 0x007F0003, CAkConvolutionReverbFX },
-        //{ 0x00810003, CAkMeterFX },
-        //{ 0x00870003, CAkStereoDelayFX },
-        //{ 0x008B0003, CAkGainFX },
-        //{ 0x008A0003, CAkHarmonizerFX },
-        //{ 0x00940002, CAkSynthOne },
-        //{ 0x00C80002, CAkFxSrcAudioInput },
-        //{ 0x00041033, iZTrashDelayFXParams }
-    };
+    public static readonly AkPlugin None = new(uint.MaxValue);
 
-    private static void CAkFxSrcSilence(FArchive Ar, uint size)
-    {
-        long maxOffset = Ar.Position + size;
+    public EAkPluginId PluginId => (EAkPluginId) _raw;
+    public AkCompanyID CompanyId => IsValid ? (AkCompanyID) ((_raw >> 4) & 0xFF) : AkCompanyID.Audiokinetic;
+    public EAkPluginType Type => IsValid ? (EAkPluginType) (_raw & 0xF) : EAkPluginType.None;
 
-        var fDuration = Ar.Read<float>();
-        var fRandomizedLengthMinus = Ar.Read<float>();
-        var fRandomizedLengthPlus = Ar.Read<float>();
-
-        if (Ar.Position != maxOffset)
-        {
-            throw new InvalidOperationException($"Not all bytes of the plugin block were consumed. Read: {Ar.Position} Expected: {maxOffset}");
-        }
-    }
+    [JsonIgnore]
+    public bool IsValid => _raw is not uint.MaxValue && _raw is not 0;
 }

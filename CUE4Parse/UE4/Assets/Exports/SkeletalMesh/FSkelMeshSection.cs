@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -80,10 +78,10 @@ public class FSkelMeshSection
         if (!stripDataFlags.IsAudioVisualDataStripped())
         {
             BaseIndex = Ar.Read<int>();
-            NumTriangles = Ar.Read<int>();
+            NumTriangles = Ar.Ver >= EUnrealEngineObjectUE3Version.DWORD_SKELETAL_MESH_INDICES ? Ar.Read<int>() : Ar.Read<short>();
         }
 
-        if (skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveTriangleSorting)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELETAL_MESH_SORTING_OPTIONS && skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveTriangleSorting)
         {
             var dummyTriangleSorting = Ar.Read<byte>(); // TEnumAsByte<ETriangleSortOption>
         }
@@ -106,7 +104,7 @@ public class FSkelMeshSection
             var dummyEnableClothLOD = Ar.Read<byte>();
         }
 
-        if (Ar.Game == EGame.GAME_DaysGone) return;
+        if (Ar.Game == GAME_DaysGone) return;
 
         if (FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RuntimeRecomputeTangent)
         {
@@ -117,7 +115,7 @@ public class FSkelMeshSection
         bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
         bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
 
-        if (Ar.Game == EGame.GAME_TrainSimWorld2020) Ar.Position += 8;
+        if (Ar.Game == GAME_TrainSimWorld2020) Ar.Position += 8;
 
         if (skelMeshVer >= FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
         {
@@ -180,13 +178,13 @@ public class FSkelMeshSection
                 ClothingData = Ar.Read<FClothingSectionData>();
             }
 
-            if (Ar.Game is EGame.GAME_KingdomHearts3 or EGame.GAME_FinalFantasy7Remake)
+            if (Ar.Game is GAME_KingdomHearts3 or GAME_FinalFantasy7Remake)
             {
                 var shouldReadArray = Ar.Read<int>();
                 var arrayLength = Ar.Read<int>();
                 if (shouldReadArray == 1)
                 {
-                    Ar.Position += Ar.Game == EGame.GAME_KingdomHearts3 ? arrayLength * 24 : arrayLength * 16;
+                    Ar.Position += Ar.Game == GAME_KingdomHearts3 ? arrayLength * 24 : arrayLength * 16;
                 }
             }
 
@@ -231,29 +229,41 @@ public class FSkelMeshSection
     public void SerializeRenderItem(FAssetArchive Ar)
     {
         var stripDataFlags = new FStripDataFlags(Ar);
-        if (Ar.Game == EGame.GAME_Raven2) Ar.Position += 4;
+        if (Ar.Game == GAME_Raven2) Ar.Position += 4;
         MaterialIndex = Ar.Read<short>();
         BaseIndex = Ar.Read<int>();
         NumTriangles = Ar.Read<int>();
-        if (Ar.Game == EGame.GAME_Paragon) Ar.Position += 1; // bool
+        if (Ar.Game == GAME_Paragon) Ar.Position += 1; // bool
         bRecomputeTangent = Ar.ReadBoolean();
         RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
-        if (Ar.Game == EGame.GAME_DeltaForceHawkOps) Ar.Position += 3;
-        if (Ar.Game == EGame.GAME_BigRumbleBoxingCreedChampions) Ar.Position += 4;
+        if (Ar.Game == GAME_DeltaForce) Ar.Position += 3;
+        if (Ar.Game == GAME_BigRumbleBoxingCreedChampions) Ar.Position += 4;
         bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
-        if (Ar.Game is EGame.GAME_FinalFantasy7Rebirth or EGame.GAME_HogwartsLegacy or EGame.GAME_Snowbreak) Ar.Position += 4;
+        if (Ar.Game is GAME_FinalFantasy7Rebirth or GAME_HogwartsLegacy or GAME_Snowbreak or GAME_ChasingKaleidoRIDER or GAME_NeedForSpeedMobile) Ar.Position += 4;
         bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
         BaseVertexIndex = Ar.Read<uint>();
         ClothMappingDataLODs = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? [Ar.ReadArray(() => new FMeshToMeshVertData(Ar))] : Ar.ReadArray(() => Ar.ReadArray(() => new FMeshToMeshVertData(Ar)));
         BoneMap = Ar.ReadArray<ushort>();
         NumVertices = Ar.Read<int>();
-        MaxBoneInfluences = Ar.Read<int>();
+
+        if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.SkeletalMeshUnifiedBoneMap)
+        {
+            const uint unifiedBoneMapBit = 1u << 31;
+            var packedBits = Ar.Read<int>();
+
+            MaxBoneInfluences = (int)(packedBits & ~unifiedBoneMapBit);
+        }
+        else
+        {
+            MaxBoneInfluences = Ar.Read<int>();
+        }
+
         CorrespondClothAssetIndex = Ar.Read<short>();
         ClothingData = Ar.Read<FClothingSectionData>();
 
-        if (Ar.Game == EGame.GAME_Paragon) return;
+        if (Ar.Game == GAME_Paragon) return;
 
-        if (Ar.Game < EGame.GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
+        if (Ar.Game < GAME_UE4_23 || !stripDataFlags.IsClassDataStripped(1)) // DuplicatedVertices, introduced in UE4.23
         {
             Ar.SkipFixedArray(4); // DupVertData
             Ar.SkipFixedArray(8); // DupVertIndexData
@@ -264,17 +274,18 @@ public class FSkelMeshSection
             bDisabled = Ar.ReadBoolean();
         }
 
-        if (Ar.Game is EGame.GAME_InfinityNikki) CustomData = Ar.Read<int>();
+        if (Ar.Game is GAME_InfinityNikki) CustomData = Ar.Read<int>();
 
         Ar.Position += Ar.Game switch
         {
-            EGame.GAME_OutlastTrials => 1,
-            EGame.GAME_RogueCompany or EGame.GAME_BladeAndSoul or EGame.GAME_SYNCED or EGame.GAME_StarWarsHunters => 4,
-            EGame.GAME_FragPunk or EGame.GAME_InfinityNikki => 8,
-            EGame.GAME_MortalKombat1 => 12,
-            EGame.GAME_FateTrigger => 15,
-            EGame.GAME_Strinova => 18,
-            EGame.GAME_SuicideSquad => 11,
+            GAME_OutlastTrials => 1,
+            GAME_RogueCompany or GAME_BladeAndSoul or GAME_SYNCED or
+                GAME_StarWarsHunters or GAME_NeedForSpeedMobile or GAME_ValorantSource => 4,
+            GAME_FragPunk or GAME_InfinityNikki => 8,
+            GAME_MortalKombat1 => 12,
+            GAME_FateTrigger => 19,
+            GAME_Strinova => 18,
+            GAME_SuicideSquad => 11,
             _ => 0,
         };
     }

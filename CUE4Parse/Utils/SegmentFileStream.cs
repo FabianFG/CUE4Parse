@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace CUE4Parse.Utils;
+﻿namespace CUE4Parse.Utils;
 
 internal sealed class SegmentFileStream : Stream
 {

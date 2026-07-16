@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.PoseSearch;
@@ -15,5 +15,5 @@ public class FSearchIndexAsset(FAssetArchive Ar)
     public int FirstPoseIdx = Ar.Read<int>();
     public int FirstSampleIdx = Ar.Read<int>();
     public int LastSampleIdx = Ar.Read<int>();
-    public float ToRealTimeFactor = Ar.Game >= EGame.GAME_UE5_6 ? Ar.Read<float>() : 1.0f;
+    public float ToRealTimeFactor = Ar.Game >= GAME_UE5_6 ? Ar.Read<float>() : 1.0f;
 }

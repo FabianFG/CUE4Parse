@@ -1,9 +1,8 @@
-using System;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -33,7 +32,7 @@ public partial class USkeletalMesh : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 8;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 8;
         base.Deserialize(Ar, validPos);
         LODInfo = GetOrDefault<FSkeletalMeshLODGroupSettings[]?>(nameof(LODInfo)) ?? GetOrDefault<FSkeletalMeshLODGroupSettings[]>("SourceModels", []); ;
 
@@ -56,13 +55,15 @@ public partial class USkeletalMesh : UObject
             Materials[i] = SkeletalMaterials[i].Material;
         }
 
+        if (Ar.Game is GAME_LordOfMysteries) CustomGameData = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
+
         ReferenceSkeleton = new FReferenceSkeleton(Ar);
 
         if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
         {
             LODModels = Ar.Game switch
             {
-                EGame.GAME_GameForPeace => GFPSerializeLODModels(Ar),
+                GAME_GameForPeace => GFPSerializeLODModels(Ar),
                 _ => Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors)),
             };
         }
@@ -96,7 +97,7 @@ public partial class USkeletalMesh : UObject
                     }
                 }
 
-                if (Ar.Game == EGame.GAME_Stalker2)
+                if (Ar.Game == GAME_Stalker2)
                 {
                     var fallbackLODModels = new FStaticLODModel[Ar.Read<int>()];
                     for (var i = 0; i < fallbackLODModels.Length; i++)
@@ -108,12 +109,24 @@ public partial class USkeletalMesh : UObject
                     LODModels = LODModels.Concat(fallbackLODModels).ToArray();
                 }
 
-                if (Ar.Game >= EGame.GAME_UE5_5)
+                if (Ar.Game is GAME_RocoKingdomWorld)
+                {
+                    foreach (var lod in LODModels)
+                    {
+                        for (int i = 0; i < lod.VertexBufferGPUSkin.VertsFloat.Length; i++)
+                        {
+                            var vert = lod.VertexBufferGPUSkin.VertsFloat[i];
+                            vert.Pos = ImportedBounds.BoxExtent * vert.Pos + ImportedBounds.Origin;
+                        }
+                    }
+                }
+
+                if (Ar.Game >= GAME_UE5_5)
                 {
                     NaniteResources = new FNaniteResources(Ar);
                 }
 
-                if (Ar.Game == EGame.GAME_DeadzoneRogue) Ar.Position += 4;
+                if (Ar.Game == GAME_DeadzoneRogue) Ar.Position += 4;
 
                 if (useNewCookedFormat)
                 {
@@ -123,7 +136,7 @@ public partial class USkeletalMesh : UObject
             }
         }
 
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty)
+        if (Ar.Game == GAME_WorldofJadeDynasty)
         {
             _ = new FStripDataFlags(Ar);
             for (var i = 0; i < LODModels.Length; i++)
@@ -132,17 +145,37 @@ public partial class USkeletalMesh : UObject
             }
         }
 
-        if (Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_SKELMESH_NAMEINDEXMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
         {
             var length = Ar.Read<int>();
             Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap
         }
 
-        _ = Ar.ReadArray(() => new FPackageIndex(Ar)); // dummyObjs
+        switch (Ar.Game)
+        {
+            case GAME_Back4Blood:
+                Ar.Position += 8;
+                break;
+            default:
+                _ = Ar.ReadArray(() => new FPackageIndex(Ar)); // dummyObjs
+                break;
+        }
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
         {
             Ar.SkipFixedArray(sizeof(float));
+        }
+
+        if ((Ar.Game >= GAME_UE4_19 && !Ar.IsFilterEditorOnly) || Ar.Game < GAME_UE4_19)
+        {
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH)
+            {
+                if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.NewClothingSystemAdded)
+                {
+                    var num = GetOrDefault("ClothingAssets", Array.Empty<StructProperty>()).Length;
+                    Ar.SkipMultipleFixedArrays(num, 1);
+                }
+            }
         }
 
         // if (bEnablePerPolyCollision)
@@ -150,8 +183,8 @@ public partial class USkeletalMesh : UObject
         //     var bodySetup = new FPackageIndex(Ar);
         // }
 
-        if (Ar.Game == EGame.GAME_OutlastTrials) Ar.Position += 1;
-        if (Ar.Game == EGame.GAME_WeHappyFew) Ar.Position += 20;
+        if (Ar.Game == GAME_OutlastTrials) Ar.Position += 1;
+        if (Ar.Game == GAME_WeHappyFew) Ar.Position += 20;
 
         if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo"))
         {
@@ -176,7 +209,7 @@ public partial class USkeletalMesh : UObject
     {
         if (LODModels is null || MorphTargets.Length == 0) return;
 
-        if (Owner?.Provider?.Versions.Game is EGame.GAME_MortalKombat1)
+        if (Owner?.Provider?.Versions.Game is GAME_MortalKombat1)
         {
             PopulateMorphTargetVerticesDataMK1();
             return;
@@ -195,7 +228,8 @@ public partial class USkeletalMesh : UObject
 
         for (int index = 0; index < MorphTargets.Length; index++)
         {
-            if (!MorphTargets[index].TryLoad(out UMorphTarget morphTarget)) continue;
+            if (!MorphTargets[index].TryLoad<UMorphTarget>(out var morphTarget))
+                continue;
 
             var morphLODModels = morphTarget.MorphLODModels;
             if (morphLODModels.Length == 0)
@@ -215,8 +249,15 @@ public partial class USkeletalMesh : UObject
 
             for (int j = 0; j < morphLODModels.Length; j++)
             {
-                if (morphLODModels[j].Vertices.Length > 0 || morphLODModels[j].NumBaseMeshVerts == 0 || morphLODModels[j].SectionIndices.Length == 0) continue;
-                morphLODModels[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, morphLODModels[j].SectionIndices);
+                if (morphTarget.TryGetCompressedLODModel(j, out var compressedLodModel))
+                {
+                    morphLODModels[j] = new FMorphTargetLODModel(morphLODModels[j].SectionIndices, compressedLodModel.PackedDeltaHeaders, compressedLodModel.PackedDeltaData, compressedLodModel.PositionPrecision, compressedLodModel.TangentPrecision);
+                }
+                else
+                {
+                    if (morphLODModels[j].Vertices.Length > 0 || morphLODModels[j].NumBaseMeshVerts == 0 || morphLODModels[j].SectionIndices.Length == 0 || j >= LODModels.Length || LODModels[j].MorphTargetVertexInfoBuffers is null) continue;
+                    morphLODModels[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, morphLODModels[j].SectionIndices);
+                }
             }
 
             if (morphLODModels.Length >= maxLodLevel) continue;
@@ -225,7 +266,10 @@ public partial class USkeletalMesh : UObject
             Array.Copy(morphLODModels, newMorphLods, morphLODModels.Length);
             for (int j = morphLODModels.Length; j < maxLodLevel; j++)
             {
-                newMorphLods[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, []);
+                if (j < LODModels.Length && LODModels[j].MorphTargetVertexInfoBuffers is not null)
+                    newMorphLods[j] = new FMorphTargetLODModel(LODModels[j].MorphTargetVertexInfoBuffers!, index, []);
+                else
+                    newMorphLods[j] = new FMorphTargetLODModel();
             }
 
             morphTarget.MorphLODModels = newMorphLods;

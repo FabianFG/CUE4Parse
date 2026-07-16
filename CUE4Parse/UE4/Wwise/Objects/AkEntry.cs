@@ -1,6 +1,4 @@
-using System;
-using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Wwise.Enums;
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;
@@ -9,22 +7,43 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 public class AkEntry
 {
     public readonly uint NameHash;
+    public readonly ulong ExternalNameHash;
     public readonly uint OffsetMultiplier;
     public readonly int Size;
     public readonly uint Offset;
     public readonly uint FolderId;
-    public string? Path;
-    public bool IsSoundBank => Data is { Length: >= 4 } && BitConverter.ToUInt32(Data) == (uint)ChunkID.BankHeader;
-    public byte[]? Data;
+    public string? AudioPath;
+    public readonly bool IsSoundBank;
+    public readonly bool IsExternalSound;
+    public FDeferredByteData? Data;
 
-    public AkEntry(FArchive Ar)
+    public AkEntry(FWwiseArchive Ar, bool isSoundBank, bool externalSound = false)
     {
-        NameHash = Ar.Read<uint>();
+        IsSoundBank = isSoundBank;
+        IsExternalSound = externalSound;
+        if (externalSound)
+        {
+            ExternalNameHash = Ar.Read<ulong>();
+        }
+        else
+        {
+            NameHash = Ar.Read<uint>();
+        }
         OffsetMultiplier = Ar.Read<uint>();
         Size = Ar.Read<int>();
         Offset = Ar.Read<uint>();
         FolderId = Ar.Read<uint>();
-        // or should be Offset*OffsetMultiplier
-        Data = Ar.ReadBytesAt(Offset, Size);
+    }
+
+    public string Name => IsExternalSound ? ExternalNameHash.ToString() : NameHash.ToString();
+
+    [MemberNotNull(nameof(AudioPath))]
+    public void ReadAudioPath(AkFolder[] folders) => AudioPath = Path.Combine(folders.FirstOrDefault(x => x.Id == FolderId)?.Name ?? "", Name + (IsSoundBank ? ".bnk" : ".wem"));
+
+    [MemberNotNull(nameof(Data))]
+    public long ReadData(FWwiseArchive Ar, WwiseDataSource source)
+    {
+        Data = WwiseReader.ReadDeferredByteData(Ar, source, Offset * OffsetMultiplier, Size);
+        return Data.LoadedSize;
     }
 }

@@ -1,6 +1,8 @@
-using System;
-using System.Collections.Generic;
+using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.GameTypes.Aion2.Encryption.Aes;
+using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
@@ -11,13 +13,29 @@ public class FAion2L10NFile
     public string Namespace = string.Empty;
     public Dictionary<string, string> Entries = [];
 
-    public FAion2L10NFile(GameFile file)
+    public FAion2L10NFile(GameFile file, IFileProvider provider)
     {
-        using var Ar = file.SafeCreateReader();
-        if (Ar is null) return;
+        var data = file.SafeRead();
+        ArgumentNullException.ThrowIfNull(data);
 
-        Namespace = Ar.ReadFString();
-        Entries = Ar.ReadMap(Ar.ReadFString, Ar.ReadFString);
+        if (data.Length >= 0x18 && BitConverter.ToUInt32(data, 0) == 2)
+        {
+            Aion2DatFileAes.Initialize(provider);
+
+            var decrypted = Aion2DatFileAes.DecryptL10N(data);
+            using var l10nAr = new FByteArchive("Aion2L10N", decrypted, null);
+            if (l10nAr.Read<int>() != 1)
+                throw new ParserException("Invalid AION2 L10N table version");
+            Namespace = l10nAr.ReadFString();
+            Entries = l10nAr.ReadMap(l10nAr.ReadFString, l10nAr.ReadFString);
+
+            return;
+        }
+
+        using var Ar = new FAion2DatFileArchive(data, provider.Versions);
+
+        Namespace = Ar.ReadL10NString();
+        Entries = Ar.ReadMap(Ar.ReadL10NString, Ar.ReadL10NString);
     }
 }
 

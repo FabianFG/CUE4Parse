@@ -1,4 +1,3 @@
-using System;
 using System.Buffers.Binary;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Objects;
@@ -11,12 +10,21 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 [JsonConverter(typeof(FTexture2DMipMapConverter))]
 public class FTexture2DMipMap
 {
-    public FByteBulkData? BulkData;
+    public TBulkData<byte>? BulkData;
     public int SizeX;
     public int SizeY;
     public int SizeZ;
 
-    public FTexture2DMipMap(FByteBulkData bulkData, int sizeX, int sizeY, int sizeZ)
+    public FTexture2DMipMap() { }
+    
+    public FTexture2DMipMap(int sizeX, int sizeY, int sizeZ)
+    {
+        SizeX = sizeX;
+        SizeY = sizeY;
+        SizeZ = sizeZ;
+    }
+
+    public FTexture2DMipMap(TBulkData<byte> bulkData, int sizeX, int sizeY, int sizeZ)
     {
         BulkData = bulkData;
         SizeX = sizeX;
@@ -26,17 +34,17 @@ public class FTexture2DMipMap
 
     public FTexture2DMipMap(FAssetArchive Ar, bool bSerializeMipData = true)
     {
-        var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadBoolean() : Ar.IsFilterEditorOnly;
+        var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < GAME_UE5_0 ? Ar.ReadBoolean() : Ar.IsFilterEditorOnly;
 
         if (bSerializeMipData) BulkData = new FByteBulkData(Ar);
 
-        if (Ar.Game == EGame.GAME_Borderlands3)
+        if (Ar.Game == GAME_Borderlands3)
         {
             SizeX = Ar.Read<ushort>();
             SizeY = Ar.Read<ushort>();
             SizeZ = Ar.Read<ushort>();
         }
-        else if (Ar.Game == EGame.GAME_WorldofJadeDynasty)
+        else if (Ar.Game == GAME_WorldofJadeDynasty)
         {
             SizeX = (int)(Ar.Read<uint>() ^ 0xa537ea93);
             SizeY = Ar.Read<int>();
@@ -46,20 +54,22 @@ public class FTexture2DMipMap
         {
             SizeX = Ar.Read<int>();
             SizeY = Ar.Read<int>();
-            SizeZ = Ar.Game >= EGame.GAME_UE4_20 ? Ar.Read<int>() : 1;
+            SizeZ = Ar.Game >= GAME_UE4_20 ? Ar.Read<int>() : 1;
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_DERIVED_DATA2 && !cooked)
         {
-            var FileRegionType = Ar.Game >= EGame.GAME_UE4_26 ? Ar.Read<byte>() : 0;
-            var derivedDataKey = Ar.Game < EGame.GAME_UE5_0 ? Ar.ReadFString() : "";
-            var bPagedToDerivedData = Ar.Game >= EGame.GAME_UE5_0 ? Ar.ReadBoolean() : false;
+            var FileRegionType = Ar.Game >= GAME_UE4_26 ? Ar.Read<byte>() : 0;
+            var derivedDataKey = Ar.Game < GAME_UE5_0 ? Ar.ReadFString() : "";
+            var bPagedToDerivedData = Ar.Game >= GAME_UE5_0 ? Ar.ReadBoolean() : false;
         }
     }
 
     public bool EnsureValidBulkData(UTextureAllMipDataProviderFactory? provider, int mipLevel)
     {
-        if (BulkData?.Data != null) return true;
+        var bulkData = BulkData?.Data;
+        if (bulkData != null && bulkData.Length > 0)
+            return true;
 
         switch (provider)
         {
@@ -78,7 +88,16 @@ public class FTexture2DMipMap
                     return destination;
                 });
 
-                BulkData = new FByteBulkData(data);
+                BulkData = new FByteArrayData(data);
+                return true;
+            }
+            case UOodleTextureStorageProviderFactory oodleProvider:
+            {
+                if (mipLevel >= oodleProvider.Mips.Length)
+                    throw new ArgumentException("UOodleTextureStorageProviderFactory has no data to work with");
+                var data = oodleProvider.Mips[mipLevel];
+                var decoded = new Lazy<byte[]?>(() => BC7PrepDecoder.Decode(data));
+                BulkData = new FByteArrayData(decoded);
                 return true;
             }
             // default: throw new NotImplementedException("unknown mip data provider");

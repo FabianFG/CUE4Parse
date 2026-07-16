@@ -1,8 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
-
 using CUE4Parse.Utils;
-
 using static System.MathF;
 
 namespace CUE4Parse.UE4.Objects.Core.Math

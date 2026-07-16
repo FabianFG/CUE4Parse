@@ -1,6 +1,4 @@
-using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -91,7 +89,7 @@ public class FVirtualTextureBuiltData
 
     public FVirtualTextureBuiltData(FAssetArchive Ar, int firstMip)
     {
-        //var bStripMips = firstMip > 0 && Ar.Game != EGame.GAME_NobodyWantsToDie;
+        //var bStripMips = firstMip > 0;
         var bCooked = Ar.ReadBoolean();
 
         NumLayers = Ar.Read<uint>();
@@ -100,7 +98,7 @@ public class FVirtualTextureBuiltData
         HeightInBlocks = Ar.Read<uint>();
         TileSize = Ar.Read<uint>();
         TileBorderSize = Ar.Read<uint>();
-        if (Ar.Game >= EGame.GAME_UE5_0) TileDataOffsetPerLayer = Ar.ReadArray<uint>();
+        if (Ar.Game >= GAME_UE5_0) TileDataOffsetPerLayer = Ar.ReadArray<uint>();
 
         //if (!bStripMips)
         {
@@ -108,7 +106,7 @@ public class FVirtualTextureBuiltData
             Width = Ar.Read<uint>();
             Height = Ar.Read<uint>();
 
-            if (Ar.Game >= EGame.GAME_UE5_0)
+            if (Ar.Game >= GAME_UE5_0)
             {
                 ChunkIndexPerMip = Ar.ReadArray<uint>();
                 BaseOffsetPerMip = Ar.ReadArray<uint>();
@@ -122,7 +120,7 @@ public class FVirtualTextureBuiltData
 
         LayerTypes = Ar.ReadArray((int) NumLayers, () => (EPixelFormat) Enum.Parse(typeof(EPixelFormat), Ar.ReadFString()));
 
-        if (Ar.Game >= EGame.GAME_UE5_0)
+        if (Ar.Game >= GAME_UE5_0)
         {
             LayerFallbackColors = new FLinearColor[NumLayers];
             for (int i = 0; i < NumLayers; i++)

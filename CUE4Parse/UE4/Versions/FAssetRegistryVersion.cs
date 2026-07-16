@@ -40,6 +40,8 @@ public enum FAssetRegistryVersionType
     PackageSavedHash,					// Replaced FAssetPackageData::PackageGuid with PackageSavedHash
     ExternalActorToWorldIsEditorOnly,   // FPackageDependencyData::LoadDependenciesFromPackageHeader changed how it calculates PackageDependencies
     ManageDependenciesCookRule,			// CookRule property added to EDependencyProperties for EDependencyCategory::Manage
+    TagSetMapSupports64BitStringNum,	// 64-bit arrays for strings
+    MemoryMappedTagDataStore,			// Tag data store is now memory mapped
 
     // -----<new versions can be added above this line>-------------------------------------------------
     VersionPlusOne,
@@ -53,6 +55,6 @@ public static class FAssetRegistryVersion
     public static void TrySerializeVersion(FArchive Ar, out FAssetRegistryVersionType version)
     {
         var guid = Ar.Read<FGuid>();
-        version = guid == GUID ? Ar.Read<FAssetRegistryVersionType>() : FAssetRegistryVersionType.LatestVersion;
+        version = guid == GUID ? Ar.Read<FAssetRegistryVersionType>() : FAssetRegistryVersionType.PreVersioning;
     }
 }

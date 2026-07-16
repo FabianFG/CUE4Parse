@@ -119,6 +119,7 @@ public enum EExprToken : byte
     EX_AutoRtfmStopTransact = 0x71, // AutoRTFM: if in a transaction, abort or break, otherwise no operation
     EX_AutoRtfmAbortIfNot   = 0x72, // AutoRTFM: evaluate bool condition, abort transaction on false
 
+    EX_A2                   = 0xA2, // Palworld
     EX_F9                   = 0xF9, // Borderland4
     EX_FD                   = 0xFD, // Borderland4, 2XKO
     EX_FE                   = 0xFE, // Borderland4
@@ -165,6 +166,8 @@ public enum EBlueprintTextLiteralType : byte
     Empty,
     /** Text is localized. The bytecode will contain three strings - source, key, and namespace - and should be loaded via FInternationalization */
     LocalizedText,
+    /** Added in 5.8. Text is localized. The bytecode will contain four strings - source, key, namespace, and devnotes - and should be loaded via FInternationalization */
+    LocalizedTextWithNotes,
     /** Text is culture invariant. The bytecode will contain one string, and you should use FText::AsCultureInvariant to initialize the FText instance. */
     InvariantText,
     /** Text is a literal FString. The bytecode will contain one string, and you should use FText::FromString to initialize the FText instance. */

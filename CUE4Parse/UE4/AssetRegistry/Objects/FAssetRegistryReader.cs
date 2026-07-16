@@ -1,9 +1,9 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.AssetRegistry.Objects;
 
@@ -74,6 +74,14 @@ public class FAssetRegistryReader : FAssetRegistryArchive
 
         assetData.TagsAndValues = ret;
         assetData.TaggedAssetBundles = new FAssetBundleData(this);
+    }
+
+    public void AlignPosInArchive()
+    {
+        if (Header.Version < FAssetRegistryVersionType.MemoryMappedTagDataStore)
+            return;
+
+        baseArchive.Position = baseArchive.Position.Align(16);
     }
 
     public override object Clone() => new FAssetRegistryReader((FArchive) baseArchive.Clone(), Header);

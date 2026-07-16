@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Objects.Engine;
 
@@ -11,7 +10,7 @@ public struct FSpline : IUStruct
 
         var wasEnabled = previousImpl  != 0;
         var wasLegacy = previousImpl == 1;
-        
+
         if (wasEnabled)
         {
             // TODO:

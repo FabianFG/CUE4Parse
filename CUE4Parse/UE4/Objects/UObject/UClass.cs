@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
@@ -49,12 +47,12 @@ public class UClass : UStruct
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Game == EGame.GAME_AWayOut) Ar.Position += 4;
+        if (Ar.Game == GAME_AWayOut) Ar.Position += 4;
 
         FuncMap = Ar.ReadMap(Ar.ReadFName, () => new FPackageIndex(Ar));
         ClassFlags = Ar.Read<EClassFlags>();
 
-        if (Ar.Game is EGame.GAME_StarWarsJediFallenOrder or EGame.GAME_StarWarsJediSurvivor or EGame.GAME_AshesOfCreation) Ar.Position += 4;
+        if (Ar.Game is GAME_StarWarsJediFallenOrder or GAME_StarWarsJediSurvivor or GAME_AshesOfCreation) Ar.Position += 4;
 
         ClassWithin = new FPackageIndex(Ar);
         ClassConfigName = Ar.ReadFName();
@@ -70,7 +68,7 @@ public class UClass : UStruct
         }
 
         ClassDefaultObject = new FPackageIndex(Ar);
-        if (Ar.Game == EGame.GAME_Borderlands4) _ = Ar.ReadMap(Ar.Read<ulong>, Ar.Read<int>);
+        if (Ar.Game == GAME_Borderlands4) _ = Ar.ReadMap(Ar.Read<ulong>, Ar.Read<int>);
     }
 
     public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
@@ -106,6 +104,7 @@ public class UClass : UStruct
 
     public string DecompileBlueprintToPseudo(UClassCookedMetaData? cookedMetaData = null)
     {
+        BlueprintDecompilerUtils.Mappings = this.Owner.Mappings;
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
@@ -114,7 +113,7 @@ public class UClass : UStruct
         bool emptyClass = Properties.Count == 0 && (ChildProperties?.Length ?? 0) == 0 && FuncMap.Count == 0 && (classDefaultObject?.Properties.Count ?? 0) == 0;
 
         var c = $"class {derivedClass} : {accessSpecifier} {baseClass}";
-        if (emptyClass) return $"{c} {{ }};";
+        if (emptyClass) return $"{c};";
 
         var stringBuilder = new CustomStringBuilder();
         stringBuilder.AppendLine(c);
@@ -157,7 +156,6 @@ public class UClass : UStruct
         var totalFuncMapCount = FuncMap.Count;
         if (totalFuncMapCount > 0) stringBuilder.AppendLine();
 
-
         var jumpCodeOffsetsMap = new Dictionary<string, List<int>>();
         foreach (var value in FuncMap.Values.Reverse())
         {
@@ -173,13 +171,42 @@ public class UClass : UStruct
                 switch (expression)
                 {
                     case EX_Jump jump:
+                        var targetIndex = (int)jump.CodeOffset;
+                        targetIndex = Array.FindIndex(function.ScriptBytecode, stmt => stmt.StatementIndex == targetIndex);
+                        if (targetIndex >= 0 && targetIndex < function.ScriptBytecode.Length && (function.ScriptBytecode[targetIndex] is EX_Return || function.ScriptBytecode[targetIndex++] is EX_Return))
+                        {
+                            break; // prevents Labels that aren't used
+                        }
                         label = jump.ObjectName;
                         offset = (int)jump.CodeOffset;
+                        break;
+                    case EX_VirtualFunction final:
+                        label = final.VirtualFunctionName.Text.Split('.').Last().Split('[')[0];
+                        if (final.Parameters is [EX_IntConst intConstVirtual])
+                            offset = intConstVirtual.Value;
                         break;
                     case EX_LocalFinalFunction final:
                         label = final.StackNode.Name.Split('.').Last().Split('[')[0];
                         if (final.Parameters is [EX_IntConst intConst])
                             offset = intConst.Value;
+                        break;
+                    case EX_CallMath math:
+                        // creates Labels for Delayed jumps
+                        if (math.StackNode.ToString().Contains("KismetSystemLibrary") && math.StackNode.ToString().Contains("Delay"))
+                        {
+                            foreach (var parameter in math.Parameters)
+                            {
+                                if (parameter is EX_StructConst structConst && structConst.Struct.Name.Contains("LatentActionInfo"))
+                                {
+                                    if (structConst.Properties.FirstOrDefault() is EX_SkipOffsetConst skipOffsetConst)
+                                    {
+                                        var skipOffsetValue = skipOffsetConst.Value;
+                                        offset = (int) skipOffsetValue;
+                                        label = function.Name;
+                                    }
+                                }
+                            }
+                        }
                         break;
                     case EX_PushExecutionFlow flow:
                         label = flow.ObjectPath.ToString().Split('.').Last().Split('[')[0];
@@ -222,8 +249,25 @@ public class UClass : UStruct
                     continue;
                 }
 
-                var parameterExpression = $"{variableType} {property.Name.Text}";
-                parametersList.Add(parameterExpression);
+                parametersList.Add($"{variableType} {property.Name}");
+            }
+
+            foreach (var child in function.Children ?? [])
+            {
+                if (child?.Load() is not UProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                    continue;
+
+                var (_, variableType) = BlueprintDecompilerUtils.GetPropertyType(property);
+                if (variableType is null)
+                    continue;
+
+                if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+                {
+                    returnType = variableType;
+                    continue;
+                }
+
+                parametersList.Add($"{variableType} {property.Name}");
             }
 
             var functionStringBuilder = new CustomStringBuilder();
@@ -256,8 +300,9 @@ public class UClass : UStruct
                 return stringBuilder.ToString();
             }
             var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
-            foreach (var kismetExpression in function.ScriptBytecode)
+            for (int i = 0; i < function.ScriptBytecode.Length; i++)
             {
+                var kismetExpression = function.ScriptBytecode[i];
                 if (kismetExpression is EX_Nothing or EX_NothingInt32 or EX_EndFunctionParms or EX_EndStructConst or EX_EndArray or EX_EndArrayConst or EX_EndSet or EX_EndMap or EX_EndMapConst or EX_EndSetConst or EX_EndOfScript)
                     continue;
 
@@ -275,13 +320,13 @@ public class UClass : UStruct
 #endif
 
                     functionStringBuilder.AppendLine(lineExpression);
-                    if (!lineExpression.StartsWith("return"))
+
+                    if (i + 1 < function.ScriptBytecode.Length && function.ScriptBytecode[i + 1] is not EX_EndOfScript)
                     {
                         functionStringBuilder.AppendLine();
                     }
                 }
             }
-
             functionStringBuilder.CloseBlock();
 
             stringBuilder.AppendLine(functionStringBuilder.ToString());

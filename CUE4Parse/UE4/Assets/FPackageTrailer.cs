@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Compression;
@@ -16,20 +14,27 @@ public class FPackageTrailer
 
     public FPackageTrailer(FAssetArchive Ar)
     {
-        Package = (FAssetArchive)Ar.Clone();
-        Header = new FHeader(Ar);
-        Ar.Position += (long)Header.PayloadsDataLength;
-        Footer = new FFooter(Ar);
+        try
+        {
+            Package = (FAssetArchive) Ar.Clone();
+            Header = new FHeader(Ar);
+            Ar.Position += (long) Header.PayloadsDataLength;
+            Footer = new FFooter(Ar);
+        }
+        catch
+        {
+            // just in case, so it doesn't fail asset load
+        }
     }
 
     public long FindPayloadOffsetInFile(FSHAHash id)
     {
-        if (id.Hash.All(b => b == 0) || Header.PayloadLookupTable is null)
+        if (!id.IsValid() || Header.PayloadLookupTable is null)
             return -1;
 
         foreach (var entry in Header.PayloadLookupTable)
         {
-            if (entry.Identifier.Hash.SequenceEqual(id.Hash))
+            if (entry.Identifier.Equals(id.Hash))
             {
                 return entry.AccessMode switch
                 {
@@ -159,7 +164,7 @@ public class FPackageTrailer
                 Flags = Ar.Read<EPayloadFlags>();
                 FilterFlags = Ar.Read<EPayloadFilterReason>();
             }
-            
+
             if (Version >= (uint)EPackageTrailerVersion.ACCESS_PER_PAYLOAD)
             {
                 AccessMode = Ar.Read<EPayloadAccessMode>();
@@ -171,7 +176,7 @@ public class FPackageTrailer
     {
         // The original trailer format when it was first added
         INITIAL = 0,
-        // Access mode is now per payload and found in FLookupTableEntry 
+        // Access mode is now per payload and found in FLookupTableEntry
         ACCESS_PER_PAYLOAD = 1,
         // Added EPayloadAccessMode to FLookupTableEntry
         PAYLOAD_FLAGS = 2,

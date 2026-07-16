@@ -8,4 +8,4 @@ public class UVirtualMaterialInstanceConstant : UMaterialInstanceConstant;
 public class UStaticLabelMesh : UStaticMesh;
 public class USMBlueprintGeneratedClass : UBlueprintGeneratedClass;
 public class USMNodeBlueprintGeneratedClass : UBlueprintGeneratedClass;
-
+public class UMultiBodyStaticMesh : UStaticMesh;

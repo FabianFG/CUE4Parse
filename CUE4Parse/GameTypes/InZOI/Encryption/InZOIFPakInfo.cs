@@ -1,5 +1,3 @@
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;

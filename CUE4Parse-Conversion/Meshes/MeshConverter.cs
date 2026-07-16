@@ -1,30 +1,25 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using CUE4Parse_Conversion.Landscape;
+using CUE4Parse_Conversion.Meshes.PSK;
+using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
+using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
-using CUE4Parse_Conversion.Meshes.PSK;
-using CUE4Parse.UE4.Assets.Exports.Actor;
-using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
-using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
-using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
+using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
-using CUE4Parse.UE4.Versions;
-using CUE4Parse.UE4.Assets.Exports.Nanite;
-using System.Threading;
-using Serilog;
 
 namespace CUE4Parse_Conversion.Meshes;
 
@@ -54,7 +49,7 @@ public static class MeshConverter
         return true;
     }
 
-    public static bool TryConvert(this USplineMeshComponent? spline, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
+    public static bool TryConvert(this USplineMeshComponent? spline, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs,  ELodFormat lodFormat = ELodFormat.AllLods)
     {
         var originalMesh = spline?.GetStaticMesh().Load<UStaticMesh>();
         if (originalMesh == null)
@@ -62,29 +57,31 @@ public static class MeshConverter
             convertedMesh = new CStaticMesh();
             return false;
         }
-        return TryConvert(originalMesh, spline, out convertedMesh, naniteFormat);
+        return TryConvert(originalMesh, spline, out convertedMesh, naniteFormat, lodFormat);
     }
 
-    public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
+    public static bool TryConvert(this UStaticMesh originalMesh, out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs, ELodFormat lodFormat = ELodFormat.AllLods)
     {
-        return TryConvert(originalMesh, null, out convertedMesh, naniteFormat);
+        return TryConvert(originalMesh, null, out convertedMesh, naniteFormat, lodFormat);
     }
 
     public static bool TryConvert(this UStaticMesh originalMesh, USplineMeshComponent? spline,
-        out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs)
+        out CStaticMesh convertedMesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.OnlyNormalLODs, ELodFormat lodFormat = ELodFormat.AllLods)
     {
         convertedMesh = new CStaticMesh();
-        if (originalMesh.RenderData?.Bounds == null || originalMesh.RenderData?.LODs is null)
+        var renderData = originalMesh.RenderData;
+        if (renderData == null || originalMesh.RenderData?.Bounds == null || originalMesh.RenderData?.LODs is null)
             return false;
 
-        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, originalMesh.RenderData.Bounds.SphereRadius / 2);
+        convertedMesh.BoundingSphere = new FSphere(0f, 0f, 0f, renderData.Bounds!.SphereRadius / 2);
         convertedMesh.BoundingBox = new FBox(
-            originalMesh.RenderData.Bounds.Origin - originalMesh.RenderData.Bounds.BoxExtent,
-            originalMesh.RenderData.Bounds.Origin + originalMesh.RenderData.Bounds.BoxExtent);
+            renderData.Bounds.Origin - renderData.Bounds.BoxExtent,
+            renderData.Bounds.Origin + renderData.Bounds.BoxExtent);
 
-        for (var i = 0; i < originalMesh.RenderData.LODs.Length; i++)
+        var lods = renderData.LODs!;
+        for (var i = 0; i < lods.Length; i++)
         {
-            var srcLod = originalMesh.RenderData.LODs[i];
+            var srcLod = lods[i];
             if (srcLod.SkipLod) continue;
 
             var numTexCoords = srcLod.VertexBuffer!.NumTexCoords;
@@ -175,6 +172,8 @@ public static class MeshConverter
             }
 
             convertedMesh.LODs.Add(staticMeshLod);
+
+            if (lodFormat == ELodFormat.FirstLod) break;
         }
 
         var lodsCount = convertedMesh.LODs.Count;
@@ -199,6 +198,9 @@ public static class MeshConverter
                     break;
             }
         }
+
+        // if (lodFormat == ELodFormat.FirstLod && convertedMesh.LODs.Count > 1)
+        //     convertedMesh.LODs.RemoveRange(1, convertedMesh.LODs.Count - 1);
 
         convertedMesh.FinalizeMesh();
         return true;
@@ -397,6 +399,7 @@ public static class MeshConverter
                 ScreenSize = originalMesh.LODInfo[i].ScreenSize.Default,
                 HasNormals = true,
                 HasTangents = true,
+                LODIndex = i,
                 Indices = new Lazy<uint[]>(() =>
                 {
                     if (srcLod.Indices?.Buffer == null)

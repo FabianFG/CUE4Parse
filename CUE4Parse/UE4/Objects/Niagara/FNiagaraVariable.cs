@@ -11,15 +11,15 @@ public class FNiagaraVariable : FNiagaraVariableBase
 
     public FNiagaraVariable(FAssetArchive Ar) : base(Ar)
     {
-        if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth) Ar.Position += 8;
-        if (Ar.Game == EGame.GAME_HellLetLoose && FallbackStruct is not null)
+        if (Ar.Game == GAME_FinalFantasy7Rebirth) Ar.Position += 8;
+        if (Ar.Game == GAME_HellLetLoose && FallbackStruct is not null)
         {
             VarData =  FallbackStruct.GetOrDefault<byte[]>(nameof(VarData));
             return;
         }
 
         VarData = Ar.ReadArray<byte>();
-        if (Ar.Game == EGame.GAME_FinalFantasy7Rebirth) Ar.Position += 4;
+        if (Ar.Game == GAME_FinalFantasy7Rebirth) Ar.Position += 4;
     }
 
     public FNiagaraVariable(FName name, FStructFallback typeDef, byte[] varData) : base(name, typeDef)

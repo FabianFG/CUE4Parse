@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -22,9 +22,9 @@ public class FMorphTargetDelta
         {
             TangentZDelta = Ar.Read<FVector>();
         }
-        SourceIdx = Ar.Read<uint>();
+        SourceIdx = Ar.Ver >= EUnrealEngineObjectUE3Version.DWORD_SKELETAL_MESH_INDICES ? Ar.Read<uint>() : Ar.Read<ushort>();
 
-        if (Ar.Game == EGame.GAME_StarWarsHunters) Ar.Position += 4;
+        if (Ar.Game == GAME_StarWarsHunters) Ar.Position += 4;
     }
 
     public FMorphTargetDelta(FVector pos, FVector tan, uint index)

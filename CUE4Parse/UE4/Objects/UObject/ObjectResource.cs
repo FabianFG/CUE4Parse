@@ -1,8 +1,6 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Readers;
@@ -258,9 +256,13 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SerialOffset = Ar.Read<long>();
             }
 
-            ForcedExport = Ar.ReadBoolean();
-            NotForClient = Ar.ReadBoolean();
-            NotForServer = Ar.ReadBoolean();
+            if (Ar.Game >= GAME_UE4_0)
+            {
+                ForcedExport = Ar.ReadBoolean();
+                NotForClient = Ar.ReadBoolean();
+                NotForServer = Ar.ReadBoolean();
+            }
+
             PackageGuid = Ar.Ver < EUnrealEngineObjectUE5Version.REMOVE_OBJECT_EXPORT_PACKAGE_GUID ? Ar.Read<FGuid>() : default;
             IsInheritedInstance = Ar.Ver >= EUnrealEngineObjectUE5Version.TRACK_OBJECT_EXPORT_IS_INHERITED && Ar.ReadBoolean();
             PackageFlags = Ar.Read<uint>();
@@ -362,12 +364,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             OuterIndex = new FPackageIndex(Ar);
             ObjectName = Ar.ReadFName();
 
-            if (Ar.Ver >= EUnrealEngineObjectUE4Version.NON_OUTER_PACKAGE_IMPORT && !Ar.IsFilterEditorOnly)
+            if (Ar.Game >=  GAME_UE5_8 || Ar.Ver >= EUnrealEngineObjectUE4Version.NON_OUTER_PACKAGE_IMPORT && !Ar.IsFilterEditorOnly)
             {
                 PackageName = Ar.ReadFName();
             }
 
-            if (Ar.Game == EGame.GAME_RacingMaster) Ar.Position += 1;
+            if (Ar.Game == GAME_RacingMaster) Ar.Position += 1;
 
             ImportOptional = Ar.Ver >= EUnrealEngineObjectUE5Version.OPTIONAL_RESOURCES && Ar.ReadBoolean();
         }

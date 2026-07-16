@@ -1,6 +1,4 @@
-using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.Text;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
@@ -21,7 +19,7 @@ public class UBinaryAsset : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Game != EGame.GAME_OctopathTraveler0 && Ar.Game != EGame.GAME_OctopathTravelerCoTC) return;
+        if (Ar.Game != GAME_OctopathTraveler0 && Ar.Game != GAME_OctopathTravelerCoTC) return;
 
         try
         {

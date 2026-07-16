@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 
 public class UAkAuxBus : UAkAudioType
 {
-    public FStructFallback? AuxBusCookedData { get; private set; }
+    public FWwiseLocalizedAuxBusCookedData? AuxBusCookedData { get; private set; }
     public float MaxAttenuationRadius { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -15,7 +15,9 @@ public class UAkAuxBus : UAkAudioType
 
         if (Ar.Position >= validPos) return;
 
-        AuxBusCookedData = new FStructFallback(Ar, "WwiseLocalizedAuxBusCookedData");
+        AuxBusCookedData = new FWwiseLocalizedAuxBusCookedData(new FStructFallback(Ar, "WwiseLocalizedAuxBusCookedData"));
+        AuxBusCookedData?.SerializeBulkData(Ar);
+
         MaxAttenuationRadius = Ar.Read<float>();
     }
 
@@ -25,10 +27,10 @@ public class UAkAuxBus : UAkAudioType
 
         if (AuxBusCookedData is null) return;
 
-        writer.WritePropertyName("AuxBusCookedData");
+        writer.WritePropertyName(nameof(AuxBusCookedData));
         serializer.Serialize(writer, AuxBusCookedData);
 
-        writer.WritePropertyName("MaxAttenuationRadius");
+        writer.WritePropertyName(nameof(MaxAttenuationRadius));
         writer.WriteValue(MaxAttenuationRadius);
     }
 }

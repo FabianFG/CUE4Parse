@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
         public FExportBundleHeader(FArchive Ar)
         {
-            SerialOffset = Ar.Game >= EGame.GAME_UE5_0 ? Ar.Read<ulong>() : ulong.MaxValue;
+            SerialOffset = Ar.Game >= GAME_UE5_0 ? Ar.Read<ulong>() : ulong.MaxValue;
             FirstEntryIndex = Ar.Read<uint>();
             EntryCount = Ar.Read<uint>();
         }

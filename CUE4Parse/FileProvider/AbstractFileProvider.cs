@@ -1,13 +1,7 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.MappingsProvider;
@@ -47,6 +41,7 @@ namespace CUE4Parse.FileProvider
 
         public VersionContainer Versions { get; }
         public StringComparer PathComparer { get; }
+        public StringComparison StringComparison { get; }
 
         public IoStoreOnDemandOptions? OnDemandOptions { get; set; }
         public FileProviderDictionary Files { get; }
@@ -71,6 +66,7 @@ namespace CUE4Parse.FileProvider
         {
             Versions = versions ?? VersionContainer.DEFAULT_VERSION_CONTAINER;
             PathComparer = pathComparer ?? StringComparer.Ordinal;
+            StringComparison = PathComparer.ToComparison();
 
             Files = new FileProviderDictionary();
             Internationalization = new InternationalizationDictionary(PathComparer);
@@ -126,6 +122,10 @@ namespace CUE4Parse.FileProvider
                         if (inst.Count > 0) _gameDisplayName = inst[0].Value;
                     }
                 }
+
+                if (Versions.Game is GAME_Back4Blood)
+                    _gameDisplayName = "Back 4 Blood"; // They left is as LDTEXT("TEXT_UI_GameTitle")
+
                 return _gameDisplayName;
             }
         }
@@ -319,6 +319,20 @@ namespace CUE4Parse.FileProvider
                     ELanguage.Chinese => "zh-Hans",
                     _ => "en"
                 },
+                "aion2" => language switch
+                {
+                    ELanguage.English => "en-US",
+                    ELanguage.Korean => "ko-KR",
+                    ELanguage.Japanese => "ja-JP",
+                    ELanguage.TraditionalChinese => "zh-TW",
+                    ELanguage.Chinese => "zh-CN",
+                    ELanguage.German => "de-DE",
+                    ELanguage.French => "fr-FR",
+                    ELanguage.Spanish => "es-ES",
+                    ELanguage.PortugueseBrazil => "pt-BR",
+                    ELanguage.Russian => "ru-RU",
+                    _ => "en-US"
+                },
                 _ => language switch // https://www.alchemysoftware.com/livedocs/ezscript/Topics/Catalyst/Language.htm
                 {
                     ELanguage.English => "en",
@@ -431,7 +445,7 @@ namespace CUE4Parse.FileProvider
                 }
                 gameAr?.Dispose();
 
-                Internationalization.InitFromIni(DefaultGame);
+                Internationalization.InitFromIni(DefaultGame, this);
             }
             if (TryGetGameFile("/Game/Config/DefaultEngine.ini", out var defaultEngine))
             {
@@ -751,7 +765,7 @@ namespace CUE4Parse.FileProvider
             ArgumentException.ThrowIfNullOrEmpty("objectName", pathName.Item2);
 
             var package = LoadPackage(pathName.Item1);
-            return package.GetExport<T>(pathName.Item2);
+            return package.GetExport<T>(pathName.Item2, StringComparison);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -772,7 +786,7 @@ namespace CUE4Parse.FileProvider
             ArgumentException.ThrowIfNullOrEmpty("objectName", pathName.Item2);
 
             var package = await LoadPackageAsync(pathName.Item1).ConfigureAwait(false);
-            return package.GetExport<T>(pathName.Item2);
+            return package.GetExport<T>(pathName.Item2, StringComparison);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

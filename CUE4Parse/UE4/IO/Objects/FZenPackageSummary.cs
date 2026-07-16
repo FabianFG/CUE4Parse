@@ -68,7 +68,7 @@ public readonly struct FZenPackageSummary
         ExportMapOffset = Ar.Read<int>();
         ExportBundleEntriesOffset = Ar.Read<int>();
 
-        if (Ar.Game >= EGame.GAME_UE5_3)
+        if (Ar.Game >= GAME_UE5_3)
         {
             DependencyBundleHeadersOffset = Ar.Read<int>();
             DependencyBundleEntriesOffset = Ar.Read<int>();

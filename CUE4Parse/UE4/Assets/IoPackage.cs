@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports;
@@ -61,7 +59,7 @@ public sealed class IoPackage : AbstractUePackage
         int cookedHeaderSize;
         int allExportDataOffset;
 
-        if (uassetAr.Game >= EGame.GAME_UE5_0)
+        if (uassetAr.Game >= GAME_UE5_0)
         {
             // Summary
             var summary = new FZenPackageSummary(uassetAr);
@@ -111,9 +109,9 @@ public sealed class IoPackage : AbstractUePackage
             Name = CreateFNameFromMappedName(summary.Name).Text;
 
             BulkDataMap = [];
-            if (uassetAr.Ver >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || uassetAr.Game == EGame.GAME_TheFirstDescendant)
+            if (uassetAr.Ver >= EUnrealEngineObjectUE5Version.DATA_RESOURCES || uassetAr.Game == GAME_TheFirstDescendant)
             {
-                if (uassetAr.Game >= EGame.GAME_UE5_4)
+                if (uassetAr.Game >= GAME_UE5_4)
                 {
                     var pad = uassetAr.Read<ulong>(); // pad
                     _ = uassetAr.ReadArray<byte>((int) pad);
@@ -141,7 +139,7 @@ public sealed class IoPackage : AbstractUePackage
             exportBundleEntries = uassetAr.ReadArray<FExportBundleEntry>(Summary.ExportCount * 2);
 
             (var storeEntry, importedPackageIds) = GetStoreEntryAndImportedPackageIds(containerHeader, provider);
-            if (uassetAr.Game < EGame.GAME_UE5_3)
+            if (uassetAr.Game < GAME_UE5_3)
             {
                 // Export bundle headers
                 uassetAr.Position = summary.GraphDataOffset;
@@ -241,11 +239,10 @@ public sealed class IoPackage : AbstractUePackage
             ExportsLazy[entry.LocalExportIndex] = new Lazy<UObject>(() =>
             {
                 // Create
-                var clas = ResolveObjectIndex(export.ClassIndex);
-                var struc = clas?.Object?.Value as UStruct;
-                var obj = ConstructObject(struc, this, export.ObjectFlags);
+                var obj = ConstructObject(ResolveObjectIndex(export.ClassIndex), this, export.ObjectFlags);
                 obj.Name = CreateFNameFromMappedName(export.ObjectName).Text;
-                obj.Outer = (ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject)?.Object?.Value ?? this;
+                obj.Outer = ResolveObjectIndex(export.OuterIndex) as ResolvedExportObject;
+                obj.Outer ??= new ResolvedPackageObject(this);
                 obj.Super = ResolveObjectIndex(export.SuperIndex) as ResolvedExportObject;
                 obj.Template = ResolveObjectIndex(export.TemplateIndex) as ResolvedExportObject;
                 obj.Flags |= export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
@@ -255,7 +252,6 @@ public sealed class IoPackage : AbstractUePackage
                 Ar.AbsoluteOffset = newPos ? cookedHeaderSize - allExportDataOffset : (int) export.CookedSerialOffset - pos;
                 Ar.Position = pos;
                 DeserializeObject(obj, Ar, (long) export.CookedSerialSize);
-                // TODO right place ???
                 obj.Flags |= EObjectFlags.RF_LoadCompleted;
                 obj.PostLoad();
                 return obj;
@@ -375,6 +371,7 @@ public sealed class IoPackage : AbstractUePackage
 
     private FPackageId[] LoadGraphData(FArchive Ar)
     {
+        if (Ar.Game is GAME_NeedForSpeedMobile && Ar.ReadBoolean()) Ar.Position += 8;
         var packageCount = Ar.Read<int>();
         if (packageCount == 0) return [];
 
@@ -544,7 +541,7 @@ public sealed class IoPackage : AbstractUePackage
         }
 
         public override FName Name => _export?.ObjectName ?? "None";
-        public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
+        public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedPackageObject(Package);
         public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
         public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
     }
@@ -560,7 +557,7 @@ public sealed class IoPackage : AbstractUePackage
         }
 
         public override FName Name => ((IoPackage) Package).CreateFNameFromMappedName(ExportMapEntry.ObjectName);
-        public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedLoadedObject((UObject) Package);
+        public override ResolvedObject Outer => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.OuterIndex) ?? new ResolvedPackageObject(Package);
         public override ResolvedObject? Class => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.ClassIndex);
         public override ResolvedObject? Super => ((IoPackage) Package).ResolveObjectIndex(ExportMapEntry.SuperIndex);
     }

@@ -19,12 +19,32 @@ namespace CUE4Parse.UE4.IO.Objects
             }
         }
 
-        public readonly uint TocEntryIndex;
-        public FIoChunkId ChunkId => IoStoreReader.TocResource.ChunkIds[TocEntryIndex];
+        private readonly uint _tocEntryIndex;
+        public FIoChunkId ChunkId => IoStoreReader.TocResource.ChunkIds[_tocEntryIndex];
+        public bool IsPackageData
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ChunkId.ChunkType == (IoStoreReader.Game >= GAME_UE5_0
+                ? (byte) EIoChunkType5.ExportBundleData
+                : (byte) EIoChunkType.ExportBundleData);
+        }
+        public bool IsOptionalPackage
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => IsOptionalPackagePath(Path);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static bool IsOptionalPackagePath(string path)
+        {
+            var extensionSeparator = path.LastIndexOf('.');
+            return extensionSeparator > 1 &&
+                   path.AsSpan(..extensionSeparator).EndsWith(".o", StringComparison.Ordinal);
+        }
 
         public FIoStoreEntry(IoStoreReader reader, string path, uint tocEntryIndex) : base(reader, path)
         {
-            TocEntryIndex = tocEntryIndex;
+            _tocEntryIndex = tocEntryIndex;
             ref var offsetLength = ref reader.TocResource.ChunkOffsetLengths[tocEntryIndex];
             Offset = (long) offsetLength.Offset;
             Size = (long) offsetLength.Length;
@@ -32,7 +52,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
         public FIoStoreEntry(IoStoreReader reader, uint tocEntryIndex) : base(reader, "NonIndexed/")
         {
-            TocEntryIndex = tocEntryIndex;
+            _tocEntryIndex = tocEntryIndex;
             Path += $"0x{ChunkId.ChunkId:X8}.{ChunkId.GetExtension(reader)}";
 
             ref var offsetLength = ref reader.TocResource.ChunkOffsetLengths[tocEntryIndex];

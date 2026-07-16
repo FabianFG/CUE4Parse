@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
@@ -8,7 +7,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Objects.RenderCore
 {
     [JsonConverter(typeof(FPackedNormalConverter))]
-    public class FPackedNormal
+    public class FPackedNormal : IUStruct
     {
         public uint Data;
         public float X => (Data & 0xFF) / 127.5f - 1; // // Rescale [0..255] range to [-1..1]

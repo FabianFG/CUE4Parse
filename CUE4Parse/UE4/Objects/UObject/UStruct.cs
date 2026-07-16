@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Kismet;
@@ -52,7 +50,7 @@ public class UStruct : UField
                 }
             }
             catch (Exception e)
-            { 
+            {
                 Log.Warning(e, $"Failed to serialize script bytecode in {Name}");
             }
             finally

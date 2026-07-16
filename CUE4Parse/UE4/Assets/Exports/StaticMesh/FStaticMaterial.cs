@@ -29,14 +29,16 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 OverlayMaterialInterface = new FPackageIndex(Ar);
             }
 
-            if (Ar.Game is EGame.GAME_FragPunk or EGame.GAME_WorldofJadeDynasty) Ar.Position += 4;
+            if (Ar.Game is GAME_FragPunk or GAME_WorldofJadeDynasty) Ar.Position += 4;
         }
 
         public FStaticMaterial(FStructFallback fallback)
         {
             MaterialInterface = fallback.GetOrDefault(nameof(MaterialInterface), new FPackageIndex().ResolvedObject);
-            MaterialSlotName = fallback.GetOrDefault(nameof(MaterialSlotName), "None");
+            MaterialSlotName = fallback.GetOrDefault<FName>(nameof(MaterialSlotName), "None");
+            ImportedMaterialSlotName = fallback.GetOrDefault<FName>(nameof(ImportedMaterialSlotName), "None");
             UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo>(nameof(UVChannelData), null);
+            OverlayMaterialInterface = fallback.GetOrDefault<FPackageIndex>(nameof(OverlayMaterialInterface), new FPackageIndex());
         }
     }
 }

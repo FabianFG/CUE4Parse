@@ -1,8 +1,6 @@
-using CUE4Parse.UE4.Readers;
-
 namespace CUE4Parse.UE4.Wwise.Objects;
 
-public class AkTrackSrcInfo
+public readonly struct AkTrackSrcInfo
 {
     public readonly uint TrackId;
     public readonly uint SourceId;
@@ -13,16 +11,17 @@ public class AkTrackSrcInfo
     public readonly double EndTrimOffset;
     public readonly double SrcDuration;
 
-    public AkTrackSrcInfo(FArchive Ar)
+    public AkTrackSrcInfo(FWwiseArchive Ar)
     {
         TrackId = Ar.Read<uint>();
         SourceId = Ar.Read<uint>();
-        if (WwiseVersions.Version > 150)
+
+        if (Ar.Version > 150)
         {
             CacheId = Ar.Read<uint>();
         }
 
-        if (WwiseVersions.Version > 132)
+        if (Ar.Version > 132)
         {
             EventId = Ar.Read<uint>();
         }

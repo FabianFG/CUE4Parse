@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using CUE4Parse.UE4.Exceptions;
+﻿using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.IO.Objects;
@@ -17,7 +16,7 @@ public struct FIoContainerMetaHeader
     public FIoContainerMetaHeader(FArchive Ar)
     {
         Magic = Ar.ReadBytes(16);
-        if (_magicSequence.SequenceEqual(Magic))
+        if (!_magicSequence.SequenceEqual(Magic))
             throw new ParserException(Ar, "Invalid container meta header magic");
 
         Version = Ar.Read<EVersion>();

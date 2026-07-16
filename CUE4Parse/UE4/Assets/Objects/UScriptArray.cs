@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.GameTypes.DaysGone.Assets;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
@@ -42,7 +40,7 @@ public class UScriptArray
                 $"ArrayProperty element count {elementCount} is larger than the remaining archive size {Ar.Length - Ar.Position}");
         }
 
-        if (Ar.HasUnversionedProperties || Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.HasUnversionedProperties || type is ReadType.RAW || Ar.Game < GAME_UE4_0)
         {
             InnerTagData = tagData.InnerTypeData;
         }
@@ -58,7 +56,7 @@ public class UScriptArray
         }
         else
         {
-            if (Ar.Game == EGame.GAME_DaysGone && InnerType == "StructProperty")
+            if (Ar.Game == GAME_DaysGone && InnerType == "StructProperty")
             {
                 var count = elementCount > 0 ? elementCount : 1;
                 var elemsize = (size - sizeof(int)) / count;

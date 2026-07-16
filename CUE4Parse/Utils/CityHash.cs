@@ -1,4 +1,3 @@
-﻿using System;
 using System.Runtime.CompilerServices;
 
 namespace CUE4Parse.Utils
@@ -63,6 +62,16 @@ namespace CUE4Parse.Utils
             }
         }
 
+        public static ulong CityHash64WithSeed(byte[] buffer, ulong seed)
+        {
+            return CityHash64WithSeeds(buffer, K2, seed);
+        }
+
+        public static ulong CityHash64WithSeeds(byte[] buffer, ulong seed0, ulong seed1)
+        {
+            return HashLen16(CityHash64(buffer) - seed0, seed1);
+        }
+
         private static ulong HashLen0to16(byte* s, uint len)
         {
             if (len >= 8)
@@ -74,14 +83,14 @@ namespace CUE4Parse.Utils
                 ulong d = (Rotate(a, 25) + b) * mul;
                 return HashLen16(c, d, mul);
             }
-            
+
             if (len >= 4)
             {
                 ulong mul = K2 + len * 2;
                 ulong a = Fetch32(s);
                 return HashLen16(len + (a << 3), Fetch32(s + len - 4), mul);
             }
-            
+
             if (len > 0)
             {
                 byte a = s[0];
@@ -91,7 +100,7 @@ namespace CUE4Parse.Utils
                 uint z = len + ((uint)c << 2);
                 return ShiftMix(y * K2 ^ z * K0) * K2;
             }
-            
+
             return K2;
         }
 

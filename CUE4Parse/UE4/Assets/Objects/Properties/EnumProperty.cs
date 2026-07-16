@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.GameTypes.AoC.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -19,17 +18,17 @@ public class EnumProperty : FPropertyTagType<FName>
         }
         else if ((Ar.HasUnversionedProperties && type == ReadType.NORMAL) || type == ReadType.RAW)
         {
-            if (Ar.Game is EGame.GAME_AshesOfCreation && Ar is FAoCDBCReader)
+            if (Ar.Game is GAME_AshesOfCreation && Ar is FAoCDBCReader)
             {
                 Value = Ar.ReadFName();
                 return;
             }
-            var index = 0;
+            long index = 0;
             if (tagData?.InnerType != null)
             {
                 var underlyingProp = ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.NORMAL)?.GenericValue;
                 if (underlyingProp != null && underlyingProp.IsNumericType())
-                    index = Convert.ToInt32(underlyingProp);
+                    index = Convert.ToInt64(underlyingProp);
             }
             else
             {
@@ -45,7 +44,7 @@ public class EnumProperty : FPropertyTagType<FName>
 
     public EnumProperty(FName value) => Value = value;
 
-    private static string IndexToEnum(FAssetArchive Ar, FPropertyTagData? tagData, int index)
+    private static string IndexToEnum(FAssetArchive Ar, FPropertyTagData? tagData, long index)
     {
         var enumName = tagData?.EnumName;
         if (enumName == null)

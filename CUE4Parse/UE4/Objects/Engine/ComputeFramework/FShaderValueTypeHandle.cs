@@ -20,13 +20,14 @@ public struct FShaderValueTypeHandle : IUStruct
         Type = Ar.Read<EShaderFundamentalType>();
 
         //if (FComputeFrameworkObjectVersion.Get(Ar) >= FComputeFrameworkObjectVersion.Type.InitialVersion)
-        if(Ar.Game >= EGame.GAME_UE5_1)
+        if(Ar.Game >= GAME_UE5_1)
         {
             bIsDynamicArray = Ar.ReadBoolean();
         }
 
         if (Type == EShaderFundamentalType.Struct)
         {
+            Name = Ar.ReadFName();
             StructElements = Ar.ReadArray(() => new FStructElement(Ar));
         }
         else
@@ -44,10 +45,10 @@ public struct FShaderValueTypeHandle : IUStruct
         }
     }
 
-    public struct FStructElement(FAssetArchive ar)
+    public struct FStructElement(FAssetArchive Ar)
     {
-        public FName Name = ar.ReadFName();
-        public EShaderFundamentalType Type = ar.Read<EShaderFundamentalType>();
+        public FName Name = Ar.ReadFName();
+        public FShaderValueTypeHandle Type = new FShaderValueTypeHandle(Ar);
     }
 
     public enum EShaderFundamentalType : byte

@@ -1,137 +1,243 @@
-using System.Collections.Generic;
-using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Wwise.Enums;
+using CUE4Parse.UE4.Wwise.Enums.Flags;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects.HIRC;
 
+// CAkBus
 public class BaseHierarchyBus : AbstractHierarchy
 {
     public readonly uint OverrideBusId;
     public readonly uint DeviceSharesetId;
-    public readonly List<AkProp> Props = [];
+    public readonly AkProp[] Props = [];
     public readonly AkPositioningParams? PositioningParams;
     public readonly AkAuxParams? AuxParams;
-    public readonly EAdvSettings? AdvSettingsParams;
+    public readonly EAdvSettingsFlags? AdvSettingsParams;
     public readonly ushort? MaxNumInstance;
-    public readonly uint? ChannelConfig;
+    public readonly AkChannelConfig ChannelConfig;
     public readonly byte? HdrEnvelopeFlags;
-    public readonly uint RecoveryTime;
+    public readonly int RecoveryTime;
     public readonly float MaxDuckVolume;
-    public readonly List<AkDuckInfo> DuckInfo = [];
+    public readonly AkDuckInfo[] DuckInfo = [];
     public readonly AkFxBus FxBusParams;
     public readonly byte OverrideAttachmentParams;
-    public readonly List<AkFxChunk> FxChunk = [];
-    public readonly List<AkRtpc> RtpcList;
-    public readonly List<AkStateGroup>? StateGroups;
+    public readonly AkFxChunk[] FxChunks = [];
+    public readonly AkFxChunk[] MetadataParams = [];
+    public readonly AkRtpc[] RTPCs;
+    public readonly AkStateGroup[] StateGroups;
+    public readonly AkFeedbackInfo? FeedbackInfo;
 
-    public BaseHierarchyBus(FArchive Ar) : base(Ar)
+    // CAkBus::SetInitialValues
+    public BaseHierarchyBus(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         OverrideBusId = Ar.Read<uint>();
-        if (WwiseVersions.Version > 126 && OverrideBusId == 0)
+        if (Ar.Version > 126 && OverrideBusId == 0)
         {
             DeviceSharesetId = Ar.Read<uint>();
         }
 
-        if (WwiseVersions.Version > 56)
+        if (Ar.Version > 56)
         {
-            int propCount = Ar.Read<byte>();
-            var propIds = new byte[propCount];
-            var propValues = new float[propCount];
-
-            for (int i = 0; i < propCount; i++)
-            {
-                propIds[i] = Ar.Read<byte>();
-            }
-
-            for (int i = 0; i < propCount; i++)
-            {
-                propValues[i] = Ar.Read<float>();
-            }
-
-            Props = new List<AkProp>(propCount);
-            for (int i = 0; i < propCount; i++)
-            {
-                Props.Add(new AkProp(propIds[i], propValues[i]));
-            }
+            Props = AkPropBundle.ReadSequentialAkProp(Ar);
         }
 
-        if (WwiseVersions.Version > 122)
+        if (Ar.Version > 122)
         {
             PositioningParams = new AkPositioningParams(Ar);
             AuxParams = new AkAuxParams(Ar);
         }
 
-        if (WwiseVersions.Version <= 53)
+        switch (Ar.Version)
         {
-            // TODO: Handle this case
-        }
-        else if (WwiseVersions.Version <= 122)
-        {
-            Ar.Read<byte>();
-            AdvSettingsParams = Ar.Read<EAdvSettings>();
-            MaxNumInstance = Ar.Read<ushort>();
-            ChannelConfig = Ar.Read<uint>();
-            HdrEnvelopeFlags = Ar.Read<byte>();
-        }
-        else
-        {
-            AdvSettingsParams = Ar.Read<EAdvSettings>();
-            MaxNumInstance = Ar.Read<ushort>();
-            ChannelConfig = Ar.Read<uint>();
-            HdrEnvelopeFlags = Ar.Read<byte>();
+            case <= 53:
+            {
+                Ar.Read<float>(); // VolumeMain
+                Ar.Read<float>(); // LFEVolumeMain
+                Ar.Read<float>(); // PitchMain
+                Ar.Read<float>(); // LPFMain
+
+                var killNewest = Ar.ReadBool();
+                MaxNumInstance = Ar.Read<ushort>();
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
+
+                if (Ar.Version > 48)
+                    ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
+
+                Ar.Read<byte>();
+                Ar.Read<byte>();
+
+                if (Ar.Version > 48)
+                    _ = Ar.ReadBool(); // IsEnvironmental
+
+                AdvSettingsParams = EAdvSettingsFlags.None;
+                if (killNewest)
+                    AdvSettingsParams |= EAdvSettingsFlags.KillNewest;
+                if (isMaxNumInstOverrideParent)
+                    AdvSettingsParams |= EAdvSettingsFlags.IgnoreParentMaxNumInst;
+                break;
+            }
+            case <= 56:
+            {
+                Ar.Read<float>(); // VolumeMain
+                Ar.Read<float>(); // LFEVolumeMain
+                Ar.Read<float>(); // PitchMain
+                Ar.Read<float>(); // LPFMain
+
+                var killNewest = Ar.ReadBool();
+                var useVirtualBehavior = Ar.ReadBool();
+                MaxNumInstance = Ar.Read<ushort>();
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
+
+                ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
+
+                Ar.Read<byte>();
+                Ar.Read<byte>();
+
+                _ = Ar.ReadBool(); // bIsEnvBus
+
+                AdvSettingsParams = EAdvSettingsFlags.None;
+                if (killNewest)
+                    AdvSettingsParams |= EAdvSettingsFlags.KillNewest;
+                if (useVirtualBehavior)
+                    AdvSettingsParams |= EAdvSettingsFlags.UseVirtualBehavior;
+                if (isMaxNumInstOverrideParent)
+                    AdvSettingsParams |= EAdvSettingsFlags.IgnoreParentMaxNumInst;
+                break;
+            }
+            case <= 65:
+            {
+                var killNewest = Ar.ReadBool();
+                var useVirtualBehavior = Ar.ReadBool();
+                MaxNumInstance = Ar.Read<ushort>();
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
+
+                ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
+
+                Ar.Read<byte>();
+                Ar.Read<byte>();
+
+                _ = Ar.ReadBool(); // bIsEnvBus
+
+                AdvSettingsParams = EAdvSettingsFlags.None;
+                if (killNewest)
+                    AdvSettingsParams |= EAdvSettingsFlags.KillNewest;
+                if (useVirtualBehavior)
+                    AdvSettingsParams |= EAdvSettingsFlags.UseVirtualBehavior;
+                if (isMaxNumInstOverrideParent)
+                    AdvSettingsParams |= EAdvSettingsFlags.IgnoreParentMaxNumInst;
+                break;
+            }
+            case <= 77:
+            {
+                var killNewest = Ar.ReadBool();
+                var useVirtualBehavior = Ar.ReadBool();
+                MaxNumInstance = Ar.Read<ushort>();
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
+
+                ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
+
+                Ar.Read<byte>();
+                Ar.Read<byte>();
+
+                AdvSettingsParams = EAdvSettingsFlags.None;
+
+                if (killNewest)
+                    AdvSettingsParams |= EAdvSettingsFlags.KillNewest;
+                if (useVirtualBehavior)
+                    AdvSettingsParams |= EAdvSettingsFlags.UseVirtualBehavior;
+                if (isMaxNumInstOverrideParent)
+                    AdvSettingsParams |= EAdvSettingsFlags.IgnoreParentMaxNumInst;
+                break;
+            }
+            case <= 89:
+            {
+                Ar.Read<byte>(); // PositioningEnabled
+                Ar.Read<byte>(); // PositioningEnablePanner
+
+                var killNewest = Ar.ReadBool();
+                var useVirtualBehavior = Ar.ReadBool();
+                MaxNumInstance = Ar.Read<ushort>();
+                var isMaxNumInstOverrideParent = Ar.ReadBool();
+
+                ChannelConfig = new AkChannelConfig(Ar.Read<ushort>());
+
+                Ar.Read<byte>();
+                Ar.Read<byte>();
+
+                var isHdrBus = Ar.ReadBool();
+                var hdrReleaseModeExponential = Ar.ReadBool();
+
+                AdvSettingsParams = EAdvSettingsFlags.None;
+                if (killNewest)
+                    AdvSettingsParams |= EAdvSettingsFlags.KillNewest;
+                if (useVirtualBehavior)
+                    AdvSettingsParams |= EAdvSettingsFlags.UseVirtualBehavior;
+                if (isMaxNumInstOverrideParent)
+                    AdvSettingsParams |= EAdvSettingsFlags.IgnoreParentMaxNumInst;
+
+                // Set HdrEnvelopeFlags
+                //if (isHdrBus)
+                //if (hdrReleaseModeExponential)
+                break;
+            }
+            case <= 122:
+            {
+                Ar.Read<byte>();
+                AdvSettingsParams = Ar.Read<EAdvSettingsFlags>();
+                MaxNumInstance = Ar.Read<ushort>();
+                ChannelConfig = new AkChannelConfig(Ar);
+                HdrEnvelopeFlags = Ar.Read<byte>();
+                break;
+            }
+            default:
+            {
+                AdvSettingsParams = Ar.Read<EAdvSettingsFlags>();
+                MaxNumInstance = Ar.Read<ushort>();
+                ChannelConfig = new AkChannelConfig(Ar);
+                HdrEnvelopeFlags = Ar.Read<byte>();
+                break;
+            }
         }
 
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 52)
         {
-            var stateGroupId = Ar.Read<uint>();
+            Ar.Read<uint>(); // stateGroupId
         }
 
-        RecoveryTime = Ar.Read<uint>();
+        RecoveryTime = Ar.Read<int>();
 
-        if (WwiseVersions.Version > 38)
+        if (Ar.Version > 38)
         {
             MaxDuckVolume = Ar.Read<float>();
         }
 
-        if (WwiseVersions.Version <= 56)
+        if (Ar.Version <= 52)
         {
-            var stateSyncType = Ar.Read<uint>();
+            Ar.Read<uint>(); // stateSyncType
         }
 
-        var numDucks = Ar.Read<uint>();
-        for (int i = 0; i < numDucks; i++)
-        {
-            DuckInfo.Add(new AkDuckInfo(Ar));
-        }
+        DuckInfo = Ar.ReadArray((int) Ar.Read<uint>(), () => new AkDuckInfo(Ar));
 
         FxBusParams = new AkFxBus(Ar);
 
-        if (WwiseVersions.Version > 89 && WwiseVersions.Version <= 145)
+        if (Ar.Version > 89 && Ar.Version <= 145)
         {
             OverrideAttachmentParams = Ar.Read<byte>();
         }
 
-        if (WwiseVersions.Version > 136)
+        if (Ar.Version > 136)
         {
-            var numFx = Ar.Read<byte>();
-            if (numFx > 0)
-            {
-                for (int i = 0; i < numFx; i++)
-                {
-                    FxChunk.Add(new AkFxChunk(Ar));
-                }
-            }
+            MetadataParams = Ar.ReadArray(Ar.Read<byte>(), () => new AkFxChunk(Ar));
         }
 
-        RtpcList = AkRtpc.ReadMultiple(Ar);
+        RTPCs = AkRtpc.ReadArray(Ar);
 
-        if (WwiseVersions.Version <= 52)
+        if (Ar.Version <= 52)
         {
-            // TODO: State chunk inlined
+            // State chunk inlined
             StateGroups = new AkStateChunk(Ar).Groups;
         }
-        else if (WwiseVersions.Version <= 122)
+        else if (Ar.Version <= 122)
         {
             StateGroups = new AkStateChunk(Ar).Groups;
         }
@@ -140,98 +246,101 @@ public class BaseHierarchyBus : AbstractHierarchy
             StateGroups = new AkStateAwareChunk(Ar).Groups;
         }
 
-        if (WwiseVersions.Version <= 126)
+        if (Ar.Version <= 126 && Ar.HasFeedback)
         {
-            // TODO: FeedbackInfo
+            FeedbackInfo = new AkFeedbackInfo(Ar);
         }
     }
 
     public override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
-        writer.WritePropertyName("OverrideBusId");
+        writer.WritePropertyName(nameof(OverrideBusId));
         writer.WriteValue(OverrideBusId);
-        writer.WritePropertyName("DeviceSharesetId");
+        writer.WritePropertyName(nameof(DeviceSharesetId));
         writer.WriteValue(DeviceSharesetId);
 
-        writer.WritePropertyName("Props");
+        writer.WritePropertyName(nameof(Props));
         writer.WriteStartArray();
         foreach (var p in Props)
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("Id");
+            writer.WritePropertyName(nameof(p.Id));
             writer.WriteValue(p.Id);
-            writer.WritePropertyName("Value");
-            writer.WriteValue(p.Value);
+            writer.WritePropertyName(nameof(p.Value));
+            writer.WriteValue(p.Value.Value);
             writer.WriteEndObject();
         }
         writer.WriteEndArray();
 
         if (PositioningParams != null)
         {
-            writer.WritePropertyName("PositioningParams");
+            writer.WritePropertyName(nameof(PositioningParams));
             serializer.Serialize(writer, PositioningParams);
         }
 
         if (AuxParams != null)
         {
-            writer.WritePropertyName("AuxParams");
+            writer.WritePropertyName(nameof(AuxParams));
             serializer.Serialize(writer, AuxParams);
         }
 
         if (AdvSettingsParams.HasValue)
         {
-            writer.WritePropertyName("AdvSettingsParams");
+            writer.WritePropertyName(nameof(AdvSettingsParams));
             writer.WriteValue(AdvSettingsParams.Value.ToString());
         }
 
         if (MaxNumInstance.HasValue)
         {
-            writer.WritePropertyName("MaxNumInstance");
+            writer.WritePropertyName(nameof(MaxNumInstance));
             writer.WriteValue(MaxNumInstance.Value);
         }
 
-        if (ChannelConfig.HasValue)
-        {
-            writer.WritePropertyName("ChannelConfig");
-            writer.WriteValue(ChannelConfig.Value);
-        }
+        writer.WritePropertyName(nameof(ChannelConfig));
+        serializer.Serialize(writer, ChannelConfig);
 
         if (HdrEnvelopeFlags.HasValue)
         {
-            writer.WritePropertyName("HdrEnvelopeFlags");
+            writer.WritePropertyName(nameof(HdrEnvelopeFlags));
             writer.WriteValue(HdrEnvelopeFlags.Value);
         }
 
-        writer.WritePropertyName("RecoveryTime");
+        writer.WritePropertyName(nameof(RecoveryTime));
         writer.WriteValue(RecoveryTime);
 
-        writer.WritePropertyName("DuckInfo");
+        writer.WritePropertyName(nameof(DuckInfo));
         writer.WriteStartArray();
         foreach (var d in DuckInfo)
             serializer.Serialize(writer, d);
         writer.WriteEndArray();
 
-        writer.WritePropertyName("FxBusParams");
+        writer.WritePropertyName(nameof(FxBusParams));
         serializer.Serialize(writer, FxBusParams);
 
-        writer.WritePropertyName("OverrideAttachmentParams");
+        writer.WritePropertyName(nameof(OverrideAttachmentParams));
         writer.WriteValue(OverrideAttachmentParams);
 
-        writer.WritePropertyName("FxChunk");
+        writer.WritePropertyName(nameof(FxChunks));
         writer.WriteStartArray();
-        foreach (var f in FxChunk)
+        foreach (var f in FxChunks)
             serializer.Serialize(writer, f);
         writer.WriteEndArray();
 
-        writer.WritePropertyName("RtpcList");
+        writer.WritePropertyName(nameof(MetadataParams));
         writer.WriteStartArray();
-        foreach (var r in RtpcList)
+        foreach (var m in MetadataParams)
+            serializer.Serialize(writer, m);
+        writer.WriteEndArray();
+
+        writer.WritePropertyName(nameof(RTPCs));
+        writer.WriteStartArray();
+        foreach (var r in RTPCs)
             serializer.Serialize(writer, r);
         writer.WriteEndArray();
 
         if (StateGroups != null)
         {
-            writer.WritePropertyName("StateGroups");
+            writer.WritePropertyName(nameof(StateGroups));
             serializer.Serialize(writer, StateGroups);
         }
     }

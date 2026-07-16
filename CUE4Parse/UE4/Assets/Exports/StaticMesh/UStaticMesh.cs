@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -6,13 +5,13 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 public class UStaticMesh : UObject
 {
     public bool bCooked { get; private set; }
+    public bool HasTangents { get; private set; }
     public FPackageIndex BodySetup { get; private set; }
     public FPackageIndex NavCollision { get; private set; }
     public FGuid LightingGuid { get; private set; }
@@ -24,14 +23,19 @@ public class UStaticMesh : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
+        if(Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
         Materials = [];
         LODForCollision = GetOrDefault(nameof(LODForCollision), 0);
 
         var stripDataFlags = new FStripDataFlags(Ar);
-        bCooked = Ar.ReadBoolean();
-        BodySetup = new FPackageIndex(Ar);
+        bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR && Ar.ReadBoolean();
+        HasTangents = Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE;
+
+        if (Ar.Game == GAME_WutheringWaves && GetOrDefault<bool>("bUseStandaloneBodySetup"))
+            BodySetup = GetOrDefault<FPackageIndex>("StandaloneBodySetup");
+        else
+            BodySetup = new FPackageIndex(Ar);
 
         if (Ar.Versions["StaticMesh.HasNavCollision"])
             NavCollision = new FPackageIndex(Ar);
@@ -64,30 +68,33 @@ public class UStaticMesh : UObject
         {
             RenderData = Ar.Game switch
             {
-                EGame.GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
-                EGame.GAME_WeHappyFew => new GFPStaticMeshRenderData(Ar, true),
+                GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
+                GAME_WeHappyFew => new GFPStaticMeshRenderData(Ar, true),
                 _ => RenderData = new FStaticMeshRenderData(Ar)
             };
         }
 
-        if (Ar.Game == EGame.GAME_WutheringWaves && GetOrDefault<bool>("bUseKuroLODDistance") && Ar.ReadBoolean())
+        if (Ar.Game == GAME_WutheringWaves && GetOrDefault<bool>("bUseKuroLODDistance") && Ar.ReadBoolean())
         {
             Ar.Position += 64; // 8 per-platform floats
         }
 
-        if (bCooked && Ar.Game is >= EGame.GAME_UE4_20 and < EGame.GAME_UE5_0 && Ar.Game != EGame.GAME_DreamStar) // DS removed this for some reason
+        if (Ar.Game is GAME_RocoKingdomWorld) Ar.Position += 4;
+
+        if (bCooked && Ar.Game is >= GAME_UE4_20 and < GAME_UE5_0 && Ar.Game != GAME_DreamStar) // DS removed this for some reason
         {
             var bHasOccluderData = Ar.ReadBoolean();
             if (bHasOccluderData)
             {
                 switch (Ar.Game)
                 {
-                    case EGame.GAME_CrystalOfAtlan:
-                    case EGame.GAME_FragPunk:
-                        if (Ar.Game is EGame.GAME_FragPunk && !Ar.ReadBoolean()) break;
+                    case GAME_CrystalOfAtlan:
+                    case GAME_FragPunk:
+                    case GAME_RocoKingdomWorld:
+                        if (Ar.Game is GAME_FragPunk && !Ar.ReadBoolean()) break;
                         Ar.SkipMultipleBulkArrayData(3);
                         break;
-                    case EGame.GAME_Farlight84:
+                    case GAME_Farlight84:
                     {
                         Ar.SkipMultipleBulkArrayData(2);
                         var count = Ar.Read<int>();
@@ -95,6 +102,23 @@ public class UStaticMesh : UObject
                             Ar.SkipMultipleBulkArrayData(2);
                         break;
                     }
+                    case GAME_NeedForSpeedMobile:
+                        Ar.SkipMultipleBulkArrayData(3);
+                        Ar.Position += 4;
+                        var count1 = Ar.Read<int>();
+                        for (var i = 0; i < count1; i++)
+                        {
+                            Ar.Position += 4;
+                            Ar.SkipMultipleFixedArrays(2, 4);
+                        }
+                        break;
+                    case GAME_HonorofKingsWorld:
+                        Ar.SkipBulkArrayData();
+                        break;
+                    case GAME_ArenaBreakoutMobile:
+                    case GAME_ValorantSource:
+                        Ar.SkipMultipleBulkArrayData(2);
+                        break;
                     default:
                         Ar.SkipFixedArray(12); // Vertices
                         Ar.SkipFixedArray(2); // Indices
@@ -103,10 +127,27 @@ public class UStaticMesh : UObject
             }
         }
 
-        if (Ar.Game is EGame.GAME_FateTrigger or EGame.GAME_GhostsofTabor or EGame.GAME_Aion2) Ar.Position += 4;
-        if (Ar.Game is EGame.GAME_TheFinals && Ar.ReadBoolean()) Ar.SkipMultipleBulkArrayData(5);
+        switch (Ar.Game)
+        {
+            case GAME_FateTrigger or GAME_GhostsofTabor or GAME_Aion2:
+                Ar.Position += 4;
+                break;
+            case GAME_TheFinals or GAME_ArcRaiders when Ar.ReadBoolean():
+                Ar.SkipMultipleBulkArrayData(5);
+                break;
+            case GAME_ValorantSource when Ar.ReadBoolean():
+                var count = Ar.Read<int>();
+                for (var i = 0; i < count; i++)
+                {
+                    Ar.Position += 64;
+                    Ar.SkipFixedArray(16);
+                }
+                Ar.SkipFixedArray(12);
+                break;
+        }
 
-        if (Ar.Game >= EGame.GAME_UE4_14)
+        // (Ar.Ver >= EUnrealEngineObjectUE4Version.SPEEDTREE_STATICMESH), but we check UE version for Materials
+        if (Ar.Game >= GAME_UE4_14)
         {
             var bHasSpeedTreeWind = Ar.ReadBoolean();
             if (bHasSpeedTreeWind)
@@ -138,9 +179,9 @@ public class UStaticMesh : UObject
 
         Ar.Position += Ar.Game switch
         {
-            EGame.GAME_OutlastTrials => 1,
-            EGame.GAME_Farlight84 or EGame.GAME_DuneAwakening => 4,
-            EGame.GAME_DaysGone => Ar.Read<int>() * 4 + 4,
+            GAME_OutlastTrials => 1,
+            GAME_Farlight84 or GAME_DuneAwakening => 4,
+            GAME_DaysGone => Ar.Read<int>() * 4 + 4,
             _ => 0
         };
     }

@@ -1,6 +1,6 @@
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.RenderCore
@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Objects.RenderCore
             Z = Ar.Read<ushort>();
             W = Ar.Read<ushort>();
 
-            if (Ar.Game >= EGame.GAME_UE4_20)
+            if (Ar.Game >= GAME_UE4_20)
             {
                 X ^= 0x8000;
                 Y ^= 0x8000;

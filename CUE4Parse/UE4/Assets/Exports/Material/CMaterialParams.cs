@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using CUE4Parse.UE4.Objects.Core.Math;
+﻿using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {

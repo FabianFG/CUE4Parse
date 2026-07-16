@@ -1,6 +1,4 @@
 using CUE4Parse.UE4.FMod.Objects;
-using System.Collections.Generic;
-using System.IO;
 
 namespace CUE4Parse.UE4.FMod.Nodes.Instruments;
 
@@ -37,7 +35,7 @@ public class InstrumentNode
         {
             Flags = Ar.ReadInt32();
         }
-        else 
+        else
         {
             Flags = Ar.ReadByte();
         }

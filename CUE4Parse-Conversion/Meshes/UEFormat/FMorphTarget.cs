@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -10,7 +9,7 @@ public readonly struct FMorphTarget : ISerializable
 {
     private readonly string MorphName;
     private readonly List<FMorphData> MorphData = [];
-    
+
     public FMorphTarget(string morphName, FMorphTargetLODModel morphLod)
     {
         MorphName = morphName;
@@ -19,7 +18,7 @@ public readonly struct FMorphTarget : ISerializable
             MorphData.Add(new FMorphData(delta.PositionDelta, delta.TangentZDelta, delta.SourceIdx));
         }
     }
-    
+
     public void Serialize(FArchiveWriter Ar)
     {
         Ar.WriteFString(MorphName);
@@ -39,7 +38,7 @@ public readonly struct FMorphData : ISerializable
         TangentZDelta = tangentZDelta;
         VertexIndex = vertexIndex;
     }
-    
+
     public void Serialize(FArchiveWriter Ar)
     {
         PositionDelta.Serialize(Ar);

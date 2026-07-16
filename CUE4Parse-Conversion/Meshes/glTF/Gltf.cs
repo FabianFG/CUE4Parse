@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
+using System.Text.Json.Nodes;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse.UE4.Assets.Exports.Animation;
@@ -13,7 +11,6 @@ using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using SharpGLTF.Geometry;
 using SharpGLTF.Geometry.VertexTypes;
-using SharpGLTF.IO;
 using SharpGLTF.Materials;
 using SharpGLTF.Scenes;
 using SharpGLTF.Schema2;
@@ -54,7 +51,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 for (var i = 0; i < morphTargets.Length; i++)
                 {
                     var morphTarget = morphTargets[i].Load<UMorphTarget>();
-                    if (morphTarget == null || morphTarget.MorphLODModels == null || morphTarget.MorphLODModels.Length < lodIndex || lodIndex == -1)
+                    if (morphTarget?.MorphLODModels is null || morphTarget.MorphLODModels.Length < lodIndex || lodIndex == -1 || morphTarget.MorphLODModels[lodIndex].Vertices.Length == 0)
                         continue;
                     var morphBuilder = mesh.UseMorphTarget(i);
                     var morphModel = morphTarget.MorphLODModels[lodIndex];
@@ -76,7 +73,7 @@ namespace CUE4Parse_Conversion.Meshes.glTF
                 }
 
                 targetNames += "]}";
-                mesh.Extras = (JsonContent) targetNames;
+                mesh.Extras = JsonNode.Parse(targetNames);
             }
 
             var sceneBuilder = new SceneBuilder();

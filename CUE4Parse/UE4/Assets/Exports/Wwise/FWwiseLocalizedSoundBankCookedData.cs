@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
@@ -12,7 +11,7 @@ public class FWwiseLocalizedSoundBankCookedData
 {
     public Dictionary<FWwiseLanguageCookedData, FWwiseSoundBankCookedData?> SoundBankLanguageMap { get; set; } = [];
     public FName DebugName { get; set; }
-    public int SoundBankId { get; set; }
+    public uint SoundBankId { get; set; }
     public List<FName> IncludedEventNames { get; set; } = [];
 
     public FWwiseLocalizedSoundBankCookedData(FStructFallback fallback)
@@ -23,7 +22,7 @@ public class FWwiseLocalizedSoundBankCookedData
             SoundBankLanguageMap[kv.Key.GetValue<FWwiseLanguageCookedData>()] = kv.Value?.GetValue<FWwiseSoundBankCookedData>();
         }
         DebugName = fallback.GetOrDefault<FName>(nameof(DebugName));
-        SoundBankId = fallback.GetOrDefault<int>(nameof(SoundBankId));
+        SoundBankId = (uint)fallback.GetOrDefault<int>(nameof(SoundBankId));
         IncludedEventNames = fallback.GetOrDefault<List<FName>>(nameof(IncludedEventNames));
     }
 }

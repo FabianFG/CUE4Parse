@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 
@@ -22,7 +21,7 @@ namespace CUE4Parse.UE4.IO.Objects
         SignatureError,
         InvalidEncryptionKey,
     }
-    
+
     public class FIoStatus
     {
         public readonly EIoErrorCode ErrorCode;
@@ -48,7 +47,7 @@ namespace CUE4Parse.UE4.IO.Objects
             Status = status;
         }
 
-        public FIoStatusException(EIoErrorCode errorCode, string errorMessage = "", Exception? innerException = null) : 
+        public FIoStatusException(EIoErrorCode errorCode, string errorMessage = "", Exception? innerException = null) :
             this(new FIoStatus(errorCode, errorMessage), innerException) { }
 
         public FIoStatusException(FArchive Ar, FIoStatus status, Exception? innerException = null) : base(Ar, status.ToString(), innerException)

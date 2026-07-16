@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -12,10 +11,12 @@ public class FPropertyInfo
     public FPackageIndex Owner;
     public FFieldPath Property;
     public int ArrayIndex;
-    
+
     public int Size;
     public uint Hash;
     public FPropertyTag? Value;
+
+    public FPropertyInfo() { }
 
     public FPropertyInfo(FAssetArchive Ar)
     {

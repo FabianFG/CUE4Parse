@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -12,7 +11,7 @@ public class FKConvexElem : FKShapeElem
     public int[] IndexData;
     public FBox ElemBox;
     public FTransform Transform;
-    
+
     public FKConvexElem(FStructFallback fallback) : base(fallback)
     {
         VertexData = fallback.GetOrDefault(nameof(VertexData), Array.Empty<FVector>());

@@ -1,0 +1,11 @@
+
+namespace CUE4Parse.UE4.Wwise.Enums.Flags;
+
+[Flags]
+public enum EResumeOptionsFlags : byte
+{
+    None = 0,
+    IsMasterResume = 1 << 0,
+    ApplyToStateTransitions = 1 << 1,
+    ApplyToDynamicSequence = 1 << 2
+}

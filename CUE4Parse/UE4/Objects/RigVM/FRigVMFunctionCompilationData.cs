@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -19,6 +18,7 @@ public class FRigVMFunctionCompilationData
     public FRigVMFunctionCompilationPropertyPath[] ExternalPropertyPathDescriptions;
     public Dictionary<int, FName> ExternalRegisterIndexToVariable;
     public Dictionary<string, FRigVMOperand> Operands;
+    public Dictionary<FName, FRigVMOperand>? InterfaceOperands;
     public uint Hash;
     public bool bEncounteredSurpressedErrors;
     public Dictionary<FRigVMOperand, FRigVMOperand[]>? OperandToDebugRegisters;
@@ -38,13 +38,17 @@ public class FRigVMFunctionCompilationData
 
         ExternalRegisterIndexToVariable = Ar.ReadMap(Ar.Read<int>, Ar.ReadFName);
         Operands = Ar.ReadMap(Ar.ReadFString, Ar.Read<FRigVMOperand>);
+        if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.RigVMCallables)
+        {
+            InterfaceOperands = Ar.ReadMap(Ar.ReadFName, Ar.Read<FRigVMOperand>);
+        }
         Hash = Ar.Read<uint>();
         bEncounteredSurpressedErrors = false;
 
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData &&
             FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData)
             return;
-
-        OperandToDebugRegisters = Ar.ReadMap(Ar.Read<byte>(), Ar.Read<FRigVMOperand>, () => Ar.ReadArray(Ar.Read<byte>(), Ar.Read<FRigVMOperand>));
+        if (FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.DebugOperandMappingSimplified)
+            OperandToDebugRegisters = Ar.ReadMap(Ar.Read<byte>(), Ar.Read<FRigVMOperand>, () => Ar.ReadArray(Ar.Read<byte>(), Ar.Read<FRigVMOperand>));
     }
 }

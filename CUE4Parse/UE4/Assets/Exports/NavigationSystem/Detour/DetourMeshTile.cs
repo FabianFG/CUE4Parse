@@ -1,9 +1,10 @@
-﻿using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.NavigationSystem.Detour;
 
-public struct DetourMeshTile
+public class DetourMeshTile
 {
     public DetourMeshHeader Header;
     public FVector[] Vertices;
@@ -25,17 +26,19 @@ public struct DetourMeshTile
         
         Vertices = Ar.ReadArray(sizeInfo.VertCount, () => new FVector(Ar));
         Polys = Ar.ReadArray(sizeInfo.PolyCount, () => new DetourPoly(Ar));
-        DetailMeshes = Ar.ReadArray<DetourPolyDetail>(sizeInfo.DetailMeshCount);
+        DetailMeshes = Ar.ReadArray(sizeInfo.DetailMeshCount, () => new DetourPolyDetail(Ar));
         DetailVertices = Ar.ReadArray(sizeInfo.DetailVertCount, () => new FVector(Ar));
         
         DetailTris = new byte[sizeInfo.DetailTriCount][];
         for (var i = 0; i < DetailTris.Length; i++)
             DetailTris[i] = Ar.ReadArray<byte>(4);
+
+        if (Ar.Game is GAME_MongilStarDive) Ar.Position += sizeInfo.PolyCount;
         
         BvTree = Ar.ReadArray(sizeInfo.BvNodeCount, () => new DetourBVNode(Ar));
         OffMeshConnections = Ar.ReadArray(sizeInfo.OffMeshConCount, () => new DetourOffMeshConnection(Ar));
         
-        if (navMeshVersion >= ENavMeshVersion.OffMeshHeightBug)
+        if (navMeshVersion >= ENavMeshVersion.NAVMESHVER_OFFMESH_HEIGHT_BUG)
         {
             for (var i = 0; i < OffMeshConnections.Length; i++)
                 OffMeshConnections[i].Height = Ar.ReadFReal();

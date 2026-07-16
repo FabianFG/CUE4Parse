@@ -28,7 +28,7 @@ public static class FLiveLinkCustomVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_23 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_23 => Type.BeforeCustomVersionWasAdded,
             _ => Type.LatestVersion
         };
     }

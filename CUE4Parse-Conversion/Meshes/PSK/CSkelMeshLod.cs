@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Objects.Core.Math;
+﻿using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
 
@@ -8,7 +7,9 @@ namespace CUE4Parse_Conversion.Meshes.PSK
     public class CSkelMeshLod : CBaseMeshLod
     {
         public CSkelMeshVertex[]? Verts;
-        
+        // LOD index in the original SK mesh, needed for the correct index into MorphLODModels array
+        public int LODIndex;
+
         public void AllocateVerts(int count)
         {
             Verts = new CSkelMeshVertex[count];
@@ -27,7 +28,7 @@ namespace CUE4Parse_Conversion.Meshes.PSK
             // BuildNormalsCommon(Verts, Indices);
             HasNormals = true;
         }
-        
+
         public void BuildTangents()
         {
             if (HasTangents) return;
@@ -38,10 +39,10 @@ namespace CUE4Parse_Conversion.Meshes.PSK
         public override void Dispose()
         {
             base.Dispose();
-            
+
             if (Verts is null)
                 return;
-            
+
             Array.Clear(Verts);
             Verts = null;
         }

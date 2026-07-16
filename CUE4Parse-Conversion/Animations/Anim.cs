@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace CUE4Parse_Conversion.Animations
+﻿namespace CUE4Parse_Conversion.Animations
 {
     public class Anim : ExporterBase
     {

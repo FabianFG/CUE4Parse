@@ -1,6 +1,6 @@
-﻿using System.Reflection;
+using System.Reflection;
+
 using CUE4Parse.UE4.Assets.Exports;
-using Xunit.Abstractions;
 
 namespace CUE4Parse.Tests;
 

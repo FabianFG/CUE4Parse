@@ -1,13 +1,9 @@
-using System;
-using System.Linq;
-using CUE4Parse.Utils;
-
 namespace CUE4Parse.Encryption.Aes;
 
 public class FAesKey
 {
     public readonly byte[] Key;
-    public readonly string KeyString;
+    public string KeyString => "0x"+Convert.ToHexString(Key);
     public bool IsDefault => Key.All(x => x == 0);
 
     public FAesKey(byte[] key, bool ignoreLength = false)
@@ -15,17 +11,13 @@ public class FAesKey
         if (!ignoreLength && key.Length != 32)
             throw new ArgumentException("Aes Key must be 32 bytes long");
         Key = key;
-        KeyString = "0x" + BitConverter.ToString(key);
     }
 
     public FAesKey(string keyString)
     {
-        if (!keyString.StartsWith("0x"))
-            keyString = "0x" + keyString;
-        if (keyString.Length != 66)
-            throw new ArgumentException("Aes Key must be 32 bytes long");
-        KeyString = keyString;
-        Key = keyString.Substring(2).ParseHexBinary();
+        if (keyString.StartsWith("0x") && keyString.Length == 66) Key = Convert.FromHexString(keyString.AsSpan(2));
+        else if (keyString.Length == 64) Key = Convert.FromHexString(keyString);
+        else throw new ArgumentException("Aes Key must be 32 bytes long");
     }
 
     public override string ToString() => KeyString;
