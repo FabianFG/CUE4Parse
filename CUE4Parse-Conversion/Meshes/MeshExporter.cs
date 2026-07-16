@@ -17,6 +17,8 @@ namespace CUE4Parse_Conversion.Meshes
 {
     public class MeshExporter : ExporterBase
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<MeshExporter>();
+
         public readonly List<Mesh> MeshLods;
         public readonly List<DNAExporter> DNAAssets = [];
 
@@ -60,7 +62,7 @@ namespace CUE4Parse_Conversion.Meshes
 
             if (!originalMesh.TryConvert(splineMeshComponent, out var convertedMesh, options.NaniteMeshFormat, options.LodFormat) || convertedMesh.LODs.Count == 0)
             {
-                Log.Logger.Warning($"Mesh '{ExportName}' has no LODs");
+                Log.Warning($"Mesh '{ExportName}' has no LODs");
                 return;
             }
 

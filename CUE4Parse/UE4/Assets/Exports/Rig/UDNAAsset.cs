@@ -8,6 +8,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
 public class UDNAAsset : UObject
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UDNAAsset>();
+    
     public DNAVersion Version;
     public DNAVersion LayerVersion;
     public Dictionary<string, IRawBase> Sections;

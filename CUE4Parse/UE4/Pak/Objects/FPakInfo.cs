@@ -34,6 +34,8 @@ public enum EPakFileVersion
 
 public partial class FPakInfo
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FPakInfo>();
+    
     public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
     public const uint PAK_FILE_MAGIC_OutlastTrials = 0xA590ED1E;
     public const uint PAK_FILE_MAGIC_TorchlightInfinite = 0x6B2A56B8;

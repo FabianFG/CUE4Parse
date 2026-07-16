@@ -84,6 +84,8 @@ public class FLevelSaveRecordArchive : FObjectAndNameAsStringProxyArchive
 [StructFallback]
 public class FActorTemplateRecord
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FActorTemplateRecord>();
+
     public ulong ID;
     public FSoftObjectPath ActorClass;
     public FActorComponentRecord[] ActorComponents;
@@ -176,6 +178,8 @@ public class FActorTemplateRecord
 
 public class FActorComponentRecord
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FActorComponentRecord>();
+
     public FName ComponentName;
     public FSoftObjectPath ComponentClass; // UClass
     public byte[]? ComponentData;
@@ -326,6 +330,8 @@ public class FFortCreativeVkPalette
 
 public class ULevelSaveRecord : UObject
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<ULevelSaveRecord>();
+
     public FName PackageName;
     public ELevelSaveRecordVersion SaveVersion;
     public bool bCompressed;

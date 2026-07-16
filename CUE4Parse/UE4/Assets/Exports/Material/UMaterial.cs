@@ -12,6 +12,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public class UMaterial : UMaterialInterface
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UMaterial>();
+    
     public bool TwoSided { get; private set; }
     public bool bDisableDepthTest { get; private set; }
     public bool bIsMasked { get; private set; }

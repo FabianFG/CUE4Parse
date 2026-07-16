@@ -225,6 +225,8 @@ public struct FArticyId(FAssetArchive Ar) : IUStruct
 
 public class FGrimInstancedObjectPtr : IUStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FGrimInstancedObjectPtr>();
+    
     public int Type;
     public int Index;
     public FPackageIndex StructType;

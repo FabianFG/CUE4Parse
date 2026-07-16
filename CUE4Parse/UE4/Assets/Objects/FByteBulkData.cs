@@ -26,6 +26,8 @@ public sealed class FByteArrayData : TBulkData<byte>
 [JsonConverter(typeof(FByteBulkDataConverter))]
 public sealed class FByteBulkData : TBulkData<byte>
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FByteBulkData>();
+    
     public FByteBulkData(FAssetArchive Ar) : base(Ar) { }
 
     /// <summary>

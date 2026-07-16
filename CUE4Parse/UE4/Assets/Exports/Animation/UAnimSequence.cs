@@ -18,6 +18,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public class UAnimSequence : UAnimSequenceBase
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<UAnimSequence>();
+        
         public int NumFrames;
         public FTrackToSkeletonMap[]? TrackToSkeletonMapTable; // used for raw data
         public FRawAnimSequenceTrack[] RawAnimationData;

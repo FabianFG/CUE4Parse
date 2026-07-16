@@ -66,6 +66,8 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FScriptStructConverter))]
 public class FScriptStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FScriptStruct>();
+
     public readonly IUStruct StructType;
 
     public FScriptStruct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)

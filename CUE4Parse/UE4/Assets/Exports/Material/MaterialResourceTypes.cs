@@ -19,6 +19,8 @@ public class FMaterialResource : FMaterial;
 
 public class FMaterial
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FMaterial>();
+    
     public FMaterialShaderMap? LoadedShaderMap;
 
     public void DeserializeInlineShaderMap(FMaterialResourceProxyReader Ar)

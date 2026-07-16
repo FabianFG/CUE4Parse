@@ -8,6 +8,8 @@ namespace CUE4Parse.UE4.Assets.Exports.NavigationSystem;
 
 public class ARecastNavMesh : ANavigationData
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<ARecastNavMesh>();
+    
     public float AgentHeight;
     public float AgentRadius;
     public FNavMeshResolutionParam[] NavMeshResolutionParams; 

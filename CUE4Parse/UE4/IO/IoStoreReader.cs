@@ -15,11 +15,14 @@ using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using GenericReader;
 using OffiUtils;
+using Serilog;
 
 namespace CUE4Parse.UE4.IO;
 
 public partial class IoStoreReader : AbstractAesVfsReader
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<IoStoreReader>();
+
     private readonly record struct DirectoryTraversal(uint Directory, int ParentPathLength);
 
     public readonly IReadOnlyList<FArchive> ContainerStreams;

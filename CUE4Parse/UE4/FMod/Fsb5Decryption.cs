@@ -64,6 +64,8 @@ namespace CUE4Parse.UE4.FMod;
 /// </summary>
 public class Fsb5Decryption
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<Fsb5Decryption>();
+    
     private static readonly string FSB5Header = "FSB5";
     private static readonly byte[] ReverseBitsTable =
     [

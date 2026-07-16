@@ -9,6 +9,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public sealed class HashedNamesProvider
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<HashedNamesProvider>();
+
     public static readonly Lazy<HashedNamesProvider> LazyInstance = new(() => new HashedNamesProvider());
     public static HashedNamesProvider Instance => LazyInstance.Value;
 

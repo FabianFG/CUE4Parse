@@ -12,6 +12,8 @@ namespace CUE4Parse.FileProvider.Objects;
 
 public abstract class GameFile
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<GameFile>();
+    
     public static readonly string[] UePackageExtensions = ["uasset", "umap"];
     public static readonly string[] UePackagePayloadExtensions = ["uexp", "ubulk", "uptnl"];
     public static readonly string[] UeKnownExtensions =

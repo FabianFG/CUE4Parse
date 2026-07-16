@@ -37,6 +37,8 @@ public abstract class FPropertyTagType<T> : FPropertyTagType
 [JsonConverter(typeof(FPropertyTagTypeConverter))]
 public abstract class FPropertyTagType
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FPropertyTagType>();
+    
     public abstract object? GenericValue { get; }
     public object? GetValue(Type type)
     {

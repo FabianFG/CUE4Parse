@@ -8,6 +8,8 @@ namespace CUE4Parse.UE4.FMod.Nodes;
 
 public class SoundDataNode
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<SoundDataNode>();
+    
     public readonly FmodSoundBank? SoundBank;
 
     public SoundDataNode(BinaryReader Ar, long nodeStart, uint size, int soundDataIndex)

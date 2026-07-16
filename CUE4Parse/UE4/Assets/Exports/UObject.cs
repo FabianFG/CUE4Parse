@@ -97,6 +97,8 @@ public abstract class AbstractPropertyHolder : IPropertyHolder
 [SkipObjectRegistration]
 public class UObject : AbstractPropertyHolder
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UObject>();
+    
     public string Name { get; set; } = null!;
     public ResolvedObject? Class;
     public ResolvedObject? Outer;

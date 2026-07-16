@@ -20,6 +20,8 @@ public enum ESkinVertexColorChannel : byte
 [JsonConverter(typeof(FSkelMeshSectionConverter))]
 public class FSkelMeshSection
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FSkelMeshSection>();
+    
     public short MaterialIndex;
     public int BaseIndex;
     public int NumTriangles;

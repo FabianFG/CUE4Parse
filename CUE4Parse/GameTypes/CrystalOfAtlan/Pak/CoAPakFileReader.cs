@@ -7,11 +7,14 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using GenericReader;
+using Serilog;
 
 namespace CUE4Parse.UE4.Pak;
 
 public static class CoAPlugins
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(CoAPlugins));
+    
     public static readonly byte[] returnbytes = [0x72, 0x65, 0x74, 0x75, 0x72, 0x6e];
     public static readonly Dictionary<string, string> CoAVirtualPaths = new(StringComparer.OrdinalIgnoreCase)
     {

@@ -17,6 +17,8 @@ public class UBinkMediaTexture : UTexture;
 
 public abstract class UTexture : UUnrealMaterial, IAssetUserData
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UTexture>();
+    
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
     public TextureGroup LODGroup { get; private set; }

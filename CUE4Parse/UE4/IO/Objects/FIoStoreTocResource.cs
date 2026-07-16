@@ -19,6 +19,8 @@ namespace CUE4Parse.UE4.IO.Objects
 
     public class FIoStoreTocResource
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<FIoStoreTocResource>();
+
         private readonly FArchive? _tocAr;
         public readonly FIoStoreTocHeader Header;
         public readonly FIoChunkId[] ChunkIds;

@@ -13,6 +13,8 @@ namespace CUE4Parse.UE4.Assets.Readers
 {
     public class FAssetArchive : FArchive
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<FAssetArchive>();
+        
         private readonly Dictionary<PayloadType, Func<FByteBulkDataHeader?, FAssetArchive?>> _payloads;
         private FArchive _baseArchive;
 

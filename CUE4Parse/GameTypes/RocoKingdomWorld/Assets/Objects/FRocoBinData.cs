@@ -95,6 +95,8 @@ public class FRocoProperty
 
 public class FRocoBinData
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FRocoBinData>();
+
     private static readonly uint _magic = 0x53DF17BE;
     private static readonly uint _binCompressedFooterLength = 68;
     private static readonly uint _binDataFooterLength = 56;

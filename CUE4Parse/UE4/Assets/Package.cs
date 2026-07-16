@@ -17,6 +17,8 @@ namespace CUE4Parse.UE4.Assets
     [SkipObjectRegistration]
     public sealed class Package : AbstractUePackage
     {
+        private static readonly ILogger Log = Serilog.Log.ForContext<Package>();
+        
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
         public override int ImportMapLength => ImportMap.Length;

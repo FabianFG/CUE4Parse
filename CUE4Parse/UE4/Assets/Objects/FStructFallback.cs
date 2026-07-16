@@ -12,6 +12,8 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [SkipObjectRegistration]
 public class FStructFallback : AbstractPropertyHolder, IUStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FStructFallback>();
+
     public FStructFallback() => Properties = [];
 
     public FStructFallback(List<FPropertyTag> properties) => Properties = properties;

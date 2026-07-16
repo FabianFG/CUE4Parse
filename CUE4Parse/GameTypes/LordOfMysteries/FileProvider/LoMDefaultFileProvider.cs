@@ -1,11 +1,14 @@
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.LordOfMysteries.Vfs;
 using CUE4Parse.UE4.Versions;
+using Serilog;
 
 namespace CUE4Parse.GameTypes.LordOfMysteries.FileProvider;
 
 public class LoMDefaultFileProvider(string directory, SearchOption searchOption, VersionContainer? versions = null, StringComparer? pathComparer = null) : DefaultFileProvider(directory, searchOption, versions, pathComparer)
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<LoMDefaultFileProvider>();
+
     public override void Initialize()
     {
         base.Initialize();

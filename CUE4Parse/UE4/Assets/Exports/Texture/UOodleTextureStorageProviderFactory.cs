@@ -33,6 +33,8 @@ public class FOodleTexture2DMipMap : FTexture2DMipMap
 
 public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFactory
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UOodleTextureStorageProviderFactory>();
+
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FOodleTexture2DMipMap[] Mips { get; private set; } = [];
     public FPackageIndex Texture { get; private set; }

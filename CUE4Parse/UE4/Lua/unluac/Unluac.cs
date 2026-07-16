@@ -5,6 +5,8 @@ namespace CUE4Parse.UE4.Lua.unluac;
 
 public class Unluac : IDisposable
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<Unluac>();
+    
     private nint Handle { get; set; }
     private readonly unluac_create_isolate _createIsolate;
     private readonly unluac_tear_down_isolate _tearDownIsolate;

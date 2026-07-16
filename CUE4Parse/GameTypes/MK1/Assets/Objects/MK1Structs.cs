@@ -84,6 +84,8 @@ public class FTimelinePredicateState(FAssetArchive Ar) : IUStruct
 
 public class FCompiledTimelinePredicate(FAssetArchive Ar) : IUStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FCompiledTimelinePredicate>();
+
     public byte[] Unknown = Ar.ReadArray<byte>();
     public object[] Parameters = Ar.ReadArray(() => ReadParameterValue(Ar));
 

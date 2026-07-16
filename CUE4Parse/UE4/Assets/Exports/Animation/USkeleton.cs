@@ -12,6 +12,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation;
 
 public class USkeleton : UObject
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<USkeleton>();
+
     public EBoneTranslationRetargetingMode[] BoneTree;
     public FReferenceSkeleton ReferenceSkeleton;
     public FGuid Guid;

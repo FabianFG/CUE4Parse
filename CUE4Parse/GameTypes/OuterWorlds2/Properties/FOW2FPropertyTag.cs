@@ -23,6 +23,8 @@ public class FOW2ObjectProperty : ObjectProperty
 
 public class FOW2FPropertyTag : FPropertyTag
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FOW2FPropertyTag>();
+    
     public FPropertryDataObjectContainer Objects;
     public bool bHasVersion;
     public bool bIsDefault;

@@ -8,6 +8,8 @@ namespace CUE4Parse.UE4.FMod.Nodes;
 
 public class ModulatorNode
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<ModulatorNode>();
+    
     [JsonIgnore] public readonly FModGuid BaseGuid;
     public readonly FModGuid OwnerGuid;
     public readonly int PropertyIndex;

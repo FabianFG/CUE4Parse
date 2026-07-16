@@ -7,6 +7,8 @@ namespace CUE4Parse.UE4.AssetRegistry;
 
 public class FPartialAssetRegistryState
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FPartialAssetRegistryState>();
+    
     public FPartialAssetData[] PreallocatedAssetDataBuffers = [];
 
     public FPartialAssetRegistryState() { }

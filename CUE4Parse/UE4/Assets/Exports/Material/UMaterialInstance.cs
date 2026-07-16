@@ -18,6 +18,8 @@ public class UMaterialInstanceTimeVarying : UMaterialInstance;
 
 public class UMaterialInstance : UMaterialInterface
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<UMaterialInstance>();
+    
     private ResolvedObject? _parent;
     private bool bHasNonUPropertyStaticParameters = false;
     public UUnrealMaterial? Parent => _parent?.Load<UUnrealMaterial>();

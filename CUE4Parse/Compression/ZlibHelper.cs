@@ -17,6 +17,8 @@ public class ZlibException : ParserException
 
 public static class ZlibHelper
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(ZlibHelper));
+    
     public const string DOWNLOAD_URL = "https://github.com/NotOfficer/Zlib-ng.NET/releases/download/1.0.0/zlib-ng2.dll.gz";
     public const string DOWNLOAD_URL_LINUX = "https://github.com/NotOfficer/Zlib-ng.NET/releases/download/1.0.0/libz-ng.so.gz";
     public const string DLL_NAME = "zlib-ng2.dll";

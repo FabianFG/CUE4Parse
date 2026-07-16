@@ -10,6 +10,8 @@ namespace CUE4Parse.UE4.Objects.NavigationSystem.NavMesh;
 
 public class URecastNavMeshDataChunk : Assets.Exports.UObject
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<URecastNavMeshDataChunk>();
+
     public ENavMeshVersion NavMeshVersion;
     public FRecastTileData[] Tiles = [];
 

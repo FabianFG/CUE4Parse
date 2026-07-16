@@ -22,6 +22,8 @@ public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkData bu
 [JsonConverter(typeof(WwiseConverter))]
 public class WwiseReader
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<WwiseReader>();
+    
     public string Path;
     private readonly WwiseDataSource? _source;
 

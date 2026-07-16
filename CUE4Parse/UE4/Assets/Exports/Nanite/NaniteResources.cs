@@ -13,6 +13,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Nanite;
 
 public class FNaniteResources
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FNaniteResources>();
+
     // Persistent State
     public FByteBulkData? StreamablePages = null; // Remaining pages are streamed on demand.
     [JsonIgnore] public ushort[] ImposterAtlas = [];

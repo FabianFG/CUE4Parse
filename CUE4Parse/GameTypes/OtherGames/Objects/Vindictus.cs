@@ -8,6 +8,8 @@ namespace CUE4Parse.GameTypes.OtherGames.Objects;
 
 public struct FAnyValue : IUStruct
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FAnyValue>();
+    
     public readonly FStructFallback? NonConstStruct;
 
     public FAnyValue(FAssetArchive Ar)

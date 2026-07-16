@@ -10,6 +10,8 @@ namespace CUE4Parse.UE4.AssetRegistry;
 [JsonConverter(typeof(FAssetRegistryStateConverter))]
 public class FAssetRegistryState
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FAssetRegistryState>();
+    
     public FAssetData[] PreallocatedAssetDataBuffers;
     public FDependsNode[] PreallocatedDependsNodeDataBuffers;
     public FAssetPackageData[] PreallocatedPackageDataBuffers;

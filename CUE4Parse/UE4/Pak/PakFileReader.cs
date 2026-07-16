@@ -28,6 +28,7 @@ using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using GenericReader;
 using OffiUtils;
+using Serilog;
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Pak.Objects.EPakFileVersion;
 
@@ -35,6 +36,8 @@ namespace CUE4Parse.UE4.Pak;
 
 public partial class PakFileReader : AbstractAesVfsReader
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<PakFileReader>();
+
     public readonly FArchive Ar;
     public readonly FPakInfo Info;
 

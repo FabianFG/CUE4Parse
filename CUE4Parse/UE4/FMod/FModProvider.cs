@@ -25,6 +25,8 @@ public class FModExtractedSound
 
 public class FModProvider
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FModProvider>();
+    
     private Dictionary<FModGuid, List<FmodSample>> _resolvedEventsCache = [];
     private Dictionary<FModGuid, bool> _eventResolutionStatus = [];
     private Dictionary<FModGuid, FModGuid> _eventToReaderMap = [];

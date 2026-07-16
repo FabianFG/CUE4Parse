@@ -36,6 +36,8 @@ public class CriWareExtractedSound
 /// </summary>
 public class CriWareProvider
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<CriWareProvider>();
+    
     private readonly record struct AwbLocation(string Path, bool InProvider);
     private Dictionary<string, AwbLocation> _streamingAwbLookup = [];
 

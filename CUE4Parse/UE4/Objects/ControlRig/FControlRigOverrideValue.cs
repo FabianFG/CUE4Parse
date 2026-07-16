@@ -10,6 +10,8 @@ namespace CUE4Parse.UE4.Objects.ControlRig;
 
 public class FControlRigOverrideValue
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<FControlRigOverrideValue>();
+    
     public FName SubjectKey; // TOptional
     public FPropertyInfo[] Properties;
     public long OffsetForData;

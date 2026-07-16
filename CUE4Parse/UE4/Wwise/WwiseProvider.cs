@@ -25,6 +25,8 @@ public class WwiseExtractedSound
 
 public partial class WwiseProvider
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<WwiseProvider>();
+    
     private readonly AbstractVfsFileProvider _provider;
     private readonly string _gameDirectory;
     private string _baseWwiseAudioPath;

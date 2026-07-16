@@ -7,6 +7,8 @@ namespace CUE4Parse_Conversion.PoseAsset;
 
 public class PoseAssetExporter : ExporterBase
 {
+    private static readonly ILogger Log = Serilog.Log.ForContext<PoseAssetExporter>();
+    
     public PoseAsset PoseAsset;
 
     public PoseAssetExporter(UPoseAsset poseAsset, ExporterOptions options) : base(poseAsset, options)
