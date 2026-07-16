@@ -28,7 +28,6 @@ using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using GenericReader;
 using OffiUtils;
-using Serilog;
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Pak.Objects.EPakFileVersion;
 
@@ -36,7 +35,6 @@ namespace CUE4Parse.UE4.Pak;
 
 public partial class PakFileReader : AbstractAesVfsReader
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<PakFileReader>();
 
     public readonly FArchive Ar;
     public readonly FPakInfo Info;
@@ -59,7 +57,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                                     || (Ar.Game >= GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
         if (hasUnsupportedVersion && !UsingCustomPakVersion())
         {
-            Log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
+            CUE4ParseLog.Logger.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
         }
     }
 
@@ -281,7 +279,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         if (!IsEncrypted && EncryptedFileCount > 0)
         {
-            Log.Warning($"Pak file \"{Name}\" is not encrypted but contains encrypted files");
+            CUE4ParseLog.Logger.Warning($"Pak file \"{Name}\" is not encrypted but contains encrypted files");
         }
 
         if (Globals.LogVfsMounts)
@@ -294,7 +292,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", version {(int) Info.Version} in {elapsed}");
-            Log.Information(sb.ToString());
+            CUE4ParseLog.Logger.Information(sb.ToString());
         }
     }
 
@@ -464,7 +462,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                     var index = -offset - 1;
                     if (index <0 || index >= NonEncodedEntries.Length)
                     {
-                        Log.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", index, path);
+                        CUE4ParseLog.Logger.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", index, path);
                         continue;
                     }
 
@@ -555,7 +553,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                     var entryIndex = -location - 1;
                     if (entryIndex < 0 || entryIndex >= nonEncodedEntries.Length)
                     {
-                        Log.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", entryIndex, path);
+                        CUE4ParseLog.Logger.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", entryIndex, path);
                         continue;
                     }
 

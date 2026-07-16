@@ -46,7 +46,7 @@ public static partial class ProSpiEncryption
         var result = decrypt(descriptor, _exePath, _aesKey, _aesKey.Length, trailerBytes, output, payloadSize);
         if (result != 1)
         {
-            Log.Error("ProSpi DLL decryption failed: descriptor=0x{Descriptor:X16}, modulePath=\"{ModulePath}\", result={Result}", descriptor, _exePath, result);
+            CUE4ParseLog.Logger.Error("ProSpi DLL decryption failed: descriptor=0x{Descriptor:X16}, modulePath=\"{ModulePath}\", result={Result}", descriptor, _exePath, result);
             output = [];
             return false;
         }
@@ -67,19 +67,19 @@ public static partial class ProSpiEncryption
             _cipherDllLoadAttempted = true;
             if (!TryLoadCipherDll(out var handle, out var loadedPath))
             {
-                Log.Warning("ProSpi DLL unavailable: {DllName}", ProSpiDecryptorDllName);
+                CUE4ParseLog.Logger.Warning("ProSpi DLL unavailable: {DllName}", ProSpiDecryptorDllName);
                 return null;
             }
 
             if (!NativeLibrary.TryGetExport(handle, "ProSpiDecrypt", out var export))
             {
-                Log.Warning("ProSpi DLL missing ProSpiDecrypt export: {Path}", loadedPath);
+                CUE4ParseLog.Logger.Warning("ProSpi DLL missing ProSpiDecrypt export: {Path}", loadedPath);
                 NativeLibrary.Free(handle);
                 return null;
             }
 
             _cipherDecrypt = Marshal.GetDelegateForFunctionPointer<ProSpiDllDecryptDelegate>(export);
-            Log.Information("ProSpi DLL loaded: {Path}", loadedPath);
+            CUE4ParseLog.Logger.Information("ProSpi DLL loaded: {Path}", loadedPath);
             return _cipherDecrypt;
         }
     }

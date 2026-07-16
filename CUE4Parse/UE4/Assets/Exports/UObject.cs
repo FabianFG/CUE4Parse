@@ -11,7 +11,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports;
 
@@ -97,7 +96,6 @@ public abstract class AbstractPropertyHolder : IPropertyHolder
 [SkipObjectRegistration]
 public class UObject : AbstractPropertyHolder
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<UObject>();
     
     public string Name { get; set; } = null!;
     public ResolvedObject? Class;
@@ -312,7 +310,7 @@ public class UObject : AbstractPropertyHolder
                 }
                 else
                 {
-                    Log.Warning(
+                    CUE4ParseLog.Logger.Warning(
                         "{0}: Unknown property with value {1} but it's zero so we are good",
                         type, val);
                 }
@@ -353,7 +351,7 @@ public class UObject : AbstractPropertyHolder
         if (propMappings is null)
         {
             if (Ar.HasUnversionedProperties) throw new ParserException(Ar, "Missing prop mappings for type " + type);
-            Log.Warning("Couldn't find {type} struct definition", type);
+            CUE4ParseLog.Logger.Warning("Couldn't find {type} struct definition", type);
             return;
         }
 

@@ -3,13 +3,11 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
 
 public class FAion2DataTableFile : FAion2DataFile
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FAion2DataTableFile>();
     
     public FAion2DataTableFile(GameFile file, IFileProvider provider)
     {
@@ -87,7 +85,7 @@ public class FAion2DataTableFile : FAion2DataFile
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to parse FAion2DatFile FAion2DataTableFile {0}", file.Name);
+            CUE4ParseLog.Logger.Error(e, "Failed to parse FAion2DatFile FAion2DataTableFile {0}", file.Name);
         }
     }
 }

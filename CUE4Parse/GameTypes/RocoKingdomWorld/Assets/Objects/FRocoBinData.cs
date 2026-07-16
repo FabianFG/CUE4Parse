@@ -1,7 +1,6 @@
 using System.Text;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.RocoKingdomWorld.Assets.Objects;
 
@@ -95,7 +94,6 @@ public class FRocoProperty
 
 public class FRocoBinData
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FRocoBinData>();
 
     private static readonly uint _magic = 0x53DF17BE;
     private static readonly uint _binCompressedFooterLength = 68;
@@ -165,7 +163,7 @@ public class FRocoBinData
                 continue;
             if (entry.Offset != Ar.Position)
             {
-                Log.Warning("Entry {0} offset mismatch, expected {1}, actual {2}", i, entry.Offset, Ar.Position);
+                CUE4ParseLog.Logger.Warning("Entry {0} offset mismatch, expected {1}, actual {2}", i, entry.Offset, Ar.Position);
                 Ar.Position = entry.Offset;
             }
 
@@ -236,7 +234,7 @@ public class FRocoBinData
         }
         else
         {
-            Log.Warning("Expected localization string with index {index}, but it wasn't present in localization table", stringIndex);
+            CUE4ParseLog.Logger.Warning("Expected localization string with index {index}, but it wasn't present in localization table", stringIndex);
             return string.Empty;
         }
     }

@@ -58,7 +58,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 using FRawUIntStruct = CUE4Parse.UE4.Objects.StructUtils.FRawStruct<uint>;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -66,7 +65,6 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FScriptStructConverter))]
 public class FScriptStruct
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FScriptStruct>();
 
     public readonly IUStruct StructType;
 
@@ -482,12 +480,12 @@ public class FScriptStruct
             }
             else
             {
-                Log.Warning("Failed to load FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
+                CUE4ParseLog.Logger.Warning("Failed to load FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
             }
         }
         catch (Exception e)
         {
-            Log.Warning(e, "Failed to read FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
+            CUE4ParseLog.Logger.Warning(e, "Failed to read FInstancedStruct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
         }
         finally
         {

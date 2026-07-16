@@ -1,7 +1,6 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Compression;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -39,7 +38,6 @@ public enum EFlags
 
 public class FEditorBulkData
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FEditorBulkData>();
     
     public EFlags Flags { get; set; }
     public FGuid BulkDataId { get; set; }
@@ -62,7 +60,7 @@ public class FEditorBulkData
             }
             else
             {
-                Log.Warning("BulkData marked as stored in package trailer, but package has no trailer");
+                CUE4ParseLog.Logger.Warning("BulkData marked as stored in package trailer, but package has no trailer");
                 Payload = new FCompressedBuffer();
                 return;
             }
@@ -86,7 +84,7 @@ public class FEditorBulkData
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to read to EditorBulkData payload at offset {OffsetInFile}", OffsetInFile);
+            CUE4ParseLog.Logger.Error(e, "Failed to read to EditorBulkData payload at offset {OffsetInFile}", OffsetInFile);
             Payload = new FCompressedBuffer();
             return;
         }

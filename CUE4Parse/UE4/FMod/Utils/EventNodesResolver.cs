@@ -3,13 +3,11 @@ using CUE4Parse.UE4.FMod.Nodes.Instruments;
 using CUE4Parse.UE4.FMod.Nodes.Transitions;
 using CUE4Parse.UE4.FMod.Objects;
 using Fmod5Sharp.FmodTypes;
-using Serilog;
 
 namespace CUE4Parse.UE4.FMod.Utils;
 
 public static class EventNodesResolver
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(EventNodesResolver));
     
     public static Dictionary<FModGuid, List<FmodSample>> TryResolveAudioEvents(FModReader reader, out bool allWaveformsResolved)
     {
@@ -178,24 +176,24 @@ public static class EventNodesResolver
 
     public static void LogMissingSamples(FModReader reader, Dictionary<FModGuid, List<FmodSample>> resolvedEvents)
     {
-        Log.Debug("----------------");
+        CUE4ParseLog.Logger.Debug("----------------");
         int sampleCount = resolvedEvents.Values.Sum(samples => samples?.Count ?? 0);
 
-        Log.Debug($"+ Resolved {sampleCount} audio sample(s)");
+        CUE4ParseLog.Logger.Debug($"+ Resolved {sampleCount} audio sample(s)");
 
         var allResolved = GetAllResolvedSampleNames(resolvedEvents);
         var unreferencedSamples = GetUnreferencedSamplesWithGuids(reader, allResolved);
 
         if (unreferencedSamples.Count == 0)
         {
-            Log.Debug("All audio samples were resolved");
+            CUE4ParseLog.Logger.Debug("All audio samples were resolved");
             return;
         }
 
-        Log.Debug($"- Unresolved {unreferencedSamples.Count} audio sample(s):");
+        CUE4ParseLog.Logger.Debug($"- Unresolved {unreferencedSamples.Count} audio sample(s):");
         foreach (var sample in unreferencedSamples)
         {
-            Log.Debug($"'{sample.Value.Name}' sample wasn't resolved (GUID: {sample.Key})");
+            CUE4ParseLog.Logger.Debug($"'{sample.Value.Name}' sample wasn't resolved (GUID: {sample.Key})");
         }
     }
 #endif

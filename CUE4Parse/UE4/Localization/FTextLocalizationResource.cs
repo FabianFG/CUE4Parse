@@ -7,14 +7,12 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Localization;
 
 [JsonConverter(typeof(FTextLocalizationResourceConverter))]
 public class FTextLocalizationResource
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FTextLocalizationResource>();
     
     private readonly FGuid _locResMagic = new (0x7574140Eu, 0xFC034A67u, 0x9D90154Au, 0x1B7F37C3u);
     public readonly Dictionary<FTextKey, Dictionary<FTextKey, FEntry>> Entries = [];
@@ -30,7 +28,7 @@ public class FTextLocalizationResource
         else // Legacy LocRes files lack the magic number, assume that's what we're dealing with, and seek back to the start of the file
         {
             Ar.Position = 0;
-            Log.Warning($"LocRes '{Ar.Name}' failed the magic number check! Assuming this is a legacy resource");
+            CUE4ParseLog.Logger.Warning($"LocRes '{Ar.Name}' failed the magic number check! Assuming this is a legacy resource");
         }
 
         // Is this LocRes file too new to load?
@@ -93,7 +91,7 @@ public class FTextLocalizationResource
                     }
                     else
                     {
-                        Log.Warning($"LocRes '{newEntry.LocResName}' has an invalid localized string index for namespace '{namespce.Str}' and key '{key.Str}'. This entry will have no translation.");
+                        CUE4ParseLog.Logger.Warning($"LocRes '{newEntry.LocResName}' has an invalid localized string index for namespace '{namespce.Str}' and key '{key.Str}'. This entry will have no translation.");
                     }
 
                     if (Ar.Game == GAME_StellarBlade && versionNumber > ELocResVersion.Latest) Ar.Position += 4;

@@ -7,7 +7,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -77,7 +76,6 @@ public static class FPropertyTypeNameUtils
 
 public class FPropertyTag
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FPropertyTag>();
     
     public FName Name;
     public FName PropertyType;
@@ -212,7 +210,7 @@ public class FPropertyTag
 #if DEBUG
             if (finalPos != Ar.Position)
             {
-                Log.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, Ar.Position, finalPos);
+                CUE4ParseLog.Logger.Debug("FPropertyTagType {0} {1} was not read properly, pos {2}, calculated pos {3}", TagData?.ToString() ?? PropertyType.Text, Name.Text, Ar.Position, finalPos);
             }
 #endif
         }
@@ -221,7 +219,7 @@ public class FPropertyTag
 #if DEBUG
             if (finalPos != Ar.Position)
             {
-                Log.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
+                CUE4ParseLog.Logger.Warning(e, "Failed to read FPropertyTagType {0} {1}, skipping it", TagData?.ToString() ?? PropertyType.Text, Name.Text);
             }
 #endif
         }
@@ -255,7 +253,7 @@ public class FPropertyTag
     {
         if (!BlueprintDecompilerUtils.GetPropertyTagVariable(this, out var variableType, out var variableValue))
         {
-            Log.Warning("Unable to get property type or value for {PropertyType} of type {Name}", PropertyType, Name);
+            CUE4ParseLog.Logger.Warning("Unable to get property type or value for {PropertyType} of type {Name}", PropertyType, Name);
         }
 
         return $"{variableType} {Name.Text} = {variableValue};";

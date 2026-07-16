@@ -4,13 +4,11 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.LegoBatman.Assets;
 
 public class UWubDialogueEvent : UObject
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<UWubDialogueEvent>();
     
     public FWubStruct2 Sequence;
     public HashSet<FName> Wems = [];
@@ -77,7 +75,6 @@ public class UWubDialogueEvent : UObject
 
     public class FWubStruct2 : FWubStructBase
     {
-        private static readonly ILogger Log = Serilog.Log.ForContext<FWubStruct2>();
 
         public FName EventId;
         public float DelayInSeconds;
@@ -92,7 +89,7 @@ public class UWubDialogueEvent : UObject
             TriggerChance = Ar.Read<float>();
             AssociatedActor = Ar.ReadFName();
             var count = Ar.Read<int>();
-            Log.Information("FStruct2 {0} {1} {2} {3}, inner {4}", EventId, AssociatedActor, DelayInSeconds, TriggerChance, count);
+            CUE4ParseLog.Logger.Information("FStruct2 {0} {1} {2} {3}, inner {4}", EventId, AssociatedActor, DelayInSeconds, TriggerChance, count);
             InnerSequence = Ar.ReadArray(count, () => ReadStruct(Ar, wems));
         }
     }

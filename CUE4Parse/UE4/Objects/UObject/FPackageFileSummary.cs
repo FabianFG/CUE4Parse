@@ -7,7 +7,6 @@ using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 
 namespace CUE4Parse.UE4.Objects.UObject
@@ -32,7 +31,6 @@ namespace CUE4Parse.UE4.Objects.UObject
     [JsonConverter(typeof(FPackageFileSummaryConverter))]
     public class FPackageFileSummary
     {
-        private static readonly ILogger Log = Serilog.Log.ForContext<FPackageFileSummary>();
         
         public const uint PACKAGE_FILE_TAG = 0x9E2A83C1U;
         public const uint PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9EU;
@@ -178,7 +176,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION ||
                     FileVersionUE > EUnrealEngineObjectUE5Version.AUTOMATIC_VERSION)
                 {
-                    Log.Warning("File version is too new or too old");
+                    CUE4ParseLog.Logger.Warning("File version is too new or too old");
                 }
 
                 if (FileVersionUE.FileVersionUE4 == 0 && FileVersionUE.FileVersionUE5 == 0 && FileVersionLicenseeUE == 0)

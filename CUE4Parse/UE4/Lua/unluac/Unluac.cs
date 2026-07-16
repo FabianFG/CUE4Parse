@@ -1,11 +1,9 @@
-﻿using System.Runtime.InteropServices;
-using Serilog;
+using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Lua.unluac;
 
 public class Unluac : IDisposable
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<Unluac>();
     
     private nint Handle { get; set; }
     private readonly unluac_create_isolate _createIsolate;
@@ -52,7 +50,7 @@ public class Unluac : IDisposable
         IntPtr thread = _createIsolate();
         if (thread == IntPtr.Zero)
         {
-            Log.Error("Failed to create isolated thread");
+            CUE4ParseLog.Logger.Error("Failed to create isolated thread");
             return rc;
         }
 
@@ -77,7 +75,7 @@ public class Unluac : IDisposable
         catch (Exception e)
         {
             if (rc == EUnluacErrorCode.Ok) rc = EUnluacErrorCode.Error;
-            Log.Error(e, "Failed to decompile lua buffer.");
+            CUE4ParseLog.Logger.Error(e, "Failed to decompile lua buffer.");
         }
         finally
         {

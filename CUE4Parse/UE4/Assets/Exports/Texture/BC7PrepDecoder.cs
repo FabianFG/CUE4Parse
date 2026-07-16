@@ -1,4 +1,3 @@
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -12,7 +11,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 /// </summary>
 public static class BC7PrepDecoder
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(BC7PrepDecoder));
 
     private const int ModeCount = 10;
     private const uint FlagSplit0 = 1;
@@ -49,7 +47,7 @@ public static class BC7PrepDecoder
 
         if (mip.BulkData is null || mip.BulkData.GetDataSize() < payloadSize || mip.BulkData.ReadDataOnce() is not { Length: >= 1 } payload)
         {
-            Log.Warning("Bulk data is corrupted or missing");
+            CUE4ParseLog.Logger.Warning("Bulk data is corrupted or missing");
             return null;
         }
 

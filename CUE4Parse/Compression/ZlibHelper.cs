@@ -4,7 +4,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 
-using Serilog;
 using ZlibngDotNet;
 
 namespace CUE4Parse.Compression;
@@ -17,7 +16,6 @@ public class ZlibException : ParserException
 
 public static class ZlibHelper
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(ZlibHelper));
     
     public const string DOWNLOAD_URL = "https://github.com/NotOfficer/Zlib-ng.NET/releases/download/1.0.0/zlib-ng2.dll.gz";
     public const string DOWNLOAD_URL_LINUX = "https://github.com/NotOfficer/Zlib-ng.NET/releases/download/1.0.0/libz-ng.so.gz";
@@ -37,7 +35,7 @@ public static class ZlibHelper
         var dllPath = Path.GetFullPath(string.IsNullOrWhiteSpace(path) ? DllName : path);
         if (!await DownloadDllAsync(dllPath, null, cancellationToken).ConfigureAwait(false))
         {
-            Log.Warning("Zlib decompression failed: unable to download zlib-ng dll");
+            CUE4ParseLog.Logger.Warning("Zlib decompression failed: unable to download zlib-ng dll");
             return;
         }
 
@@ -74,7 +72,7 @@ public static class ZlibHelper
         if (decodedSize < uncompressedSize)
         {
             // Not sure whether this should be an exception or not
-            Log.Warning("Zlib decompression only decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
+            CUE4ParseLog.Logger.Warning("Zlib decompression only decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
         }
     }
 
@@ -114,12 +112,12 @@ public static class ZlibHelper
                                               UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
             }
 
-            Log.Information("Successfully downloaded Zlib-ng dll at {0}", dllPath);
+            CUE4ParseLog.Logger.Information("Successfully downloaded Zlib-ng dll at {0}", dllPath);
             return true;
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Uncaught exception while downloading Zlib-ng dll");
+            CUE4ParseLog.Logger.Warning(ex, "Uncaught exception while downloading Zlib-ng dll");
         }
         return false;
     }

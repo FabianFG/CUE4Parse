@@ -7,7 +7,7 @@ namespace CUE4Parse.Tests;
 public class SourceContextTest
 {
     [Fact]
-    public void NamespaceOverrideFiltersContextualLogs()
+    public void NamespaceOverrideFiltersCUE4ParseLogs()
     {
         var sink = new CollectingSink();
         using var logger = new LoggerConfiguration()
@@ -16,13 +16,21 @@ public class SourceContextTest
             .WriteTo.Sink(sink)
             .CreateLogger();
 
-        var contextualLogger = logger.ForContext<SourceContextTest>();
-        contextualLogger.Warning("Filtered warning");
-        contextualLogger.Error("Retained error");
+        var previousLogger = CUE4ParseLog.Logger;
+        try
+        {
+            CUE4ParseLog.UseLogger(logger);
+            CUE4ParseLog.Logger.Warning("Filtered warning");
+            CUE4ParseLog.Logger.Error("Retained error");
+        }
+        finally
+        {
+            CUE4ParseLog.UseLogger(previousLogger);
+        }
 
         var logEvent = Assert.Single(sink.Events);
         Assert.Equal(LogEventLevel.Error, logEvent.Level);
-        Assert.Equal(typeof(SourceContextTest).FullName, logEvent.Properties["SourceContext"].ToString().Trim('"'));
+        Assert.Equal("CUE4Parse", logEvent.Properties["SourceContext"].ToString().Trim('"'));
     }
 
     private sealed class CollectingSink : ILogEventSink

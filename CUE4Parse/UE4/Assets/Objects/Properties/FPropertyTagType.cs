@@ -11,7 +11,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects.Properties;
 
@@ -37,7 +36,6 @@ public abstract class FPropertyTagType<T> : FPropertyTagType
 [JsonConverter(typeof(FPropertyTagTypeConverter))]
 public abstract class FPropertyTagType
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FPropertyTagType>();
     
     public abstract object? GenericValue { get; }
     public object? GetValue(Type type)
@@ -90,7 +88,7 @@ public abstract class FPropertyTagType
             case OptionalProperty optionalProperty:
                 return optionalProperty.Value?.GetValue(type);
             default:
-                Log.Warning("Incorrect type conversion from {0} to {1}", this, type);
+                CUE4ParseLog.Logger.Warning("Incorrect type conversion from {0} to {1}", this, type);
                 return null;
         }
     }
@@ -203,7 +201,7 @@ public abstract class FPropertyTagType
 #if DEBUG
         if (tagType == null)
         {
-            Log.Warning("Couldn't read property type {0} at {1}", propertyType, Ar.Position);
+            CUE4ParseLog.Logger.Warning("Couldn't read property type {0} at {1}", propertyType, Ar.Position);
         }
 #endif
         return tagType;

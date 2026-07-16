@@ -1,13 +1,11 @@
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.AssetRegistry;
 
 public class FPartialAssetRegistryState
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FPartialAssetRegistryState>();
     
     public FPartialAssetData[] PreallocatedAssetDataBuffers = [];
 
@@ -19,7 +17,7 @@ public class FPartialAssetRegistryState
         switch (header.Version)
         {
             case < FAssetRegistryVersionType.AddAssetRegistryState:
-                Log.Warning("Cannot read registry state before {Version}", header.Version);
+                CUE4ParseLog.Logger.Warning("Cannot read registry state before {Version}", header.Version);
                 break;
             case < FAssetRegistryVersionType.FixedTags:
                 {

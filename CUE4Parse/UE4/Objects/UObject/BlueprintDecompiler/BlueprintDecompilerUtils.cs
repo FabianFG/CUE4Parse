@@ -15,13 +15,11 @@ using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.UE4.Objects.Engine.GameFramework;
 using CUE4Parse.UE4.Objects.GameplayTags;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 
 public static class BlueprintDecompilerUtils
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(BlueprintDecompilerUtils));
     
     public static TypeMappings? Mappings { get; set; }
     public static UFunction Function { get; set; }
@@ -442,7 +440,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
+                CUE4ParseLog.Logger.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
                 break;
             }
         }
@@ -556,7 +554,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                Log.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
+                CUE4ParseLog.Logger.Warning("Property Value '{type}' is currently not supported", property.GetType().Name);
                 break;
             }
         }
@@ -580,7 +578,7 @@ public static class BlueprintDecompilerUtils
 
         if (!Enum.TryParse<EPropertyType>(propertyTag.PropertyType.ToString(), out var propertyType))
         {
-            Log.Warning("Unable to Parse {0} while trying to get PropertyEnum Type",
+            CUE4ParseLog.Logger.Warning("Unable to Parse {0} while trying to get PropertyEnum Type",
                 propertyTag.PropertyType.ToString());
             return false;
         }
@@ -678,7 +676,7 @@ public static class BlueprintDecompilerUtils
                                 new FPropertyTag(new FName(scriptArray.InnerType), property, scriptArray.InnerTagData),
                                 out type, out var innerValue))
                         {
-                            Log.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
+                            CUE4ParseLog.Logger.Warning("Failed to get ArrayElement of type {type}", scriptArray.InnerType);
                             continue;
                         }
 
@@ -705,7 +703,7 @@ public static class BlueprintDecompilerUtils
                 var structType = propertyTag.GetGenericValue<FScriptStruct>();
                 if (!GetPropertyTagVariable(structType, out value))
                 {
-                    Log.Error("Unable to get struct value or type for FScriptStruct type {structType}",
+                    CUE4ParseLog.Logger.Error("Unable to get struct value or type for FScriptStruct type {structType}",
                         structType.GetType().Name);
                     return false;
                 }
@@ -838,7 +836,7 @@ public static class BlueprintDecompilerUtils
 
                         if (!GetPropertyTagVariable(keyProperty, out keyType, out var keyValue))
                         {
-                            Log.Warning("Unable to get KeyValue for UScriptMap of type: {type}", mapKey.GetType().Name);
+                            CUE4ParseLog.Logger.Warning("Unable to get KeyValue for UScriptMap of type: {type}", mapKey.GetType().Name);
                             continue;
                         }
 
@@ -847,7 +845,7 @@ public static class BlueprintDecompilerUtils
 
                         if (!GetPropertyTagVariable(valueProperty, out valueType, out var valueValue))
                         {
-                            Log.Warning("Unable to get MapValue for UScriptMap of type: {type}",
+                            CUE4ParseLog.Logger.Warning("Unable to get MapValue for UScriptMap of type: {type}",
                                 mapValue.GetType().Name);
                         }
 
@@ -923,7 +921,7 @@ public static class BlueprintDecompilerUtils
             }
             default:
             {
-                Log.Warning($"EPropertyType {propertyTag.TagData?.Type} is currently not implemented");
+                CUE4ParseLog.Logger.Warning($"EPropertyType {propertyTag.TagData?.Type} is currently not implemented");
                 return false;
             }
         }
@@ -1154,7 +1152,7 @@ public static class BlueprintDecompilerUtils
             default:
             {
                 value = uStruct.ToString() ?? string.Empty;
-                Log.Warning("Property Type '{type}' is currently not supported for FScriptStruct", uStruct.GetType().Name);
+                CUE4ParseLog.Logger.Warning("Property Type '{type}' is currently not supported for FScriptStruct", uStruct.GetType().Name);
                 break;
             }
         }

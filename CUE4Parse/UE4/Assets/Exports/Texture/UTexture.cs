@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -17,7 +16,6 @@ public class UBinkMediaTexture : UTexture;
 
 public abstract class UTexture : UUnrealMaterial, IAssetUserData
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<UTexture>();
     
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
@@ -117,7 +115,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
         while (!pixelFormatName.IsNone)
         {
             if (!Enum.TryParse(pixelFormatName.Text, ignoreCase: true, out EPixelFormat pixelFormat))
-                Log.Warning("Failed to parse pixel format: {PixelFormat}", pixelFormatName.Text);
+                CUE4ParseLog.Logger.Warning("Failed to parse pixel format: {PixelFormat}", pixelFormatName.Text);
 
             var skipOffset = Ar.Game switch
             {
@@ -131,7 +129,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             {
                 //?? check whether we can support this pixel format
 #if DEBUG
-                //Log.Debug("Loading data for format {Format}", pixelFormatName);
+                //CUE4ParseLog.Logger.Debug("Loading data for format {Format}", pixelFormatName);
 #endif
                 PlatformData = new FTexturePlatformData(Ar, this, bSerializeMipData);
 
@@ -139,7 +137,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
                 if (Ar.AbsolutePosition != skipOffset)
                 {
-                    Log.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
+                    CUE4ParseLog.Logger.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
                     Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
                 }
 
@@ -148,7 +146,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             else
             {
 #if DEBUG
-                Log.Debug("Skipping data for format {Format}", pixelFormatName);
+                CUE4ParseLog.Logger.Debug("Skipping data for format {Format}", pixelFormatName);
 #endif
                 Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
             }

@@ -6,7 +6,6 @@ using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
-using Serilog;
 
 namespace CUE4Parse.UE4.Pak.Objects;
 
@@ -34,7 +33,6 @@ public enum EPakFileVersion
 
 public partial class FPakInfo
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FPakInfo>();
     
     public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
     public const uint PAK_FILE_MAGIC_OutlastTrials = 0xA590ED1E;
@@ -460,7 +458,7 @@ public partial class FPakInfo
                         continue;
                     if (!Enum.TryParse(name, true, out CompressionMethod method))
                     {
-                        Log.Warning("Unknown compression method '{CompressionMethod}' in {ArchiveName}", name, Ar.Name);
+                        CUE4ParseLog.Logger.Warning("Unknown compression method '{CompressionMethod}' in {ArchiveName}", name, Ar.Name);
                         method = CompressionMethod.Unknown;
                     }
                     CompressionMethods.Add(method);

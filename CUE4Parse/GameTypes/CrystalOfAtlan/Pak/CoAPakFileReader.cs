@@ -7,13 +7,11 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using GenericReader;
-using Serilog;
 
 namespace CUE4Parse.UE4.Pak;
 
 public static class CoAPlugins
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(CoAPlugins));
     
     public static readonly byte[] returnbytes = [0x72, 0x65, 0x74, 0x75, 0x72, 0x6e];
     public static readonly Dictionary<string, string> CoAVirtualPaths = new(StringComparer.OrdinalIgnoreCase)
@@ -219,7 +217,7 @@ public partial class PakFileReader
                 }
                 else if (warning)
                 {
-                    Log.Warning("Missing {0} file for package {1}", extension, path);
+                    CUE4ParseLog.Logger.Warning("Missing {0} file for package {1}", extension, path);
                 }
             }
 
@@ -282,7 +280,7 @@ public partial class PakFileReader
 
                 if (!entry.TryRead(out var data) || entry.UncompressedSize < 4)
                 {
-                    Log.Warning("Failed to create reader for pathhash {0} with offset {1}", hash, offset);
+                    CUE4ParseLog.Logger.Warning("Failed to create reader for pathhash {0} with offset {1}", hash, offset);
                     files[hash.ToString()] = entry;
                     continue;
                 }
@@ -340,7 +338,7 @@ public partial class PakFileReader
                     mainExport = exports.FirstOrDefault(exp => (exp.ObjectFlags & 2) == 2);
                     if (mainExport is null)
                     {
-                        Log.Warning("Can't find export name for {0} pathhash", hash);
+                        CUE4ParseLog.Logger.Warning("Can't find export name for {0} pathhash", hash);
                         continue;
                     }
                 }
@@ -409,7 +407,7 @@ public partial class PakFileReader
 
                 if (!found)
                 {
-                    Log.Warning("Can't find package name for {0} pathhash in {1}", hash, Name);
+                    CUE4ParseLog.Logger.Warning("Can't find package name for {0} pathhash in {1}", hash, Name);
                     continue;
                 }
 
@@ -443,7 +441,7 @@ public partial class PakFileReader
                 if (entry.IsEncrypted)
                     EncryptedFileCount++;
                 files[path] = entry;
-                Log.Warning("Can't find corresponding name for {0} pathhash", hash);
+                CUE4ParseLog.Logger.Warning("Can't find corresponding name for {0} pathhash", hash);
             }
 
             Files = files;

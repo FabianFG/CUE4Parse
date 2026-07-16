@@ -13,13 +13,11 @@ using CUE4Parse.UE4.Wwise.Plugins.OculusSpatializer;
 using CUE4Parse.UE4.Wwise.Plugins.PolyspectralMBC;
 using CUE4Parse.UE4.Wwise.Plugins.ResonanceAudio;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
 public class WwisePlugin
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<WwisePlugin>();
     
     public static IAkPluginParam? TryParsePluginParams(FWwiseArchive Ar, AkPlugin plugin, bool always = false)
     {
@@ -154,19 +152,19 @@ public class WwisePlugin
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with Wwise version {Ar.Version}");
+            CUE4ParseLog.Logger.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with Wwise version {Ar.Version}");
         }
         finally
         {
 #if DEBUG
             if (Params is CAkDefaultParams)
             {
-                Log.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping {size} bytes");
+                CUE4ParseLog.Logger.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping {size} bytes");
             }
 
             if (Ar.Position != endPosition)
             {
-                Log.Warning($"Didn't read Wwise plugin '{pluginId}' with Wwise version {Ar.Version} correctly (at {Ar.Position}, should be {endPosition})");
+                CUE4ParseLog.Logger.Warning($"Didn't read Wwise plugin '{pluginId}' with Wwise version {Ar.Version} correctly (at {Ar.Position}, should be {endPosition})");
             }
 #endif
             Ar.Position = endPosition;

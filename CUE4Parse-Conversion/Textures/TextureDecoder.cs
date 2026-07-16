@@ -11,13 +11,11 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureDecoder
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(TextureDecoder));
 
     public static bool UseAssetRipperTextureDecoder { get; set; } = false;
 
@@ -191,7 +189,7 @@ public static class TextureDecoder
                         }
                         catch (ParserException e)
                         {
-                            Log.Error(e, "Failed to decompress crunch codec texture");
+                            CUE4ParseLog.Logger.Error(e, "Failed to decompress crunch codec texture");
                             break;
                         }
                     }

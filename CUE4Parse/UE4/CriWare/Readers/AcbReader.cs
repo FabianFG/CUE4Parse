@@ -1,12 +1,10 @@
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.CriWare.Readers;
 
 [JsonConverter(typeof(AcbReaderConverter))]
 public sealed class AcbReader : IDisposable
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<AcbReader>();
     
     private readonly Stream _outerStream;
     private readonly long _offset;
@@ -53,7 +51,7 @@ public sealed class AcbReader : IDisposable
     {
         if (_awbLength <= 0)
         {
-            Log.Warning("ACB has no AWB in memory, skipping");
+            CUE4ParseLog.Logger.Warning("ACB has no AWB in memory, skipping");
             return null;
         }
 

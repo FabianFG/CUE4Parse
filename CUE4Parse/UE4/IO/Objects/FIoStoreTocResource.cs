@@ -4,7 +4,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -19,7 +18,6 @@ namespace CUE4Parse.UE4.IO.Objects
 
     public class FIoStoreTocResource
     {
-        private static readonly ILogger Log = Serilog.Log.ForContext<FIoStoreTocResource>();
 
         private readonly FArchive? _tocAr;
         public readonly FIoStoreTocHeader Header;
@@ -141,7 +139,7 @@ namespace CUE4Parse.UE4.IO.Objects
                         continue;
                     if (!Enum.TryParse(name, true, out CompressionMethod method))
                     {
-                        Log.Warning($"Unknown compression method '{name}' in {Ar.Name}");
+                        CUE4ParseLog.Logger.Warning($"Unknown compression method '{name}' in {Ar.Name}");
                         method = CompressionMethod.Unknown;
                     }
 

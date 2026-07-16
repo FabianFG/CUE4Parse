@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 
 namespace CUE4Parse.MappingsProvider;
 
@@ -63,7 +62,6 @@ public class Struct
 
 public class SerializedStruct : Struct
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<SerializedStruct>();
 
     public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
     {
@@ -80,7 +78,7 @@ public class SerializedStruct : Struct
                         return scriptStruct;
                     }
 
-                    Log.Warning("Missing prop mappings for type {0}", superStruct.Name);
+                    CUE4ParseLog.Logger.Warning("Missing prop mappings for type {0}", superStruct.Name);
                     return null;
                 }
 

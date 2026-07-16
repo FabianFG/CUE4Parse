@@ -8,7 +8,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
-using Serilog;
 using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -16,7 +15,6 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(TBulkDataConverter))]
 public abstract class TBulkData<T> where T: struct
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<TBulkData<T>>();
     
     public FByteBulkDataHeader Header { get; init; }
     public EBulkDataFlags BulkDataFlags => Header.BulkDataFlags;
@@ -98,7 +96,7 @@ public abstract class TBulkData<T> where T: struct
         var read = archive.ReadAt(position, bulkData, 0, (int) Header.SizeOnDisk);
         if (read != Header.SizeOnDisk)
         {
-            Log.Warning("Read {read} bytes, expected {sizeOnDisk}", read, Header.SizeOnDisk);
+            CUE4ParseLog.Logger.Warning("Read {read} bytes, expected {sizeOnDisk}", read, Header.SizeOnDisk);
         }
 
         using var dataAr = new FByteArchive("", bulkData, Header.SizeOnDisk, _savedAr.Versions);
@@ -139,7 +137,7 @@ public abstract class TBulkData<T> where T: struct
             if (!TryGetBulkPayload(archive, PayloadType.UPTNL, out var uptnlAr))
             {
 #if DEBUG
-                Log.Debug("Failed to load bulk data in {CookedIndex}.uptnl file (Optional Payload) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
+                CUE4ParseLog.Logger.Debug("Failed to load bulk data in {CookedIndex}.uptnl file (Optional Payload) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
 #endif
                 return false;
             }
@@ -152,7 +150,7 @@ public abstract class TBulkData<T> where T: struct
             if (!TryGetBulkPayload(archive, PayloadType.MUBULK, out var mubulkAr))
             {
 #if DEBUG
-                Log.Debug("Failed to load bulk data in {CookedIndex}.m.ubulk file (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
+                CUE4ParseLog.Logger.Debug("Failed to load bulk data in {CookedIndex}.m.ubulk file (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
 #endif
                 return false;
             }
@@ -165,7 +163,7 @@ public abstract class TBulkData<T> where T: struct
             if (!TryGetBulkPayload(archive, PayloadType.UBULK, out var ubulkAr))
             {
 #if DEBUG
-                Log.Debug("Failed to load bulk data in {CookedIndex}.ubulk file (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
+                CUE4ParseLog.Logger.Debug("Failed to load bulk data in {CookedIndex}.ubulk file (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
 #endif
                 return false;
             }

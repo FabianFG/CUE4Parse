@@ -8,14 +8,12 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets;
 
 [JsonConverter(typeof(PackageConverter))]
 public abstract class AbstractUePackage : UObject, IPackage
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<AbstractUePackage>();
     
     public IFileProvider? Provider { get; }
     public TypeMappings? Mappings => Provider?.MappingsForGame;
@@ -91,11 +89,11 @@ public abstract class AbstractUePackage : UObject, IPackage
             switch (remaining)
             {
                 case > 0:
-                    Log.Warning("Did not read {0} correctly, {1} bytes remaining ({2}%)", obj.ExportType, remaining,
+                    CUE4ParseLog.Logger.Warning("Did not read {0} correctly, {1} bytes remaining ({2}%)", obj.ExportType, remaining,
                         Math.Round((decimal)remaining / validPos * 100, 2));
                     break;
                 case < 0:
-                    Log.Warning("Did not read {0} correctly, {1} bytes exceeded", obj.ExportType, Math.Abs(remaining));
+                    CUE4ParseLog.Logger.Warning("Did not read {0} correctly, {1} bytes exceeded", obj.ExportType, Math.Abs(remaining));
                     break;
                 default:
                     break;
@@ -108,7 +106,7 @@ public abstract class AbstractUePackage : UObject, IPackage
             {
                 throw new ParserException($"Could not read {obj.ExportType} correctly", e);
             }
-            Log.Error(e, "Could not read {0} correctly", obj.ExportType);
+            CUE4ParseLog.Logger.Error(e, "Could not read {0} correctly", obj.ExportType);
         }
     }
 

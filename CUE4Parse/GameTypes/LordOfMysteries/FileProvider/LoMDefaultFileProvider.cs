@@ -1,13 +1,11 @@
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.LordOfMysteries.Vfs;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.LordOfMysteries.FileProvider;
 
 public class LoMDefaultFileProvider(string directory, SearchOption searchOption, VersionContainer? versions = null, StringComparer? pathComparer = null) : DefaultFileProvider(directory, searchOption, versions, pathComparer)
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<LoMDefaultFileProvider>();
 
     public override void Initialize()
     {
@@ -20,7 +18,7 @@ public class LoMDefaultFileProvider(string directory, SearchOption searchOption,
         var manifest = _workingDirectory.EnumerateFiles("package.manifest", _searchOption).FirstOrDefault();
         if (manifest == null)
         {
-            Log.Error("Failed to find Lord of Mysteries manifest");
+            CUE4ParseLog.Logger.Error("Failed to find Lord of Mysteries manifest");
             return;
         }
 
@@ -31,7 +29,7 @@ public class LoMDefaultFileProvider(string directory, SearchOption searchOption,
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to open Lord of Mysteries manifest {Manifest}", manifest.FullName);
+            CUE4ParseLog.Logger.Error(e, "Failed to open Lord of Mysteries manifest {Manifest}", manifest.FullName);
             return;
         }
 
@@ -43,7 +41,7 @@ public class LoMDefaultFileProvider(string directory, SearchOption searchOption,
             }
             catch (Exception e)
             {
-                Log.Error(e, "Failed to load container {Container}", container.TocArchive.Name);
+                CUE4ParseLog.Logger.Error(e, "Failed to load container {Container}", container.TocArchive.Name);
             }
         }
     }

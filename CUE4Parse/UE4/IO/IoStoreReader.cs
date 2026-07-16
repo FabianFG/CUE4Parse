@@ -15,13 +15,11 @@ using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 using GenericReader;
 using OffiUtils;
-using Serilog;
 
 namespace CUE4Parse.UE4.IO;
 
 public partial class IoStoreReader : AbstractAesVfsReader
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<IoStoreReader>();
 
     private readonly record struct DirectoryTraversal(uint Directory, int ParentPathLength);
 
@@ -136,7 +134,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
 #endif
         if (TocResource.Header.Version > EIoStoreTocVersion.Latest)
         {
-            Log.Warning("Io Store \"{0}\" has unsupported version {1}", Path, (int) TocResource.Header.Version);
+            CUE4ParseLog.Logger.Warning("Io Store \"{0}\" has unsupported version {1}", Path, (int) TocResource.Header.Version);
         }
     }
 
@@ -447,7 +445,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 sb.Append($", mount point: \"{MountPoint}\"");
             sb.Append($", order {ReadOrder}");
             sb.Append($", version {(int) TocResource.Header.Version} in {elapsed}");
-            Log.Information(sb.ToString());
+            CUE4ParseLog.Logger.Information(sb.ToString());
         }
     }
 

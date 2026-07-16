@@ -4,13 +4,11 @@ using CUE4Parse.GameTypes.HonorOfKings.Vfs;
 using CUE4Parse.GameTypes.HonorOfKings.Vfs.Objects;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.FileProvider;
 
 public class HoKWDefaultFileProvider : DefaultFileProvider
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<HoKWDefaultFileProvider>();
     
     public static string GeneratedIndexFolder;
 
@@ -27,7 +25,7 @@ public class HoKWDefaultFileProvider : DefaultFileProvider
         var index = _workingDirectory.EnumerateFiles("1.db", _searchOption).FirstOrDefault();
         if (index is null)
         {
-            Log.Warning("Can't find 1.db for building an index.");
+            CUE4ParseLog.Logger.Warning("Can't find 1.db for building an index.");
             var generatedIndex = _workingDirectory.EnumerateDirectories("GeneratedIndex", _searchOption).FirstOrDefault();
             GeneratedIndexFolder = Path.GetFullPath(generatedIndex is null ? Path.Combine(_workingDirectory.FullName, "GeneratedIndex") : generatedIndex.FullName);
         }
@@ -57,7 +55,7 @@ public class HoKWDefaultFileProvider : DefaultFileProvider
         }
         catch (Exception)
         {
-            Log.Error("Failed to open {0}", file.FullName);
+            CUE4ParseLog.Logger.Error("Failed to open {0}", file.FullName);
         }
 
         return false;
@@ -88,10 +86,10 @@ public class HoKWDefaultFileProvider : DefaultFileProvider
         }
         catch (Exception)
         {
-            Log.Error("Failed to build index for {0}", mainIndex.FullName);
+            CUE4ParseLog.Logger.Error("Failed to build index for {0}", mainIndex.FullName);
         }
 
-        Log.Information("Regenerated file index.");
+        CUE4ParseLog.Logger.Information("Regenerated file index.");
     }
 
     private static async Task<string> ReadGeneratedFileIndex(string indexDirectory)

@@ -8,7 +8,6 @@ using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
@@ -22,7 +21,6 @@ public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkData bu
 [JsonConverter(typeof(WwiseConverter))]
 public class WwiseReader
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<WwiseReader>();
     
     public string Path;
     private readonly WwiseDataSource? _source;
@@ -111,7 +109,7 @@ public class WwiseReader
                     Ar.HasFeedback = Header.FeedbackInBank;
 
                     if (!Ar.IsSupported())
-                        Log.Warning($"Wwise version {Ar.Version} is not supported");
+                        CUE4ParseLog.Logger.Warning($"Wwise version {Ar.Version} is not supported");
                     break;
                 case EChunkID.BankInit:
                     LoadedSize += sectionLength;
@@ -177,7 +175,7 @@ public class WwiseReader
                     // For example: ADM3 codec (Crankcase Audio), AK Convolution Reverb impulse response (currently not supported https://github.com/vgmstream/vgmstream/issues/1638)
                     Ar.Position -= 8;
 #if DEBUG
-                    Log.Debug($"Found Wwise plugin section with length {sectionLength}");
+                    CUE4ParseLog.Logger.Debug($"Found Wwise plugin section with length {sectionLength}");
 #endif
                     WemFile = ReadDeferredByteData(Ar, _source, Ar.Position, 8 + sectionLength);
                     LoadedSize += WemFile.LoadedSize;
@@ -190,7 +188,7 @@ public class WwiseReader
                     break;
                 default:
 #if DEBUG
-                    Log.Warning($"Unknown section {sectionIdentifier:X} at {position - sizeof(uint) - sizeof(uint)}");
+                    CUE4ParseLog.Logger.Warning($"Unknown section {sectionIdentifier:X} at {position - sizeof(uint) - sizeof(uint)}");
 #endif
                     break;
             }
@@ -199,7 +197,7 @@ public class WwiseReader
             {
                 var shouldBe = position + sectionLength;
 #if DEBUG
-                Log.Warning($"Didn't read {sectionIdentifier} correctly (at {Ar.Position}, should be {shouldBe})");
+                CUE4ParseLog.Logger.Warning($"Didn't read {sectionIdentifier} correctly (at {Ar.Position}, should be {shouldBe})");
 #endif
                 Ar.Position = shouldBe;
             }

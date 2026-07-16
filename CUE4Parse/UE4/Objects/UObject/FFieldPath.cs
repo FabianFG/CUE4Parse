@@ -59,7 +59,7 @@ public class FFieldPath
 
         if (ResolvedOwner.IsNull)
         {
-            //if (Path.Count > 0) Log.Warning("");
+            //if (Path.Count > 0) CUE4ParseLog.Logger.Warning("");
             writer.WriteNull();
             return;
         }

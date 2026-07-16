@@ -3,13 +3,11 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 
 public class FLandscapeComponentGrassData
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FLandscapeComponentGrassData>();
 
     public int NumElements;
     public Dictionary<FPackageIndex, int>? WeightOffsets;
@@ -34,7 +32,7 @@ public class FLandscapeComponentGrassData
                 }
                 else
                 {
-                    Log.Warning("Could not find package index for grass type {0}", kvp.Key);
+                    CUE4ParseLog.Logger.Warning("Could not find package index for grass type {0}", kvp.Key);
                 }
             }
         }

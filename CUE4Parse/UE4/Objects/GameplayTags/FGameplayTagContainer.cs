@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Objects.GameplayTags;
 
@@ -195,7 +194,6 @@ public enum EGameplayTagQueryExprType
 
 public class FQueryEvaluator
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FQueryEvaluator>();
     
     private readonly FGameplayTagQuery Query;
     private int CurStreamIdx;
@@ -394,7 +392,7 @@ public class FQueryEvaluator
             return Query.QueryTokenStream[CurStreamIdx++];
         }
 
-        Log.Error("Failed to parse FGameplayQuery!");
+        CUE4ParseLog.Logger.Error("Failed to parse FGameplayQuery!");
         bReadError = true;
         return 0;
     }

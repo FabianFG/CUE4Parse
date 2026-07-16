@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 using UExport = CUE4Parse.UE4.Assets.Exports.UObject;
 
 namespace CUE4Parse.UE4.Objects.UObject;
@@ -17,7 +16,6 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [JsonConverter(typeof(FSoftObjectPathConverter))]
 public readonly struct FSoftObjectPath : IUStruct
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FSoftObjectPath>();
     
     /** Asset path, patch to a top level object in a package. This is /package/path.assetname */
     public readonly FName AssetPathName;
@@ -43,7 +41,7 @@ public readonly struct FSoftObjectPath : IUStruct
             var index = Ar.Read<int>();
             if (index < 0 || index >= softObjectPaths.Length)
             {
-                Log.Warning("SoftObjectProperty: Invalid SoftObjectPath index {Index} in package {PackageName}", index, Ar.Name);
+                CUE4ParseLog.Logger.Warning("SoftObjectProperty: Invalid SoftObjectPath index {Index} in package {PackageName}", index, Ar.Name);
             }
             else
             {
@@ -225,7 +223,7 @@ public readonly struct FSoftObjectPath : IUStruct
             var foundExport = current.Owner.GetExportOrNull(part);
             if (foundExport == null)
             {
-                Log.Warning("SoftObjectPath: Could not find subobject '{ObjectName}' in path '{SubPath}' for asset '{AssetPath}'", part, SubPathString, AssetPathName.Text);
+                CUE4ParseLog.Logger.Warning("SoftObjectPath: Could not find subobject '{ObjectName}' in path '{SubPath}' for asset '{AssetPath}'", part, SubPathString, AssetPathName.Text);
                 export = null;
                 return false;
             }

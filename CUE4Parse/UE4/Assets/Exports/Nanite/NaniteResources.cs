@@ -7,13 +7,11 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Nanite;
 
 public class FNaniteResources
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FNaniteResources>();
 
     // Persistent State
     public FByteBulkData? StreamablePages = null; // Remaining pages are streamed on demand.
@@ -95,7 +93,7 @@ public class FNaniteResources
 #if DEBUG
             if (NumInputTriangles > 0)
             {
-                Log.Debug("Nanite mesh has {NumInputTriangles} triangles", NumInputTriangles);
+                CUE4ParseLog.Logger.Debug("Nanite mesh has {NumInputTriangles} triangles", NumInputTriangles);
             }
 #endif
             NumInputVertices = Ar.Read<uint>();
@@ -141,7 +139,7 @@ public class FNaniteResources
     {
         if (pageIndex >= LoadedPages.Length)
         {
-            Log.Error("PageIndex {pageIndex} is out of range!", pageIndex);
+            CUE4ParseLog.Logger.Error("PageIndex {pageIndex} is out of range!", pageIndex);
             outPage = null;
             return false;
         }
@@ -177,7 +175,7 @@ public class FNaniteResources
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to load Nanite page {pageIndex}!", pageIndex);
+            CUE4ParseLog.Logger.Error(ex, "Failed to load Nanite page {pageIndex}!", pageIndex);
             outPage = null;
         }
         finally

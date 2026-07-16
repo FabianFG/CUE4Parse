@@ -4,7 +4,6 @@ using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -12,7 +11,6 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [SkipObjectRegistration]
 public class FStructFallback : AbstractPropertyHolder, IUStruct
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FStructFallback>();
 
     public FStructFallback() => Properties = [];
 
@@ -63,7 +61,7 @@ public class FStructFallback : AbstractPropertyHolder, IUStruct
         }
         else
         {
-            Log.Warning("Failed to read Struct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
+            CUE4ParseLog.Logger.Warning("Failed to read Struct of type {0}, skipping it", structType.ResolvedObject?.GetFullName());
         }
         return result;
     }

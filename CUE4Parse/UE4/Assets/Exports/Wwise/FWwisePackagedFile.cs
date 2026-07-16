@@ -4,14 +4,12 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 
 [JsonConverter(typeof(FWwisePackagedFileConverter))]
 public class FWwisePackagedFile : FStructFallback
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<FWwisePackagedFile>();
     
     public EWwisePackagingStrategy PackagingStrategy;
     public FName PathName;
@@ -83,13 +81,13 @@ public class FWwisePackagedFile : FStructFallback
                     }
                     catch
                     {
-                        Log.Error("Failed to read Wwise bank data for {Name} from combined bulk data", name);
+                        CUE4ParseLog.Logger.Error("Failed to read Wwise bank data for {Name} from combined bulk data", name);
                     }
                 }
             }
             catch
             {
-                Log.Error("Failed to read Wwise bank data for {Name} from bulk data", name);
+                CUE4ParseLog.Logger.Error("Failed to read Wwise bank data for {Name} from bulk data", name);
             }
         }
         else if (PackagingStrategy is EWwisePackagingStrategy.External or EWwisePackagingStrategy.AdditionalFile) // maybe in AssetLibrary or an asset
@@ -97,7 +95,7 @@ public class FWwisePackagedFile : FStructFallback
         }
         else
         {
-            Log.Warning("Wwise bank data for {Name} uses unsupported packaging strategy {stategy}", name,
+            CUE4ParseLog.Logger.Warning("Wwise bank data for {Name} uses unsupported packaging strategy {stategy}", name,
                 PackagingStrategy.ToString());
         }
     }

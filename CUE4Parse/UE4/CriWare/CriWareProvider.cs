@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.CriWare.Decoders;
 using CUE4Parse.UE4.CriWare.Readers;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 using UE4Config.Parsing;
 
 namespace CUE4Parse.UE4.CriWare;
@@ -36,7 +35,6 @@ public class CriWareExtractedSound
 /// </summary>
 public class CriWareProvider
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<CriWareProvider>();
     
     private readonly record struct AwbLocation(string Path, bool InProvider);
     private Dictionary<string, AwbLocation> _streamingAwbLookup = [];
@@ -131,7 +129,7 @@ public class CriWareProvider
             {
                 if (wave.EncodeType is not (EEncodeType.HCA or EEncodeType.HCA_ALT))
                 {
-                    Log.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
+                    CUE4ParseLog.Logger.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
                     continue;
                 }
 
@@ -191,7 +189,7 @@ public class CriWareProvider
                         continue;
                     if (!TryGetSupportedExtension(wave.EncodeType, out var extension))
                     {
-                        Log.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
+                        CUE4ParseLog.Logger.Warning($"Skipping waveform extraction. Waveform encoding type '{wave.EncodeType}' is not supported");
                         continue;
                     }
 
@@ -212,7 +210,7 @@ public class CriWareProvider
             int waveformsCount = memoryAwb?.Waves.Count ?? 0 + streamingAwb?.Waves.Count ?? 0;
             if (visitedWaveforms.Count < waveformsCount)
             {
-                Log.Warning($"Not all waveforms were extracted from ACB '{baseName}'. Extracted {visitedWaveforms.Count} out of {waveformsCount}.");
+                CUE4ParseLog.Logger.Warning($"Not all waveforms were extracted from ACB '{baseName}'. Extracted {visitedWaveforms.Count} out of {waveformsCount}.");
             }
         }
         else
@@ -333,7 +331,7 @@ public class CriWareProvider
         if (!string.IsNullOrEmpty(token?.Value))
         {
             _criWareContentDir = token.Value.Replace('\\', '/');
-            Log.Information($"CriWare content directory found at: {token.Value}");
+            CUE4ParseLog.Logger.Information($"CriWare content directory found at: {token.Value}");
         }
     }
 

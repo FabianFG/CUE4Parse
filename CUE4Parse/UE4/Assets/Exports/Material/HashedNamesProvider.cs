@@ -3,13 +3,11 @@ using System.Reflection;
 using System.Text;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public sealed class HashedNamesProvider
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext<HashedNamesProvider>();
 
     public static readonly Lazy<HashedNamesProvider> LazyInstance = new(() => new HashedNamesProvider());
     public static HashedNamesProvider Instance => LazyInstance.Value;
@@ -23,7 +21,7 @@ public sealed class HashedNamesProvider
             using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse.Resources.ShaderHashedNames.json");
             if (stream == null)
             {
-                Log.Error("Couldn't find ShaderHashedNames.json in Embedded Resources");
+                CUE4ParseLog.Logger.Error("Couldn't find ShaderHashedNames.json in Embedded Resources");
                 return;
             }
 
@@ -32,7 +30,7 @@ public sealed class HashedNamesProvider
         }
         catch (Exception e)
         {
-            Log.Error(e, "Failed to load ShaderHashedNames.json from Embedded Resources");
+            CUE4ParseLog.Logger.Error(e, "Failed to load ShaderHashedNames.json from Embedded Resources");
         }
     }
 
