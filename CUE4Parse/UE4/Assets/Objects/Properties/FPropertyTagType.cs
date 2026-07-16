@@ -85,7 +85,10 @@ public abstract class FPropertyTagType
             //TODO There are also Enums stored as ByteProperty but UModel uses them nowhere besides in UE2
             case FPropertyTagType<UScriptMap> mapProp when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>):
                 return CreateDictionary(type, mapProp.Value!.Properties);
+            case OptionalProperty optionalProperty:
+                return optionalProperty.Value?.GetValue(type);
             default:
+                Log.Warning("Incorrect type conversion from {0} to {1}", this, type);
                 return null;
         }
     }
