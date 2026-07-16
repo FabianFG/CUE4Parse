@@ -11,7 +11,7 @@ public static class WwiseVersionInfo
         112,    // Dead by Daylight (old)
         113,    // Dead by Daylight (old), Styx: Shards of Drakness, Abzu
         120,    // Code Vein
-        125,    // Ace Combat 7
+        125,    // Ace Combat 7, PUBG Mobile
         132,    // Dead by Daylight (old), Undawn
         134,    // Valorant (old)
         135,    // Dead by Daylight (old), Hot Wheels Unleashed, Tetris Effect, Valorant Source

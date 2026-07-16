@@ -90,6 +90,9 @@ public partial class PakFileReader : AbstractAesVfsReader
         var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
         var alignment = pakEntry.IsEncrypted ? Aes.ALIGN : 1;
 
+        if (Game is GAME_PUBGMobile) // There's so many changes I'll just leave it here
+            return PUBGMobileExtract(reader, pakEntry, header);
+
         long offset = 0;
         var requestedSize = (int) pakEntry.UncompressedSize;
         if (header is { } bulk)
@@ -313,15 +316,17 @@ public partial class PakFileReader : AbstractAesVfsReader
         ValidateMountPoint(ref mountPoint);
         MountPoint = mountPoint;
 
-        if (Ar.Game == GAME_GameForPeace)
+        switch (Ar.Game)
         {
-            GameForPeaceReadIndex(pathComparer, index);
-            return;
-        }
-        if (Ar.Game == GAME_DragonQuestXI)
-        {
-            DQXIReadIndexLegacy(pathComparer, index);
-            return;
+            case GAME_GameForPeace:
+                GameForPeaceReadIndex(pathComparer, index);
+                return;
+            case GAME_DragonQuestXI:
+                DQXIReadIndexLegacy(pathComparer, index);
+                return;
+            case GAME_PUBGMobile:
+                PUBGMobileReadIndex(pathComparer, index);
+                return;
         }
 
         var fileCount = index.Read<int>();
@@ -626,6 +631,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
     public override void Dispose()
     {
+        _pubgMobileZstdDecompressor?.Dispose();
         Ar.Dispose();
     }
 }

@@ -23,6 +23,7 @@ This library includes material developed by the following third-party libraries:
 - VGAudio (https://github.com/Thealexbarney/VGAudio/blob/master/LICENSE) - Copyright (c) 2016 Thealexbarney. Licensed under the MIT License.
 - SubstreamSharp (https://github.com/connorhaigh/SubstreamSharp/blob/master/Licence.txt) - Copyright (c) 2021 Connor Haigh. Licensed under the MIT License.
 - crunch (https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/ThirdParty/Crunch/src/license.txt) - Copyright (c) 2010-2016 Richard Geldreich, Jr. and Binomial LLC. Licensed under the ZLIB license.
+- SwiftShader (https://swiftshader.googlesource.com/SwiftShader/+/HEAD/src/Device/ETC_Decoder.cpp) - Copyright 2016 The SwiftShader Authors. Licensed under the Apache License 2.0. Portions of the ETC decoder were translated to C# and modified.
 
 ---------------------------------------------------------------------------
 

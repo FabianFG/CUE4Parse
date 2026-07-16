@@ -11,7 +11,7 @@ using OodleSharp;
 
 using ZlibngDotNet;
 
-using ZstdSharpMethods = ZstdSharp.Unsafe.Methods;
+using ZstdSharp;
 
 namespace CUE4Parse.Compression;
 
@@ -21,26 +21,14 @@ public static class Compression
 
     public static IDecompressor Decompressor => _decompressor;
 
-    private static unsafe IDecompressor _decompressor = DecompressorBuilder.Default
+    private static IDecompressor _decompressor = DecompressorBuilder.Default
         .Add(CompressionAlgorithm.Oodle, OodleDecompressor.TryDecompress)
         .Add(CompressionAlgorithm.LZ4, static (source, destination, out written)
             => (written = LZ4Codec.Decode(source, destination)) > 0, replace: true)
         .Add(CompressionAlgorithm.Zstd, static (source, destination, out written) =>
         {
-            fixed (byte* srcPtr = source)
-            fixed (byte* dstPtr = destination)
-            {
-                var result = ZstdSharpMethods.ZSTD_decompress(
-                    dstPtr, (nuint) destination.Length, srcPtr, (nuint) source.Length);
-                if (ZstdSharpMethods.ZSTD_isError(result))
-                {
-                    written = 0;
-                    return false;
-                }
-
-                written = (int) result;
-                return true;
-            }
+            using var decompressor = new Decompressor();
+            return decompressor.TryUnwrap(source, destination, out written);
         }, replace: true)
         .Build();
 
