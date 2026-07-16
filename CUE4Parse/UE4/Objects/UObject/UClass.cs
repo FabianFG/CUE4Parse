@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
@@ -52,12 +49,12 @@ public class UClass : UStruct
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Game == EGame.GAME_AWayOut) Ar.Position += 4;
+        if (Ar.Game == GAME_AWayOut) Ar.Position += 4;
 
         FuncMap = Ar.ReadMap(Ar.ReadFName, () => new FPackageIndex(Ar));
         ClassFlags = Ar.Read<EClassFlags>();
 
-        if (Ar.Game is EGame.GAME_StarWarsJediFallenOrder or EGame.GAME_StarWarsJediSurvivor or EGame.GAME_AshesOfCreation) Ar.Position += 4;
+        if (Ar.Game is GAME_StarWarsJediFallenOrder or GAME_StarWarsJediSurvivor or GAME_AshesOfCreation) Ar.Position += 4;
 
         ClassWithin = new FPackageIndex(Ar);
         ClassConfigName = Ar.ReadFName();
@@ -73,7 +70,7 @@ public class UClass : UStruct
         }
 
         ClassDefaultObject = new FPackageIndex(Ar);
-        if (Ar.Game == EGame.GAME_Borderlands4) _ = Ar.ReadMap(Ar.Read<ulong>, Ar.Read<int>);
+        if (Ar.Game == GAME_Borderlands4) _ = Ar.ReadMap(Ar.Read<ulong>, Ar.Read<int>);
     }
 
     public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
@@ -107,9 +104,9 @@ public class UClass : UStruct
         return null;
     }
 
-    public string DecompileBlueprintToPseudo(TypeMappings mappings, UClassCookedMetaData? cookedMetaData = null)
+    public string DecompileBlueprintToPseudo(UClassCookedMetaData? cookedMetaData = null)
     {
-        BlueprintDecompilerUtils.Mappings = mappings;
+        BlueprintDecompilerUtils.Mappings = this.Owner.Mappings;
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
@@ -161,7 +158,6 @@ public class UClass : UStruct
         var totalFuncMapCount = FuncMap.Count;
         if (totalFuncMapCount > 0) stringBuilder.AppendLine();
 
-
         var jumpCodeOffsetsMap = new Dictionary<string, List<int>>();
         foreach (var value in FuncMap.Values.Reverse())
         {
@@ -185,6 +181,11 @@ public class UClass : UStruct
                         }
                         label = jump.ObjectName;
                         offset = (int)jump.CodeOffset;
+                        break;
+                    case EX_VirtualFunction final:
+                        label = final.VirtualFunctionName.Text.Split('.').Last().Split('[')[0];
+                        if (final.Parameters is [EX_IntConst intConstVirtual])
+                            offset = intConstVirtual.Value;
                         break;
                     case EX_LocalFinalFunction final:
                         label = final.StackNode.Name.Split('.').Last().Split('[')[0];

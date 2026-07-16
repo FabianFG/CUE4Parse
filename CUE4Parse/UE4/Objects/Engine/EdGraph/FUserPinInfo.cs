@@ -39,12 +39,12 @@ public class FUserPinInfo
         }
         else
         {
-            var bIsArray = Ar.ReadBoolean();
-            var bIsReference = Ar.ReadBoolean();
+            var bIsArray = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_PINTYPE_ARRAY && Ar.ReadBoolean();
+            var bIsReference = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_PINTYPE_BYREF && Ar.ReadBoolean();
             var PinCategoryStr = Ar.ReadFString();
             var PinSubCategoryStr = Ar.ReadFString();
 
-            if (Ar.Game is >= EGame.GAME_UE5_0 && PinCategoryStr is "double" or "float")
+            if (Ar.Game is >= GAME_UE5_0 && PinCategoryStr is "double" or "float")
             {
                 PinCategoryStr = "real";
                 PinSubCategoryStr = "double";

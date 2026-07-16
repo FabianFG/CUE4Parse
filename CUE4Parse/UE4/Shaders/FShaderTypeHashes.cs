@@ -11,6 +11,6 @@ public class FShaderTypeHashes
 
     public FShaderTypeHashes(FArchive Ar)
     {
-        Data = Ar.ReadArray(Ar.ReadArray<FHashedName>);
+        Data = Ar.ReadArray(() => Ar.ReadArray(() => new FHashedName(Ar)));
     }
 }

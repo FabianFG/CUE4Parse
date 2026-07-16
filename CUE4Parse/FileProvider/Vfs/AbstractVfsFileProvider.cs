@@ -1,20 +1,15 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
-using CUE4Parse.GameTypes.ABI.Encryption.Aes;
+using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
 using CUE4Parse.GameTypes.ArcRaiders.Encryption.Aes;
 using CUE4Parse.GameTypes.BB3.Encryption.Aes;
 using CUE4Parse.GameTypes.DBD.Encryption.Aes;
 using CUE4Parse.GameTypes.DeltaForce.Encryption.Aes;
+using CUE4Parse.GameTypes.DragonSword.Encryption.Aes;
 using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
 using CUE4Parse.GameTypes.FSR.Encryption.Aes;
 using CUE4Parse.GameTypes.FunkoFusion.Encryption.Aes;
@@ -26,11 +21,14 @@ using CUE4Parse.GameTypes.NMZ.Encryption.Aes;
 using CUE4Parse.GameTypes.OPA.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 using CUE4Parse.GameTypes.PMA.Encryption.Aes;
-using CUE4Parse.GameTypes.RocoKingdomWorld.Encryption.Aes;
+using CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
+using CUE4Parse.GameTypes.RocoKingdomWorld.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
+using CUE4Parse.GameTypes.SilverPalace.Encryption;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
 using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
+using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.Aes;
 using CUE4Parse.GameTypes.THPS.Encryption.Aes;
 using CUE4Parse.GameTypes.UDWN.Encryption.Aes;
 using CUE4Parse.GameTypes.UWO.Encryption.Aes;
@@ -69,6 +67,8 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public IReadOnlyDictionary<FPackageId, GameFile> FilesById => Files.ById;
 
+        public int LooseFileCount { get; protected set; }
+
         public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
         public event EventHandler<int>? VfsRegistered;
         public event EventHandler<int>? VfsMounted;
@@ -78,31 +78,35 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             CustomEncryption = versions?.Game switch
             {
-                EGame.GAME_ApexLegendsMobile => ApexLegendsMobileAes.DecryptApexMobile,
-                EGame.GAME_Snowbreak => SnowbreakAes.SnowbreakDecrypt,
-                EGame.GAME_MarvelRivals => MarvelAes.MarvelDecrypt,
-                EGame.GAME_Undawn => ToaaAes.ToaaDecrypt,
-                EGame.GAME_DeadByDaylight or EGame.GAME_DeadByDaylight_Old => DBDAes.DbDDecrypt,
-                EGame.GAME_PaxDei => PaxDeiAes.PaxDeiDecrypt,
-                EGame.GAME_3on3FreeStyleRebound => FreeStyleReboundAes.FSRDecrypt,
-                EGame.GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
-                EGame.GAME_DeltaForce => DeltaForceAes.DeltaForceDecrypt,
-                EGame.GAME_PromiseMascotAgency => PMAAes.PMADecrypt,
-                EGame.GAME_Rennsport => RennsportAes.RennsportDecrypt,
-                EGame.GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
-                EGame.GAME_TonyHawkProSkater12 or EGame.GAME_TonyHawkProSkater34 => THPS12Aes.THPS12Decrypt,
-                EGame.GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
-                EGame.GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
-                EGame.GAME_Splitgate2 => Splitgate2Aes.Splitgate2Decrypt,
-                EGame.GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
-                EGame.GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
-                EGame.GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
-                EGame.GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
-                EGame.GAME_ArenaBreakoutInfinite => ABIDecryption.ABIDecrypt,
-                EGame.GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
-                EGame.GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
-                EGame.GAME_ArcRaiders => ArcRaidersAes.ArcRaidersDecrypt,
-                EGame.GAME_RocoKingdomWorld => RocoKingdomWorldAes.RocoKingdomWorldDecrypt,
+                GAME_ApexLegendsMobile => ApexLegendsMobileAes.DecryptApexMobile,
+                GAME_Snowbreak => SnowbreakAes.SnowbreakDecrypt,
+                GAME_MarvelRivals => MarvelAes.MarvelDecrypt,
+                GAME_Undawn => ToaaAes.ToaaDecrypt,
+                GAME_DeadByDaylight or GAME_DeadByDaylight_Old => DBDAes.DbDDecrypt,
+                GAME_PaxDei => PaxDeiAes.PaxDeiDecrypt,
+                GAME_3on3FreeStyleRebound => FreeStyleReboundAes.FSRDecrypt,
+                GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
+                GAME_DeltaForce => DeltaForceAes.DeltaForceDecrypt,
+                GAME_PromiseMascotAgency => PMAAes.PMADecrypt,
+                GAME_Rennsport => RennsportAes.RennsportDecrypt,
+                GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
+                GAME_TonyHawkProSkater12 or GAME_TonyHawkProSkater34 => THPS12Aes.THPS12Decrypt,
+                GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
+                GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
+                GAME_Splitgate2 or GAME_Empulse => Aes1047Games.Decrypt1047Games,
+                GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
+                GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
+                GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
+                GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
+                GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile => ABIDecryption.ABIDecrypt,
+                GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
+                GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
+                GAME_ArcRaiders => ArcRaidersAes.ArcRaidersDecrypt,
+                GAME_RocoKingdomWorld => RocoKingdomWorldAes.RocoKingdomWorldDecrypt,
+                GAME_DragonSwordAwakening => DragonSwordAes.DragonSwordDecrypt,
+                GAME_eBaseballProSpirit => ProSpiEncryption.ProSpiDecrypt,
+                GAME_SilverPalace => SilverPalaceAes.SilverPalaceDecrypt,
+                GAME_ValorantSource => ValorantSourceAes.ValorantSourceDecrypt,
                 _ => null
             };
         }
@@ -142,6 +146,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 switch (archive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
+                    case "UPAK" when archive.Game is GAME_LordOfMysteries:
                         reader = new PakFileReader(archive);
                         break;
                     case "UTOC":
@@ -176,6 +181,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 switch (pakOrUtocArchive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
+                    case "UPAK" when pakOrUtocArchive.Game is GAME_LordOfMysteries:
                         reader = new PakFileReader(pakOrUtocArchive);
                         break;
                     case "UTOC":
@@ -208,6 +214,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 switch (pakOrUtocArchive.Name.SubstringAfterLast('.').ToUpper())
                 {
                     case "PAK":
+                    case "UPAK" when pakOrUtocArchive.Game is GAME_LordOfMysteries:
                         reader = new PakFileReader(pakOrUtocArchive);
                         break;
                     case "UTOC":
@@ -266,7 +273,7 @@ namespace CUE4Parse.FileProvider.Vfs
 
             _unloadedVfs[reader] = null;
             reader.IsConcurrent = isConcurrent;
-            if (!(reader.Game == EGame.GAME_MarvelRivals && reader is IoStoreReader)) // no custom encryption for MR IoStore
+            if (!(reader.Game == GAME_MarvelRivals && reader is IoStoreReader)) // no custom encryption for MR IoStore
             {
                 reader.CustomEncryption = CustomEncryption;
             }
@@ -279,7 +286,11 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             var countNewMounts = 0;
             var tasks = new LinkedList<Task>();
-            foreach (var reader in _unloadedVfs.Keys)
+            var readers = _unloadedVfs.Keys.ToArray();
+            Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader =>
+                (!reader.IsEncrypted || CustomEncryption != null) && reader.HasDirectoryIndex)));
+
+            foreach (var reader in readers)
             {
                 VerifyGlobalData(reader);
 
@@ -323,11 +334,16 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             var countNewMounts = 0;
             var tasks = new LinkedList<Task<IAesVfsReader?>>();
-            foreach (var (guid, key) in keys)
+            var submittedKeys = keys as IReadOnlyCollection<KeyValuePair<FGuid, FAesKey>> ?? keys.ToArray();
+            var submittedKeyGuids = submittedKeys.Select(x => x.Key).ToHashSet();
+            var readers = _unloadedVfs.Keys.Where(reader => submittedKeyGuids.Contains(reader.EncryptionKeyGuid)).ToArray();
+            Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader => reader.HasDirectoryIndex)));
+
+            foreach (var (guid, key) in submittedKeys)
             {
-                foreach (var reader in _unloadedVfs.Keys.Where(it => it.EncryptionKeyGuid == guid))
+                foreach (var reader in readers.Where(it => it.EncryptionKeyGuid == guid))
                 {
-                    if (reader.Game == EGame.GAME_FragPunk && reader.Name.Contains("global")) reader.AesKey = key;
+                    if (reader.Game == GAME_FragPunk && reader.Name.Contains("global")) reader.AesKey = key;
                     VerifyGlobalData(reader);
 
                     if (!reader.HasDirectoryIndex)
@@ -366,6 +382,18 @@ namespace CUE4Parse.FileProvider.Vfs
             }
 
             return countNewMounts;
+        }
+
+        private static int EstimatePackageIndexCapacity(IEnumerable<IAesVfsReader> readers)
+        {
+            long capacity = 0;
+            foreach (var reader in readers)
+            {
+                if (reader is IoStoreReader ioStoreReader)
+                    capacity += ioStoreReader.GetPackageDataChunkCount();
+            }
+
+            return (int) Math.Min(capacity, int.MaxValue);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

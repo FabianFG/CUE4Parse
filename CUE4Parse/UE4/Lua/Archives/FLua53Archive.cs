@@ -1,4 +1,3 @@
-using System.IO;
 using System.Text;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;

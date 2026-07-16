@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -21,7 +20,7 @@ public class UTexture2D : UTexture
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 12;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
         ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
         AddressX = GetOrDefault<TextureAddress>(nameof(AddressX));
@@ -55,9 +54,9 @@ public class UTexture2D : UTexture
         if (bCooked)
         {
             var bSerializeMipData = true;
-            if (Ar.Game >= EGame.GAME_UE5_3 || Ar.Game == EGame.GAME_TheFirstDescendant)
+            if (Ar.Game >= GAME_UE5_3 || Ar.Game == GAME_TheFirstDescendant)
             {
-                // Controls whether FByteBulkData is serialized??
+                // Controls whether FByteBulkData
                 bSerializeMipData = Ar.ReadBoolean();
             }
 

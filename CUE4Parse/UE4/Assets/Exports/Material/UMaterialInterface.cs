@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -15,8 +13,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material;
 [SkipObjectRegistration]
 public class UMaterialInterface : UUnrealMaterial
 {
-    //I think those aren't used in UE4 but who knows
-    //to delete
     public bool bUseMobileSpecular;
     public float MobileSpecularPower = 16.0f;
     public EMobileSpecularMask MobileSpecularMask = EMobileSpecularMask.MSM_Constant;
@@ -31,7 +27,7 @@ public class UMaterialInterface : UUnrealMaterial
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
+        if(Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
         bUseMobileSpecular = GetOrDefault<bool>(nameof(bUseMobileSpecular));
         MobileSpecularPower = GetOrDefault<float>(nameof(MobileSpecularPower));
@@ -48,7 +44,7 @@ public class UMaterialInterface : UUnrealMaterial
             CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");
         }
 
-        if (Ar.Game == EGame.GAME_HogwartsLegacy) CustomGameData = new FSHAHash(Ar);
+        if (Ar.Game == GAME_HogwartsLegacy) CustomGameData = new FSHAHash(Ar);
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -174,7 +170,7 @@ public class UMaterialInterface : UUnrealMaterial
         if (numLoadedResources > 0)
         {
             FMaterialResourceProxyReader resourceAr;
-            if (Ar.Game != EGame.GAME_Stalker2)
+            if (Ar.Game != GAME_Stalker2)
             {
                 resourceAr = new FMaterialResourceProxyReader(Ar);
             }

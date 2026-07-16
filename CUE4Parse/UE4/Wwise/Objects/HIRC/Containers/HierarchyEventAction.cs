@@ -10,17 +10,21 @@ public class HierarchyEventAction : AbstractHierarchy
 {
     public readonly EAkActionScope EventActionScope;
     public readonly EAkActionType EventActionType;
-    public readonly byte IsBus;
+    public readonly bool IsBus;
     public readonly uint ReferencedId;
     public readonly AkPropBundle PropBundle;
     public readonly object? ActionData;
 
-    public HierarchyEventAction(FWwiseArchive Ar) : base(Ar)
+    public HierarchyEventAction(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         EventActionScope = Ar.Read<EAkActionScope>();
         EventActionType = Ar.Read<EAkActionType>();
         ReferencedId = Ar.Read<uint>();
-        IsBus = Ar.Read<byte>();
+        if (Ar.Version > 65)
+        {
+            IsBus = Ar.ReadBool();
+        }
 
         PropBundle = new AkPropBundle(Ar);
 
@@ -76,7 +80,7 @@ public class HierarchyEventAction : AbstractHierarchy
         }
 
         writer.WritePropertyName(nameof(IsBus));
-        writer.WriteValue(IsBus != 0);
+        writer.WriteValue(IsBus);
 
         writer.WritePropertyName(nameof(PropBundle));
         serializer.Serialize(writer, PropBundle);

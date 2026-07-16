@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 

@@ -8,7 +8,7 @@ public class CAkActionPause
 {
     public readonly CAkActionParams ActionParams;
     [JsonConverter(typeof(StringEnumConverter))]
-    public readonly EPauseOptions PauseOptions;
+    public readonly EPauseOptionsFlags PauseOptions;
     public readonly CAkActionExcept ExceptParams;
 
     // CAkActionPause::SetActionSpecificParams
@@ -26,7 +26,7 @@ public class CAkActionPause
         }
         else
         {
-            PauseOptions = Ar.Read<EPauseOptions>();
+            PauseOptions = Ar.Read<EPauseOptionsFlags>();
         }
 
         ExceptParams = new CAkActionExcept(Ar);

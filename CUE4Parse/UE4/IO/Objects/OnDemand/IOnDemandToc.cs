@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace CUE4Parse.UE4.IO.Objects.OnDemand;
+﻿namespace CUE4Parse.UE4.IO.Objects.OnDemand;
 
 public interface IOnDemandToc
 {

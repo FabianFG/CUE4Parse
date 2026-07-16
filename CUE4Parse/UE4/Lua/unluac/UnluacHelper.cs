@@ -1,10 +1,5 @@
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Compression;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
 using Serilog;
@@ -49,7 +44,7 @@ public static class UnluacHelper
     {
         if (Instance is not null) return;
 
-        var dllPath = string.IsNullOrWhiteSpace(path) ? DllName : path;
+        var dllPath = Path.GetFullPath(string.IsNullOrWhiteSpace(path) ? DllName : path);
         if (!await DownloadDllAsync(dllPath, null, cancellationToken).ConfigureAwait(false))
         {
             Log.Warning("Unable to download unluac dll");

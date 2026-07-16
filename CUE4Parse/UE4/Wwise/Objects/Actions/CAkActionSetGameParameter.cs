@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Wwise.Objects.Actions;
 public class CAkActionSetGameParameter
 {
     public readonly CAkActionParams ActionParams;
-    public readonly bool? BypassTransition;
+    public readonly bool BypassTransition;
     [JsonConverter(typeof(StringEnumConverter))]
     public readonly EAkValueMeaning ValueMeaning;
     public readonly AkRandomizerModifier RandomizerModifier;
@@ -19,7 +19,7 @@ public class CAkActionSetGameParameter
         ActionParams = new CAkActionParams(Ar);
         if (Ar.Version > 89)
         {
-            BypassTransition = Ar.Read<byte>() != 0;
+            BypassTransition = Ar.ReadBool();
         }
 
         if (Ar.Version <= 56)

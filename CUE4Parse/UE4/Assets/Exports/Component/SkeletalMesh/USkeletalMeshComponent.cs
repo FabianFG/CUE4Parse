@@ -25,6 +25,6 @@ public class USkeletalMeshComponent : USkinnedMeshComponent
             }
         }
 
-        if(Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 20;
+        if(Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 20;
     }
 }

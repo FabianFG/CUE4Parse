@@ -1,4 +1,3 @@
-using System.Linq;
 using CUE4Parse.GameTypes.SMG.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -46,18 +45,18 @@ public class FMorphTargetLODModel
         }
         else
         {
-            if (Ar.Game is EGame.GAME_TheCastingofFrankStone or EGame.GAME_TheQuarry or EGame.GAME_Directive8020 or EGame.GAME_MortalKombat1)
+            if (Ar.Game is GAME_TheCastingofFrankStone or GAME_TheQuarry or GAME_Directive8020 or GAME_MortalKombat1)
             {
                 Ar.Position += 4; // NumVertices
-                NumBaseMeshVerts = Ar.Game is not EGame.GAME_MortalKombat1 ? 1 : Ar.Read<int>();
+                NumBaseMeshVerts = Ar.Game is not GAME_MortalKombat1 ? 1 : Ar.Read<int>();
                 Vertices = [];
                 SectionIndices = Ar.ReadArray<int>();
                 bGeneratedByEngine = Ar.ReadBoolean();
                 return;
             }
 
-            if (Ar.Game is EGame.GAME_DarkPicturesAnthologyHouseOfAshes or EGame.GAME_DarkPicturesAnthologyTheDevilinMe or
-                EGame.GAME_DarkPicturesAnthologyManofMedan or EGame.GAME_DarkPicturesAnthologyLittleHope)
+            if (Ar.Game is GAME_DarkPicturesAnthologyHouseOfAshes or GAME_DarkPicturesAnthologyTheDevilinMe or
+                GAME_DarkPicturesAnthologyManofMedan or GAME_DarkPicturesAnthologyLittleHope)
             {
                 Vertices = FDPAMorphTargetDeltaBatchData.ProcessDPAMorphTargetDeltas(Ar);
                 SectionIndices = Ar.ReadArray<int>();
@@ -65,7 +64,7 @@ public class FMorphTargetLODModel
                 return;
             }
 
-            if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+            if (Ar.Game is GAME_RocoKingdomWorld)
             {
                 var buffer = Ar.ReadArray<ulong>();
                 Vertices = new FMorphTargetDelta[buffer.Length];
@@ -154,9 +153,9 @@ public class FMorphTargetLODModel
     {
         SectionIndices = sectionIndices;
         bGeneratedByEngine = false;
-        
+
         var numDeltas = batchHeaders.Sum(header => (int)header.NumElements);
-        
+
         Vertices = new FMorphTargetDelta[numDeltas];
         NumBaseMeshVerts = numDeltas;
 
@@ -188,7 +187,7 @@ public class FMorphTargetLODModel
                 ((int)reader.GetBits((uint)header.TangentZBits.Y) + header.TangentZMin.Y) * tangentZPrecision,
                 ((int)reader.GetBits((uint)header.TangentZBits.Z) + header.TangentZMin.Z) * tangentZPrecision);
         }
-        
+
         return new FMorphTargetDelta(positionDelta, tangentZDelta, sourceIdx);
     }
 }

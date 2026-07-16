@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -14,6 +11,12 @@ public sealed class FWwiseArchive(FArchive archive) : FArchive(archive.Versions)
     /// Can also be deducted from plugin version
     /// </summary>
     public uint Version;
+
+    /// <summary>
+    /// Read from BankHeader section of the .bnk file
+    /// Only relevant for versions <= 126
+    /// </summary>
+    public bool HasFeedback;
 
     public FWwiseArchive(string name, byte[] data, VersionContainer? versions = null) : this(new FByteArchive(name, data, versions)) { }
 
@@ -78,4 +81,6 @@ public sealed class FWwiseArchive(FArchive archive) : FArchive(archive.Versions)
 
         return value;
     }
+
+    public bool ReadBool() => archive.Read<byte>() != 0;
 }

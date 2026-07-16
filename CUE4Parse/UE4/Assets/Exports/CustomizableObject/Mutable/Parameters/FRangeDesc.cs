@@ -13,9 +13,9 @@ public class FRangeDesc
 
     public FRangeDesc(FMutableArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
-        Name = Ar.Game >= EGame.GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString();
-        UID = Ar.Game >= EGame.GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString();
+        if (Ar.Game < GAME_UE5_6) Version = Ar.Read<int>();
+        Name = Ar.Game >= GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString();
+        UID = Ar.Game >= GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString();
         if (Version >= 2)
             DimensionParameter = Ar.Read<int>();
     }

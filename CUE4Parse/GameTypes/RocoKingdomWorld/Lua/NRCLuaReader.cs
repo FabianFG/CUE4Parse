@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;

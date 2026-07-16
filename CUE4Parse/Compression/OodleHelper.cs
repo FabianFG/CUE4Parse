@@ -1,11 +1,6 @@
-using System;
-using System.IO;
-using System.IO.Compression;
-using System.Net.Http;
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
@@ -31,7 +26,7 @@ public static class OodleHelper
     public const string OODLE_NAME_CURRENT = "oodle-data-shared.dll";
     public const string OODLE_NAME_LINUX = "liboodle-data-shared.so";
 
-    private const string RELEASE_URL = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-01-25-1223";
+    private const string RELEASE_URL = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-06-04-1357"; // 2.9.16
     private const string WINDOWS_ZIP = "clang-cl-x64-release.zip";
     private const string LINUX_ZIP = "gcc-x64-release.zip";
 
@@ -66,6 +61,7 @@ public static class OodleHelper
     {
         Instance?.Dispose();
         Instance = instance;
+        Compression.UseNativeOodle(instance);
     }
 
     public static bool DownloadOodleDll() =>
@@ -116,7 +112,7 @@ public static class OodleHelper
 
     public static async Task<bool> DownloadOodleDllFromOodleUEAsync(HttpClient client, string path, CancellationToken cancellationToken = default)
     {
-        var (url, entryName) = OperatingSystem.IsLinux()
+        (string? url, string? entryName) = OperatingSystem.IsLinux()
             ? ($"{RELEASE_URL}/{LINUX_ZIP}", $"lib/{OODLE_NAME_LINUX}")
             : ($"{RELEASE_URL}/{WINDOWS_ZIP}", $"bin/{OODLE_NAME_CURRENT}");
 
@@ -125,10 +121,10 @@ public static class OodleHelper
             using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            using var zip = new ZipArchive(responseStream, ZipArchiveMode.Read);
+            await using var zip = await ZipArchive.CreateAsync(responseStream, ZipArchiveMode.Read, true, null, cancellationToken).ConfigureAwait(false);
             var entry = zip.GetEntry(entryName);
             ArgumentNullException.ThrowIfNull(entry, "oodle entry in zip not found");
-            await using var entryStream = entry.Open();
+            await using var entryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var fs = File.Create(path);
             await entryStream.CopyToAsync(fs, cancellationToken).ConfigureAwait(false);
 
@@ -151,9 +147,9 @@ public static class OodleHelper
 
     private static string ResolvePath(string? path)
     {
-        return !string.IsNullOrWhiteSpace(path)
+        return Path.GetFullPath(!string.IsNullOrWhiteSpace(path)
             ? path
-            : !OperatingSystem.IsLinux() && File.Exists(OODLE_NAME_OLD) ? OODLE_NAME_OLD : OodleFileName;
+            : !OperatingSystem.IsLinux() && File.Exists(OODLE_NAME_OLD) ? OODLE_NAME_OLD : OodleFileName);
     }
 
     [DoesNotReturn]

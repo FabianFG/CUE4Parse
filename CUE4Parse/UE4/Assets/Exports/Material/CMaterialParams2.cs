@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
@@ -22,7 +20,7 @@ public class CMaterialParams2
     public const string FallbackSpecularMasks = "PM_SpecularMasks";
     public const string FallbackEmissive = "PM_Emissive";
 
-    public const string RegexDiffuse = ".*(?:Diff|_Tex|_?Albedo|_?Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM)$";
+    public const string RegexDiffuse = ".*(?:Diff|_Tex|_?Albedo|_?Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM|_DS|_DA)$";
     public const string RegexNormals = "^NO_|.*Norm.*|(?:_N|_NM|_NRM)$";
     public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_|MR|(?<!no)RM).*|(?:_S|_LP|_PAK)$";
     public const string RegexEmissive = ".*Emiss.*|(?:_E|_EM)$";
@@ -50,7 +48,7 @@ public class CMaterialParams2
             "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Base Color Map", "DesatTexture",
             "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "BaseColor_Tex",
             "DiffuseLayer1", "1 - Albedo", "albedo", "Albedo", "Aldebo", "ALB", "TextureAlbedo", "AlbedoTex", "Color_Texture", "color", "Base_D", "Tex_BaseColor",
-            "AlbedoColour", "BCR",
+            "AlbedoColour", "BCR", "Base Texture",
             "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "BaseColor", "Basecolor", "Tex_BC", "TexA_BC", "BaseDiffuse",
             "Base Texture Color", "BaseColorA", "BC", "BCA", "BC_Map", "Base Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework", "Bc",
             "BaseColorVT", "Tex_Color", "Color Tex", "TexColor", "AlbedMap", "Tex_Colormap", "ColorMap", "Main_T_BaseColor", "BaseColour", "Base_Texture",
@@ -60,7 +58,7 @@ public class CMaterialParams2
             "Simple_BaseColor_Texture", "AlbedoTexture", "Albedo Texture", "BC_LUT", "BCO", "CR", "C/R" /*Finals*/, "BaseColor_Tex(a:mask)", "Base Color Map VT",
             "Basecolor_VT", "BaseColor_Map", "BaceColor_Map", "ColorAo", "RGBMask", "Color & Alpha", "BaseColor - Texture", "Clothing Diffuse",
             "Base Color [Standard]", "Base Color VT", "BaseColorRoughness", "BaseColorAlpha", "Color Map (Packed)", "D(ID)", "BC Texture (BC/BCO)",
-            "BCM BaseColor|Metallic Map", "Color_Main"
+            "BCM BaseColor|Metallic Map", "Color_Main", "Texture_BC", "DF"
         ],
         ["Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "Diffuse B Map", "BaseColorB", "CO_2", "M2_T_BC"],
         ["Background Diffuse 3", "Diffuse_Texture_3", "DiffuseLayer3", "Diffuse C", "Diffuse C Map", "BaseColorC", "CO_3", "M3_T_BC"],
@@ -74,7 +72,7 @@ public class CMaterialParams2
     public static readonly string[][] Normals =
     [
         [
-            "Trunk_Normal", "T_Normal", "normal", "normalmap", "NRRO", "Base Normal", "BaseNormalMap",
+            "Trunk_Normal", "T_Normal", "normal", "normalmap", "NRRO", "Base Normal", "BaseNormalMap", "Normal Map",
             "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "Normal Tex",
             "Normal A Map", "Normals Top", "Normals Side", "Fallback Normal", "Base_N", "BaseNormal_Tex", "BaseNormal_NonVT",
             "Base_Normal", "BaseNormal", "Normal Base", "NormalVT", "TextureNormal", "Tex_BakedNormal", "TexNor", "Normal VT",
@@ -83,7 +81,8 @@ public class CMaterialParams2
             "Texture A Normal", "CliffNormal", "Skin Normal", "Normal_MAIN","Main_T_Normal(B：SSSMask)", "PBREmissiveTex",
             "Primary Normal Map", "ORN" /*ABI*/, "NRO_Base_Normal", "Layer00_Normal_Tex", "Tex_SkinBase_N", "Tex_Core_Layer_Normal",
             "Simple_Normal_Texture", "BaseNormal Texture", "NOH", "N/O/H", "NMH", "NWO" /*Finals*/, "Normal_VT", "NRM_Map",
-            "Normal - Texture", "Clothing Normal", "Normal [Standard]", "NCD_Mask", "Normal Map (Packed)", "N2R(M)","Normal Texture (N)"
+            "Normal - Texture", "Clothing Normal", "Normal [Standard]", "NCD_Mask", "Normal Map (Packed)", "N2R(M)", "Normal Texture (N)",
+            "Normal(HrNM)_Texture",
         ],
         ["Normals_Texture_2", "Texture B Normal", "NormalB", "Normal B Map", "NM_2", "M2_T_NRM"],
         ["Normals_Texture_3", "Texture C Normal", "NormalC", "Normal C Map", "NM_3", "M3_T_NRM"],
@@ -107,7 +106,8 @@ public class CMaterialParams2
             "Primary ARME", "CombineTex(HRA)", "ORN", "TPA_SpecColorTex", "Tex_RME", "CompVT", "MetalRoughOcc_Tex",
             "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture",
             "Simple_OcclRoughMet_Texture", "P (NoneVT)", "Pack Tex1", "CASR", "Roughness_VT", "OcclusionRoughnessMetallicTexture",
-            "Clothing ORM", "ORC [Standard]", "ORME_Tex", "Roughness VT", "RMAO VT", "Mix(AO,Rough,Mask,Metal)",
+            "Clothing ORM", "ORC [Standard]", "ORME_Tex", "Roughness VT", "RMAO VT", "Mix(AO,Rough,Mask,Metal)", "Texture_S",
+            "MetallicRoughnessOcclusionSpecularTexture"
         ],
         ["SpecularMasks_2", "MRA B", "LP_2", "M2_T_PAK"],
         ["SpecularMasks_3", "MRA C", "LP_3", "M3_T_PAK"],

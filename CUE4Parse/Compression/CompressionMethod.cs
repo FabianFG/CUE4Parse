@@ -16,5 +16,7 @@ public enum CompressionMethod
     Zstd,
     XB1Zlib,
     XboxOneGDKZlib,
+    Brotli,
+    PWC, // Century: Age of Ashes (custom obfuscation)
     Unknown
 }

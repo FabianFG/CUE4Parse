@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -39,7 +38,7 @@ public class FPCGLandscapeCacheEntry
 
     public FPCGLandscapeCacheEntry(FAssetArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_4) _ = new FPackageIndex(Ar); // DummyComponent
+        if (Ar.Game < GAME_UE5_4) _ = new FPackageIndex(Ar); // DummyComponent
         PointHalfSize = new FVector(Ar);
         Stride = Ar.Read<int>();
         LayerDataNames = Ar.ReadArray(Ar.ReadFName);

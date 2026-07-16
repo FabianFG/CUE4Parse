@@ -1,9 +1,6 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using Serilog;
 
 namespace CUE4Parse_Conversion.Textures.BC;

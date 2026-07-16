@@ -1,7 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse_Conversion.ActorX;
 using CUE4Parse_Conversion.Materials;
 using CUE4Parse.UE4.Assets.Exports.Animation;
@@ -320,7 +317,7 @@ public class ActorXMesh
         for (var i = 0; i < morphTargets.Length; i++)
         {
             var morphTarget = morphTargets[i].Load<UMorphTarget>();
-            if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lodIndex)
+            if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lodIndex || morphTarget.MorphLODModels[lodIndex].Vertices.Length == 0)
                 continue;
 
             var morphModel = morphTarget.MorphLODModels[lodIndex];

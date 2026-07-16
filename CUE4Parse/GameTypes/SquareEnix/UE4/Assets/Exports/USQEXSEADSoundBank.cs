@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -16,7 +15,7 @@ public class USQEXSEADSoundBank : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Game is EGame.GAME_DragonQuestXI || Ar.ReadBoolean())
+        if (Ar.Game is GAME_DragonQuestXI || Ar.ReadBoolean())
         {
             SQEXFlags = Ar.Read<int>();
             Ar.Position += SQEXFlags switch

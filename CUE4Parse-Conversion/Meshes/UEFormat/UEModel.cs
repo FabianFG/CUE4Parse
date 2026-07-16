@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using CUE4Parse_Conversion.Meshes.PSK;
+﻿using CUE4Parse_Conversion.Meshes.PSK;
 using CUE4Parse_Conversion.Meshes.UEFormat.Collision;
 using CUE4Parse_Conversion.UEFormat;
 using CUE4Parse_Conversion.UEFormat.Structs;
 using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
@@ -197,7 +193,7 @@ public class UEModel : UEFormatExport
 
                 var materialPath = section.Material?.GetPathName() ?? string.Empty;
                 materialChunk.WriteFString(materialPath);
-                
+
                 materialChunk.Write(section.FirstIndex);
                 materialChunk.Write(section.NumFaces);
             }
@@ -232,7 +228,7 @@ public class UEModel : UEFormatExport
             foreach (var morphTarget in morphTargets)
             {
                 var morph = morphTarget.Load<UMorphTarget>();
-                if (morph?.MorphLODModels is null || lodIndex >= morph.MorphLODModels.Length) continue;
+                if (morph?.MorphLODModels is null || lodIndex >= morph.MorphLODModels.Length || morph.MorphLODModels[lodIndex].Vertices.Length == 0) continue;
 
                 var morphLod = morph.MorphLODModels[lodIndex];
 
@@ -251,7 +247,7 @@ public class UEModel : UEFormatExport
             metaDataChunk.WriteFString(skeleton?.GetPathName() ?? string.Empty);
             metaDataChunk.Serialize(archive);
         }
-        
+
         using (var boneChunk = new FDataChunk("BONES", bones.Count))
         {
             foreach (var bone in bones)

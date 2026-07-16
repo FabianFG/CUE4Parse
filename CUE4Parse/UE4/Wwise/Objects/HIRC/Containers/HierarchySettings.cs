@@ -1,4 +1,3 @@
-using System.Linq;
 using CUE4Parse.UE4.Wwise.Enums;
 using Newtonsoft.Json;
 
@@ -9,8 +8,9 @@ public class HierarchySettings : AbstractHierarchy
     public readonly ushort SettingsCount;
     public readonly Setting<EHierarchyParameterType>[] Settings;
 
-    public HierarchySettings(FWwiseArchive Ar) : base(Ar)
+    public HierarchySettings(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         if (Ar.Version <= 126)
         {
             SettingsCount = Ar.Read<byte>();

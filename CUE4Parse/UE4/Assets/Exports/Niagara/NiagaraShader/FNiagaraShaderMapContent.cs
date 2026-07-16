@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -14,7 +14,7 @@ public class FNiagaraShaderMapContent : FShaderMapContent
     {
         base.Deserialize(Ar);
 
-        if (Ar.Game < EGame.GAME_UE5_4)
+        if (Ar.Game < GAME_UE5_4)
         {
             FriendlyName = Ar.ReadFString();
             DebugDescription = Ar.ReadFString();

@@ -1,17 +1,10 @@
-using System;
-using System.IO;
-using System.IO.Compression;
 using System.Diagnostics.CodeAnalysis;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-
+using System.IO.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 
 using Serilog;
-
 using ZlibngDotNet;
 
 namespace CUE4Parse.Compression;
@@ -41,7 +34,7 @@ public static class ZlibHelper
     {
         if (Instance is not null) return;
 
-        var dllPath = string.IsNullOrWhiteSpace(path) ? DllName : path;
+        var dllPath = Path.GetFullPath(string.IsNullOrWhiteSpace(path) ? DllName : path);
         if (!await DownloadDllAsync(dllPath, null, cancellationToken).ConfigureAwait(false))
         {
             Log.Warning("Zlib decompression failed: unable to download zlib-ng dll");
@@ -55,6 +48,7 @@ public static class ZlibHelper
     {
         Instance?.Dispose();
         Instance = instance;
+        Compression.UseNativeZlib(instance);
     }
 
     public static bool DownloadDll(string? path = null, string? url = null)

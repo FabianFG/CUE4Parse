@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4;
@@ -95,7 +93,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         return true;
     }
 
-    public IUStruct? ReadInstancedStruct()
+    public FScriptStruct? ReadInstancedStruct()
     {
         var strucPath = ReadFString();
         var size = Read<int>();
@@ -104,7 +102,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         var name = strucPath.SubstringAfterLast('.');
         try
         {
-            return new FScriptStruct(this, name, null, ReadType.RAW).StructType;
+            return new FScriptStruct(this, name, null, ReadType.RAW);
         }
         catch
         {

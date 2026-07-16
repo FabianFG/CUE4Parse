@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Writers;
-using CUE4Parse.Utils;
-using CUE4Parse_Conversion.ActorX;
-using CUE4Parse_Conversion.Animations.PSA;
+﻿using CUE4Parse_Conversion.Animations.PSA;
 using CUE4Parse_Conversion.Animations.UEFormat;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Writers;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse_Conversion.Animations
 {
@@ -70,7 +65,7 @@ namespace CUE4Parse_Conversion.Animations
         public AnimExporter(UAnimSequence animSequence, ExporterOptions options) : this(options, animSequence.Skeleton.Load<USkeleton>()!, animSequence) { }
         public AnimExporter(UAnimMontage animMontage, ExporterOptions options) : this(options, animMontage.Skeleton.Load<USkeleton>()!, animMontage) { }
         public AnimExporter(UAnimComposite animComposite, ExporterOptions options) : this(options, animComposite.Skeleton.Load<USkeleton>()!, animComposite) { }
-        
+
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)
         {

@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             IndirectionDimensions = Ar.Read<FIntVector>();
             NumDistanceFieldBricks = Ar.Read<int>();
 
-            if (Ar.Game >= EGame.GAME_UE5_4)
+            if (Ar.Game >= GAME_UE5_4)
             {
                 VolumeToVirtualUVScale = Ar.Read<FVector>();
                 VolumeToVirtualUVAdd = Ar.Read<FVector>();
@@ -58,7 +58,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FDistanceFieldVolumeData(FArchive Ar)
         {
-            if (Ar.Game >= EGame.GAME_UE4_16)
+            if (Ar.Game >= GAME_UE4_16)
             {
                 CompressedDistanceFieldVolume = Ar.ReadArray<byte>();
                 Size = Ar.Read<FIntVector>();
@@ -66,9 +66,9 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 DistanceMinMax = Ar.Read<FVector2D>();
                 bMeshWasClosed = Ar.ReadBoolean();
                 bBuiltAsIfTwoSided = Ar.ReadBoolean();
-                bMeshWasPlane = Ar.Game != EGame.GAME_FragPunk && Ar.ReadBoolean();
+                bMeshWasPlane = Ar.Game != GAME_FragPunk && Ar.ReadBoolean();
                 DistanceFieldVolume = [];
-                if (Ar.Game == EGame.GAME_Psychonauts2) Ar.Position += 22;
+                if (Ar.Game == GAME_Psychonauts2) Ar.Position += 22;
             }
             else
             {
@@ -102,16 +102,16 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FDistanceFieldVolumeData5(FAssetArchive Ar)
         {
-            LocalSpaceMeshBounds = Ar.Game >= EGame.GAME_UE5_4 || Ar.Game is EGame.GAME_Highguard ? Ar.Read<FBox>() : new FBox(Ar);
+            LocalSpaceMeshBounds = Ar.Game >= GAME_UE5_4 || Ar.Game is GAME_Highguard ? Ar.Read<FBox>() : new FBox(Ar);
             bMostlyTwoSided = Ar.ReadBoolean();
             var mips = Ar.Game switch
             {
-                EGame.GAME_TheFinals or EGame.GAME_ArcRaiders => 2,
+                GAME_TheFinals or GAME_ArcRaiders => 2,
                 _ => DistanceField.NumMips
             };
             Mips = Ar.ReadArray(mips, () => new FSparseDistanceFieldMip(Ar));
             AlwaysLoadedMip = Ar.ReadArray<byte>();
-            if (Ar.Game is EGame.GAME_TheFinals or EGame.GAME_ArcRaiders)
+            if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
                 Ar.Position += 6;
             StreamableMips = new FByteBulkData(Ar);
         }

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports.CriWare;
@@ -36,7 +32,7 @@ public class CriWareExtractedSound
 /// 5.3  | Demon Slayer -Kimetsu no Yaiba- The Hinokami Chronicles 2
 /// 5.4  | Double Dragon Revive, FANTASY LIFE i: The Girl Who Steals Time (unknown external awb encryption)
 ///      | Rune Factory: Guardians of Azuma, Sonic Racing: CrossWorlds (0x00720FB46101DF7A)
-///      
+///
 /// </summary>
 public class CriWareProvider
 {

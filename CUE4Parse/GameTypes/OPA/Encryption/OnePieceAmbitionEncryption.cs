@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Pak;
+﻿using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.VirtualFileSystem;
 
 namespace CUE4Parse.GameTypes.OPA.Encryption.Aes;

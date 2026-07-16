@@ -2,33 +2,158 @@
 name: NuGet Push
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 1 * *' # At 09:00 on day-of-month 1
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  OWNER: "FabianFG"
+  NUGET_OWNER: "GMatrixGames"
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - name: GIT Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: 'recursive'
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
-      - name: Build & Pack NuGet Package(s)
-        run: dotnet pack -c Release -o "./nuget-packages"
+      - name: Compute package version from Directory.Build.props
+        id: ver
+        shell: pwsh
+        run: |
+          $content = Get-Content .\Directory.Build.props -Raw -Encoding UTF8
+          if (-not $content) { throw "Could not read Directory.Build.props" }
+          
+          # Parse <Version>1.2.2</Version> with regex (strips whitespace/tabs)
+          if ($content -match '<Version>\s*([0-9]+\.[0-9]+\.[0-9]+)\s*</Version>') {
+            $baseVersion = $matches[1]
+          } else {
+            throw "Could not parse 3-part SemVer <Version> from Directory.Build.props. Found: '$content'"
+          }
+          
+          $year  = (Get-Date).ToString("yyyy")
+          $month = (Get-Date).ToString("MM")
+          $version = "$baseVersion.$year$month"
+          "packageVersion=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "PackageVersion=$version"
 
-      - name: Upload Build Artifact(s)
-        uses: actions/upload-artifact@v4
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Pack NuGet Package(s)
+        run: >
+          dotnet pack -c Release --no-restore --no-build `
+            -p:Version=${{ steps.ver.outputs.packageVersion }} `
+            -p:PackageVersion=${{ steps.ver.outputs.packageVersion }} `
+            --output "${{ github.workspace }}\nuget-packages"
+
+      - name: NuGet login
+        id: nuget-login
+        uses: NuGet/login@v1
         with:
-          name: nuget-packages
-          path: ./nuget-packages
+          user: ${{ env.NUGET_OWNER }}
 
-      - name: Push NuGet Package(s)
-        working-directory: ./nuget-packages
-        run: dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+      - name: Push NuGet Package(s) to nuget.org
+        run: |
+          dotnet nuget push "${{ github.workspace }}\nuget-packages\*.nupkg" `
+            --source https://api.nuget.org/v3/index.json `
+            --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} `
+            --skip-duplicate
+
+      - name: Add GitHub Packages source
+        run: |
+          dotnet nuget add source `
+            --username ${{ github.actor }} `
+            --password ${{ secrets.GITHUB_TOKEN }} `
+            --store-password-in-clear-text `
+            --name github `
+            "https://nuget.pkg.github.com/${{ env.OWNER }}/index.json"
+
+      - name: Push NuGet Package(s) to GitHub
+        run: |
+          dotnet nuget push "${{ github.workspace }}\nuget-packages\*.nupkg" `
+            --source github `
+            --api-key ${{ secrets.GITHUB_TOKEN }} `
+            --skip-duplicate
+
+      - name: Check if GitHub release already exists for this month
+        id: release_check
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ steps.ver.outputs.packageVersion }}"
+          gh api "repos/${{ github.repository }}/releases/tags/$tag" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $tag already exists, skipping."
+            "skip=true" >> $env:GITHUB_OUTPUT
+          } else {
+            "skip=false" >> $env:GITHUB_OUTPUT
+          }
+          exit 0
+
+      - name: Collect DLL artifacts
+        if: steps.release_check.outputs.skip == 'false'
+        shell: pwsh
+        run: |
+          $outDir = "${{ github.workspace }}\release-artifacts"
+          New-Item -ItemType Directory -Force $outDir | Out-Null
+
+          # Grab DLLs only for projects that were actually packed (respects IsPackable=false)
+          Get-ChildItem "${{ github.workspace }}\nuget-packages\*.nupkg" | ForEach-Object {
+            $name = $_.BaseName -replace '\.\d+\.\d+\.\d+\.\d+$', ''
+            Get-ChildItem "${{ github.workspace }}" -Recurse -Filter "$name.dll" |
+              Where-Object { $_.FullName -match "\\bin\\Release\\" } |
+              Select-Object -First 1
+          } | Copy-Item -Destination $outDir -Force
+
+          # Also grab nupkgs
+          Copy-Item "${{ github.workspace }}\nuget-packages\*.nupkg" $outDir -Force
+
+          Write-Host "Release artifacts:"
+          Get-ChildItem $outDir | Select-Object -ExpandProperty Name
+
+      - name: Create GitHub Release
+        if: steps.release_check.outputs.skip == 'false'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag     = "${{ steps.ver.outputs.packageVersion }}"
+          $repo    = "${{ github.repository }}"
+
+          # Find the previous release tag to build a compare link
+          $prevTag = gh release list --repo $repo --limit 1 --json tagName --jq '.[0].tagName' 2>$null
+          if ($prevTag) {
+            $compareUrl = "https://github.com/$repo/compare/$prevTag...$tag"
+            $compareSection = "**Full Changelog**: $compareUrl"
+          } else {
+            $compareSection = ""
+          }
+
+          $packageName = $repo.Split('/')[-1]
+
+          $body = "Automated monthly release.`nPackages are available on [NuGet](https://www.nuget.org/packages/$packageName) and [GitHub Packages](https://github.com/$repo/packages).`n`n${compareSection}"
+
+          $artifacts = Get-ChildItem "${{ github.workspace }}\release-artifacts" | Select-Object -ExpandProperty FullName
+
+          gh release create $tag `
+            --repo $repo `
+            --title "v$tag" `
+            --notes $body `
+            @artifacts

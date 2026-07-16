@@ -27,7 +27,7 @@ public struct DetourTileCacheLayerHeader
         var size = Unsafe.SizeOf<DetourTileCacheLayerHeader>();
         return Ar.Game switch
         {
-            < EGame.GAME_UE5_0 => size + sizeof(int),
+            < GAME_UE5_0 => size + sizeof(int),
             _ when Ar.Ver < EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES => size - 2,
             _ => size + (6 * sizeof(float)) - 2
         };
@@ -35,7 +35,7 @@ public struct DetourTileCacheLayerHeader
     
     public DetourTileCacheLayerHeader(FArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_0)
+        if (Ar.Game < GAME_UE5_0)
         {
             var magic = Ar.Read<uint>();
             Version = Ar.Read<int>();

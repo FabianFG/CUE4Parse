@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Borderlands4.Wwise;
 using CUE4Parse.UE4.Assets.Exports;

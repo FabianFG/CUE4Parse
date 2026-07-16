@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         {
             CodecType = new EVirtualTextureCodec[numLayers];
             CodecPayloadOffset = new uint[numLayers];
-            if (Ar.Game >= EGame.GAME_UE5_0)
+            if (Ar.Game >= GAME_UE5_0)
                 Ar.Position += FSHAHash.SIZE; // var bulkDataHash = new FSHAHash(Ar);
 
             SizeInBytes = Ar.Read<uint>();
@@ -39,8 +39,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             for (uint layerIndex = 0u; layerIndex < numLayers; ++layerIndex)
             {
                 CodecType[layerIndex] = Ar.Read<EVirtualTextureCodec>();
-                if (Ar.Game == EGame.GAME_DeltaForce) continue;
-                CodecPayloadOffset[layerIndex] = Ar.Game >= EGame.GAME_UE4_27 ? Ar.Read<uint>() : Ar.Read<ushort>();
+                if (Ar.Game == GAME_DeltaForce) continue;
+                CodecPayloadOffset[layerIndex] = Ar.Game >= GAME_UE4_27 ? Ar.Read<uint>() : Ar.Read<ushort>();
             }
             BulkData = new FByteBulkData(Ar);
         }

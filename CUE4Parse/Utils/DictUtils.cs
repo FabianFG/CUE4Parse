@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace CUE4Parse.Utils
+﻿namespace CUE4Parse.Utils
 {
     public static class DictUtils
     {

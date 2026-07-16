@@ -1,12 +1,5 @@
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
 using CUE4Parse.UE4.Versions;
-
 using Microsoft.Win32.SafeHandles;
-
 using OffiUtils;
 
 namespace CUE4Parse.UE4.Readers;

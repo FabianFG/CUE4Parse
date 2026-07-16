@@ -1,6 +1,4 @@
-using System;
 using System.Buffers.Binary;
-using System.IO;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using Newtonsoft.Json;
 

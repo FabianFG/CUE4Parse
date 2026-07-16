@@ -1,4 +1,3 @@
-using System;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -787,7 +786,7 @@ public class FVerseClassProperty : FClassProperty
 {
     public bool bRequiresConcrete;
     public bool bRequiresCastable;
-    
+
     public override void Deserialize(FAssetArchive Ar)
     {
         base.Deserialize(Ar);
@@ -799,10 +798,10 @@ public class FVerseClassProperty : FClassProperty
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {
         base.WriteJson(writer, serializer);
-        
+
         writer.WritePropertyName(nameof(bRequiresConcrete));
         serializer.Serialize(writer, bRequiresConcrete);
-        
+
         writer.WritePropertyName(nameof(bRequiresCastable));
         serializer.Serialize(writer, bRequiresCastable);
     }

@@ -6,6 +6,6 @@ public readonly struct AkChildren
 
     public AkChildren(FWwiseArchive Ar)
     {
-        ChildIds = Ar.ReadArray<uint>((int)Ar.Read<uint>());
+        ChildIds = Ar.ReadArray<uint>((int) Ar.Read<uint>());
     }
 }

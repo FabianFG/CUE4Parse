@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Objects.Engine;
 [StructLayout(LayoutKind.Sequential)]
 public struct FStripDataFlags
 {
-    private static readonly FPackageFileVersion OldestLoadablePackageFileUEVersion = FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE);
+    private static readonly FPackageFileVersion OldestLoadablePackageFileUEVersion = FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.REMOVED_STRIP_DATA);
 
     public byte GlobalStripFlags;
     public byte ClassStripFlags;

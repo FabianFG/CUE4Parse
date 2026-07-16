@@ -1,4 +1,3 @@
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Readers;
@@ -21,21 +20,21 @@ public class FMaterialResourceProxyReader : FArchive
         InnerArchive = Ar;
         bUseNewFormat = Ar.Versions["ShaderMap.UseNewCookedFormat"];
         _readNameMap = bReadNameMap;
-        
+
         if (!bReadNameMap && Ar is FAssetArchive assetArchive)
         {
             _nameMap = assetArchive.Owner?.NameMap;
             _readNameMap = true;
             return;
         }
-        
+
         if (_readNameMap)
         {
             _nameMap = InnerArchive.ReadArray(() => new FNameEntrySerialized(Ar));
             var num = Ar.Read<int>();
             Ar.Position += num * Unsafe.SizeOf<FMaterialResourceLocOnDisk>(); // Locs
-            if (Ar.Game is EGame.GAME_ArenaBreakoutInfinite) Ar.Position += num;
-            if (Ar.Game is EGame.GAME_RocoKingdomWorld) Ar.Position += num * 5;
+            if (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) Ar.Position += num;
+            if (Ar.Game is GAME_RocoKingdomWorld) Ar.Position += num * 5;
             Ar.Position += 4; // NumBytes
         }
     }

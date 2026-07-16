@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse.UE4.FMod.Nodes;
 using CUE4Parse.UE4.FMod.Nodes.Instruments;
 using CUE4Parse.UE4.FMod.Nodes.Transitions;

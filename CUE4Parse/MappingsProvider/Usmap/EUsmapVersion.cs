@@ -1,23 +1,22 @@
-namespace CUE4Parse.MappingsProvider.Usmap
+namespace CUE4Parse.MappingsProvider.Usmap;
+
+public enum EUsmapVersion : byte
 {
-    public enum EUsmapVersion : byte
-    {
-        /* Initial format. */
-        Initial,
+    /* Initial format. */
+    Initial,
 
-        /* Adds package versioning to aid with compatibility */
-        PackageVersioning,
+    /* Adds package versioning to aid with compatibility */
+    PackageVersioning,
 
-        /* Adds support for 16-bit wide name-lengths (ushort/uint16) */
-        LongFName,
+    /* Adds support for 16-bit wide name-lengths (ushort/uint16) */
+    LongFName,
 
-        /* Adds support for enums with more than 255 values */
-        LargeEnums,
+    /* Adds support for enums with more than 255 values */
+    LargeEnums,
 
-        /* Adds support for explicit enum values */
-        ExplicitEnumValues,
+    /* Adds support for explicit enum values */
+    ExplicitEnumValues,
 
-        LatestPlusOne,
-        Latest = LatestPlusOne - 1
-    }
+    LatestPlusOne,
+    Latest = LatestPlusOne - 1
 }

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -16,6 +14,7 @@ public class FRigVMByteCode
     public List<IRigInstruction> Instructions = [];
     public string[] Entries = [];
     public FRigVMBranchInfo[] BranchInfos = [];
+    public FRigVMCallableInfo[] CallableInfos = [];
     public FTopLevelAssetPath? PublicContextAssetPath;
     public bool bHasPublicContextPathName = false;
 
@@ -56,6 +55,11 @@ public class FRigVMByteCode
         if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.RigVMLazyEvaluation)
         {
             BranchInfos = Ar.ReadArray(() => new FRigVMBranchInfo(Ar));
+        }
+
+        if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.RigVMCallables)
+        {
+            CallableInfos = Ar.ReadArray(() => new FRigVMCallableInfo(Ar));
         }
 
         if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.VMBytecodeStorePublicContextPathAsTopLevelAssetPath)
@@ -99,6 +103,24 @@ public class FRigVMByteCode
     }
 }
 
+public class FRigVMCallableArgument(FArchive Ar)
+{
+    public FName Name = Ar.ReadFName();
+    public string TypeString = Ar.ReadFString();
+    public FRigVMOperand InterfaceOperand = Ar.Read<FRigVMOperand>();
+    public FRigVMOperand ForwardedOperand = Ar.Read<FRigVMOperand>();
+    public ERigVMPinDirection Direction = Ar.Read<ERigVMPinDirection>();
+}
+
+public class FRigVMCallableInfo(FArchive Ar)
+{
+    public int Index = Ar.Read<int>();
+    public FName Name = Ar.ReadFString();
+    public uint FunctionHash = Ar.Read<uint>();
+    public FRigVMCallableArgument[] Arguments = Ar.ReadArray(() => new FRigVMCallableArgument(Ar));
+    public int FirstInstruction = Ar.Read<int>();
+    public int LastInstruction = Ar.Read<int>();
+}
 public readonly struct FRigVMBranchInfo
 {
     public readonly int Index;
@@ -258,7 +280,7 @@ public readonly struct FRigVMCopyOp : IRigInstruction
         Source = Ar.Read<FRigVMOperand>();
         Target = Ar.Read<FRigVMOperand>();
 
-        if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RigVMCopyOpStoreNumBytes && Ar.Game != EGame.GAME_HonorofKingsWorld)
+        if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RigVMCopyOpStoreNumBytes && Ar.Game != GAME_HonorofKingsWorld)
         {
             NumBytes = 0;
             RegisterType = ERigVMRegisterType.Invalid;

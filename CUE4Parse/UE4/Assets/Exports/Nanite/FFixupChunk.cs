@@ -1,4 +1,3 @@
-using System.IO;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteConstants;
@@ -18,7 +17,7 @@ public class FFixupChunk
         public readonly uint NumParentFixups;
         public readonly uint NumHierarchyLocations;
         public readonly uint NumClusterIndices;
-        
+
         /// <summary>
         /// Pages that need to be reconsidered for fixup when this page is installed/uninstalled. The last pages of any groups in the page.
         /// </summary>
@@ -27,22 +26,22 @@ public class FFixupChunk
         public FHeader(FArchive Ar)
         {
             // the NF header was added in 5.3 in previous versions it isn't there
-            if (Ar.Game >= EGame.GAME_UE5_3)
+            if (Ar.Game >= GAME_UE5_3)
             {
                 var magic = Ar.Read<ushort>();
                 if (magic != NANITE_FIXUP_MAGIC) //NF
                     throw new InvalidDataException($"Invalid magic value, expected {NANITE_FIXUP_MAGIC:04x} got {magic:04x}");
             }
 
-            if (Ar.Game >= EGame.GAME_UE5_7)
+            if (Ar.Game >= GAME_UE5_7)
             {
                 NumGroupFixups = Ar.Read<ushort>();
                 NumPartFixups = Ar.Read<ushort>();
             }
-            
+
             NumClusters = Ar.Read<ushort>();
 
-            if (Ar.Game >= EGame.GAME_UE5_7)
+            if (Ar.Game >= GAME_UE5_7)
             {
                 NumReconsiderPages = Ar.Read<ushort>();
                 Ar.Position += sizeof(ushort); // pad
@@ -55,8 +54,8 @@ public class FFixupChunk
                 NumHierarchyFixups = Ar.Read<ushort>();
                 NumClusterFixups = Ar.Read<ushort>();
             }
-            
-            if (Ar.Game < EGame.GAME_UE5_3) Ar.Position += 2;
+
+            if (Ar.Game < GAME_UE5_3) Ar.Position += 2;
         }
     }
 
@@ -67,7 +66,7 @@ public class FFixupChunk
     public FHierarchyLocation[] HierarchyLocations;
     public ushort[] ReconsiderPageIndexes;
     public byte[] ClusterIndex;
-    
+
     public FHierarchyFixup[] HierarchyFixups;
     public FClusterFixup[] ClusterFixups;
 
@@ -75,7 +74,7 @@ public class FFixupChunk
     {
         Header = new FHeader(Ar);
 
-        if (Ar.Game >= EGame.GAME_UE5_7)
+        if (Ar.Game >= GAME_UE5_7)
         {
             GroupFixups = Ar.ReadArray<FGroupFixup>(Header.NumGroupFixups);
             PartFixups = Ar.ReadArray<FPartFixup>(Header.NumPartFixups);

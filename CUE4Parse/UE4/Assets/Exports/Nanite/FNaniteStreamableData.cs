@@ -1,4 +1,3 @@
-using System.IO;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -25,7 +24,7 @@ public class FNaniteStreamableData
     public FNaniteStreamableData(FByteArchive Ar, FNaniteResources resources, uint pageIndex)
     {
         FixupChunk = new FFixupChunk(Ar);
-        
+
         // origin of all the offsets in the page cluster header
         PageDiskHeaderOffset = Ar.Position;
         PageDiskHeader = new FPageDiskHeader(Ar);
@@ -105,12 +104,12 @@ public readonly struct FClusterDiskHeader
 
     public FClusterDiskHeader(FArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE5_7) DecodeInfoOffset = Ar.Read<uint>();
+        if (Ar.Game >= GAME_UE5_7) DecodeInfoOffset = Ar.Read<uint>();
         IndexDataOffset = Ar.Read<uint>();
         PageClusterMapOffset = Ar.Read<uint>();
         VertexRefDataOffset = Ar.Read<uint>();
 
-        if (Ar.Game >= EGame.GAME_UE5_4)
+        if (Ar.Game >= GAME_UE5_4)
         {
             LowBytesDataOffset = Ar.Read<uint>();
             MidBytesDataOffset = Ar.Read<uint>();

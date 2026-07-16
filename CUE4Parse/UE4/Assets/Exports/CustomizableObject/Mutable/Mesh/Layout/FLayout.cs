@@ -16,10 +16,10 @@ public class FLayout
     public EReductionMethod ReductionMethod;
     public FLayoutBlock[] Blocks;
     public FImage[] Masks = [];
-    
+
     public FLayout(FMutableArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE5_7)
+        if (Ar.Game >= GAME_UE5_7)
         {
             Size = Ar.Read<FIntVector2>();
             MaxSize = Ar.Read<FIntVector2>();
@@ -28,7 +28,7 @@ public class FLayout
             Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar));
             Masks = Ar.ReadPtrArray(() => new FImage(Ar));
         }
-        else if (Ar.Game >= EGame.GAME_UE5_5)
+        else if (Ar.Game >= GAME_UE5_5)
         {
             Size = Ar.Read<FIntVector2>();
             Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar));
@@ -41,13 +41,10 @@ public class FLayout
             Version = Ar.Read<int>();
             var size = Ar.Read<TIntVector2<ushort>>();
             Size = new FIntVector2(size.X, size.Y);
-            if (Version < 6)
+            Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar, Version));
+            if (Ar.Game is GAME_LordsoftheFallen && Blocks.Length != 0)
             {
-                Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar, Version));
-            }
-            else
-            {
-                Blocks = Ar.ReadArray(() => new FLayoutBlock(Ar));
+                Ar.Position +=4;
             }
             var maxSize = Ar.Read<TIntVector2<ushort>>();
             MaxSize = new FIntVector2(maxSize.X, maxSize.Y);
@@ -76,5 +73,5 @@ public enum EPackStrategy : uint
 public enum EReductionMethod : uint
 {
     Halve,	// Divide axis by 2
-    Unitary	// Reduces 1 block the axis 
+    Unitary	// Reduces 1 block the axis
 }

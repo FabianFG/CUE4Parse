@@ -1,13 +1,10 @@
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
+using CUE4Parse_Conversion.Textures;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse_Conversion.Textures;
 
 namespace CUE4Parse_Conversion.Landscape;
 
@@ -32,8 +29,8 @@ internal class FLandscapeComponentDataInterface {
     private readonly object _dataLock = new();
 
     private bool _bEnsuredWeightmapTexCache;
-    
-    internal unsafe FLandscapeComponentDataInterface(ULandscapeComponent inComponent, int inMipLevel) 
+
+    internal unsafe FLandscapeComponentDataInterface(ULandscapeComponent inComponent, int inMipLevel)
     {
         Component = inComponent;
         HeightMipData = null;
@@ -47,8 +44,7 @@ internal class FLandscapeComponentDataInterface {
         var format = heightMapTexture.Format;
         Debug.Assert(heightMapTexture.Format == EPixelFormat.PF_B8G8R8A8);
 
-        if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int)format) is not { Supported: true } formatInfo ||
-            formatInfo.BlockBytes == 0)
+        if (!PixelFormatUtils.PixelFormats.TryGetValue(format, out var formatInfo) || !formatInfo.Supported || formatInfo.BlockBytes == 0)
             throw new NotImplementedException($"The supplied pixel format {format} is not supported!");
 
         HeightmapStride = heightMapTexture.PlatformData.SizeX >> MipLevel;
@@ -61,7 +57,7 @@ internal class FLandscapeComponentDataInterface {
         ComponentSizeVerts = (Component.ComponentSizeQuads + 1) >> MipLevel;
         SubsectionSizeVerts = (Component.SubsectionSizeQuads + 1) >> MipLevel;
         ComponentNumSubsections = Component.NumSubsections;
-        
+
         if (MipLevel < heightMapTexture.PlatformData.Mips.Length) {
             Trace.Assert(heightMapTexture.Owner != null, "heightMapTexture.Owner != null");
             var platform = heightMapTexture.Owner!.Provider!.Versions.Platform;
@@ -105,7 +101,7 @@ internal class FLandscapeComponentDataInterface {
         }
     }
 
-    private bool GetWeightMapIndex(FWeightmapLayerAllocationInfo allocationInfo, out int LayerIdx) 
+    private bool GetWeightMapIndex(FWeightmapLayerAllocationInfo allocationInfo, out int LayerIdx)
     {
         LayerIdx = -1;
         FWeightmapLayerAllocationInfo[] componentWeightmapLayerAllocations =
@@ -134,7 +130,7 @@ internal class FLandscapeComponentDataInterface {
         return true;
     }
 
-    public bool EnsureWeightmapTextureDataCache() 
+    public bool EnsureWeightmapTextureDataCache()
     {
         var allocationInfos = Component.GetWeightmapLayerAllocations();
         for (var index = 0; index < allocationInfos.Length; index++) {
@@ -152,7 +148,7 @@ internal class FLandscapeComponentDataInterface {
         return true;
     }
 
-    private bool GetWeightmapTextureData(int /*ULandscapeLayerInfoObject*/ layerIdx, out byte[]? outData) 
+    private bool GetWeightmapTextureData(int /*ULandscapeLayerInfoObject*/ layerIdx, out byte[]? outData)
     {
         if (_bEnsuredWeightmapTexCache) {
             // can read without lock
@@ -179,8 +175,7 @@ internal class FLandscapeComponentDataInterface {
         var weightTexture =
             componentWeightmapTextures[componentWeightmapLayerAllocations[layerIdx].WeightmapTextureIndex];
         var format = weightTexture.Format;
-        if (PixelFormatUtils.PixelFormats.ElementAtOrDefault((int)format) is not { Supported: true } formatInfo ||
-            formatInfo.BlockBytes == 0)
+        if (!PixelFormatUtils.PixelFormats.TryGetValue(format, out var formatInfo) || !formatInfo.Supported || formatInfo.BlockBytes == 0)
             throw new NotImplementedException($"The supplied pixel format {format} is not supported!");
 
         var platform = weightTexture.Owner!.Provider!.Versions.Platform;

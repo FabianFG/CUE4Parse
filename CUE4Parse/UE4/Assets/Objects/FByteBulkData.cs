@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
@@ -60,28 +59,11 @@ public sealed class FByteBulkData : TBulkData<byte>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetDataSize() => Header.ElementCount;
 
-    /// <summary>
-    /// Reads bulk data once without storing it in this instance.
-    /// If data is already cached, optionally returns a copy of a cached data.
-    /// </summary>
-    public byte[]? ReadDataOnce(bool returnCachedData = true)
-    {
-        if (_data is { IsValueCreated: true })
-        {
-            var cached = _data.Value;
-            if (cached is null) return null;
-
-            return returnCachedData ? cached : (byte[]) cached.Clone();
-        }
-
-        return ReadBulkDataInto(out var data) ? data : null;
-    }
-
     public bool TryCreateReader(string name, [NotNullWhen(true)] out FArchive reader, bool useCachedData = true)
     {
         try
         {
-            var data = ReadDataOnce(useCachedData) ?? throw new ParserException();
+            var data = ReadDataOnce(useCachedData) ?? [];
             reader = new FByteArchive(name, data, _savedAr?.Versions);
         }
         catch (Exception e)
@@ -89,7 +71,7 @@ public sealed class FByteBulkData : TBulkData<byte>
             Log.Error(e, "Could not create {0} reader for FByteBulkData", name);
             reader = null!;
         }
-        return reader != null;
+        return reader != null && reader.Length > 0;
     }
 
     protected override bool ReadBulkDataInto(out byte[] data)

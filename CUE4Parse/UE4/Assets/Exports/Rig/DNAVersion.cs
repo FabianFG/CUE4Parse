@@ -28,5 +28,8 @@ public enum FileVersion : ulong
     v23 = (2 << 16) + 3,
     v24 = (2 << 16) + 4,
     v25 = (2 << 16) + 5,
-    latest = v25
+    v26 = (2 << 16) + 6,
+    v27 = (2 << 16) + 7,
+    v28 = (2 << 16) + 8,
+    latest = v28
 }

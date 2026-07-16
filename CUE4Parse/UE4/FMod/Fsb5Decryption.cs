@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Text;
 using Serilog;
 
@@ -7,13 +5,13 @@ namespace CUE4Parse.UE4.FMod;
 
 /// <summary>
 /// Known encryption keys:
-/// 
+///
 /// - Godbreakers: 06U8A&w5#PnsW&GA
 /// - The Darkest Files: JNM-zHdO49i_s)p&rG8`a:{)GMI6O*U:Jq\"1E8k0£%O*AyxXFL
 /// - PAPERHEAD EP0: 666Paperhead999
 /// - Delverium Demo: D3lv3rium FTW!
 /// - Mr. Nomad Demo: vanillaicecream
-/// 
+///
 /// Credits to https://github.com/vgmstream/vgmstream/blob/master/src/meta/fsb_keys.h and other sources:
 /// - Double Fine Productions: DFm3t4lFTW
 /// - DJ Hero 2 (X360): nos71RiT

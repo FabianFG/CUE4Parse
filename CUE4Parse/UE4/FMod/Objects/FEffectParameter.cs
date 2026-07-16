@@ -1,4 +1,3 @@
-using System.IO;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.FMod.Objects;

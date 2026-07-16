@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
@@ -8,6 +7,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
@@ -49,7 +49,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
-            if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 28;
+            if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 28;
             NumFrames = GetOrDefault<int>(nameof(NumFrames));
             BoneCompressionSettings = GetOrDefault<ResolvedObject>(nameof(BoneCompressionSettings));
             CurveCompressionSettings = GetOrDefault<ResolvedObject>(nameof(CurveCompressionSettings));
@@ -61,13 +61,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
             Interpolation = GetOrDefault<EAnimInterpolationType>(nameof(Interpolation));
 
-            if (BoneCompressionSettings == null && Ar.Game == EGame.GAME_RogueCompany)
+            if (BoneCompressionSettings == null && Ar.Game == GAME_RogueCompany)
             {
                 BoneCompressionSettings = new ResolvedLoadedObject(Owner!.Provider!.LoadPackageObject("/Game/Animation/KSAnimBoneCompressionSettings.KSAnimBoneCompressionSettings"));
             }
 
-            if (Ar.Game is EGame.GAME_SuicideSquad) return; // custom format
-            if (Ar.Game == EGame.GAME_DaysGone)
+            if (Ar.Game is GAME_SuicideSquad) return; // custom format
+            if (Ar.Game == GAME_DaysGone)
             {
                 var rawcurvedata = GetOrDefault<FStructFallback>("RawCurveData");
                 if (rawcurvedata is not null && rawcurvedata.TryGet("FloatCurves", out FStructFallback[] array, []))
@@ -104,7 +104,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
                 // Part of data were serialized as properties
                 compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
-                if (Ar.Game == EGame.GAME_SeaOfThieves && compressedData.CompressedByteStream.Length == 1 && Ar.Length - Ar.Position > 0)
+                if (Ar.Game == GAME_SeaOfThieves && compressedData.CompressedByteStream.Length == 1 && Ar.Length - Ar.Position > 0)
                 {
                     // Sea of Thieves has extra int32 == 1 before the CompressedByteStream
                     Ar.Position -= 1;
@@ -121,12 +121,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             {
                 // UE4.12+
                 var bSerializeCompressedData = Ar.ReadBoolean();
-                if (Ar.Game == EGame.GAME_GameForPeace && GetOrDefault<bool>("bUseStreamable")) Ar.Position += 24;
+                if (Ar.Game == GAME_GameForPeace && GetOrDefault<bool>("bUseStreamable")) Ar.Position += 24;
                 if (bSerializeCompressedData)
                 {
-                    if (Ar.Game < EGame.GAME_UE4_23)
+                    if (Ar.Game < GAME_UE4_23)
                         SerializeCompressedData(Ar);
-                    else if (Ar.Game < EGame.GAME_UE4_25 && Ar.Game != EGame.GAME_AssaultFireFuture)
+                    else if (Ar.Game < GAME_UE4_25 && Ar.Game != GAME_AssaultFireFuture)
                         SerializeCompressedData2(Ar);
                     else
                         SerializeCompressedData3(Ar);
@@ -217,7 +217,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             compressedData.CompressedTrackOffsets = Ar.ReadArray<int>();
             compressedData.CompressedScaleOffsets = new FCompressedOffsetData(Ar);
 
-            if (Ar.Game >= EGame.GAME_UE4_21)
+            if (Ar.Game >= GAME_UE4_21)
             {
                 // UE4.21+ - added compressed segments; disappeared in 4.23
                 var compressedSegments = Ar.ReadArray<FCompressedSegment>();
@@ -229,7 +229,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             CompressedTrackToSkeletonMapTable = Ar.ReadArray<FTrackToSkeletonMap>();
 
-            if (Ar.Game < EGame.GAME_UE4_22)
+            if (Ar.Game < GAME_UE4_22)
             {
                 CompressedCurveData = new FRawCurveTracks(new FStructFallback(Ar, "RawCurveTracks"));
             }
@@ -244,7 +244,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 CompressedRawDataSize = Ar.Read<int>();
             }
 
-            if (Ar.Game >= EGame.GAME_UE4_22)
+            if (Ar.Game >= GAME_UE4_22)
             {
                 compressedData.CompressedNumberOfFrames = Ar.Read<int>();
             }
@@ -268,14 +268,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 compressedData.CompressedByteStream = Ar.ReadBytes(Ar.Read<int>());
             }
 
-            if (Ar.Game >= EGame.GAME_UE4_22)
+            if (Ar.Game >= GAME_UE4_22)
             {
                 CurveCodecPath = Ar.ReadFString();
                 CompressedCurveByteStream = Ar.ReadBytes(Ar.Read<int>());
             }
 
             // Fix layout of "byte swapped" data (workaround for UE4 bug)
-            if (compressedData is { KeyEncodingFormat: AnimationKeyFormat.AKF_PerTrackCompression, CompressedScaleOffsets.OffsetData.Length: > 0 } && Ar.Game < EGame.GAME_UE4_23)
+            if (compressedData is { KeyEncodingFormat: AnimationKeyFormat.AKF_PerTrackCompression, CompressedScaleOffsets.OffsetData.Length: > 0 } && Ar.Game < GAME_UE4_23)
             {
                 compressedData.CompressedByteStream = TransferPerTrackData(compressedData);
             }
@@ -336,7 +336,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         {
             var numBytes = Ar.Read<int>();
             var bUseBulkDataForLoad = Ar.ReadBoolean();
-            if (Ar.Game == EGame.GAME_WorldofJadeDynasty)
+            if (Ar.Game == GAME_WorldofJadeDynasty)
                 numBytes = (numBytes << 24) | (numBytes & 0xFFFF00) | (byte)(numBytes >> 24);
 
             // In UE4.23 CompressedByteStream field exists in FUECompressedAnimData (as TArrayView) and in
@@ -346,7 +346,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             // avoid confuse.
             byte[] serializedByteStream;
 
-            if (Ar.Game is EGame.GAME_RocoKingdomWorld)
+            if (Ar.Game is GAME_RocoKingdomWorld)
             {
                 Ar.Position += 16;
                 numBytes -= 16;
@@ -354,8 +354,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (bUseBulkDataForLoad)
             {
-                throw new NotImplementedException("Anim: bUseBulkDataForLoad not implemented");
-                //todo: read from bulk to serializedByteStream
+                var bulkData = new FByteBulkData(Ar);
+                using var bulkAr = new FByteArchive("AnimSequenceBulkData", bulkData.Data, Ar.Versions);
+                serializedByteStream = bulkAr.ReadBytes(numBytes);
             }
             else
             {

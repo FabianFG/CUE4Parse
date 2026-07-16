@@ -1,8 +1,8 @@
-using System;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Plugins;
 using CUE4Parse.UE4.Wwise.Plugins.atmoky;
 using CUE4Parse.UE4.Wwise.Plugins.Auro;
+using CUE4Parse.UE4.Wwise.Plugins.Bitcrush;
 using CUE4Parse.UE4.Wwise.Plugins.CrankcaseAudioREVModelPlayer;
 using CUE4Parse.UE4.Wwise.Plugins.iZotope;
 using CUE4Parse.UE4.Wwise.Plugins.MasteringSuite;
@@ -99,6 +99,7 @@ public class WwisePlugin
                 EAkPluginId.AkMotionSink => new CAkDefaultSinkParams(),
 
                 EAkPluginId.AkSystemOutputMeta => new CAkSystemOutputParams(Ar),
+                EAkPluginId.AkChannelRouterMeta => new CAkChannelRouterMetaParams(Ar),
 
                 EAkPluginId.atmokyEars => new CAtmokyEarsFXParams(Ar),
 
@@ -109,7 +110,8 @@ public class WwisePlugin
 
                 // EAkPluginId.bnsRadio
 
-                EAkPluginId.CrankcaseAudioREVModelPlayer => new CREVSourceModelPlayerParams(Ar, (int)size),                
+                EAkPluginId.Bitcrush => new CBitcrushFXParams(Ar),
+                EAkPluginId.CrankcaseAudioREVModelPlayer => new CREVSourceModelPlayerParams(Ar, (int)size),
 
                 EAkPluginId.iZHybridReverbFX => new CiZHybridReverbFXParams(Ar),
                 EAkPluginId.iZTrashDistortionFX => new CiZTrashDistortionFXParams(Ar),

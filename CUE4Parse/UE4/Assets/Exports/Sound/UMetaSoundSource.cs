@@ -11,7 +11,7 @@ public class UMetaUSoundSource : USoundWaveProcedural
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Game >= EGame.GAME_UE5_4)
+        if (Ar.Game >= GAME_UE5_4)
         {
             Settings = new FStructFallback(Ar, "MetaSoundQualitySettings");
         }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Resources;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;

@@ -77,14 +77,14 @@ public static class FFortniteReleaseBranchCustomObjectVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_25 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE5_0 => Type.DisableLevelset_v14_10,
-            < EGame.GAME_UE5_1 => Type.ChaosKinematicTargetRemoveScale,
-            < EGame.GAME_UE5_2 => Type.ActorComponentUCSModifiedPropertiesSparseStorage,
-            < EGame.GAME_UE5_3 => Type.RemoveUselessLandscapeMeshesCookedCollisionData,
-            < EGame.GAME_UE5_4 => Type.NaniteMaterialOverrideUsesEditorOnly,
-            < EGame.GAME_UE5_5 => Type.PCGPointStructuredSerializer,
-            < EGame.GAME_UE5_6 => Type.DynamicMeshAttributesSerializeBones,
+            < GAME_UE4_25 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE5_0 => Type.DisableLevelset_v14_10,
+            < GAME_UE5_1 => Type.ChaosKinematicTargetRemoveScale,
+            < GAME_UE5_2 => Type.ActorComponentUCSModifiedPropertiesSparseStorage,
+            < GAME_UE5_3 => Type.RemoveUselessLandscapeMeshesCookedCollisionData,
+            < GAME_UE5_4 => Type.NaniteMaterialOverrideUsesEditorOnly,
+            < GAME_UE5_5 => Type.PCGPointStructuredSerializer,
+            < GAME_UE5_6 => Type.DynamicMeshAttributesSerializeBones,
             _ => Type.LatestVersion
         };
     }

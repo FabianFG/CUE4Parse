@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -32,7 +31,7 @@ public class UBlueprintGeneratedClass : UClass
         InheritableComponentHandler = GetOrDefault<FPackageIndex?>(nameof(InheritableComponentHandler));
         UberGraphFunction = GetOrDefault<FPackageIndex?>(nameof(UberGraphFunction));
 
-        if (Ar.Game == EGame.GAME_WorldofJadeDynasty) Ar.Position += 24;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 24;
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.BPGCCookedEditorTags)
         {
             if (validPos - Ar.Position > 4)

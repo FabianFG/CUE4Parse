@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using CommunityToolkit.HighPerformance;
 using CUE4Parse.UE4.Readers;

@@ -1,6 +1,4 @@
-using System;
 using System.Buffers.Binary;
-using System.IO;
 
 namespace CUE4Parse.UE4.CriWare.Readers.Common;
 

@@ -1,6 +1,3 @@
-﻿using System;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -139,7 +136,10 @@ public static class TextureEncoder
     // TODO cant cast to float from T so have to use Func<T, float>
     private static unsafe nint ConvertToRGBE<T>(EPixelFormat pixelFormat, int width, int height, ReadOnlySpan<byte> inp, Func<T, float> toFloat, bool flipOrder = false) where T : unmanaged
     {
-        int channelCount = PixelFormatUtils.PixelFormats.First(x => x.UnrealFormat == pixelFormat).NumComponents;
+        if (!PixelFormatUtils.PixelFormats.TryGetValue(pixelFormat, out var formatInfo))
+            throw new NotImplementedException("Unsupported pixel format: " + pixelFormat);
+
+        int channelCount = formatInfo.NumComponents;
 
         MemoryUtils.NativeAlloc<byte>(width * height * 4, out var retPtr);
 
@@ -376,7 +376,9 @@ public static class TextureEncoder
 
     private static unsafe nint ConvertTo8<T>(EPixelFormat pixelFormat, int width, int height, ReadOnlySpan<byte> inp, Func<T, byte> conversionFunc, bool flipOrder = false)
     {
-        int channelCount = PixelFormatUtils.PixelFormats.First(x => x.UnrealFormat == pixelFormat).NumComponents;
+        if (!PixelFormatUtils.PixelFormats.TryGetValue(pixelFormat, out var formatInfo))
+            throw new NotImplementedException("Unsupported pixel format: " + pixelFormat);
+        int channelCount = formatInfo.NumComponents;
 
         //(4 bytes per pixel for RGBA)
         MemoryUtils.NativeAlloc<byte>(width * height * 4, out var retPtr);
@@ -397,14 +399,14 @@ public static class TextureEncoder
                         *outPtr = conversionFunc(value);
                         outPtr += sizeof(byte);
                     }
-                    FillMissingChannels(outPtr, channelCount);
+                    FillMissingChannels(ref outPtr, channelCount);
                 }
             }
         }
         return retPtr;
     }
 
-    private static unsafe void FillMissingChannels(byte* outPtr, int channelCount)
+    private static unsafe void FillMissingChannels(ref byte* outPtr, int channelCount)
     {
         for (int i = channelCount; i < 4; i++)
         {

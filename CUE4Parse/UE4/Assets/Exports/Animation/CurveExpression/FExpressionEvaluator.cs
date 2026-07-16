@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Data;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -122,7 +120,7 @@ public class FExpressionEvaluator
                 {
                     arguments[index] = valueStack.Pop();
                 }
-                
+
                 valueStack.Add(functionInfo.Function(arguments));
             }
         }
@@ -157,7 +155,7 @@ public static class GBuiltInFunctions
 
         CE_EXPR("sqrt", 1, args => MathF.Sqrt(args[0]));
         CE_EXPR("isqrt", 1, args => 1 / MathF.Sqrt(args[0]));
-        
+
         CE_EXPR("pi", 0, _ => MathF.PI);
         CE_EXPR("e", 0, _ => MathF.E);
         CE_EXPR("undef", 0, _ => float.NaN);

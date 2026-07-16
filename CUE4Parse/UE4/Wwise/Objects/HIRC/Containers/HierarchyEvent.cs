@@ -11,8 +11,9 @@ public class HierarchyEvent : AbstractHierarchy
     public readonly uint[] EventActionIds;
 
     // CAkEvent::SetInitialValues
-    public HierarchyEvent(FWwiseArchive Ar) : base(Ar)
+    public HierarchyEvent(FWwiseArchive Ar) : base()
     {
+        Id = Ar.Read<uint>();
         if (Ar.Version > 154)
         {
             LimitScope = Ar.Read<byte>();

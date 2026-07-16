@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.IO.Objects.OnDemand;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
@@ -36,15 +33,16 @@ public class IoStoreOnDemandReader : IoStoreReader
 
     public override byte[] Read(FIoChunkId chunkId)
     {
-        if (!Container.TryGetFileEntryHash(chunkId, out var fileHash) || !TryResolve(chunkId, out var offsetLength))
+        if (!Container.TryGetFileEntryHash(chunkId, out var fileEntry) || !TryResolve(chunkId, out var offsetLength))
             throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStoreOnDemand {Name}");
 
-        return Read(fileHash.ToString().ToLower(), (long)offsetLength.Offset, (long)offsetLength.Length);
+        return Read(fileEntry, (long)offsetLength.Offset, (long)offsetLength.Length);
     }
 
-    private byte[] Read(string hash, long offset, long length)
+    private byte[] Read(FOnDemandFileEntry fileEntry, long offset, long length)
     {
-        var reader = _downloader.Download($"{ChunkToc.OnDemandToc.ChunksDirectory}/chunks/{hash[..2]}/{hash}.iochunk").GetAwaiter().GetResult();
+        var hash = fileEntry.FileEntryHash.ToString().ToLower();
+        var reader = _downloader.Download($"{ChunkToc.OnDemandToc.ChunksDirectory}/chunks/{hash[..2]}/{hash}.{fileEntry.ChunkExt}", fileEntry.PartitionOffset).GetAwaiter().GetResult();
 
         var compressionBlockSize = TocResource.Header.CompressionBlockSize;
         var dst = new byte[length];

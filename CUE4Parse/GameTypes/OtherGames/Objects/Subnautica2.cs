@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Exports.Actor;
@@ -24,7 +23,7 @@ public class AMercunaNavDataChunk : AActor
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game is EGame.GAME_Subnautica2)
+        if (Ar.Game is GAME_Subnautica2)
         {
             Ar.Position += 8;
             Ar.Position += Ar.Read<int>();

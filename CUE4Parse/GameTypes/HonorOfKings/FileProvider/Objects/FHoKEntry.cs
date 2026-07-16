@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using CUE4Parse.Compression;
 using CUE4Parse.GameTypes.HonorOfKings.Lua;
 using CUE4Parse.GameTypes.HonorOfKings.Vfs;

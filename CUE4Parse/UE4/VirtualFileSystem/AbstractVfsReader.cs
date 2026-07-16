@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Objects;

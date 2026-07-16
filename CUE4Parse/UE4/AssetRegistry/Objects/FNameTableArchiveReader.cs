@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Exceptions;

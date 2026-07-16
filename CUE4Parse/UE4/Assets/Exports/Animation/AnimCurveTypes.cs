@@ -1,6 +1,5 @@
 ﻿using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
-using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Objects.Engine.Curves;
 using CUE4Parse.UE4.Objects.UObject;
 

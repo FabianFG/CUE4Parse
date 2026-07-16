@@ -1,10 +1,7 @@
-using System;
+using System.Collections.Frozen;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Readers;
@@ -26,13 +23,14 @@ public abstract class GameFile
         "wem", "bnk", "pck", "bank", "awb", "acb"
     ];
 
-    // hashset for quick lookup
-    public static readonly HashSet<string> UePackageExtensionsSet = UePackageExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
-    public static readonly HashSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
-    public static readonly HashSet<string> UeKnownExtensionsSet = UeKnownExtensions.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    // Immutable lookup tables optimized once during startup.
+    public static readonly FrozenSet<string> UePackageExtensionsSet = UePackageExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+    public static readonly FrozenSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+    public static readonly FrozenSet<string> UeKnownExtensionsSet = UeKnownExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
-    // so we don't end up with a lot of duplicate "uasset"s in memory
+    // Avoid retaining duplicate extension and directory strings for every file.
     private static readonly ConcurrentDictionary<string, string> _internedExtensions = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, string> _internedDirectories = new(StringComparer.Ordinal);
 
     private string _path;
     private string? _directory;
@@ -67,11 +65,23 @@ public abstract class GameFile
     }
     public long Size { get; protected init; }
 
-    public string Directory => _directory ??= Path.SubstringBeforeLast('/');
+    public string Directory => _directory ??= Intern(_internedDirectories, Path.SubstringBeforeLast('/'));
     public string PathWithoutExtension => _pathWithoutExtension ??= Path.SubstringBeforeLast('.');
     public string Name => _name ??= Path.SubstringAfterLast('/');
-    public string NameWithoutExtension => _nameWithoutExtension ??= Name.SubstringBeforeLast('.');
-    public string Extension => _extension ??= InternExtension(Name.SubstringAfterLast('.'));
+    public string NameWithoutExtension
+    {
+        get
+        {
+            if (_nameWithoutExtension is not null) return _nameWithoutExtension;
+
+            var nameStart = Path.LastIndexOf('/') + 1;
+            var extensionSeparator = Path.LastIndexOf('.');
+            return _nameWithoutExtension = extensionSeparator < nameStart
+                ? Name
+                : Path.Substring(nameStart, extensionSeparator - nameStart);
+        }
+    }
+    public string Extension => _extension ??= Intern(_internedExtensions, Name.SubstringAfterLast('.'));
 
     public bool IsUePackage => UePackageExtensionsSet.Contains(Extension);
     public bool IsUePackagePayload => UePackagePayloadExtensionsSet.Contains(Extension);
@@ -140,12 +150,6 @@ public abstract class GameFile
     public override string ToString() => Path;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string InternExtension(string extension)
-    {
-        if (_internedExtensions.TryGetValue(extension, out var interned))
-            return interned;
-
-        _internedExtensions[extension] = extension;
-        return extension;
-    }
+    private static string Intern(ConcurrentDictionary<string, string> pool, string value) =>
+        pool.GetOrAdd(value, static candidate => candidate);
 }

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace CUE4Parse.Utils;
 
 public static class ListUtils
