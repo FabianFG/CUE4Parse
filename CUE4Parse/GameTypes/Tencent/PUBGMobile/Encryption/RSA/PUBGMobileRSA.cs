@@ -39,6 +39,7 @@ public class PUBGMobileRSA
         0xE9, 0xBC, 0xEA, 0xC9, 0xBD, 0x72, 0xAB, 0x7A, 0x56, 0xA3, 0xC0, 0xAD, 0x73, 0x6A, 0xBC, 0xE4,
     ];
 
+    // We only need RSA for AES and IV, ignore the rest
     public static byte[] DerivePakKey(FArchive Ar)
     {
         if (Ar.Length < PAK_INFO_SIZE + ENCRYPTION_DATA_SIZE)
