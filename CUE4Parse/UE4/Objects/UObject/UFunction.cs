@@ -22,6 +22,11 @@ public class UFunction : UStruct
         {
             Ar.Read<short>(); // RepOffset
         }
+        
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.MovedFriendlyNameToUFunction && Ar.Game < GAME_UE4_0)
+        {
+            Ar.ReadFName(); // FriendlyName
+        }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_BLUEPRINT_EVENTGRAPH_FASTCALLS_IN_UFUNCTION)
         {

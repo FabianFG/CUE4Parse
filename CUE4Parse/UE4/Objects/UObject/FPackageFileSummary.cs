@@ -187,6 +187,12 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 FileVersionLicenseeUE = Ar.Read<EUnrealEngineObjectLicenseeUEVersion>();
 
+                if (FileVersionUE >= EUnrealEngineObjectUE4Version.READD_COOKER && FileVersionUE <= EUnrealEngineObjectUE4Version.COOKED_PACKAGE_VERSION_IS_PACKAGE_VERSION)
+                {
+                    Ar.Read<int>(); // PackageCookedVersion
+                    Ar.Read<int>(); // PackageCookedLicenseeVersion
+                }
+
                 if (FileVersionUE != EUnrealEngineObjectUE4Version.DETERMINE_BY_GAME &&
                     FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE ||
                     FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION ||
@@ -275,6 +281,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             ExportOffset = Ar.Read<int>();
             ImportCount = Ar.Read<int>();
             ImportOffset = Ar.Read<int>();
+            
+            if (FileVersionUE < EUnrealEngineObjectUE3Version.DeprecatedHeritageTable)
+            {
+                HeritageOffset = Ar.Read<int>();
+                HeritageCount = Ar.Read<int>();
+            }
 
             if (FileVersionUE >= EUnrealEngineObjectUE5Version.VERSE_CELLS)
             {
@@ -289,13 +301,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 MetaDataOffset = Ar.Read<int>();
             }
 
-            DependsOffset = Ar.Read<int>();
-
-            if (FileVersionUE < EUnrealEngineObjectUE4Version.OLDEST_LOADABLE_PACKAGE || FileVersionUE > EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION)
+            if (FileVersionUE >= EUnrealEngineObjectUE3Version.ADDED_LINKER_DEPENDENCIES)
             {
-                Generations = [];
-                ChunkIds = [];
-                return; // we can't safely load more than this because the below was different in older files.
+                DependsOffset = Ar.Read<int>();
             }
 
             if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADD_STRING_ASSET_REFERENCES_MAP)

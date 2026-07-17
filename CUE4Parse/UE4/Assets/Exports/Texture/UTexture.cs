@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public class UBinkMediaTexture : UTexture;
 
-public abstract class UTexture : UUnrealMaterial, IAssetUserData
+public class UTexture : UUnrealMaterial, IAssetUserData
 {
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }

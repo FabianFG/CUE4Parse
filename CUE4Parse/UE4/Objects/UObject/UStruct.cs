@@ -19,14 +19,7 @@ public class UStruct : UField
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.MOVED_SUPERFIELD_TO_USTRUCT)
-        {
-            SuperStruct = new FPackageIndex(Ar);
-        }
-        else
-        {
-            SuperStruct = SuperField;
-        }
+        SuperStruct = Ar.Ver >= EUnrealEngineObjectUE3Version.MOVED_SUPERFIELD_TO_USTRUCT ? new FPackageIndex(Ar) : SuperField;
 
         if (Ar.Ver < EUnrealEngineObjectUE4Version.CONSOLIDATE_HEADER_PARSER_ONLY_PROPERTIES)
         {
