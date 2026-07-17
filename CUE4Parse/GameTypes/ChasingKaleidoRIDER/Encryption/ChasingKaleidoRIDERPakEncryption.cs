@@ -19,9 +19,10 @@ public static class ChasingKaleidoRIDERPakEncryption
         ArgumentOutOfRangeException.ThrowIfNegative(encryptionBaseOffset);
         ArgumentOutOfRangeException.ThrowIfLessThan(absoluteOffset, encryptionBaseOffset);
 
-        var key = reader.AesKey?.Key ?? throw new NullReferenceException("reader.AesKey");
+        var key = reader.AesKey?.Key ??
+                  throw new InvalidOperationException("Chasing KaleidoRIDER pak decryption requires an AES key");
         if (key.Length != 32)
-            throw new ArgumentException("ChaCha key must be 32 bytes long", nameof(reader));
+            throw new ArgumentException("ChaCha key must be 32 bytes long", nameof(reader.AesKey));
 
         var streamOffset = (ulong) (absoluteOffset - encryptionBaseOffset);
         var counter = streamOffset / BlockSize;
