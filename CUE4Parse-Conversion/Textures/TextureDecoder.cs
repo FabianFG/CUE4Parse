@@ -267,7 +267,7 @@ public static class TextureDecoder
 
         var bytes = mip.BulkData.Data;
 
-        // Only known game to use this is PUBG Mobile, not sure if this is right place to decompress
+        // TODO: Only known game to use this is PUBG Mobile, not sure if this is right place to decompress, probably not and should be refactored
         if (texture.PlatformData.PixelFormat.EndsWith("_crunched", StringComparison.OrdinalIgnoreCase))
             bytes = CrunchDecoder.DecompressMip(bytes, sizeX, sizeY, sizeZ, formatInfo);
 

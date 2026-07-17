@@ -13,15 +13,12 @@ internal static class TextureNativeLibrary
             throw new MissingManifestResourceException($"Couldn't find {dllName} in Embedded Resources");
 
         var embeddedData = new byte[(int) stream.Length];
-        _ = stream.Read(embeddedData, 0, embeddedData.Length);
+        stream.ReadExactly(embeddedData);
 
         var fileOk = false;
-        using (var sha1 = SHA1.Create())
-        {
-            var embeddedHash = sha1.ComputeHash(embeddedData);
-            if (File.Exists(dllName))
-                fileOk = embeddedHash.AsSpan().SequenceEqual(sha1.ComputeHash(File.ReadAllBytes(dllName)));
-        }
+        var embeddedHash = SHA1.HashData(embeddedData);
+        if (File.Exists(dllName))
+            fileOk = embeddedHash.AsSpan().SequenceEqual(SHA1.HashData(File.ReadAllBytes(dllName)));
 
         if (!fileOk)
             File.WriteAllBytes(dllName, embeddedData);

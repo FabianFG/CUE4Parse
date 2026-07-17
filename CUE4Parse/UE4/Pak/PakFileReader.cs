@@ -69,7 +69,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 or GAME_Snowbreak or GAME_TorchlightInfinite or GAME_TowerOfFantasy
                 or GAME_TheDivisionResurgence or GAME_QQ or GAME_DreamStar
                 or GAME_EtheriaRestart or GAME_DeadByDaylight_Old or GAME_WorldofJadeDynasty
-                or GAME_EmbersofTheUncrowned or GAME_ValorantSource => true,
+                or GAME_EmbersofTheUncrowned or GAME_ValorantSource or GAME_PUBGMobile => true,
             _ => false
         };
     }

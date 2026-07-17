@@ -2,6 +2,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.SM4;
+using CUE4Parse.GameTypes.Tencent.PUBGMobile.Lua;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.UE4.Pak.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
@@ -98,7 +99,15 @@ public partial class PakFileReader
             if (pakEntry.IsEncrypted)
                 data = PUBGMobileSM4.Decrypt(data, 0, data.Length, pakEntry.Path, pakEntry.EncryptionMethod);
 
-            return dataOffset == 0 && requestedSize == data.Length ? data : data.AsSpan(dataOffset, requestedSize).ToArray();
+            var output = dataOffset == 0 && requestedSize == data.Length
+                ? data
+                : data.AsSpan(dataOffset, requestedSize).ToArray();
+
+            return pakEntry.Extension switch
+            {
+                "lua" => PUBGMobileLua.DecryptLuaBytecode(pakEntry.Name, output),
+                _ => output
+            };
         }
 
         var compressionBlockSize = checked((int) pakEntry.CompressionBlockSize);
@@ -118,7 +127,7 @@ public partial class PakFileReader
         {
             // Salt encrypted PUBG Mobile entries store compressed blocks in a shuffled order to make life harder
             var serializedBlockIndex = pakEntry.EncryptionMethod is >= (int) EPUBGMobileEncryptionMethod.PathKeySM4Min and <= (int) EPUBGMobileEncryptionMethod.PathKeySM4Max
-                ? PUBGUnshuffledBlockIndex(blockIndex, pakEntry.CompressionBlocks.Length)
+                ? PUBGUnshuffleBlockIndex(blockIndex, pakEntry.CompressionBlocks.Length)
                 : blockIndex;
 
             var block = pakEntry.CompressionBlocks[serializedBlockIndex];
@@ -151,10 +160,20 @@ public partial class PakFileReader
         }
 
         var offsetInFirstBlock = checked((int) (offset - firstBlockOffset));
-        return offsetInFirstBlock == 0 && requestedSize == uncompressed.Length ? uncompressed : uncompressed.AsSpan(offsetInFirstBlock, requestedSize).ToArray();
+
+        var uncompressedOutput = offsetInFirstBlock == 0 && requestedSize == uncompressed.Length
+            ? uncompressed
+            : uncompressed.AsSpan(offsetInFirstBlock, requestedSize).ToArray();
+
+        return pakEntry.Extension switch
+        {
+            "lua" => PUBGMobileLua.DecryptLuaBytecode(pakEntry.Name, uncompressedOutput),
+            _ => uncompressedOutput
+        };
     }
 
-    private static int PUBGUnshuffledBlockIndex(int logicalBlockIndex, int blockCount)
+    // sub_A1109D8
+    private static int PUBGUnshuffleBlockIndex(int logicalBlockIndex, int blockCount)
     {
         Span<int> shuffled = blockCount <= 128 ? stackalloc int[blockCount] : new int[blockCount];
         var state = blockCount;
@@ -163,9 +182,9 @@ public partial class PakFileReader
             int candidate;
             do
             {
-                var multiplied = unchecked(1103515245 * state);
-                state = unchecked(multiplied + 12345);
-                var randomValue = state >= 0 ? state : unchecked(multiplied + 77880);
+                var multiplied = unchecked(0x41C64E6D * state);
+                state = unchecked(multiplied + 0x3039);
+                var randomValue = state >= 0 ? state : unchecked(multiplied + 0x13038);
                 candidate = (int) (((uint) (randomValue >> 16) % 0x7FFFu) % (uint) blockCount);
             } while (shuffled[..shuffledIndex].Contains(candidate));
 
