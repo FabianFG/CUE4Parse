@@ -17,7 +17,6 @@
     <PackageReference Include="OffiUtils" />
     <PackageReference Include="OodleSharp" />
     <PackageReference Include="Oodle.NET" />
-    <PackageReference Include="NativeSharpLzo" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="K4os.Compression.LZ4.Streams" />
