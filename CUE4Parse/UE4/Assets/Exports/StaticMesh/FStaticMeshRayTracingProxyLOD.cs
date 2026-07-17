@@ -31,7 +31,7 @@ public class FStaticMeshRayTracingProxyLOD
 
         bOwnsRayTracingGeometry = Ar.ReadBoolean();
 
-        if (Ar.Game >= EGame.GAME_UE5_6)
+        if (Ar.Game >= GAME_UE5_6)
             bBuffersInlined = Ar.ReadBoolean(); // always false ???
 
         if (bBuffersInlined)
@@ -43,7 +43,7 @@ public class FStaticMeshRayTracingProxyLOD
             StreamableData = new FByteBulkData(Ar);
         }
 
-        if (Ar.Game >= EGame.GAME_UE5_6)
+        if (Ar.Game >= GAME_UE5_6)
             SerializeMetaData(Ar);
     }
 

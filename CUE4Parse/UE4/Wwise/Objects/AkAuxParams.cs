@@ -18,20 +18,15 @@ public readonly struct AkAuxParams
 
     public AkAuxParams(FWwiseArchive Ar)
     {
-        OverrideGameAuxSends = false;
-        UseGameAuxSends = false;
-        OverrideUserAuxSends = false;
-        AuxParams = EAuxParamsFlags.None;
         AuxIds = [];
-        ReflectionsAuxBus = 0;
 
         bool hasAux;
         if (Ar.Version <= 89)
         {
-            OverrideGameAuxSends = Ar.Read<byte>() != 0;
-            UseGameAuxSends = Ar.Read<byte>() != 0;
-            OverrideUserAuxSends = Ar.Read<byte>() != 0;
-            hasAux = Ar.Read<byte>() != 0;
+            OverrideGameAuxSends = Ar.ReadBool();
+            UseGameAuxSends = Ar.ReadBool();
+            OverrideUserAuxSends = Ar.ReadBool();
+            hasAux = Ar.ReadBool();
 
             if (OverrideUserAuxSends)
                 AuxParams |= EAuxParamsFlags.OverrideUserAuxSends;

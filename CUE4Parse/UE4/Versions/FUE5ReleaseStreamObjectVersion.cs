@@ -230,15 +230,15 @@ public static class FUE5ReleaseStreamObjectVersion
 
         return Ar.Game switch
         {
-            EGame.GAME_BlackMythWukong => Type.StoreReflectionCaptureEncodedHDRDataInRG11B10Format,
+            GAME_BlackMythWukong => Type.StoreReflectionCaptureEncodedHDRDataInRG11B10Format,
 
-            < EGame.GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE5_1 => Type.SerializeFloatPinDefaultValuesAsSinglePrecision,
-            < EGame.GAME_UE5_3 => Type.LinkedAnimGraphMemberReference,
-            < EGame.GAME_UE5_4 => Type.OpenColorIODisabledDisplayConfigurationDefault,
-            < EGame.GAME_UE5_6 => Type.OrthographicAutoNearFarPlane,
-            < EGame.GAME_UE5_7 => Type.RecalculateClothAssetSerializedBounds,
-            < EGame.GAME_UE5_8 => Type.AudioSectionPlayUntilFinished,
+            < GAME_UE5_0 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE5_1 => Type.SerializeFloatPinDefaultValuesAsSinglePrecision,
+            < GAME_UE5_3 => Type.LinkedAnimGraphMemberReference,
+            < GAME_UE5_4 => Type.OpenColorIODisabledDisplayConfigurationDefault,
+            < GAME_UE5_6 => Type.OrthographicAutoNearFarPlane,
+            < GAME_UE5_7 => Type.RecalculateClothAssetSerializedBounds,
+            < GAME_UE5_8 => Type.AudioSectionPlayUntilFinished,
             _ => Type.LatestVersion
         };
     }

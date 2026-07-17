@@ -17,7 +17,7 @@ public struct FBonePose
 
     public FBonePose(FMutableArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_5) Version = Ar.Read<int>();
+        if (Ar.Game < GAME_UE5_5) Version = Ar.Read<int>();
 
         if (Version <= 1)
         {

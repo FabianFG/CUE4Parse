@@ -36,15 +36,15 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
         bFillCollisionUnderneathForNavmesh = Ar.ReadBoolean();
         bRasterizeAsFilledConvexVolume = Ar.ReadBoolean();
         bCanEverAffectNavigation = Ar.ReadBoolean();
-        bMultiBodyOverlap = Ar.Game >= EGame.GAME_UE5_8 && Ar.ReadBoolean();
-        if (Ar.Game is EGame.GAME_LEGOBatmanLegacyoftheDarkKnight) Ar.Position += 4;
-        SurrogateComponentDescriptorIndex = Ar.Game >= EGame.GAME_UE5_8 ? Ar.Read<int>() : 0;
+        bMultiBodyOverlap = Ar.Game >= GAME_UE5_8 && Ar.ReadBoolean();
+        if (Ar.Game is GAME_LEGOBatmanLegacyoftheDarkKnight) Ar.Position += 4;
+        SurrogateComponentDescriptorIndex = Ar.Game >= GAME_UE5_8 ? Ar.Read<int>() : 0;
         CustomPrimitiveData = Ar.ReadArray<float>();
-        DetailMode = Ar.Game is < EGame.GAME_UE5_8 or EGame.GAME_WutheringWavesFastGeo ? Ar.Read<EDetailMode>() : EDetailMode.Low;
+        DetailMode = Ar.Game is < GAME_UE5_8 or GAME_WutheringWavesFastGeo ? Ar.Read<EDetailMode>() : EDetailMode.Low;
         bHasCustomNavigableGeometry = Ar.Read<EHasCustomNavigableGeometry>();
         RuntimeVirtualTextures = Ar.ReadArray(Ar.ReadFPackageIndex);
-        BodyInstance = Ar.Game < EGame.GAME_UE5_8 ? new FStructFallback(Ar, "BodyInstance") : null;
-        if (Ar.Game != EGame.GAME_WutheringWavesFastGeo)
+        BodyInstance = Ar.Game < GAME_UE5_8 ? new FStructFallback(Ar, "BodyInstance") : null;
+        if (Ar.Game != GAME_WutheringWavesFastGeo)
             SceneProxyDesc = new FSceneProxyDesc(Ar);
         else
         {

@@ -95,9 +95,9 @@ namespace CUE4Parse.FileProvider
                 var upperExt = file.Extension.SubstringAfter('.').ToUpper();
 
                 // Only load containers if .uproject file is not found
-                if (uproject is null && upperExt is "PAK" or "UTOC")
+                if (uproject is null && (upperExt is "PAK" or "UTOC" || (upperExt == "UPAK" && Versions.Game is GAME_LordOfMysteries)))
                 {
-                    if (file.FullName.Contains(@"Binaries\ThirdParty\CEF", StringComparison.OrdinalIgnoreCase) || file.FullName.Contains(@"Binaries\Win32\host") || file.FullName.Contains(@"NexonPlatformWebView\ThirdParty")) continue;
+                    if (file.FullName.Contains(@"Binaries\ThirdParty\CEF", StringComparison.OrdinalIgnoreCase) || file.FullName.Contains(@"Binaries\Win32\host") || file.FullName.Contains(@"Binaries\Win64\host") || file.FullName.Contains(@"\qtwebengine_") || file.FullName.Contains(@"NexonPlatformWebView\ThirdParty") || file.FullName.Contains("SnapversePCGameSDK")) continue;
                     RegisterVfs(file);
                     continue;
                 }
@@ -116,9 +116,9 @@ namespace CUE4Parse.FileProvider
                 }
 
                 // Register local file only if it has a known extension, we don't need every file
-                if (!GameFile.UeKnownExtensions.Contains(upperExt, StringComparer.OrdinalIgnoreCase))
+                if (!GameFile.UeKnownExtensionsSet.Contains(upperExt))
                     continue;
-                if (!GameFile.UePackagePayloadExtensionsSet.Contains(upperExt, StringComparer.OrdinalIgnoreCase))
+                if (!GameFile.UePackagePayloadExtensionsSet.Contains(upperExt))
                     packageCount++;
 
                 var osFile = new OsGameFile(_workingDirectory, file, mountPoint, Versions);

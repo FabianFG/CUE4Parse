@@ -3,13 +3,13 @@ using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.AssetRegistry;
 
 [JsonConverter(typeof(FAssetRegistryStateConverter))]
 public class FAssetRegistryState
 {
+    
     public FAssetData[] PreallocatedAssetDataBuffers;
     public FDependsNode[] PreallocatedDependsNodeDataBuffers;
     public FAssetPackageData[] PreallocatedPackageDataBuffers;

@@ -231,21 +231,21 @@ public static class FNiagaraCustomVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_20 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_21 => Type.EmitterLocalSpaceLiteralConstant,
-            < EGame.GAME_UE4_23 => Type.SkelMeshInterfaceAPIImprovements,
-            < EGame.GAME_UE4_24 => Type.AddLibraryAssetProperty,
-            < EGame.GAME_UE4_25 => Type.DisableSortingByDefault,
-            < EGame.GAME_UE4_26 => Type.StandardizeParameterNames,
-            < EGame.GAME_UE4_27 => Type.SignificanceHandlers,
-            < EGame.GAME_UE5_0 => Type.MoveDefaultValueFromFNiagaraVariableMetaDataToUNiagaraScriptVariable,
-            < EGame.GAME_UE5_1 => Type.StaticSwitchFunctionPinsUsePersistentGuids,
-            < EGame.GAME_UE5_2 => Type.EventSpawnsUpdateInitialAttributeValues,
-            < EGame.GAME_UE5_3 => Type.DynamicPinNodeFixup,
-            < EGame.GAME_UE5_4 => Type.RibbonRendererLinkOrderDefaultIsUniqueID,
-            < EGame.GAME_UE5_5 => Type.NDCSpawnGroupOverrideDisabledByDefault,
-            < EGame.GAME_UE5_6 => Type.EmitterStateAddLoopDelayEnabled,
-            < EGame.GAME_UE5_7 => Type.AddedNewInterpolatedSpawnMode, 
+            < GAME_UE4_20 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_21 => Type.EmitterLocalSpaceLiteralConstant,
+            < GAME_UE4_23 => Type.SkelMeshInterfaceAPIImprovements,
+            < GAME_UE4_24 => Type.AddLibraryAssetProperty,
+            < GAME_UE4_25 => Type.DisableSortingByDefault,
+            < GAME_UE4_26 => Type.StandardizeParameterNames,
+            < GAME_UE4_27 => Type.SignificanceHandlers,
+            < GAME_UE5_0 => Type.MoveDefaultValueFromFNiagaraVariableMetaDataToUNiagaraScriptVariable,
+            < GAME_UE5_1 => Type.StaticSwitchFunctionPinsUsePersistentGuids,
+            < GAME_UE5_2 => Type.EventSpawnsUpdateInitialAttributeValues,
+            < GAME_UE5_3 => Type.DynamicPinNodeFixup,
+            < GAME_UE5_4 => Type.RibbonRendererLinkOrderDefaultIsUniqueID,
+            < GAME_UE5_5 => Type.NDCSpawnGroupOverrideDisabledByDefault,
+            < GAME_UE5_6 => Type.EmitterStateAddLoopDelayEnabled,
+            < GAME_UE5_7 => Type.AddedNewInterpolatedSpawnMode, 
             _ => Type.LatestVersion
         };
     }

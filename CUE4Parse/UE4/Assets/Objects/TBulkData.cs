@@ -8,7 +8,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
-using Serilog;
 using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -16,6 +15,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(TBulkDataConverter))]
 public abstract class TBulkData<T> where T: struct
 {
+    
     public FByteBulkDataHeader Header { get; init; }
     public EBulkDataFlags BulkDataFlags => Header.BulkDataFlags;
 
@@ -62,6 +62,23 @@ public abstract class TBulkData<T> where T: struct
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual int GetDataSize() => Header.ElementCount * Unsafe.SizeOf<T>();
+
+    /// <summary>
+    /// Reads bulk data once without storing it in this instance.
+    /// If data is already cached, optionally returns a copy of a cached data.
+    /// </summary>
+    public T[]? ReadDataOnce(bool returnCachedData = true)
+    {
+        if (_data is { IsValueCreated: true })
+        {
+            var cached = _data.Value;
+            if (cached is null) return null;
+
+            return returnCachedData ? cached : (T[]) cached.Clone();
+        }
+
+        return ReadBulkDataInto(out var data) ? data : null;
+    }
 
     protected virtual bool ReadBulkDataInto(out T[] data)
     {
@@ -128,6 +145,19 @@ public abstract class TBulkData<T> where T: struct
             archive = uptnlAr;
             position = uptnlAr.Length == Header.SizeOnDisk ? 0 : Header.OffsetInFile;
         }
+        else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile | BULKDATA_MemoryMappedPayload))
+        {
+            if (!TryGetBulkPayload(archive, PayloadType.MUBULK, out var mubulkAr))
+            {
+#if DEBUG
+                Log.Debug("Failed to load bulk data in {CookedIndex}.m.ubulk file (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", Header.CookedIndex, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
+#endif
+                return false;
+            }
+
+            archive = mubulkAr;
+            position = mubulkAr.Length == Header.SizeOnDisk ? 0 : Header.OffsetInFile;
+        }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadInSeperateFile))
         {
             if (!TryGetBulkPayload(archive, PayloadType.UBULK, out var ubulkAr))
@@ -164,7 +194,16 @@ public abstract class TBulkData<T> where T: struct
         payloadAr = null;
         if (Header.CookedIndex.IsDefault)
         {
-            Ar.TryGetPayload(type, out payloadAr, Header);
+            if (type is PayloadType.MUBULK && Ar.Owner?.Provider is IVfsFileProvider vfsFileProvider)
+            {
+                var path = Path.ChangeExtension(Ar.Name, ".m.ubulk");
+                if (vfsFileProvider.TryGetGameFile(path, out var file) && file.TryCreateReader(out var reader, Header))
+                {
+                    payloadAr = new FAssetArchive(reader, Ar.Owner);
+                }
+            }
+            else
+                Ar.TryGetPayload(type, out payloadAr, Header);
         }
         else if (Ar.Owner?.Provider is IVfsFileProvider vfsFileProvider)
         {

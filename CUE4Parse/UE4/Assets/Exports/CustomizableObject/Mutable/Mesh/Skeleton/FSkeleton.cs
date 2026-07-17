@@ -18,7 +18,7 @@ public class FSkeleton
 
     public FSkeleton(FMutableArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
+        if (Ar.Game < GAME_UE5_6) Version = Ar.Read<int>();
 
         if (Version >= 7)
         {
@@ -33,7 +33,7 @@ public class FSkeleton
             OldBoneNames = Ar.ReadArray(Ar.ReadString);
         }
 
-        if (Ar.Game is EGame.GAME_LordsoftheFallen)
+        if (Ar.Game is GAME_LordsoftheFallen)
         {
             Ar.SkipFixedArray(64); // matrix bone transforms
         }

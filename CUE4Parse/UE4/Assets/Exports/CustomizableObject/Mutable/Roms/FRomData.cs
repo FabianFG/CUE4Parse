@@ -17,11 +17,11 @@ public struct FRomData
     public FRomData(FMutableArchive Ar)
     {
         Id = Ar.Read<uint>();
-        SourceId = Ar.Game >= EGame.GAME_UE5_5 ? Ar.Read<uint>() : 0;
+        SourceId = Ar.Game >= GAME_UE5_5 ? Ar.Read<uint>() : 0;
         Size = Ar.Read<uint>();
         ResourceIndex = Ar.Read<uint>();
-        ResourceType = (EDataType) (Ar.Game >= EGame.GAME_UE5_5 ? Ar.Read<ushort>() : Ar.Read<uint>());
-        Flags = Ar.Game >= EGame.GAME_UE5_5 ? Ar.Read<ERomFlags>() : ERomFlags.None;
+        ResourceType = (EDataType) (Ar.Game >= GAME_UE5_5 ? Ar.Read<ushort>() : Ar.Read<uint>());
+        Flags = Ar.Game >= GAME_UE5_5 ? Ar.Read<ERomFlags>() : ERomFlags.None;
     }
 }
 

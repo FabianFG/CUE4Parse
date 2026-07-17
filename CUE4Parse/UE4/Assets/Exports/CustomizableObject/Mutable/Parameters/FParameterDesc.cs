@@ -25,9 +25,9 @@ public class FParameterDesc
 
     public FParameterDesc(FMutableArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
+        if (Ar.Game < GAME_UE5_6) Version = Ar.Read<int>();
 
-        if (Ar.Game >= EGame.GAME_UE5_4)
+        if (Ar.Game >= GAME_UE5_4)
         {
             Name = Ar.ReadFString();
             UID = Ar.Read<FGuid>();
@@ -40,7 +40,7 @@ public class FParameterDesc
 
         Type = ReadMaterialParameterType(Ar);
 
-        if (Ar.Game >= EGame.GAME_UE5_2)
+        if (Ar.Game >= GAME_UE5_2)
         {
             var index = Ar.Read<byte>(); // index into TVariant
         }
@@ -56,14 +56,14 @@ public class FParameterDesc
             EParameterType.Texture => null,
             EParameterType.SkeletalMesh => null,
             EParameterType.Material => null,
-            EParameterType.String => Ar.Game >= EGame.GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString(),
+            EParameterType.String => Ar.Game >= GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString(),
             EParameterType.Matrix => new FMatrix(Ar, false),
             EParameterType.InstancedStruct => null,
             // for older versions
-            EParameterType.Image => Ar.Game >= EGame.GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString(),
+            EParameterType.Image => Ar.Game >= GAME_UE5_4 ? Ar.ReadFString() : Ar.ReadString(),
             _ => throw new NotSupportedException("Serialization for parameter type " + Type + " is not supported")
         };
-        if (Ar.Game < EGame.GAME_UE5_3)
+        if (Ar.Game < GAME_UE5_3)
             Ar.Position = saved + Unsafe.SizeOf<FProjector>();
 
         Ranges = Ar.ReadArray<uint>();
@@ -77,8 +77,8 @@ public class FParameterDesc
         var value = Ar.Read<uint>();
         return Ar.Game switch
         {
-            >= EGame.GAME_UE5_7 => (EParameterType) value,
-            >= EGame.GAME_UE5_6 => value switch
+            >= GAME_UE5_7 => (EParameterType) value,
+            >= GAME_UE5_6 => value switch
             {
                 >= 10 => throw new ParserException("Unsupported parameter type"),
                 9 => EParameterType.Matrix,
@@ -87,7 +87,7 @@ public class FParameterDesc
                 6 => EParameterType.Image,
                 _ => (EParameterType) value,
             },
-            >= EGame.GAME_UE5_5 => value switch
+            >= GAME_UE5_5 => value switch
             {
                 >= 9 => throw new ParserException("Unsupported parameter type"),
                 8 => EParameterType.Matrix,

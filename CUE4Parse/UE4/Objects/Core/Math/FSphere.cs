@@ -1,4 +1,5 @@
 ﻿using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Core.Math
 {
@@ -33,7 +34,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FSphere(FArchive Ar)
         {
             Center = new FVector(Ar);
-            W = Ar.ReadFReal();
+            if (Ar.Ver > EUnrealEngineObjectUE3Version.Release61) W = Ar.ReadFReal();
         }
 
         public static FSphere operator *(FSphere a, float scale) => new FSphere(a.Center * scale, a.W * scale);

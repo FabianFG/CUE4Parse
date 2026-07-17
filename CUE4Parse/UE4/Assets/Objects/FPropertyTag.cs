@@ -7,7 +7,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -77,6 +76,7 @@ public static class FPropertyTypeNameUtils
 
 public class FPropertyTag
 {
+    
     public FName Name;
     public FName PropertyType;
     public int Size;
@@ -154,7 +154,7 @@ public class FPropertyTag
             TagData = new FPropertyTagData(typeName, Name.Text);
 
             Size = Ar.Read<int>();
-            PropertyTagFlags = (EPropertyTagFlags) Ar.ReadByte();
+            PropertyTagFlags = (EPropertyTagFlags) Ar.Read<byte>();
             if (PropertyTagFlags.HasFlag(EPropertyTagFlags.BoolTrue)) TagData.Bool = true;
             ArrayIndex = PropertyTagFlags.HasFlag(EPropertyTagFlags.HasArrayIndex) ? Ar.Read<int>() : 0;
             HasPropertyGuid = PropertyTagFlags.HasFlag(EPropertyTagFlags.HasPropertyGuid);

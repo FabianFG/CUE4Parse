@@ -11,7 +11,7 @@ public class UUniqueID : UObject
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if (Ar.Game is EGame.GAME_ConanExilesEnhanced) CustomGameData = Ar.Read<long>();
+        if (Ar.Game is GAME_ConanExilesEnhanced) CustomGameData = Ar.Read<long>();
         else base.Deserialize(Ar, validPos);
     }
 }

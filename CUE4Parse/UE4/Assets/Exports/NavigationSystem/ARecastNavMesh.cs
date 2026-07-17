@@ -2,12 +2,12 @@ using System.ComponentModel;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.NavigationSystem;
 
 public class ARecastNavMesh : ANavigationData
 {
+    
     public float AgentHeight;
     public float AgentRadius;
     public FNavMeshResolutionParam[] NavMeshResolutionParams; 
@@ -19,7 +19,7 @@ public class ARecastNavMesh : ANavigationData
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Game is EGame.GAME_TheFirstDescendant && Class?.Name.Text.Contains("M1RecastNavMesh") is true) return;
+        if (Ar.Game is GAME_TheFirstDescendant && Class?.Name.Text.Contains("M1RecastNavMesh") is true) return;
 
         AgentHeight = GetOrDefault<float>(nameof(AgentHeight));
         AgentRadius = GetOrDefault<float>(nameof(AgentRadius));

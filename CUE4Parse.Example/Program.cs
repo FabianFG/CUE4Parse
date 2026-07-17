@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using CUE4Parse;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -28,6 +28,7 @@ namespace CUE4Parse.Example
         public static void Main()
         {
             Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+            CUE4ParseLog.UseLogger(Log.Logger);
 
             var provider = new ApkFileProvider(@"C:\Users\valen\Downloads\ZqOY4K41h0N_Qb6WjEe23TlGExojpQ.apk", new VersionContainer(EGame.GAME_UE5_3));
             // var provider = new DefaultFileProvider(_gameDirectory, SearchOption.TopDirectoryOnly, true, new VersionContainer(EGame.GAME_UE5_3));

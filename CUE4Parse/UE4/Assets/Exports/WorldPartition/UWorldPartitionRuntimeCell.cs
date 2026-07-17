@@ -51,7 +51,7 @@ public class UWorldPartitionRuntimeCellData : UObject
         Priority = GetOrDefault<int>(nameof(Priority));
         HierarchicalLevel = GetOrDefault<int>(nameof(HierarchicalLevel));
 
-        DebugName = Ar.Game >= EGame.GAME_UE5_3 ? Ar.ReadFString() : null;
+        DebugName = Ar.Game >= GAME_UE5_3 ? Ar.ReadFString() : null;
     }
 }
 

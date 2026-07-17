@@ -1,13 +1,11 @@
 using System.Collections.Concurrent;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.VirtualFileSystem;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
 
 public static partial class ProSpiEncryption
 {
-    private static readonly ILogger Log = Serilog.Log.ForContext(typeof(ProSpiEncryption));
     private static readonly ConcurrentDictionary<ulong, byte> _missingDescriptorLookupKeys = new();
 
     public const int EncryptionDataTrailerSize = 0x18;

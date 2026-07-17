@@ -4,7 +4,6 @@ using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -12,6 +11,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [SkipObjectRegistration]
 public class FStructFallback : AbstractPropertyHolder, IUStruct
 {
+
     public FStructFallback() => Properties = [];
 
     public FStructFallback(List<FPropertyTag> properties) => Properties = properties;
@@ -37,10 +37,18 @@ public class FStructFallback : AbstractPropertyHolder, IUStruct
         UObject.DeserializeRawProperties(Properties = [], Ar, new UScriptClass(structType), rawHeader, type);
     }
 
+    [Obsolete("Deprecated, please use FScriptStruct.ReadInstancedStructWithoutSerialSize", true)]
     public static FStructFallback? ReadInstancedStruct(FAssetArchive Ar)
     {
         var structType = new FPackageIndex(Ar);
-        if (structType.IsNull) return null;
+        return ReadInstancedStruct(Ar, structType);
+    }
+
+    [Obsolete("Deprecated, please use FScriptStruct.ReadInstancedStructWithoutSerialSize", true)]
+    public static FStructFallback? ReadInstancedStruct(FAssetArchive Ar, FPackageIndex structType)
+    {
+        if (structType is null || structType.IsNull)
+            return null;
 
         FStructFallback? result = null;
         if (structType.TryLoad<UStruct>(out var struc))

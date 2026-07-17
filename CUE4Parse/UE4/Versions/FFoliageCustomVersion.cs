@@ -56,13 +56,13 @@ public static class FFoliageCustomVersion
 
         return Ar.Game switch
         {
-            < EGame.GAME_UE4_7 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_8 => Type.AddedFoliageTypeUpdateGuid,
-            < EGame.GAME_UE4_9 => Type.FoliageTypeProceduralScaleAndShade,
-            < EGame.GAME_UE4_10 => Type.AddedMobility,
-            < EGame.GAME_UE4_23 => Type.FoliageUsingFoliageISMC,
-            < EGame.GAME_UE4_24 => Type.FoliageActorSupportNoWeakPtr,
-            < EGame.GAME_UE4_26 => Type.FoliageRepairInstancesWithLevelTransform,
+            < GAME_UE4_7 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_8 => Type.AddedFoliageTypeUpdateGuid,
+            < GAME_UE4_9 => Type.FoliageTypeProceduralScaleAndShade,
+            < GAME_UE4_10 => Type.AddedMobility,
+            < GAME_UE4_23 => Type.FoliageUsingFoliageISMC,
+            < GAME_UE4_24 => Type.FoliageActorSupportNoWeakPtr,
+            < GAME_UE4_26 => Type.FoliageRepairInstancesWithLevelTransform,
             _ => Type.LatestVersion
         };
     }

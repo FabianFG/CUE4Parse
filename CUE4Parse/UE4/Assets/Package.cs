@@ -10,13 +10,13 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets
 {
     [SkipObjectRegistration]
     public sealed class Package : AbstractUePackage
     {
+        
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
         public override int ImportMapLength => ImportMap.Length;
@@ -68,13 +68,22 @@ namespace CUE4Parse.UE4.Assets
             FAssetArchive uassetAr;
             ACE7XORKey? xorKey = null;
             ACE7Decrypt? decryptor = null;
-            if (uasset.Game == EGame.GAME_AceCombat7)
+            if (uasset.Game == GAME_AceCombat7)
             {
                 decryptor = new ACE7Decrypt();
                 uassetAr = new FAssetArchive(decryptor.DecryptUassetArchive(uasset, out xorKey), this);
             }
             else uassetAr = new FAssetArchive(uasset, this);
 
+            // The package has been stored in a separate endianness than the linker expected so we need to force
+            // endian conversion. Latent handling allows the PC version to retrieve information about cooked packages.
+            var Tag = uassetAr.Read<uint>();
+            if (Tag == FPackageFileSummary.PACKAGE_FILE_TAG_SWAPPED)
+            {
+                uassetAr = new FAssetArchive(new FArchiveBigEndian(uasset), this);
+            }
+            uassetAr.Position -= 4;
+            
             Summary = new FPackageFileSummary(uassetAr);
 
             uassetAr.SeekAbsolute(Summary.NameOffset, SeekOrigin.Begin);
@@ -165,7 +174,7 @@ namespace CUE4Parse.UE4.Assets
             FAssetArchive uexpAr;
             if (uexp != null)
             {
-                if (uasset.Game == EGame.GAME_AceCombat7 && decryptor != null && xorKey != null)
+                if (uasset.Game == GAME_AceCombat7 && decryptor != null && xorKey != null)
                 {
                     uexpAr = new FAssetArchive(decryptor.DecryptUexpArchive(uexp, xorKey), this, (int) uassetAr.Length);
                 } else uexpAr = new FAssetArchive(uexp, this, (int) uassetAr.Length);
@@ -205,7 +214,6 @@ namespace CUE4Parse.UE4.Assets
                         var Ar = (FAssetArchive) uexpAr.Clone();
                         Ar.SeekAbsolute(export.SerialOffset, SeekOrigin.Begin);
                         DeserializeObject(obj, Ar, export.SerialSize);
-                        // TODO right place ???
                         obj.Flags |= EObjectFlags.RF_LoadCompleted;
                         obj.PostLoad();
                         return obj;
@@ -493,7 +501,6 @@ namespace CUE4Parse.UE4.Assets
                 var Ar = (FAssetArchive) _archive.Clone();
                 Ar.SeekAbsolute(_export.SerialOffset, SeekOrigin.Begin);
                 _package.DeserializeObject(_object, Ar, _export.SerialSize);
-                // TODO right place ???
                 _object.Flags |= EObjectFlags.RF_LoadCompleted;
                 _object.PostLoad();
             }

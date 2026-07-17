@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.RenderCore;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -50,22 +51,30 @@ public class FStaticMeshComponentLODInfo
         {
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
             {
+                if (Ar.Game < GAME_UE4_0)
+                {
+                    Ar.ReadArray(() => new FPackageIndex(Ar)); // ShadowMaps
+                    Ar.ReadArray(() => new FPackageIndex(Ar)); // ShadowVertexBuffers
+                }
+
                 FLightMap? lightMap = Ar.Read<ELightMapType>() switch
                 {
                     ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
                     ELightMapType.LMT_2D => new FLightMap2D(Ar),
                     _ => null
                 };
-
-                var shadowMap = Ar.Read<EShadowMapType>() switch
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.PRECOMPUTED_SHADOW_MAPS)
                 {
-                    EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
-                    _ => null
-                };
+                    var shadowMap = Ar.Read<EShadowMapType>() switch
+                    {
+                        EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
+                        _ => null
+                    };
+                }
             }
             else
             {
-                if (Ar.Game >= EGame.GAME_UE5_5)
+                if (Ar.Game >= GAME_UE5_5)
                 {
                     if (Ar.IsLoadingFromCookedPackage) MapBuildDataId = Ar.Read<FGuid>();
                     OriginalMapBuildDataId = Ar.Read<FGuid>();
@@ -77,21 +86,24 @@ public class FStaticMeshComponentLODInfo
             }
         }
 
-        if (!stripFlags.IsClassDataStripped(OverrideColorsStripFlag))
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.MESH_PAINT_SYSTEM_ENUM && !stripFlags.IsClassDataStripped(OverrideColorsStripFlag))
         {
-            var bLoadVertexColorData = Ar.Read<byte>();
-            if (bLoadVertexColorData == 1)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.OVERWRITE_VERTEX_COLORS_MEM_OPTIMIZED)
             {
-                if (Ar.Game is EGame.GAME_HonorofKingsWorld) Ar.Position += 4;
-                OverrideVertexColors = new FColorVertexBuffer(Ar);
+                var bLoadVertexColorData = Ar.Read<byte>();
+                if (bLoadVertexColorData == 1)
+                {
+                    if (Ar.Game is GAME_HonorofKingsWorld) Ar.Position += 4;
+                    OverrideVertexColors = new FColorVertexBuffer(Ar);
+                }
             }
         }
 
-        if (!stripFlags.IsEditorDataStripped() && !Ar.IsFilterEditorOnly)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRESERVE_SMC_VERT_COLORS && !stripFlags.IsEditorDataStripped() && !Ar.IsFilterEditorOnly)
         {
             PaintedVertices = Ar.ReadArray(() => new FPaintedVertex(Ar));
         }
 
-        if (Ar.Game == EGame.GAME_StarWarsJediSurvivor) Ar.Position += 20;
+        if (Ar.Game == GAME_StarWarsJediSurvivor) Ar.Position += 20;
     }
 }

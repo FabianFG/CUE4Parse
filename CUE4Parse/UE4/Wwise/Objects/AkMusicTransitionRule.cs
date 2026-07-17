@@ -26,7 +26,17 @@ public readonly struct TransitionRule
         SrcRules = new AkMusicTransSrcRule(Ar);
         DestRules = new AkMusicTransDestRule(Ar);
 
-        bool hasTransitionObject = Ar.Version <= 72 ? Ar.Read<byte>() != 0 : Ar.Read<byte>() != 0;
+        bool hasTransitionObject;
+        if (Ar.Version <= 72)
+        {
+            Ar.ReadBool(); // bIsTransObjectEnabled
+            hasTransitionObject = true; // No, don't use bool above, trust me
+        }
+        else
+        {
+            hasTransitionObject = Ar.ReadBool();
+        }
+
         if (hasTransitionObject)
         {
             TransObject = new AkMusicTransitionObject(Ar);
@@ -56,7 +66,7 @@ public readonly struct AkMusicTransSrcRule
         else if (Ar.Version > 72)
             CueFilterHash = Ar.Read<uint>();
 
-        PlayPostExit = Ar.Read<byte>() != 0;
+        PlayPostExit = Ar.ReadBool();
     }
 }
 
@@ -90,10 +100,10 @@ public readonly struct AkMusicTransDestRule
             JumpToType = (EAkJumpToSelType) Ar.Read<ushort>();
 
         EntryType = (EAkEntryType) Ar.Read<ushort>();
-        PlayPreEntry = Ar.Read<byte>() != 0;
+        PlayPreEntry = Ar.ReadBool();
 
         if (Ar.Version > 62)
-            DestMatchSourceCueName = Ar.Read<byte>() != 0;
+            DestMatchSourceCueName = Ar.ReadBool();
     }
 }
 
@@ -110,7 +120,7 @@ public readonly struct AkMusicTransitionObject
         SegmentId = Ar.Read<uint>();
         FadeInParams = new AkMusicFade(Ar);
         FadeOutParams = new AkMusicFade(Ar);
-        PlayPreEntry = Ar.Read<byte>() != 0;
-        PlayPostExit = Ar.Read<byte>() != 0;
+        PlayPreEntry = Ar.ReadBool();
+        PlayPostExit = Ar.ReadBool();
     }
 }

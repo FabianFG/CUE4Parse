@@ -4,7 +4,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -19,6 +18,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
     public class FIoStoreTocResource
     {
+
         private readonly FArchive? _tocAr;
         public readonly FIoStoreTocHeader Header;
         public readonly FIoChunkId[] ChunkIds;
@@ -33,7 +33,7 @@ namespace CUE4Parse.UE4.IO.Objects
             if (_tocAr == null || DirectoryIndexBufferOffset == -1)
                 return null;
 
-            if (_tocAr.Game is EGame.GAME_TheFinals or EGame.GAME_ArcRaiders)
+            if (_tocAr.Game is GAME_TheFinals or GAME_ArcRaiders)
             {
                 var readOffset = DirectoryIndexBufferOffset & ~((long) Aes.ALIGN - 1);
                 var dataOffset = DirectoryIndexBufferOffset - readOffset;
@@ -54,7 +54,7 @@ namespace CUE4Parse.UE4.IO.Objects
             var streamBuffer = new byte[Ar.Length];
             Ar.Read(streamBuffer, 0, streamBuffer.Length);
 
-            if (Ar.Game is EGame.GAME_TheFinals or EGame.GAME_ArcRaiders)
+            if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
             {
                 var decrypted = streamBuffer.Decrypt(FIoStoreTocHeader.SIZE, (int) (Ar.Length - FIoStoreTocHeader.SIZE), new FAesKey("0x5A4741BC469E10E569D48057B7AB43320388C9748759663BB5D13E201CA2052E"));
                 Array.Copy(decrypted, 0, streamBuffer, FIoStoreTocHeader.SIZE, decrypted.Length);
@@ -77,7 +77,7 @@ namespace CUE4Parse.UE4.IO.Objects
             // Chunk offsets
             ChunkOffsetLengths = archive.ReadArray<FIoOffsetAndLength>((int) Header.TocEntryCount);
 
-            if (Ar.Game == EGame.GAME_NeedForSpeedMobile && !Ar.Name.EndsWith("global.utoc"))
+            if (Ar.Game == GAME_NeedForSpeedMobile && !Ar.Name.EndsWith("global.utoc"))
             {
                 archive.Position -= Header.TocEntryCount * 10;
                 var len = ((int) Header.TocEntryCount * 10).Align(16);
@@ -108,12 +108,20 @@ namespace CUE4Parse.UE4.IO.Objects
             }
 
             // Compression blocks
-            var isFragPunk = archive.Game == EGame.GAME_FragPunk;
-            CompressionBlocks = new FIoStoreTocCompressedBlockEntry[Header.TocCompressedBlockEntryCount];
-            for (int i = 0; i < Header.TocCompressedBlockEntryCount; i++)
+            var isFragPunk = archive.Game == GAME_FragPunk;
+            if (!isFragPunk)
             {
-                CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
-                if (isFragPunk) archive.Position += 4;
+                CompressionBlocks = archive.ReadArray<FIoStoreTocCompressedBlockEntry>(
+                    (int) Header.TocCompressedBlockEntryCount);
+            }
+            else
+            {
+                CompressionBlocks = new FIoStoreTocCompressedBlockEntry[Header.TocCompressedBlockEntryCount];
+                for (var i = 0; i < Header.TocCompressedBlockEntryCount; i++)
+                {
+                    CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
+                    archive.Position += 4;
+                }
             }
 
             // Compression methods
@@ -131,7 +139,7 @@ namespace CUE4Parse.UE4.IO.Objects
                         continue;
                     if (!Enum.TryParse(name, true, out CompressionMethod method))
                     {
-                        Log.Warning($"Unknown compression method '{name}' in {Ar.Name}");
+                        Log.Warning("Unknown compression method '{CompressionMethod}' in {ArchiveName}", name, Ar.Name);
                         method = CompressionMethod.Unknown;
                     }
 

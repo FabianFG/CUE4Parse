@@ -34,18 +34,18 @@ public class BaseHierarchy : AbstractHierarchy
     // CAkParameterNodeBase::SetNodeBaseParams
     public BaseHierarchy(FWwiseArchive Ar) : base()
     {
-        OverrideFx = Ar.Read<byte>() != 0;
+        OverrideFx = Ar.ReadBool();
         FxParams = new AkFxParams(Ar);
 
         if (Ar.Version > 136)
         {
-            OverrideParentMetadataFlag = Ar.Read<byte>() != 0;
+            OverrideParentMetadataFlag = Ar.ReadBool();
             FxChunks = Ar.ReadArray(Ar.Read<byte>(), () => new AkFxChunk(Ar));
         }
 
         if (Ar.Version > 89 && Ar.Version <= 145)
         {
-            OverrideAttachmentParams = Ar.Read<byte>() != 0;
+            OverrideAttachmentParams = Ar.ReadBool();
         }
 
         OverrideBusId = Ar.Read<uint>();
@@ -54,14 +54,14 @@ public class BaseHierarchy : AbstractHierarchy
         switch (Ar.Version)
         {
             case <= 56:
-                Priority = Ar.Read<byte>() != 0;
-                PriorityOverrideParent = Ar.Read<byte>() != 0;
-                PriorityApplyDistFactor = Ar.Read<byte>() != 0;
+                Priority = Ar.ReadBool();
+                PriorityOverrideParent = Ar.ReadBool();
+                PriorityApplyDistFactor = Ar.ReadBool();
                 DistOffset = Ar.Read<sbyte>();
                 break;
             case <= 89:
-                PriorityOverrideParent = Ar.Read<byte>() != 0;
-                PriorityApplyDistFactor = Ar.Read<byte>() != 0;
+                PriorityOverrideParent = Ar.ReadBool();
+                PriorityApplyDistFactor = Ar.ReadBool();
                 break;
             default:
                 MidiBehaviorFlags = Ar.Read<EMidiBehaviorFlags>();

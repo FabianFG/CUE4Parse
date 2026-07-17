@@ -1,8 +1,8 @@
-﻿namespace CUE4Parse.UE4.Assets.Utils
+namespace CUE4Parse.UE4.Assets.Utils;
+
+public enum PayloadType
 {
-    public enum PayloadType
-    {
-        UBULK,
-        UPTNL
-    }
+    UBULK,
+    UPTNL,
+    MUBULK,
 }

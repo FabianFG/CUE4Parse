@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -13,7 +13,7 @@ public class IoGlobalData
     public IoGlobalData(IoStoreReader globalReader)
     {
         FByteArchive metaAr;
-        if (globalReader.Game >= EGame.GAME_UE5_0)
+        if (globalReader.Game >= GAME_UE5_0)
         {
             metaAr = new FByteArchive("ScriptObjects", globalReader.Read(new FIoChunkId(0, 0, EIoChunkType5.ScriptObjects)));
             GlobalNameMap = FNameEntrySerialized.LoadNameBatch(metaAr);

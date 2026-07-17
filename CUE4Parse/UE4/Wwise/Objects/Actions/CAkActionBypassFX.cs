@@ -10,8 +10,7 @@ public class CAkActionBypassFX
     // CAkActionBypassFX::SetActionParams
     public CAkActionBypassFX(FWwiseArchive Ar)
     {
-        bIsBypass = Ar.Read<byte>() != 0;
-
+        bIsBypass = Ar.ReadBool();
         switch (Ar.Version)
         {
             case >= 146:

@@ -2,6 +2,7 @@ using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Plugins;
 using CUE4Parse.UE4.Wwise.Plugins.atmoky;
 using CUE4Parse.UE4.Wwise.Plugins.Auro;
+using CUE4Parse.UE4.Wwise.Plugins.Bitcrush;
 using CUE4Parse.UE4.Wwise.Plugins.CrankcaseAudioREVModelPlayer;
 using CUE4Parse.UE4.Wwise.Plugins.iZotope;
 using CUE4Parse.UE4.Wwise.Plugins.MasteringSuite;
@@ -12,12 +13,12 @@ using CUE4Parse.UE4.Wwise.Plugins.OculusSpatializer;
 using CUE4Parse.UE4.Wwise.Plugins.PolyspectralMBC;
 using CUE4Parse.UE4.Wwise.Plugins.ResonanceAudio;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
 public class WwisePlugin
 {
+    
     public static IAkPluginParam? TryParsePluginParams(FWwiseArchive Ar, AkPlugin plugin, bool always = false)
     {
         var pluginId = plugin.PluginId;
@@ -107,6 +108,7 @@ public class WwisePlugin
 
                 // EAkPluginId.bnsRadio
 
+                EAkPluginId.Bitcrush => new CBitcrushFXParams(Ar),
                 EAkPluginId.CrankcaseAudioREVModelPlayer => new CREVSourceModelPlayerParams(Ar, (int)size),
 
                 EAkPluginId.iZHybridReverbFX => new CiZHybridReverbFXParams(Ar),
@@ -150,19 +152,19 @@ public class WwisePlugin
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Error while parsing Wwise plugin '{pluginId}' with Wwise version {Ar.Version}");
+            Log.Error(ex, "Error while parsing Wwise plugin '{PluginId}' with Wwise version {Version}", pluginId, Ar.Version);
         }
         finally
         {
 #if DEBUG
             if (Params is CAkDefaultParams)
             {
-                Log.Warning($"Handler for Wwise plugin '{pluginId}' wasn't added, skipping {size} bytes");
+                Log.Warning("Handler for Wwise plugin '{PluginId}' wasn't added, skipping {Size} bytes", pluginId, size);
             }
 
             if (Ar.Position != endPosition)
             {
-                Log.Warning($"Didn't read Wwise plugin '{pluginId}' with Wwise version {Ar.Version} correctly (at {Ar.Position}, should be {endPosition})");
+                Log.Warning("Didn't read Wwise plugin '{PluginId}' with Wwise version {Version} correctly (at {Position}, should be {ExpectedPosition})", pluginId, Ar.Version, Ar.Position, endPosition);
             }
 #endif
             Ar.Position = endPosition;

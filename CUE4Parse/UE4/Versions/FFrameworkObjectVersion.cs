@@ -143,22 +143,22 @@ public static class FFrameworkObjectVersion
         return Ar.Game switch
         {
             // Game Overrides
-            EGame.GAME_TEKKEN7 => Type.WheelOffsetIsFromWheel,
+            GAME_TEKKEN7 => Type.WheelOffsetIsFromWheel,
 
             // Engine
-            < EGame.GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
-            < EGame.GAME_UE4_13 => Type.FixNonTransactionalPins,
-            < EGame.GAME_UE4_14 => Type.RemoveSoundWaveCompressionName,
-            < EGame.GAME_UE4_15 => Type.GeometryCacheMissingMaterials,
-            < EGame.GAME_UE4_16 => Type.ChangeAudioComponentOverrideSubtitlePriorityDefault,
-            < EGame.GAME_UE4_17 => Type.HardSoundReferences,
-            < EGame.GAME_UE4_18 => Type.LocalVariablesBlueprintVisible,
-            < EGame.GAME_UE4_19 => Type.UserDefinedStructsBlueprintVisible,
-            < EGame.GAME_UE4_20 => Type.FunctionTerminatorNodesUseMemberReference,
-            < EGame.GAME_UE4_22 => Type.EditableEventsUseConstRefParameters,
-            < EGame.GAME_UE4_24 => Type.BlueprintGeneratedClassIsAlwaysAuthoritative,
-            < EGame.GAME_UE4_25 => Type.EnforceBlueprintFunctionVisibility,
-            < EGame.GAME_UE4_26 => Type.StoringUCSSerializationIndex,
+            < GAME_UE4_12 => Type.BeforeCustomVersionWasAdded,
+            < GAME_UE4_13 => Type.FixNonTransactionalPins,
+            < GAME_UE4_14 => Type.RemoveSoundWaveCompressionName,
+            < GAME_UE4_15 => Type.GeometryCacheMissingMaterials,
+            < GAME_UE4_16 => Type.ChangeAudioComponentOverrideSubtitlePriorityDefault,
+            < GAME_UE4_17 => Type.HardSoundReferences,
+            < GAME_UE4_18 => Type.LocalVariablesBlueprintVisible,
+            < GAME_UE4_19 => Type.UserDefinedStructsBlueprintVisible,
+            < GAME_UE4_20 => Type.FunctionTerminatorNodesUseMemberReference,
+            < GAME_UE4_22 => Type.EditableEventsUseConstRefParameters,
+            < GAME_UE4_24 => Type.BlueprintGeneratedClassIsAlwaysAuthoritative,
+            < GAME_UE4_25 => Type.EnforceBlueprintFunctionVisibility,
+            < GAME_UE4_26 => Type.StoringUCSSerializationIndex,
             _ => Type.LatestVersion
         };
     }

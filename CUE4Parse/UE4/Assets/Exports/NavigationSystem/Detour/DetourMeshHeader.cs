@@ -34,7 +34,7 @@ public struct DetourMeshHeader
 
     public DetourMeshHeader(FArchive Ar, ENavMeshVersion navMeshVersion)
     {
-        if (Ar.Game >= EGame.GAME_UE5_0)
+        if (Ar.Game >= GAME_UE5_0)
         {
             Version = Ar.Read<ushort>();
             X = Ar.Read<int>();
@@ -92,7 +92,7 @@ public struct DetourMeshHeader
             BMin = new FVector(Ar);
             BMax = new FVector(Ar);
             bvQuantFactor = Ar.ReadFReal();
-            if (Ar.Game is EGame.GAME_WutheringWaves) Ar.Position += 4;
+            if (Ar.Game is GAME_WutheringWaves) Ar.Position += 4;
             ClusterCount = Ar.Read<int>();
 
             OffMeshSegConCount = Ar.Read<int>();

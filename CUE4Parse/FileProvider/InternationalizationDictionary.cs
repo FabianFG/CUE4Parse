@@ -90,7 +90,7 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
         // else
         {
             LoadByPattern($"^{exclusion}.+/{Culture}/.+.locres$", files);
-            if (_provider?.Versions.Game is EGame.GAME_Aion2)
+            if (_provider?.Versions.Game is GAME_Aion2)
                 LoadAion2L10NDatFiles(Culture);
         }
     }
@@ -118,7 +118,14 @@ public class InternationalizationDictionary : IReadOnlyDictionary<string, IReadO
     private void LoadByPattern(string pattern, IReadOnlyDictionary<string, GameFile> files)
     {
         var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        Parallel.ForEach(files.Where(x => regex.IsMatch(x.Key)), file =>
+        // Streamed providers can turn each locres read into one or more network requests. Letting
+        // Parallel.ForEach use every available worker overwhelms BuildPatch/CDN reads and causes
+        // requests to sit in the queue until the HttpClient timeout expires.
+        var parallelOptions = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = _provider is StreamedFileProvider ? 4 : -1
+        };
+        Parallel.ForEach(files.Where(x => regex.IsMatch(x.Key)), parallelOptions, file =>
         {
             if (!file.Value.TryCreateReader(out var archive)) return;
 

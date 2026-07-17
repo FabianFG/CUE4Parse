@@ -38,7 +38,7 @@ public class FPrimitiveSceneProxyDesc(FArchive Ar)
     public bool bVisibleInReflectionCaptures = Ar.ReadBoolean();
     public bool bVisibleInRealTimeSkyCaptures = Ar.ReadBoolean();
     public bool bVisibleInRayTracing = Ar.ReadBoolean();
-    public bool bVisibleInReflections = Ar.Game >= EGame.GAME_UE5_8 && Ar.ReadBoolean();
+    public bool bVisibleInReflections = Ar.Game >= GAME_UE5_8 && Ar.ReadBoolean();
     public bool bRenderInDepthPass = Ar.ReadBoolean();
     public bool bRenderInMainPass = Ar.ReadBoolean();
     public bool bTreatAsBackgroundForOcclusion = Ar.ReadBoolean();
@@ -159,12 +159,12 @@ public class FStaticMeshSceneProxyDesc
     public FStaticMeshSceneProxyDesc(FFastGeoArchive Ar)
     {
         StaticMesh = Ar.ReadFPackageIndex();
-        if (Ar.Game is EGame.GAME_WutheringWavesFastGeo)
+        if (Ar.Game is GAME_WutheringWavesFastGeo)
         {
             Ar.Position += 68;
             return;
         }
-        MeshPaintTexture = Ar.Game >= EGame.GAME_UE5_8 ? Ar.ReadFPackageIndex() : new FPackageIndex();
+        MeshPaintTexture = Ar.Game >= GAME_UE5_8 ? Ar.ReadFPackageIndex() : new FPackageIndex();
         OverlayMaterial = Ar.ReadFPackageIndex();
         MaterialSlotsOverlayMaterial = Ar.ReadArray(Ar.ReadFPackageIndex);
         OverlayMaterialMaxDrawDistance = Ar.Read<float>();
@@ -175,7 +175,7 @@ public class FStaticMeshSceneProxyDesc
         DistanceFieldSelfShadowBias = Ar.Read<float>();
         DistanceFieldIndirectShadowMinVisibility = Ar.Read<float>();
         StaticLightMapResolution = Ar.Read<int>();
-        MeshPaintTextureCoordinateIndex = Ar.Game >= EGame.GAME_UE5_8 ? Ar.Read<int>() : 0;
+        MeshPaintTextureCoordinateIndex = Ar.Game >= GAME_UE5_8 ? Ar.Read<int>() : 0;
         bReverseCulling = Ar.ReadBoolean();
         bEvaluateWorldPositionOffset = Ar.ReadBoolean();
         bOverrideMinLOD = Ar.ReadBoolean();

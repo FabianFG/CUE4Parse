@@ -14,6 +14,8 @@ public class UAkAssetData : UObject
     {
         base.Deserialize(Ar, validPos);
 
+        if (Ar.Position >= validPos) return;
+
         var bulkData = new FByteBulkData(Ar);
         if (!bulkData.TryCreateReader("AkAssetData", out FArchive dataAr)) return;
 

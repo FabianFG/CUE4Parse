@@ -11,7 +11,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports;
 
@@ -97,6 +96,7 @@ public abstract class AbstractPropertyHolder : IPropertyHolder
 [SkipObjectRegistration]
 public class UObject : AbstractPropertyHolder
 {
+    
     public string Name { get; set; } = null!;
     public ResolvedObject? Class;
     public ResolvedObject? Outer;
@@ -139,7 +139,7 @@ public class UObject : AbstractPropertyHolder
             DeserializePropertiesTagged(Properties = [], Ar, false);
         }
 
-        if (Ar.Game >= EGame.GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
+        if (Ar.Game >= GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
         {
             var hasGuid = Ar.ReadBoolean();
 

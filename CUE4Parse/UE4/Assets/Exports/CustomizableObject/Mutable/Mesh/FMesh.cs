@@ -41,7 +41,7 @@ public class FMesh
 
     public FMesh(FMutableArchive Ar)
     {
-        if (Ar.Game < EGame.GAME_UE5_6) Version = Ar.Read<int>();
+        if (Ar.Game < GAME_UE5_6) Version = Ar.Read<int>();
 
         IndexBuffers = new FMeshBufferSet(Ar);
         VertexBuffers = new FMeshBufferSet(Ar);
@@ -51,11 +51,11 @@ public class FMesh
         }
         AdditionalBuffers = Ar.ReadArray(() => new KeyValuePair<EMeshBufferType, FMeshBufferSet>(Ar.Read<EMeshBufferType>(), new FMeshBufferSet(Ar)));
         Layouts = Ar.ReadPtrArray(() => new FLayout(Ar));
-        if (Version >= 14 && Ar.Game < EGame.GAME_UE5_8)
+        if (Version >= 14 && Ar.Game < GAME_UE5_8)
         {
             SkeletonIDs = Ar.ReadArray<uint>();
         }
-        if (Ar.Game < EGame.GAME_UE5_8) Skeleton = Ar.ReadPtr(() => new FSkeleton(Ar));
+        if (Ar.Game < GAME_UE5_8) Skeleton = Ar.ReadPtr(() => new FSkeleton(Ar));
         if (Version >= 12)
         {
             PhysicsBody = Ar.ReadPtr(() => new FPhysicsBody(Ar));
@@ -77,10 +77,10 @@ public class FMesh
 
         if (Version <= 16)
             Tags = Ar.ReadArray(Ar.ReadString);
-        else if (Ar.Game < EGame.GAME_UE5_8)
+        else if (Ar.Game < GAME_UE5_8)
             Tags = Ar.ReadArray(Ar.ReadFString);
 
-        if (Version >= 18 && Ar.Game < EGame.GAME_UE5_8)
+        if (Version >= 18 && Ar.Game < GAME_UE5_8)
             StreamedResources = Ar.ReadArray<ulong>();
         if (Version >= 13) BonePoses = Ar.ReadArray(() => new FBonePose(Ar));
         else if (Skeleton is not null)
@@ -112,9 +112,9 @@ public class FMesh
         }
 
         if (Version >= 15) AdditionalPhysicsBodies = Ar.ReadArray(() => new FPhysicsBody(Ar));
-        if (Ar.Game >= EGame.GAME_UE5_5) MeshIDPrefix = Ar.Read<uint>();
-        if (Ar.Game < EGame.GAME_UE5_6) ReferenceID = Ar.Read<uint>();
-        if (Ar.Game >= EGame.GAME_UE5_8)
+        if (Ar.Game >= GAME_UE5_5) MeshIDPrefix = Ar.Read<uint>();
+        if (Ar.Game < GAME_UE5_6) ReferenceID = Ar.Read<uint>();
+        if (Ar.Game >= GAME_UE5_8)
         {
             ClothSections = Ar.ReadArray(() => new FCloth(Ar));
             Morph = new FMeshMorph(Ar);

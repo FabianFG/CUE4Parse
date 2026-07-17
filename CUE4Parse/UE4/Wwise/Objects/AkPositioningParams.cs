@@ -35,14 +35,14 @@ public class AkPositioningParams
             switch (Ar.Version)
             {
                 case <= 72:
-                    has3dPositioning = Ar.Read<byte>() != 0; // cbIs3DPositioningAvailable
+                    has3dPositioning = Ar.ReadBool(); // cbIs3DPositioningAvailable
                     if (!has3dPositioning)
                         Ar.Read<byte>(); // bIsPannerEnabled
                     break;
                 case <= 89:
                 {
-                    bool has2dPositioning = Ar.Read<byte>() != 0; // cbIs2DPositioningAvailable
-                    has3dPositioning = Ar.Read<byte>() != 0;      // cbIs3DPositioningAvailable
+                    bool has2dPositioning = Ar.ReadBool(); // cbIs2DPositioningAvailable
+                    has3dPositioning = Ar.ReadBool();      // cbIs3DPositioningAvailable
                     if (has2dPositioning)
                         Ar.Read<byte>(); // bPositioningEnablePanner
                     break;
@@ -99,7 +99,7 @@ public class AkPositioningParams
                 if (Ar.Version <= 89)
                 {
                     PathMode = (EAkPathMode) Ar.Read<uint>();
-                    IsLooping = Ar.Read<byte>() != 0;
+                    IsLooping = Ar.ReadBool();
                     TransitionTime = Ar.Read<int>();
                     if (Ar.Version > 36)
                         Ar.Read<byte>(); // bFollowOrientation

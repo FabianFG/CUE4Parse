@@ -91,5 +91,5 @@ public static class FLuaReader
     public static readonly byte[] LUAC_NUM = BitConverter.GetBytes(370.5);
     public static readonly byte LUAC_FORMAT = 0; // This is the official format
 
-    public static bool IsValidLuaMagic(byte[] data) => data.AsSpan() is [0x1B, 0x4C, 0x75, 0x61, ..]; // Lua magic "\x1BLua"
+    public static bool IsValidLuaMagic(ReadOnlySpan<byte> data) => data is [0x1B, 0x4C, 0x75, 0x61, ..]; // Lua magic "\x1BLua"
 }

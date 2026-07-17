@@ -37,6 +37,8 @@
     <EmbeddedResource Include="Resources\BL4SoundTagsMap.json" />
     <None Remove="Resources\ProSpiDecryptor.dll" />
     <EmbeddedResource Include="Resources\ProSpiDecryptor.dll.gz" />
+    <None Remove="Resources\ShaderHashedNames.json" />
+    <EmbeddedResource Include="Resources\ShaderHashedNames.json" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -45,7 +47,8 @@
     <CMakeBuildDir>$(CMakeProject)builddir</CMakeBuildDir>
   </PropertyGroup>
 
-  <Target Name="Build-Natives" BeforeTargets="BeforeBuild" AfterTargets="AfterBuild">
+  <Target Name="Build-Natives" BeforeTargets="BeforeBuild" AfterTargets="AfterBuild"
+    Condition="'$(CUE4PARSE_SKIP_NATIVE)' != 'true' and '$(CUE4PARSE_SKIP_NATIVE)' != '1'">
     <MakeDir Directories="$(CMakeBuildDir)" Condition="!Exists('$(CMakeBuildDir)')" />
     <Exec Command="cmake .." ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)" IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />

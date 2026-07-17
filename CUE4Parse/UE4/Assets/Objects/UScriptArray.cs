@@ -4,13 +4,13 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
 [JsonConverter(typeof(UScriptArrayConverter))]
 public class UScriptArray
 {
+    
     public readonly string InnerType;
     public readonly FPropertyTagData? InnerTagData;
     public readonly List<FPropertyTagType> Properties;
@@ -40,7 +40,7 @@ public class UScriptArray
                 $"ArrayProperty element count {elementCount} is larger than the remaining archive size {Ar.Length - Ar.Position}");
         }
 
-        if (Ar.HasUnversionedProperties || type is ReadType.RAW || Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.HasUnversionedProperties || type is ReadType.RAW || Ar.Game < GAME_UE4_0)
         {
             InnerTagData = tagData.InnerTypeData;
         }
@@ -56,7 +56,7 @@ public class UScriptArray
         }
         else
         {
-            if (Ar.Game == EGame.GAME_DaysGone && InnerType == "StructProperty")
+            if (Ar.Game == GAME_DaysGone && InnerType == "StructProperty")
             {
                 var count = elementCount > 0 ? elementCount : 1;
                 var elemsize = (size - sizeof(int)) / count;
@@ -79,7 +79,7 @@ public class UScriptArray
                 if (property != null)
                     Properties.Add(property);
                 else
-                    Log.Debug($"Failed to read array property of type {InnerType} at {Ar.Position}, index {i}");
+                    Log.Debug("Failed to read array property of type {InnerType} at {Position}, index {Index}", InnerType, Ar.Position, i);
             }
             return;
         }
@@ -90,7 +90,7 @@ public class UScriptArray
             if (property != null)
                 Properties.Add(property);
             else
-                Log.Debug($"Failed to read array property of type {InnerType} at {Ar.Position}, index {i}");
+                Log.Debug("Failed to read array property of type {InnerType} at {Position}, index {Index}", InnerType, Ar.Position, i);
         }
     }
 

@@ -2,7 +2,6 @@ namespace CUE4Parse.UE4.Wwise.Objects;
 
 public sealed class AkFeedbackInfo
 {
-    public readonly uint Size;
     public readonly uint BusId;
 
     public readonly float FeedbackVolume;

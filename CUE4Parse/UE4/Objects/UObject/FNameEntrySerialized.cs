@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -19,11 +20,11 @@ namespace CUE4Parse.UE4.Objects.UObject
 #endif
         public FNameEntrySerialized(FArchive Ar)
         {
-            var bHasNameHashes = Ar.Ver >= EUnrealEngineObjectUE4Version.NAME_HASHES_SERIALIZED || Ar.Game is EGame.GAME_GearsOfWar4 or EGame.GAME_DaysGone;
+            var bHasNameHashes = Ar.Ver >= EUnrealEngineObjectUE4Version.NAME_HASHES_SERIALIZED || Ar.Game is GAME_GearsOfWar4 or GAME_DaysGone;
 
             Name = Ar.ReadFString().Trim();
 
-            if (Ar.Game == EGame.GAME_PlayerUnknownsBattlegrounds)
+            if (Ar.Game == GAME_PlayerUnknownsBattlegrounds)
             {
                 if (_pubgNameMap == null)
                 {
@@ -36,6 +37,12 @@ namespace CUE4Parse.UE4.Objects.UObject
                 if (Name != null && _pubgNameMap.TryGetValue(Name, out var name)) Name = name;
             }
 
+            if (Ar.Game < GAME_UE4_0)
+            {
+                _ = (Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag)
+                    ? (EObjectFlags)Ar.Read<long>()
+                    : Ar.Read<EObjectFlags>(); // flags
+            }
             if (bHasNameHashes)
             {
 #if NAME_HASHES

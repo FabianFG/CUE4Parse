@@ -14,7 +14,7 @@ public struct DetourPolyDetail
 
     public DetourPolyDetail(FArchive Ar)
     {
-        if (Ar.Game >= EGame.GAME_UE5_0)
+        if (Ar.Game >= GAME_UE5_0)
         {
             VertBase = Ar.Read<ushort>();
             TriBase = Ar.Read<ushort>();

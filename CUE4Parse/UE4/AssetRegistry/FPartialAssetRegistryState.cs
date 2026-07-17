@@ -1,12 +1,12 @@
 using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.AssetRegistry;
 
 public class FPartialAssetRegistryState
 {
+    
     public FPartialAssetData[] PreallocatedAssetDataBuffers = [];
 
     public FPartialAssetRegistryState() { }

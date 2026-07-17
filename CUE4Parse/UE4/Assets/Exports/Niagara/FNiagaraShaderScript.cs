@@ -17,11 +17,11 @@ public class FNiagaraShaderScript
     {
         var bCooked = Ar.ReadBoolean();
         NumPermutations = Ar.Read<int>();
-        if (Ar.Game is >= EGame.GAME_UE4_26 and < EGame.GAME_UE5_0)
+        if (Ar.Game is >= GAME_UE4_26 and < GAME_UE5_0)
         {
             ShaderStageToPermutation = Ar.ReadMap(Ar.Read<int>, Ar.Read<int>);
         }
-        if (Ar.Game >= EGame.GAME_UE5_2 || Ar.Game is EGame.GAME_DuetNightAbyss or EGame.GAME_HonorofKingsWorld)
+        if (Ar.Game >= GAME_UE5_2 || Ar.Game is GAME_DuetNightAbyss or GAME_HonorofKingsWorld)
         {
             BaseCompileHash = new FNiagaraCompileHash(Ar);
         }
