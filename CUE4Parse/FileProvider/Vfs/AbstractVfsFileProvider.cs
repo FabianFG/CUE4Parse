@@ -7,6 +7,7 @@ using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
 using CUE4Parse.GameTypes.ArcRaiders.Encryption.Aes;
 using CUE4Parse.GameTypes.BB3.Encryption.Aes;
+using CUE4Parse.GameTypes.ChasingKaleidoRIDER.Encryption;
 using CUE4Parse.GameTypes.DBD.Encryption.Aes;
 using CUE4Parse.GameTypes.DeltaForce.Encryption.Aes;
 using CUE4Parse.GameTypes.DragonSword.Encryption.Aes;
@@ -68,6 +69,7 @@ namespace CUE4Parse.FileProvider.Vfs
         public int LooseFileCount { get; protected set; }
 
         public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
+        public IAesVfsReader.CustomEncryptionWithOffsetDelegate? CustomEncryptionWithOffset { get; set; }
         public event EventHandler<int>? VfsRegistered;
         public event EventHandler<int>? VfsMounted;
         public event EventHandler<int>? VfsUnmounted;
@@ -105,6 +107,11 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_eBaseballProSpirit => ProSpiEncryption.ProSpiDecrypt,
                 GAME_SilverPalace => SilverPalaceAes.SilverPalaceDecrypt,
                 GAME_ValorantSource => ValorantSourceAes.ValorantSourceDecrypt,
+                _ => null
+            };
+            CustomEncryptionWithOffset = versions?.Game switch
+            {
+                GAME_ChasingKaleidoRIDER => ChasingKaleidoRIDERPakEncryption.Decrypt,
                 _ => null
             };
         }
@@ -275,13 +282,21 @@ namespace CUE4Parse.FileProvider.Vfs
             {
                 reader.CustomEncryption = CustomEncryption;
             }
+            if (reader is PakFileReader)
+            {
+                reader.CustomEncryptionWithOffset = CustomEncryptionWithOffset;
+            }
 
             VfsRegistered?.Invoke(reader, _unloadedVfs.Count);
         }
 
+        private bool CanMountReader(IAesVfsReader reader) =>
+            !reader.IsEncrypted || CustomEncryption != null ||
+            reader is AbstractAesVfsReader { CustomEncryptionWithOffset: not null };
+
         private void TryMountReader(IAesVfsReader reader, ref int countNewMounts)
         {
-            if ((reader.IsEncrypted && CustomEncryption == null) || !reader.HasDirectoryIndex)
+            if (!CanMountReader(reader) || !reader.HasDirectoryIndex)
                 return;
 
             try
@@ -306,7 +321,7 @@ namespace CUE4Parse.FileProvider.Vfs
             var countNewMounts = 0;
             var readers = _unloadedVfs.Keys.ToArray();
             Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader =>
-                (!reader.IsEncrypted || CustomEncryption != null) && reader.HasDirectoryIndex)));
+                CanMountReader(reader) && reader.HasDirectoryIndex)));
 
             foreach (var reader in readers)
             {
@@ -323,7 +338,7 @@ namespace CUE4Parse.FileProvider.Vfs
             var tasks = new LinkedList<Task>();
             var readers = _unloadedVfs.Keys.ToArray();
             Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader =>
-                (!reader.IsEncrypted || CustomEncryption != null) && reader.HasDirectoryIndex)));
+                CanMountReader(reader) && reader.HasDirectoryIndex)));
 
             foreach (var reader in readers)
             {
