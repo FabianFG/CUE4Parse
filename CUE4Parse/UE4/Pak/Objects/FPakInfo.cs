@@ -299,6 +299,8 @@ public partial class FPakInfo
             goto beforeCompression;
         }
 
+        if (Ar.Game is GAME_DeltaForce) CustomEncryptionData = new byte[1]; // It's going to be modified via reflection
+
         // New FPakInfo fields.
         EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid
         EncryptedIndex = Ar.Read<byte>() != 0;         // Do not replace by ReadFlag
