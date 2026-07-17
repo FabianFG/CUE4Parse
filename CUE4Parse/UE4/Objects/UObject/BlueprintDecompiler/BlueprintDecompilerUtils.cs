@@ -422,6 +422,53 @@ public static class BlueprintDecompilerUtils
                 type = $"{enumProperty.Enum.Name}";
                 break;
             }
+            case FMulticastInlineDelegateProperty multicastInlineDelegate:
+            {
+                var signature = multicastInlineDelegate.SignatureFunction;
+                var functionSignature = signature.Load<UFunction>();
+
+                string returnType = "void";
+                var parametersList = new List<string>();
+
+                foreach (var childProperty in functionSignature?.ChildProperties ?? [])
+                {
+                    if (childProperty is not FProperty property2 || !property2.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                        continue;
+
+                    var (_, variableType) = GetPropertyType(property2);
+                    if (variableType is null)
+                        continue;
+
+                    if (property2.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+                    {
+                        returnType = variableType;
+                        continue;
+                    }
+
+                    parametersList.Add($"{variableType} {property2.Name}");
+                }
+
+                foreach (var child in functionSignature?.Children ?? [])
+                {
+                    if (child?.Load() is not UProperty property2 || !property2.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                        continue;
+
+                    var (_, variableType) = GetPropertyType(property2);
+                    if (variableType is null)
+                        continue;
+
+                    if (property2.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+                    {
+                        returnType = variableType;
+                        continue;
+                    }
+
+                    parametersList.Add($"{variableType} {property2.Name}");
+                }
+
+                type = $"TMulticastInlineDelegate<{returnType}({string.Join(", ", parametersList)})>";
+                break;
+            }
             case FVerseDynamicProperty:
             {
                 type = "DynamicVerse";
@@ -911,7 +958,49 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.MulticastInlineDelegateProperty:
             {
-                type = "FMulticastScriptDelegate";
+                var signature = propertyTag.GetGenericValue<FMulticastInlineDelegateProperty>().SignatureFunction;
+                var functionSignature = signature.Load<UFunction>();
+
+                string returnType = "void";
+                var parametersList = new List<string>();
+
+                foreach (var childProperty in functionSignature?.ChildProperties ?? [])
+                {
+                    if (childProperty is not FProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                        continue;
+
+                    var (_, variableType) = GetPropertyType(property);
+                    if (variableType is null)
+                        continue;
+
+                    if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+                    {
+                        returnType = variableType;
+                        continue;
+                    }
+
+                    parametersList.Add($"{variableType} {property.Name}");
+                }
+
+                foreach (var child in functionSignature?.Children ?? [])
+                {
+                    if (child?.Load() is not UProperty property || !property.PropertyFlags.HasFlag(EPropertyFlags.Parm))
+                        continue;
+
+                    var (_, variableType) = GetPropertyType(property);
+                    if (variableType is null)
+                        continue;
+
+                    if (property.PropertyFlags.HasFlag(EPropertyFlags.ReturnParm))
+                    {
+                        returnType = variableType;
+                        continue;
+                    }
+
+                    parametersList.Add($"{variableType} {property.Name}");
+                }
+
+                type = $"TMulticastInlineDelegate<{returnType}({string.Join(", ", parametersList)})>";
                 return true;
             }
             case EPropertyType.VerseFunctionProperty:
