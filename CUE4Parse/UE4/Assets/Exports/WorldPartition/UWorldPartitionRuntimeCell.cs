@@ -1,7 +1,8 @@
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.WorldPartition;
 
@@ -16,7 +17,9 @@ public class UWorldPartitionRuntimeCell : UObject
     {
         base.Deserialize(Ar, validPos);
         bIsSpatiallyLoaded = GetOrDefault<bool>(nameof(bIsSpatiallyLoaded));
-        DataLayers = GetOrDefault<FDataLayerInstanceNames?>(nameof(DataLayers));
+        DataLayers = Ar.Game is not GAME_WutheringWaves
+            ? GetOrDefault<FDataLayerInstanceNames?>(nameof(DataLayers))
+            : new FDataLayerInstanceNames(new FStructFallback(this.Properties));
         CellDebugColor = GetOrDefault<FLinearColor>(nameof(CellDebugColor));
         RuntimeCellData = GetOrDefault<FPackageIndex>(nameof(RuntimeCellData));
     }
@@ -30,6 +33,10 @@ public class UWorldPartitionRuntimeLevelStreamingCell : UWorldPartitionRuntimeCe
     {
         base.Deserialize(Ar, validPos);
         LevelStreaming = GetOrDefault<FPackageIndex>(nameof(LevelStreaming));
+        if (Ar.Game is GAME_WutheringWaves && Ar.ReadBoolean())
+        {
+            CustomGameData = (new FScriptStruct(Ar, Ar.ReadFName().Text, null, ReadType.NORMAL), Ar.ReadFName(), Ar.ReadFString());
+        }
     }
 }
 

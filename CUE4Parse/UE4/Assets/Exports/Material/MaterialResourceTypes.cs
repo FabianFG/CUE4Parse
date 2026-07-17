@@ -750,6 +750,7 @@ public class FUniformExpressionSet
             UniformScalarParameters = Ar.ReadArray(() => new FMaterialScalarParameterInfo(Ar));
             UniformVectorParameters = Ar.ReadArray(() => new FMaterialVectorParameterInfo(Ar));
             Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
+            if (Ar.Game is GAME_WutheringWaves) Ar.Position += 16;
             UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
             UniformPreshaderData = new FMaterialPreshaderData(Ar);
         }

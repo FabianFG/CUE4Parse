@@ -1,4 +1,7 @@
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public static class PixelFormatUtils
@@ -202,6 +205,7 @@ public record FPixelFormatInfo(EPixelFormat UnrealFormat, string Name, int Block
     }
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EPixelFormat : byte
 {
     PF_Unknown              = 0,
