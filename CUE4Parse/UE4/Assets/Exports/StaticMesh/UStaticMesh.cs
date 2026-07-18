@@ -129,7 +129,7 @@ public class UStaticMesh : UObject
 
         switch (Ar.Game)
         {
-            case GAME_FateTrigger or GAME_GhostsofTabor or GAME_Aion2 or GAME_PUBGLite:
+            case GAME_FateTrigger or GAME_GhostsofTabor or GAME_Aion2:
                 Ar.Position += 4;
                 break;
             case GAME_TheFinals or GAME_ArcRaiders when Ar.ReadBoolean():
@@ -143,6 +143,9 @@ public class UStaticMesh : UObject
                     Ar.SkipFixedArray(16);
                 }
                 Ar.SkipFixedArray(12);
+                break;
+            case GAME_PUBGLite when Ar.ReadBoolean():
+                Ar.SkipMultipleBulkArrayData(2);
                 break;
         }
 
