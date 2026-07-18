@@ -3,6 +3,7 @@ using CUE4Parse.UE4.AssetRegistry.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.AssetRegistry.Objects;
 
@@ -10,6 +11,7 @@ public class FNameTableArchiveReader : FAssetRegistryArchive
 {
     public FNameTableArchiveReader(FArchive Ar, FAssetRegistryHeader header) : base(Ar, header)
     {
+        if (header.Version < FAssetRegistryVersionType.AddAssetRegistryState) return;
         var nameOffset = Ar.Read<long>();
         if (nameOffset > Ar.Length)
             throw new ArgumentOutOfRangeException(nameof(nameOffset), "Archive is corrupted");
@@ -40,6 +42,7 @@ public class FNameTableArchiveReader : FAssetRegistryArchive
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override FName ReadFName()
     {
+        if (Header.Version < FAssetRegistryVersionType.AddAssetRegistryState) return ReadFString();
         var nameIndex = baseArchive.Read<int>();
         var number = baseArchive.Read<int>();
 #if !NO_FNAME_VALIDATION

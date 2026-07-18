@@ -69,9 +69,9 @@ public static class SoundDecoder
                 input = compressedData.Value.Data;
             }
 
-            if (soundWave.RawData?.Data != null) // is this even a thing?
+            if (soundWave.RawData?.Data != null)
             {
-                audioFormat = string.Empty;
+                audioFormat = "WEM";
                 input = soundWave.RawData.Data;
             }
         }
@@ -110,36 +110,48 @@ public static class SoundDecoder
 
     public static byte[]? Decompress(bool shouldDecompress, ref string audioFormat, byte[]? input)
     {
-        if (input == null) return null;
-        if (!shouldDecompress) return input;
-        if (audioFormat.Equals("ADPCM", StringComparison.OrdinalIgnoreCase) || audioFormat.Equals("PCM", StringComparison.OrdinalIgnoreCase))
-        {
-            using var archive = new FByteArchive("WhoDoesntLoveCats", input);
-            switch (ADPCMDecoder.GetAudioFormat(archive))
-            {
-                case EAudioFormat.WAVE_FORMAT_PCM:
-                    audioFormat = "WAV";
-                    return input;
-                case EAudioFormat.WAVE_FORMAT_ADPCM:
-                    return input;
-            }
-        }
-        else if (audioFormat.Equals("BINKA", StringComparison.OrdinalIgnoreCase))
-            return input;
-        else if (audioFormat.Equals("RADA", StringComparison.OrdinalIgnoreCase))
-            return input;
-        else if (audioFormat.Equals("OPUS", StringComparison.OrdinalIgnoreCase))
-            return input;
-        else if (audioFormat.Equals("WEM", StringComparison.OrdinalIgnoreCase))
-            return input;
-        else if (audioFormat.Equals("AT9", StringComparison.OrdinalIgnoreCase))
-            return input;
-        else if (audioFormat.IndexOf("OGG", StringComparison.OrdinalIgnoreCase) > -1)
-        {
-            audioFormat = "OGG";
-            return input;
-        }
+        if (input == null)
+            return null;
 
-        return null;
+        if (!shouldDecompress)
+            return input;
+
+        switch (audioFormat.ToUpperInvariant())
+        {
+            case "PCM":
+            case "ADPCM":
+            {
+                using var archive = new FByteArchive(nameof(SoundDecoder), input);
+
+                switch (ADPCMDecoder.GetAudioFormat(archive))
+                {
+                    case EAudioFormat.WAVE_FORMAT_PCM:
+                        audioFormat = "WAV";
+                        return input;
+
+                    case EAudioFormat.WAVE_FORMAT_ADPCM:
+                        return input;
+
+                    default:
+                        return null;
+                }
+            }
+
+            case "BINKA":
+            case "RADA":
+            case "OPUS":
+            case "WEM":
+            case "AT9":
+                return input;
+
+            default:
+                if (audioFormat.Contains("OGG", StringComparison.OrdinalIgnoreCase))
+                {
+                    audioFormat = "OGG";
+                    return input;
+                }
+
+                return null;
+        }
     }
 }

@@ -27,7 +27,7 @@ public class FAssetRegistryState
         var version = header.Version;
         switch (version)
         {
-            case < FAssetRegistryVersionType.AddAssetRegistryState:
+            case < FAssetRegistryVersionType.HardSoftDependencies:
                 Log.Warning("Cannot read registry state before {Version}", version);
                 break;
             case < FAssetRegistryVersionType.FixedTags:
