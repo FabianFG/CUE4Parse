@@ -346,6 +346,7 @@ public class FPakEntry : VfsEntry
                 {
                     0 => CompressionMethod.None,
                     1 => CompressionMethod.Zlib,
+                    6 => CompressionMethod.Zstd,
                     7 => CompressionMethod.Oodle,
                     152 => CompressionMethod.Zstd, // ZSTD using `mini_obbzsdic_obb` dictionary
                     _ => CompressionMethod.Unknown
