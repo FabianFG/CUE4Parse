@@ -958,6 +958,13 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.MulticastInlineDelegateProperty:
             {
+                if (propertyTag.Tag?.GenericValue is not FMulticastInlineDelegateProperty)
+                {
+                    Log.Warning("Property '{name}' is marked as '{propertyType}' but its GenericValue is '{genericValue}'",
+                        propertyTag.Name, propertyType.ToString(), propertyTag.Tag?.GenericValue?.GetType().Name);
+                    return false;
+                }
+
                 var signature = propertyTag.GetGenericValue<FMulticastInlineDelegateProperty>().SignatureFunction;
                 var functionSignature = signature.Load<UFunction>();
 
