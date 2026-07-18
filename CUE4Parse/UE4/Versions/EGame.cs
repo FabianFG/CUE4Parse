@@ -49,6 +49,7 @@ public enum EGame : uint
         GAME_DragonQuestXI = GAME_UE4_18 + 6,
         GAME_CodeVein = GAME_UE4_18 + 7,
         GAME_PUBGMobile = GAME_UE4_18 + 8,
+        GAME_PUBGLite = GAME_UE4_18 + 9,
     GAME_UE4_19 = GameUtils.GameUe4Base + (19 << 16),
         GAME_Paragon = GAME_UE4_19 + 1,
         GAME_Ashen = GAME_UE4_19 + 2,

@@ -69,7 +69,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                 or GAME_Snowbreak or GAME_TorchlightInfinite or GAME_TowerOfFantasy
                 or GAME_TheDivisionResurgence or GAME_QQ or GAME_DreamStar
                 or GAME_EtheriaRestart or GAME_DeadByDaylight_Old or GAME_WorldofJadeDynasty
-                or GAME_EmbersofTheUncrowned or GAME_ValorantSource or GAME_PUBGMobile => true,
+                or GAME_EmbersofTheUncrowned or GAME_ValorantSource or GAME_PUBGMobile
+                or GAME_PUBGLite => true,
             _ => false
         };
     }
@@ -90,7 +91,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
         var alignment = pakEntry.IsEncrypted ? Aes.ALIGN : 1;
 
-        if (Game is GAME_PUBGMobile) // There's so many changes I'll just leave it here
+        if (Game is GAME_PUBGMobile or GAME_PUBGLite) // There's so many changes I'll just leave it here
             return PUBGMobileExtract(reader, pakEntry, header);
 
         long offset = 0;
@@ -324,7 +325,7 @@ public partial class PakFileReader : AbstractAesVfsReader
             case GAME_DragonQuestXI:
                 DQXIReadIndexLegacy(pathComparer, index);
                 return;
-            case GAME_PUBGMobile:
+            case GAME_PUBGMobile or GAME_PUBGLite:
                 PUBGMobileReadIndex(pathComparer, index);
                 return;
         }

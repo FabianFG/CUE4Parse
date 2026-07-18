@@ -111,7 +111,7 @@ public partial class FPakInfo
             return;
         }
 
-        if (Ar.Game is GAME_PUBGMobile)
+        if (Ar.Game is GAME_PUBGMobile or GAME_PUBGLite)
         {
             EncryptionKeyGuid = default;
             EncryptedIndex = (Ar.Read<byte>() ^ 0x01) != 0;
@@ -526,7 +526,7 @@ public partial class FPakInfo
     {
         Size = sizeof(int) * 2 + sizeof(long) * 2 + 20 + /* new fields */ 1 + 16, // sizeof(FGuid)
         // Just to be sure
-        SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile
+        SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
         Size8_1 = Size + 32,
         Size8_2 = Size8_1 + 32,
         Size8_3 = Size8_2 + 32,
@@ -607,7 +607,7 @@ public partial class FPakInfo
                 GAME_DeadByDaylight or GAME_DeadByDaylight_Old => [OffsetsToTry.SizeDbD],
                 GAME_Farlight84 => [OffsetsToTry.SizeFarlight],
                 GAME_QQ or GAME_DreamStar => [OffsetsToTry.SizeDreamStar, OffsetsToTry.SizeQQ],
-                GAME_GameForPeace or GAME_DragonQuestXI or GAME_PUBGMobile => [OffsetsToTry.SizePUBG],
+                GAME_GameForPeace or GAME_DragonQuestXI or GAME_PUBGMobile or GAME_PUBGLite => [OffsetsToTry.SizePUBG],
                 GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                 GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                 GAME_RacingMaster => [OffsetsToTry.SizeRacingMaster],
@@ -665,7 +665,8 @@ public partial class FPakInfo
                     info.CustomEncryptionData = Ar.Game switch
                     {
                         GAME_ValorantSource => ValorantSourceRSA.DerivePakKey(Ar, info.CustomEncryptionData),
-                        GAME_PUBGMobile => PUBGMobileRSA.DerivePakKey(Ar),
+                        GAME_PUBGMobile => PUBGMobileRSA.DeriveGlobalPakKey(Ar),
+                        GAME_PUBGLite => PUBGMobileRSA.DeriveLitePakKey(Ar),
                         _ => info.CustomEncryptionData
                     };
 

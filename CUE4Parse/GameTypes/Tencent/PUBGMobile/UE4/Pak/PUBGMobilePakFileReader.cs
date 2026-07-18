@@ -1,4 +1,3 @@
-using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.SM4;
@@ -9,7 +8,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
-using OffiUtils;
 using ZstdSharp;
 using UECompression = CUE4Parse.Compression.Compression;
 
@@ -30,11 +28,7 @@ public partial class PakFileReader
         {
             // The entry uses the same field order as Game for Peace
             // but PUBG Mobile also stores per-entry encryption method and key id
-            entries[i] = new FPUBGMobilePakEntry(this, index)
-            {
-                EncryptionMethod = index.Read<int>(),
-                EncryptionKeyId = index.Read<uint>()
-            };
+            entries[i] = new FPUBGMobilePakEntry(this, index);
         }
 
         var directoryCount64 = index.Read<long>();
@@ -77,7 +71,7 @@ public partial class PakFileReader
             InitializePUBGMobileZstdDictionary();
     }
 
-    private byte[] PUBGMobileExtract(FArchive reader, FPakEntry entry, FByteBulkDataHeader? header)
+    private byte[] PUBGMobileExtract(FArchive Ar, FPakEntry entry, FByteBulkDataHeader? header)
     {
         if (entry is not FPUBGMobilePakEntry pakEntry)
             throw new ParserException("Invalid PUBG Mobile pak entry type");
@@ -95,7 +89,7 @@ public partial class PakFileReader
             var readOffset = offset & ~((long) alignment - 1);
             var dataOffset = checked((int) (offset - readOffset));
             var readSize = checked((dataOffset + requestedSize).Align(alignment));
-            var data = reader.ReadBytesAt(pakEntry.Offset + readOffset, readSize);
+            var data = Ar.ReadBytesAt(pakEntry.Offset + readOffset, readSize);
             if (pakEntry.IsEncrypted)
                 data = PUBGMobileSM4.Decrypt(data, 0, data.Length, pakEntry.Path, pakEntry.EncryptionMethod);
 
@@ -105,7 +99,7 @@ public partial class PakFileReader
 
             return pakEntry.Extension switch
             {
-                "lua" => PUBGMobileLua.DecryptLuaBytecode(pakEntry.Name, output),
+                "lua" => PUBGMobileLua.DecryptLuaBytecode(pakEntry.Name, output, Ar.Game),
                 _ => output
             };
         }
@@ -126,14 +120,15 @@ public partial class PakFileReader
         for (var blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
         {
             // Salt encrypted PUBG Mobile entries store compressed blocks in a shuffled order to make life harder
-            var serializedBlockIndex = pakEntry.EncryptionMethod is >= (int) EPUBGMobileEncryptionMethod.PathKeySM4Min and <= (int) EPUBGMobileEncryptionMethod.PathKeySM4Max
+            var serializedBlockIndex = pakEntry.EncryptionMethod is EPUBGMobileEncryptionMethod.LiteSaltSM4 or
+                    >= EPUBGMobileEncryptionMethod.SaltSM4Min and <= EPUBGMobileEncryptionMethod.SaltSM4Max
                 ? PUBGUnshuffleBlockIndex(blockIndex, pakEntry.CompressionBlocks.Length)
                 : blockIndex;
 
             var block = pakEntry.CompressionBlocks[serializedBlockIndex];
             var compressedSize = checked((int) block.Size);
             var readSize = compressedSize.Align(alignment);
-            var compressed = reader.ReadBytesAt(block.CompressedStart, readSize);
+            var compressed = Ar.ReadBytesAt(block.CompressedStart, readSize);
             if (pakEntry.IsEncrypted)
                 compressed = PUBGMobileSM4.Decrypt(compressed, 0, compressed.Length, pakEntry.Path, pakEntry.EncryptionMethod);
 
@@ -155,7 +150,7 @@ public partial class PakFileReader
             }
             else
             {
-                UECompression.Decompress(compressed.AsSpan(0, compressedSize), destination, pakEntry.CompressionMethod, reader);
+                UECompression.Decompress(compressed.AsSpan(0, compressedSize), destination, pakEntry.CompressionMethod, Ar);
             }
         }
 
@@ -167,7 +162,7 @@ public partial class PakFileReader
 
         return pakEntry.Extension switch
         {
-            "lua" => PUBGMobileLua.DecryptLuaBytecode(pakEntry.Name, uncompressedOutput),
+            "lua" => PUBGMobileLua.DecryptLuaBytecode(pakEntry.Name, uncompressedOutput, Ar.Game),
             _ => uncompressedOutput
         };
     }

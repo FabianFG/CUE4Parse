@@ -71,10 +71,21 @@ public static class PUBGMobileLua
         [29] = 12  // SELF
     };
 
-    public static byte[] DecryptLuaBytecode(string name, byte[] encryptedData)
+    public static byte[] DecryptLuaBytecode(string name, byte[] encryptedData, EGame game)
     {
         if (!FLuaReader.IsValidLuaMagic(encryptedData))
             return encryptedData;
+
+        if (game is GAME_PUBGLite)
+        {
+            using var liteAr = new FLua53Archive(name, encryptedData);
+            using var msOutLite = new MemoryStream();
+            using var writerLite = new FLua53ArchiveWriter(msOutLite);
+            FLuaWriter53.Write(writerLite, FLua53Reader.ReadLuaBytecode(liteAr, _opcodeMapping));
+            writerLite.Flush();
+
+            return msOutLite.ToArray();
+        }
 
         using var Ar = new FPUBGMobileLuaArchive(name, encryptedData);
         var lua = new LuaBytecode

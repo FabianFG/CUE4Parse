@@ -105,7 +105,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_eBaseballProSpirit => ProSpiEncryption.ProSpiDecrypt,
                 GAME_SilverPalace => SilverPalaceAes.SilverPalaceDecrypt,
                 GAME_ValorantSource => ValorantSourceAes.ValorantSourceDecrypt,
-                GAME_PUBGMobile => PUBGMobileAes.PUBGMobileDecrypt,
+                GAME_PUBGMobile or GAME_PUBGLite => PUBGMobileAes.PUBGMobileDecrypt,
                 _ => null
             };
         }

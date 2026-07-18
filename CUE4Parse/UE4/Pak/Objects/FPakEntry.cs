@@ -334,14 +334,14 @@ public class FPakEntry : VfsEntry
     {
         var startOffset = Ar.Position;
 
-        if (game is GAME_GameForPeace or GAME_PUBGMobile)
+        if (game is GAME_GameForPeace or GAME_PUBGMobile or GAME_PUBGLite)
         {
             Ar.Position += 20;
             Offset = Ar.Read<long>();
             UncompressedSize = Ar.Read<long>();
             var serializedCompressionMethod = Ar.Read<int>();
             if (game is GAME_PUBGMobile) CustomData = serializedCompressionMethod;
-            CompressionMethod = game is GAME_PUBGMobile
+            CompressionMethod = game is GAME_PUBGMobile or GAME_PUBGLite
                 ? serializedCompressionMethod switch
                 {
                     0 => CompressionMethod.None,
@@ -361,6 +361,6 @@ public class FPakEntry : VfsEntry
             Flags = (uint) Ar.ReadByte();
         }
 
-        StructSize = game is GAME_PUBGMobile ? 0 : (int) (Ar.Position - startOffset);
+        StructSize = game is GAME_PUBGMobile or GAME_PUBGLite ? 0 : (int) (Ar.Position - startOffset);
     }
 }
