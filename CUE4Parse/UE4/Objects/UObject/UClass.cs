@@ -138,7 +138,7 @@ public class UClass : UStruct
                 continue;
 
             var value = variableValue is null ? string.Empty : $" = {variableValue}";
-            variables.TryAdd($"{variableType} {property.Name.Text}{value};", property.GetAccessMode());
+            variables.TryAdd($"{variableType} {property.Name.Text.Replace(" ", "")}{value};", property.GetAccessMode());
         }
 
         foreach (var group in variables.GroupBy(pair => pair.Value))
