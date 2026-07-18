@@ -11,7 +11,7 @@ public static unsafe class CUE4ParseNatives
     public static nint LibraryHandle { get; }
     public static bool IsInitialized => LibraryHandle != nint.Zero;
 
-    private static readonly delegate* unmanaged<byte*, bool> _isFeatureAvailableFunctionPointer;
+    private static readonly delegate* unmanaged<byte*, int> _isFeatureAvailableFunctionPointer;
 
     static CUE4ParseNatives()
     {
@@ -32,7 +32,7 @@ public static unsafe class CUE4ParseNatives
             return;
         }
 
-        _isFeatureAvailableFunctionPointer = (delegate* unmanaged<byte*, bool>)isFeatureAvailableAddress;
+        _isFeatureAvailableFunctionPointer = (delegate* unmanaged<byte*, int>)isFeatureAvailableAddress;
         LibraryHandle = handle;
     }
 
@@ -43,7 +43,7 @@ public static unsafe class CUE4ParseNatives
 
         fixed (byte* featureNamePtr = utf8FeatureName)
         {
-            return _isFeatureAvailableFunctionPointer(featureNamePtr);
+            return _isFeatureAvailableFunctionPointer(featureNamePtr) != 0;
         }
     }
 
@@ -54,9 +54,11 @@ public static unsafe class CUE4ParseNatives
 
         var utf8Chars = Encoding.UTF8.GetByteCount(featureName) + 1;
         Span<byte> utf8FeatureName = stackalloc byte[utf8Chars];
-        if (!Encoding.UTF8.TryGetBytes(featureName, utf8FeatureName, out _))
+        if (!Encoding.UTF8.TryGetBytes(featureName, utf8FeatureName[..^1], out var written) ||
+            written != utf8Chars - 1)
             return false;
 
+        utf8FeatureName[^1] = 0;
         return IsFeatureAvailable(utf8FeatureName);
     }
 }
