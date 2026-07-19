@@ -7,6 +7,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
+using CUE4Parse.GameTypes.ChasingKaleidoRIDER.Encryption;
 using CUE4Parse.GameTypes.LordOfMysteries.UE4.Lua;
 using CUE4Parse.GameTypes.Netmarble.NiNoKuni.UE4.Encryption;
 using CUE4Parse.GameTypes.NFS.Mobile.Lua;
@@ -117,6 +118,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                     return ABIExtract(reader, pakEntry);
                 case GAME_eBaseballProSpirit:
                     return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
+                case GAME_ChasingKaleidoRIDER:
+                    return CKRExtract(reader, pakEntry, header);
             }
 
             var compressionBlockSize = (int) pakEntry.CompressionBlockSize;
@@ -203,6 +206,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                 return ABIExtract(reader, pakEntry);
             case GAME_eBaseballProSpirit:
                 return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
+            case GAME_ChasingKaleidoRIDER:
+                    return CKRExtract(reader, pakEntry, header);
         }
 
         // Pak Entry is written before the file data,
@@ -345,7 +350,12 @@ public partial class PakFileReader : AbstractAesVfsReader
     {
         // Prepare primary index and decrypt if necessary
         Ar.Position = Info.IndexOffset;
-        using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecryptIndex((int) Info.IndexSize));
+        var indexData = Ar.Game switch
+        {
+            GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt(Ar.ReadBytes((int) Info.IndexSize), 0, (int) Info.IndexSize, 0, Info.IndexOffset, this),
+            _ => ReadAndDecryptIndex((int) Info.IndexSize)
+        };
+        using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", indexData, Versions);
 
         var fileCount = 0;
         EncryptedFileCount = 0;
@@ -411,6 +421,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         var data = Ar.Game switch
         {
             GAME_Rennsport => RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true),
+            GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, 0, directoryIndexOffset, this),
             _ => ReadAndDecryptIndex((int) directoryIndexSize),
         };
 
