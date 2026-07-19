@@ -27,7 +27,5 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public void MountTo(FileProviderDictionary files, StringComparer pathComparer, FAesKey? key, EventHandler<int>? vfsMounted = null);
 
         public delegate byte[] CustomEncryptionDelegate(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader);
-        public delegate byte[] CustomEncryptionWithOffsetDelegate(byte[] bytes, int beginOffset, int count, bool isIndex,
-            long absoluteOffset, long encryptionBaseOffset, IAesVfsReader reader);
     }
 }

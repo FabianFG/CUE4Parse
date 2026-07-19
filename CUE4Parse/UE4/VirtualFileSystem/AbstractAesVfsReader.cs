@@ -12,12 +12,6 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
 {
     public abstract long Length { get; set; }
     public IAesVfsReader.CustomEncryptionDelegate? CustomEncryption { get; set; }
-    /// <summary>
-    /// Custom encryption delegate for ciphers that derive their state from container offsets.
-    /// The absolute offset identifies the first requested byte, while the encryption base identifies
-    /// the start of its continuous cipher stream.
-    /// </summary>
-    public IAesVfsReader.CustomEncryptionWithOffsetDelegate? CustomEncryptionWithOffset { get; set; }
     public FAesKey? AesKey { get; set; }
     public CompressionMethod[] CompressionMethods { get; set; }
 
@@ -36,22 +30,16 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     public bool TestAesKey(FAesKey key) => !IsEncrypted || TestAesKey(MountPointCheckBytes(), key);
 
     public abstract byte[] MountPointCheckBytes();
-    protected virtual long MountPointCheckOffset => 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TestAesKey(byte[] bytes, FAesKey key)
     {
         byte[] result;
-        if (CustomEncryptionWithOffset != null || CustomEncryption != null)
+        if (CustomEncryption != null)
         {
             var backupKey = AesKey;
             AesKey = key;
-            try
-            {
-                result = CustomEncryptionWithOffset != null
-                    ? CustomEncryptionWithOffset(bytes, 0, bytes.Length, true, MountPointCheckOffset, MountPointCheckOffset, this)
-                    : CustomEncryption!(bytes, 0, bytes.Length, true, this);
-            }
+            try { result = CustomEncryption(bytes, 0, bytes.Length, true, this); }
             finally { AesKey = backupKey; }
         }
         else
@@ -85,18 +73,9 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count) =>
         DecryptIfEncrypted(bytes, beginOffset, count, IsEncrypted);
 
-    protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted, bool isIndex = false) =>
-        DecryptIfEncryptedAtOffset(bytes, isEncrypted, isIndex, 0, 0);
-
-    private byte[] DecryptIfEncryptedAtOffset(byte[] bytes, bool isEncrypted, bool isIndex, long absoluteOffset,
-        long encryptionBaseOffset)
+    protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted, bool isIndex = false)
     {
         if (!isEncrypted) return bytes;
-        if (CustomEncryptionWithOffset != null)
-        {
-            return CustomEncryptionWithOffset(bytes, 0, bytes.Length, isIndex, absoluteOffset,
-                encryptionBaseOffset, this);
-        }
         if (CustomEncryption != null)
         {
             return CustomEncryption(bytes, 0, bytes.Length, isIndex, this);
@@ -105,19 +84,9 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
         return Decrypt(bytes, AesKey);
     }
 
-    protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted,
-        bool bypassMountPointCheck = false, bool isIndex = false) =>
-        DecryptIfEncryptedAtOffset(bytes, beginOffset, count, isEncrypted, bypassMountPointCheck, isIndex, 0, 0);
-
-    private byte[] DecryptIfEncryptedAtOffset(byte[] bytes, int beginOffset, int count, bool isEncrypted,
-        bool bypassMountPointCheck, bool isIndex, long absoluteOffset, long encryptionBaseOffset)
+    protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted, bool bypassMountPointCheck = false, bool isIndex = false)
     {
         if (!isEncrypted) return bytes;
-        if (CustomEncryptionWithOffset != null)
-        {
-            return CustomEncryptionWithOffset(bytes, beginOffset, count, isIndex, absoluteOffset,
-                encryptionBaseOffset, this);
-        }
         if (CustomEncryption != null)
         {
             return CustomEncryption(bytes, beginOffset, count, isIndex, this);
@@ -134,15 +103,10 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected byte[] ReadAndDecrypt(int length, FArchive reader, bool isEncrypted) =>
-        ReadAndDecryptAt(reader.Position, length, reader, isEncrypted);
+        DecryptIfEncrypted(reader.ReadBytes(length), isEncrypted);
 
     protected byte[] ReadAndDecryptAt(long position, int length, FArchive reader, bool isEncrypted) =>
-        DecryptIfEncryptedAtOffset(reader.ReadBytesAt(position, length), isEncrypted, false, position, position);
-
-    protected byte[] ReadAndDecryptAtWithBase(long position, int length, FArchive reader, bool isEncrypted,
-        long encryptionBaseOffset) =>
-        DecryptIfEncryptedAtOffset(reader.ReadBytesAt(position, length), isEncrypted, false, position,
-            encryptionBaseOffset);
+        DecryptIfEncrypted(reader.ReadBytesAt(position, length), isEncrypted);
 
     protected byte[] ReadAndDecryptAt(byte[] buffer, long position, int length, FArchive reader, bool isEncrypted)
     {
@@ -150,25 +114,10 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
         return DecryptIfEncrypted(buffer, isEncrypted);
     }
 
-    protected byte[] ReadAndDecryptAtWithBase(byte[] buffer, long position, int length, FArchive reader,
-        bool isEncrypted, long encryptionBaseOffset)
-    {
-        reader.ReadAt(position, buffer, 0, length);
-        if (isEncrypted && CustomEncryptionWithOffset != null)
-        {
-            return DecryptIfEncryptedAtOffset(buffer, 0, length, true, false, false, position,
-                encryptionBaseOffset);
-        }
-        return DecryptIfEncryptedAtOffset(buffer, isEncrypted, false, position, encryptionBaseOffset);
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected byte[] ReadAndDecryptIndex(int length, FArchive reader, bool isEncrypted)
-    {
-        var position = reader.Position;
-        return DecryptIfEncryptedAtOffset(reader.ReadBytes(length), isEncrypted, true, position, position);
-    }
+    protected byte[] ReadAndDecryptIndex(int length, FArchive reader, bool isEncrypted) =>
+        DecryptIfEncrypted(reader.ReadBytes(length), isEncrypted, true);
 
     protected byte[] ReadAndDecryptIndexAt(long position, int length, FArchive reader, bool isEncrypted) =>
-        DecryptIfEncryptedAtOffset(reader.ReadBytesAt(position, length), isEncrypted, true, position, position);
+        DecryptIfEncrypted(reader.ReadBytesAt(position, length), isEncrypted, true);
 }

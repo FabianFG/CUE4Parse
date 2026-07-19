@@ -7,6 +7,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
+using CUE4Parse.GameTypes.ChasingKaleidoRIDER.Encryption;
 using CUE4Parse.GameTypes.LordOfMysteries.UE4.Lua;
 using CUE4Parse.GameTypes.Netmarble.NiNoKuni.UE4.Encryption;
 using CUE4Parse.GameTypes.NFS.Mobile.Lua;
@@ -90,7 +91,6 @@ public partial class PakFileReader : AbstractAesVfsReader
         // If this reader is used as a concurrent reader create a clone of the main reader to provide thread safety
         var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
         var alignment = pakEntry.IsEncrypted ? Aes.ALIGN : 1;
-        var encryptionBaseOffset = pakEntry.Offset + pakEntry.StructSize;
 
         long offset = 0;
         var requestedSize = (int) pakEntry.UncompressedSize;
@@ -118,6 +118,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                     return ABIExtract(reader, pakEntry);
                 case GAME_eBaseballProSpirit:
                     return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
+                case GAME_ChasingKaleidoRIDER:
+                    return CKRExtract(reader, pakEntry, header);
             }
 
             var compressionBlockSize = (int) pakEntry.CompressionBlockSize;
@@ -149,8 +151,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                     compressedBuffer = new byte[srcSize];
                 }
                 // Read the compressed block
-                var compressed = ReadAndDecryptAtWithBase(compressedBuffer, block.CompressedStart, srcSize, reader,
-                    pakEntry.IsEncrypted, encryptionBaseOffset);
+                var compressed = ReadAndDecryptAt(compressedBuffer, block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
                 // Calculate the uncompressed size,
                 // its either just the compression block size,
                 // or if it's the last block, it's the remaining data size
@@ -205,6 +206,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                 return ABIExtract(reader, pakEntry);
             case GAME_eBaseballProSpirit:
                 return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
+            case GAME_ChasingKaleidoRIDER:
+                    return CKRExtract(reader, pakEntry, header);
         }
 
         // Pak Entry is written before the file data,
@@ -214,8 +217,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         var readOffset = offset & ~((long) alignment - 1);
         var dataOffset = offset - readOffset;
         var readSize = (dataOffset + requestedSize).Align(alignment);
-        var data = ReadAndDecryptAtWithBase(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize,
-            reader, pakEntry.IsEncrypted, encryptionBaseOffset);
+        var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize, reader, pakEntry.IsEncrypted);
 
         switch (Ar.Game)
         {
@@ -348,7 +350,12 @@ public partial class PakFileReader : AbstractAesVfsReader
     {
         // Prepare primary index and decrypt if necessary
         Ar.Position = Info.IndexOffset;
-        using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecryptIndex((int) Info.IndexSize));
+        var indexData = Ar.Game switch
+        {
+            GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt(Ar.ReadBytes((int) Info.IndexSize), 0, (int) Info.IndexSize, 0, Info.IndexOffset, this),
+            _ => ReadAndDecryptIndex((int) Info.IndexSize)
+        };
+        using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", indexData, Versions);
 
         var fileCount = 0;
         EncryptedFileCount = 0;
@@ -414,6 +421,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         var data = Ar.Game switch
         {
             GAME_Rennsport => RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true),
+            GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, 0, directoryIndexOffset, this),
             _ => ReadAndDecryptIndex((int) directoryIndexSize),
         };
 
@@ -619,8 +627,6 @@ public partial class PakFileReader : AbstractAesVfsReader
     protected override byte[] ReadAndDecrypt(int length) => ReadAndDecrypt(length, Ar, IsEncrypted);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override byte[] ReadAndDecryptIndex(int length) => ReadAndDecryptIndex(length, Ar, IsEncrypted);
-
-    protected override long MountPointCheckOffset => Info.IndexOffset;
 
     public override byte[] MountPointCheckBytes()
     {
