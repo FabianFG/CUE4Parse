@@ -22,6 +22,7 @@
     <PackageReference Include="K4os.Compression.LZ4.Streams" />
     <PackageReference Include="SubstreamSharp" />
     <PackageReference Include="System.IO.Hashing" />
+    <PackageReference Include="System.Numerics.Tensors"/>
     <PackageReference Include="VGAudio" />
     <PackageReference Include="Zlib-ng.NET" />
     <PackageReference Include="ZstdSharp.Port" />
