@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.UDWN.Lua;
 
@@ -30,10 +31,7 @@ public class FUndawnLuaArchive(string name, byte[] data, VersionContainer? versi
             return string.Empty;
 
         var buffer = ReadBytes(length);
-        for (int i = 0; i < length; i++)
-        {
-            buffer[i] ^= _stringKey[i % _stringKey.Length];
-        }
+        TensorUtils.Xor(buffer, _stringKey);
 
         return Encoding.UTF8.GetString(buffer);
     }
@@ -98,8 +96,7 @@ public class UndawnLua
         if (!FLuaReader.IsValidLuaMagic(encryptedData))
             throw new InvalidDataException("Failed to decrypt. Expected Lua magic");
 
-        for (int i = 4; i < encryptedData.Length; i++)
-            encryptedData[i] ^= XorKey; // Part of the header isn't encrypted but I don't care
+        TensorUtils.Xor(encryptedData.AsSpan()[4..], XorKey); // Part of the header isn't encrypted but I don't care
 
         using var Ar = new FUndawnLuaArchive(name, encryptedData, null);
         var lua = new LuaBytecode

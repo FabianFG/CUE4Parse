@@ -1,10 +1,6 @@
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Pak;
-using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.VirtualFileSystem;
+using CUE4Parse.Utils;
 using AesProvider = CUE4Parse.Encryption.Aes.Aes;
 
 namespace CUE4Parse.GameTypes.DFHO.Encryption.Aes;
@@ -19,34 +15,18 @@ public static class DeltaForceAes
             throw new ArgumentException("count must be a multiple of 16");
         if (reader.AesKey == null)
             throw new NullReferenceException("reader.AesKey");
+        if ((reader as PakFileReader)?.Info?.CustomEncryptionData is not { Length: 2 } xorData)
+            throw new NullReferenceException("reader.Info");
 
         var output = AesProvider.Decrypt(bytes, beginOffset, count, reader.AesKey);
 
-        var pakInfo = ((reader as PakFileReader)?.Info) ?? throw new NullReferenceException("reader.Info");
-
-        if (pakInfo.CustomEncryptionData.Length == 1)
+        if (isIndex && xorData[1] == 0)
         {
-            if (!isIndex) throw new ParserException($"Can't decrypt pak {reader.Name} without xor value");
-
-            var field = typeof(FPakInfo).GetProperty(nameof(pakInfo.CustomEncryptionData), BindingFlags.Instance | BindingFlags.Public);
-
-            var xorValue = output[0];
-            if (field is not null && output.Take(4).All(x => x == xorValue))
-            {
-                field.SetValue(pakInfo, Enumerable.Repeat(xorValue, 8).ToArray());
-            }
-            else
-            {
-                throw new ParserException($"Can't find correct xor value to decrypt pak {reader.Name}");
-            }
+            xorData[0] = output[0];
+            xorData[1] = 1;
         }
 
-        var xorKey = BitConverter.ToUInt64(pakInfo.CustomEncryptionData.AsSpan(..8));
-        var span = MemoryMarshal.CreateSpan(ref Unsafe.As<byte, ulong>(ref output[0]), count >> 3);
-        for (var i = 0; i < span.Length; i++)
-        {
-            span[i] ^= xorKey;
-        }
+        TensorUtils.Xor(output, xorData[0]);
 
         return output;
     }

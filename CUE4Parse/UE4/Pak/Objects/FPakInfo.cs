@@ -299,7 +299,7 @@ public partial class FPakInfo
             goto beforeCompression;
         }
 
-        if (Ar.Game is GAME_DeltaForce) CustomEncryptionData = new byte[1]; // It's going to be modified via reflection
+        if (Ar.Game is GAME_DeltaForce) CustomEncryptionData = new byte[2]; // for storing xor value
 
         // New FPakInfo fields.
         EncryptionKeyGuid = Ar.Read<FGuid>();          // PakFile_Version_EncryptionKeyGuid

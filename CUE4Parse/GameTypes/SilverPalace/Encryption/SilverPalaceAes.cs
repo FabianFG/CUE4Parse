@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Text;
 using Blake3;
 using CUE4Parse.UE4.VirtualFileSystem;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.SilverPalace.Encryption;
 
@@ -49,8 +50,7 @@ public static class SilverPalaceAes
     private static void DecryptCustomAes(Span<byte> data, Span<byte> key)
     {
         DecryptData(data, key);
-        for (int i = 0; i < data.Length; i++)
-            data[i] ^= XorKey[i & 0xF];
+        TensorUtils.Xor(data, XorKey);
     }
 
     private const int BlockSize = 16;

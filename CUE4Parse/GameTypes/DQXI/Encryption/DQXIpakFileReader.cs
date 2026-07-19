@@ -21,8 +21,8 @@ public partial class PakFileReader
         {
             var length = -2 * index.Read<int>(); ;
             var encryptedBytes = index.ReadBytes(length);
-            for (var j = 0; j < length; j++) encryptedBytes[j] ^= xorKey[j & 0xF];
-            var path = string.Concat(MountPoint, Encoding.Unicode.GetString(encryptedBytes.AsSpan()[..(length-2)]));
+            TensorUtils.Xor(encryptedBytes, xorKey);
+            var path = string.Concat(MountPoint, Encoding.Unicode.GetString(encryptedBytes.AsSpan()[..^2]));
             if (path.StartsWith("Game")) path = "Jack" + path;
             var entry = new FPakEntry(this, path, index);
             if (entry is { IsDeleted: true, Size: 0 }) continue;
@@ -43,7 +43,7 @@ public partial class PakFileReader
             {
                 var srcSize = (int) block.Size;
                 var compressed = ReadAndDecryptAt(block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
-                for (var i = 0; i < compressed.Length; i++) compressed[i] ^= DQXIDecodeKey[i & 7];
+                TensorUtils.Xor(compressed, DQXIDecodeKey);
                 var uncompressedSize = (int) Math.Min(pakEntry.CompressionBlockSize, pakEntry.UncompressedSize - uncompressedOff);
                 Decompress(compressed, 0, srcSize, uncompressed, uncompressedOff, uncompressedSize, pakEntry.CompressionMethod);
                 uncompressedOff += (int) pakEntry.CompressionBlockSize;
@@ -54,7 +54,7 @@ public partial class PakFileReader
 
         var size = (int) pakEntry.UncompressedSize;
         var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize, size, reader, pakEntry.IsEncrypted);
-        for (var i = 0; i < data.Length; i++) data[i] ^= 0xff;
+        TensorUtils.Xor(data, (byte)0xFF);
         return size != pakEntry.UncompressedSize ? data.SubByteArray((int) pakEntry.UncompressedSize) : data;
     }
 }
