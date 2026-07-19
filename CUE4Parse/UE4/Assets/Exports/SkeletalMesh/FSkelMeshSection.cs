@@ -4,7 +4,6 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
@@ -20,6 +19,7 @@ public enum ESkinVertexColorChannel : byte
 [JsonConverter(typeof(FSkelMeshSectionConverter))]
 public class FSkelMeshSection
 {
+    
     public short MaterialIndex;
     public int BaseIndex;
     public int NumTriangles;

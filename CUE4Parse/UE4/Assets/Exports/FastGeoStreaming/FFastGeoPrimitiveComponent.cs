@@ -1,7 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.FastGeoStreaming;
 
@@ -38,18 +37,24 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
         bCanEverAffectNavigation = Ar.ReadBoolean();
         bMultiBodyOverlap = Ar.Game >= GAME_UE5_8 && Ar.ReadBoolean();
         if (Ar.Game is GAME_LEGOBatmanLegacyoftheDarkKnight) Ar.Position += 4;
+        if (Ar.Game is GAME_WutheringWaves)
+        {
+            bMultiBodyOverlap = Ar.ReadBoolean();
+            SurrogateComponentDescriptorIndex = Ar.Read<int>();
+            CustomPrimitiveData = Ar.ReadArray<float>();
+            DetailMode = Ar.Read<EDetailMode>();
+            bHasCustomNavigableGeometry = Ar.Read<EHasCustomNavigableGeometry>();
+            RuntimeVirtualTextures = Ar.ReadArray(Ar.ReadFPackageIndex);
+            SceneProxyDesc = new FSceneProxyDesc();
+            Ar.Position += 377;
+            return;
+        }
         SurrogateComponentDescriptorIndex = Ar.Game >= GAME_UE5_8 ? Ar.Read<int>() : 0;
         CustomPrimitiveData = Ar.ReadArray<float>();
-        DetailMode = Ar.Game is < GAME_UE5_8 or GAME_WutheringWavesFastGeo ? Ar.Read<EDetailMode>() : EDetailMode.Low;
+        DetailMode = Ar.Game is < GAME_UE5_8 ? Ar.Read<EDetailMode>() : EDetailMode.Low;
         bHasCustomNavigableGeometry = Ar.Read<EHasCustomNavigableGeometry>();
         RuntimeVirtualTextures = Ar.ReadArray(Ar.ReadFPackageIndex);
         BodyInstance = Ar.Game < GAME_UE5_8 ? new FStructFallback(Ar, "BodyInstance") : null;
-        if (Ar.Game != GAME_WutheringWavesFastGeo)
-            SceneProxyDesc = new FSceneProxyDesc(Ar);
-        else
-        {
-            SceneProxyDesc = new FSceneProxyDesc();
-            Ar.Position += 365;
-        }
+        SceneProxyDesc = new FSceneProxyDesc(Ar);
     }
 }

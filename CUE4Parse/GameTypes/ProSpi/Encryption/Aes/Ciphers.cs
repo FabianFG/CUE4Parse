@@ -27,7 +27,7 @@ public static partial class ProSpiEncryption
                 ProSpiSalsaRorXor(payload, trailer, spec);
                 return;
             default:
-                Log.Warning($"Unsupported cipher kind: {spec.CipherKind}");
+                Log.Warning("Unsupported cipher kind: {CipherKind}", spec.CipherKind);
                 break;
         }
     }

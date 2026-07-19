@@ -3,12 +3,12 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
 
 public class FAion2DataTableFile : FAion2DataFile
 {
+    
     public FAion2DataTableFile(GameFile file, IFileProvider provider)
     {
         var data = file.SafeRead();

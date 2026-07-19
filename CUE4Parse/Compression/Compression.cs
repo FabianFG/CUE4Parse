@@ -49,6 +49,14 @@ public static class Compression
                 => zlib.Uncompress(destination, source, out written) == ZlibngCompressionResult.Ok, replace: true)
             .Build();
     }
+    
+    public static void UseLZO(DecompressDelegate decompressor)
+    {
+        _decompressor = new DecompressorBuilder()
+            .AddRange(_decompressor, true)
+            .Add(CompressionAlgorithm.LZO, decompressor, replace: true)
+            .Build();
+    }
 
     public static byte[] Decompress(byte[] compressed, int uncompressedSize, CompressionMethod method, FArchive? reader = null)
         => Decompress(compressed, 0, compressed.Length, uncompressedSize, method, reader);
@@ -75,26 +83,27 @@ public static class Compression
         Span<byte> uncompressed,
         CompressionMethod method, FArchive? reader = null)
     {
-        CompressionAlgorithm algorythm = method switch
+        CompressionAlgorithm algorithm = method switch
         {
             CompressionMethod.None => 0,
             CompressionMethod.Zlib or CompressionMethod.XB1Zlib or CompressionMethod.XboxOneGDKZlib => CompressionAlgorithm.Zlib,
             CompressionMethod.Gzip => CompressionAlgorithm.Gzip,
             CompressionMethod.Oodle => CompressionAlgorithm.Oodle,
             CompressionMethod.LZ4 => CompressionAlgorithm.LZ4,
+            CompressionMethod.LZO => CompressionAlgorithm.LZO,
             CompressionMethod.Brotli => CompressionAlgorithm.Brotli,
             CompressionMethod.Zstd => CompressionAlgorithm.Zstd,
             _ when reader is not null => throw new UnknownCompressionMethodException(reader, $"Compression method \"{method}\" is unknown"),
             _ => throw new UnknownCompressionMethodException($"Compression method \"{method}\" is unknown")
         };
 
-        if (algorythm == 0)
+        if (algorithm == 0)
         {
             compressed.CopyTo(uncompressed);
             return;
         }
 
-        if (!_decompressor.TryDecompress(algorythm, compressed, uncompressed, out int bytesWritten) || bytesWritten != uncompressed.Length)
+        if (!_decompressor.TryDecompress(algorithm, compressed, uncompressed, out int bytesWritten) || bytesWritten != uncompressed.Length)
         {
             throw new FileLoadException($"Failed to decompress {method} data (Expected: {uncompressed.Length}, Result: {bytesWritten})");
         }

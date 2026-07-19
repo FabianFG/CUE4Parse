@@ -6,7 +6,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.OtherGames.Objects;
 
@@ -42,6 +41,7 @@ public class UVAL_PremiumItemAsset : UPrimaryDataAsset
 
 public class FVAL_CharacterCustomizationVariantOptionsArray : IUStruct
 {
+    
     public FPackageIndex OptionStruct;
     public IUStruct[] Options = [];
     public FVAL_CharacterCustomizationVariantOptionsArray(FAssetArchive Ar)

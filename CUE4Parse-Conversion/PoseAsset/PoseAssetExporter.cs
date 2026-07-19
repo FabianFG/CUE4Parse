@@ -1,19 +1,19 @@
 using CUE4Parse_Conversion.PoseAsset.UEFormat;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse.UE4.Writers;
-using Serilog;
 
 namespace CUE4Parse_Conversion.PoseAsset;
 
 public class PoseAssetExporter : ExporterBase
 {
+    
     public PoseAsset PoseAsset;
 
     public PoseAssetExporter(UPoseAsset poseAsset, ExporterOptions options) : base(poseAsset, options)
     {
         if (!poseAsset.TryConvert(out var convertedPoseAsset))
         {
-            Log.Warning($"PoseAsset '{ExportName}' failed to convert");
+            Log.Warning("PoseAsset '{ExportName}' failed to convert", ExportName);
             return;
         }
 

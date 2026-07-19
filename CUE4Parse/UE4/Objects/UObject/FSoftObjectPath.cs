@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 using UExport = CUE4Parse.UE4.Assets.Exports.UObject;
 
 namespace CUE4Parse.UE4.Objects.UObject;
@@ -17,6 +16,7 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [JsonConverter(typeof(FSoftObjectPathConverter))]
 public readonly struct FSoftObjectPath : IUStruct
 {
+    
     /** Asset path, patch to a top level object in a package. This is /package/path.assetname */
     public readonly FName AssetPathName;
     /** Optional FString for subobject within an asset. This is the sub path after the : */

@@ -58,7 +58,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 using FRawUIntStruct = CUE4Parse.UE4.Objects.StructUtils.FRawStruct<uint>;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -66,6 +65,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FScriptStructConverter))]
 public class FScriptStruct
 {
+
     public readonly IUStruct StructType;
 
     public FScriptStruct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)

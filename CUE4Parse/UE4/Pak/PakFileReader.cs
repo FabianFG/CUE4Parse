@@ -35,6 +35,7 @@ namespace CUE4Parse.UE4.Pak;
 
 public partial class PakFileReader : AbstractAesVfsReader
 {
+
     public readonly FArchive Ar;
     public readonly FPakInfo Info;
 
@@ -56,7 +57,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                                     || (Ar.Game >= GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
         if (hasUnsupportedVersion && !UsingCustomPakVersion())
         {
-            Log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
+            Log.Warning("Pak file \"{Name}\" has unsupported version {Version}", Name, (int) Info.Version);
         }
     }
 
@@ -282,7 +283,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         if (!IsEncrypted && EncryptedFileCount > 0)
         {
-            Log.Warning($"Pak file \"{Name}\" is not encrypted but contains encrypted files");
+            Log.Warning("Pak file \"{Name}\" is not encrypted but contains encrypted files", Name);
         }
 
         if (Globals.LogVfsMounts)

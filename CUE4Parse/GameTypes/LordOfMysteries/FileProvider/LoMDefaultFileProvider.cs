@@ -6,6 +6,7 @@ namespace CUE4Parse.GameTypes.LordOfMysteries.FileProvider;
 
 public class LoMDefaultFileProvider(string directory, SearchOption searchOption, VersionContainer? versions = null, StringComparer? pathComparer = null) : DefaultFileProvider(directory, searchOption, versions, pathComparer)
 {
+
     public override void Initialize()
     {
         base.Initialize();

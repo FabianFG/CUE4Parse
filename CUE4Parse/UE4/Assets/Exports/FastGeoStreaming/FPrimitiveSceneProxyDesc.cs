@@ -1,7 +1,6 @@
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.FastGeoStreaming;
 
@@ -159,9 +158,9 @@ public class FStaticMeshSceneProxyDesc
     public FStaticMeshSceneProxyDesc(FFastGeoArchive Ar)
     {
         StaticMesh = Ar.ReadFPackageIndex();
-        if (Ar.Game is GAME_WutheringWavesFastGeo)
+        if (Ar.Game is GAME_WutheringWaves)
         {
-            Ar.Position += 68;
+            Ar.Position += 84;
             return;
         }
         MeshPaintTexture = Ar.Game >= GAME_UE5_8 ? Ar.ReadFPackageIndex() : new FPackageIndex();

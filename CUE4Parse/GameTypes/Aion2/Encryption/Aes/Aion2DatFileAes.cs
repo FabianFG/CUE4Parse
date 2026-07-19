@@ -5,12 +5,12 @@ using CUE4Parse.GameTypes.Aion2.Objects;
 using CUE4Parse.UE4.Exceptions;
 using GenericReader;
 using K4os.Compression.LZ4;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 
 public sealed class Aion2DatFileAes
 {
+
     public static Dictionary<ulong, FAesKey> AesKeys = [];
     private static readonly Lock _instanceLock = new();
 

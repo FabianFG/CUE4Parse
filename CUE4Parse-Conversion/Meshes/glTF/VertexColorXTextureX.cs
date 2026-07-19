@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using SharpGLTF.Geometry.VertexTypes;
+using SharpGLTF.Memory;
 using SharpGLTF.Schema2;
 
 namespace CUE4Parse_Conversion.Meshes.glTF
@@ -9,18 +10,17 @@ namespace CUE4Parse_Conversion.Meshes.glTF
         public int MaxColors => 1; // Do we need more?
         public int MaxTextCoords => Constants.MAX_MESH_UV_SETS;
 
-        [VertexAttribute("COLOR_0", EncodingType.UNSIGNED_BYTE, true)]
         public Vector4 Color;
 
         // public List<Vector2> TexCoords;
-        [VertexAttribute("TEXCOORD_0")] public Vector2 TexCoord0;
-        [VertexAttribute("TEXCOORD_1")] public Vector2 TexCoord1;
-        [VertexAttribute("TEXCOORD_2")] public Vector2 TexCoord2;
-        [VertexAttribute("TEXCOORD_3")] public Vector2 TexCoord3;
-        [VertexAttribute("TEXCOORD_4")] public Vector2 TexCoord4;
-        [VertexAttribute("TEXCOORD_5")] public Vector2 TexCoord5;
-        [VertexAttribute("TEXCOORD_6")] public Vector2 TexCoord6;
-        [VertexAttribute("TEXCOORD_7")] public Vector2 TexCoord7;
+        public Vector2 TexCoord0;
+        public Vector2 TexCoord1;
+        public Vector2 TexCoord2;
+        public Vector2 TexCoord3;
+        public Vector2 TexCoord4;
+        public Vector2 TexCoord5;
+        public Vector2 TexCoord6;
+        public Vector2 TexCoord7;
 
         public VertexColorXTextureX(Vector4 color, List<Vector2> texCoords)
         {
@@ -58,6 +58,20 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             }
         }
 
+        public VertexMaterialDelta Subtract(IVertexMaterial baseValue)
+        {
+            return new VertexMaterialDelta(this).Subtract(new VertexMaterialDelta(baseValue));
+        }
+
+        public void Add(in VertexMaterialDelta delta)
+        {
+            Color += delta.GetColor(0);
+            TexCoord0 += delta.GetTexCoord(0);
+            TexCoord1 += delta.GetTexCoord(1);
+            TexCoord2 += delta.GetTexCoord(2);
+            TexCoord3 += delta.GetTexCoord(3);
+        }
+
         public Vector2 GetTexCoord(int index)
         {
             switch (index)
@@ -79,6 +93,19 @@ namespace CUE4Parse_Conversion.Meshes.glTF
             if (index != 0)
                 throw new ArgumentOutOfRangeException(nameof(index));
             return Color;
+        }
+
+        IEnumerable<KeyValuePair<string, AttributeFormat>> IVertexReflection.GetEncodingAttributes()
+        {
+            yield return new KeyValuePair<string, AttributeFormat>("COLOR_0", new AttributeFormat(DimensionType.VEC4, EncodingType.UNSIGNED_BYTE, true));
+            yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_0", new AttributeFormat(DimensionType.VEC2));
+            yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_1", new AttributeFormat(DimensionType.VEC2));
+            yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_2", new AttributeFormat(DimensionType.VEC2));
+            yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_3", new AttributeFormat(DimensionType.VEC2));
+            yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_4", new AttributeFormat(DimensionType.VEC2));
+            yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_5", new AttributeFormat(DimensionType.VEC2));
+            yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_6", new AttributeFormat(DimensionType.VEC2));
+            yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_7", new AttributeFormat(DimensionType.VEC2));
         }
 
         private static void Resize<T>(List<T> list, int size, T val)

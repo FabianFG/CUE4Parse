@@ -8,7 +8,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
-using Serilog;
 using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -16,6 +15,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(TBulkDataConverter))]
 public abstract class TBulkData<T> where T: struct
 {
+    
     public FByteBulkDataHeader Header { get; init; }
     public EBulkDataFlags BulkDataFlags => Header.BulkDataFlags;
 

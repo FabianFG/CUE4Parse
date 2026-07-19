@@ -1,7 +1,6 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Compression;
 using CUE4Parse.UE4.Objects.Core.Misc;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -39,6 +38,7 @@ public enum EFlags
 
 public class FEditorBulkData
 {
+    
     public EFlags Flags { get; set; }
     public FGuid BulkDataId { get; set; }
     public FSHAHash PayloadContentId { get; set; }

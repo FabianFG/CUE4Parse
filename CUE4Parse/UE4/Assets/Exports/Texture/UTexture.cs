@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -17,6 +16,7 @@ public class UBinkMediaTexture : UTexture;
 
 public abstract class UTexture : UUnrealMaterial, IAssetUserData
 {
+    
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
     public TextureGroup LODGroup { get; private set; }
@@ -137,7 +137,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
 
                 if (Ar.AbsolutePosition != skipOffset)
                 {
-                    Log.Warning($"Texture2D read incorrectly. Offset {Ar.AbsolutePosition}, Skip Offset {skipOffset}, Bytes remaining {skipOffset - Ar.AbsolutePosition}");
+                    Log.Warning("Texture2D read incorrectly. Offset {Offset}, Skip Offset {SkipOffset}, Bytes remaining {BytesRemaining}", Ar.AbsolutePosition, skipOffset, skipOffset - Ar.AbsolutePosition);
                     Ar.SeekAbsolute(skipOffset, SeekOrigin.Begin);
                 }
 

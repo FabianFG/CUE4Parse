@@ -3,13 +3,13 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Kismet;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Objects.UObject;
 
 [SkipObjectRegistration]
 public class UStruct : UField
 {
+    
     public FPackageIndex SuperStruct;
     public FPackageIndex[] Children;
     public FField[] ChildProperties;
@@ -51,7 +51,7 @@ public class UStruct : UField
             }
             catch (Exception e)
             {
-                Log.Warning(e, $"Failed to serialize script bytecode in {Name}");
+                Log.Warning(e, "Failed to serialize script bytecode in {Name}", Name);
             }
             finally
             {

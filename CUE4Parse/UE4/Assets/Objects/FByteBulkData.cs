@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
-using Serilog;
 using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -26,6 +25,7 @@ public sealed class FByteArrayData : TBulkData<byte>
 [JsonConverter(typeof(FByteBulkDataConverter))]
 public sealed class FByteBulkData : TBulkData<byte>
 {
+    
     public FByteBulkData(FAssetArchive Ar) : base(Ar) { }
 
     /// <summary>

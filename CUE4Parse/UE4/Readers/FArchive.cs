@@ -10,7 +10,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using OffiUtils;
-using Serilog;
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 using static CUE4Parse.UE4.Objects.UObject.FPackageFileSummary;
@@ -19,6 +18,7 @@ namespace CUE4Parse.UE4.Readers
 {
     public abstract class FArchive : RandomAccessStream, ICloneable
     {
+        
         public VersionContainer Versions;
         public EGame Game
         {

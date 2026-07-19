@@ -6,12 +6,12 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.FileProvider.Objects;
 
 public abstract class GameFile
 {
+    
     public static readonly string[] UePackageExtensions = ["uasset", "umap"];
     public static readonly string[] UePackagePayloadExtensions = ["uexp", "ubulk", "uptnl"];
     public static readonly string[] UeKnownExtensions =
@@ -26,8 +26,9 @@ public abstract class GameFile
     public static readonly FrozenSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
     public static readonly FrozenSet<string> UeKnownExtensionsSet = UeKnownExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
-    // so we don't end up with a lot of duplicate "uasset"s in memory
+    // Avoid retaining duplicate extension and directory strings for every file.
     private static readonly ConcurrentDictionary<string, string> _internedExtensions = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, string> _internedDirectories = new(StringComparer.Ordinal);
 
     private string _path;
     private string? _directory;
@@ -62,11 +63,23 @@ public abstract class GameFile
     }
     public long Size { get; protected init; }
 
-    public string Directory => _directory ??= Path.SubstringBeforeLast('/');
+    public string Directory => _directory ??= Intern(_internedDirectories, Path.SubstringBeforeLast('/'));
     public string PathWithoutExtension => _pathWithoutExtension ??= Path.SubstringBeforeLast('.');
     public string Name => _name ??= Path.SubstringAfterLast('/');
-    public string NameWithoutExtension => _nameWithoutExtension ??= Name.SubstringBeforeLast('.');
-    public string Extension => _extension ??= InternExtension(Name.SubstringAfterLast('.'));
+    public string NameWithoutExtension
+    {
+        get
+        {
+            if (_nameWithoutExtension is not null) return _nameWithoutExtension;
+
+            var nameStart = Path.LastIndexOf('/') + 1;
+            var extensionSeparator = Path.LastIndexOf('.');
+            return _nameWithoutExtension = extensionSeparator < nameStart
+                ? Name
+                : Path.Substring(nameStart, extensionSeparator - nameStart);
+        }
+    }
+    public string Extension => _extension ??= Intern(_internedExtensions, Name.SubstringAfterLast('.'));
 
     public bool IsUePackage => UePackageExtensionsSet.Contains(Extension);
     public bool IsUePackagePayload => UePackagePayloadExtensionsSet.Contains(Extension);
@@ -83,7 +96,7 @@ public abstract class GameFile
         }
         catch (Exception e)
         {
-            Log.Error(e, $"Could not read GameFile {this}");
+            Log.Error(e, "Could not read GameFile {GameFile}", this);
             data = null;
         }
         return data != null;
@@ -98,7 +111,7 @@ public abstract class GameFile
         }
         catch (Exception e)
         {
-            Log.Error(e, $"Could not create reader for GameFile {this}");
+            Log.Error(e, "Could not create reader for GameFile {GameFile}", this);
             reader = null;
         }
         return reader != null;
@@ -135,12 +148,6 @@ public abstract class GameFile
     public override string ToString() => Path;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string InternExtension(string extension)
-    {
-        if (_internedExtensions.TryGetValue(extension, out var interned))
-            return interned;
-
-        _internedExtensions[extension] = extension;
-        return extension;
-    }
+    private static string Intern(ConcurrentDictionary<string, string> pool, string value) =>
+        pool.GetOrAdd(value, static candidate => candidate);
 }
