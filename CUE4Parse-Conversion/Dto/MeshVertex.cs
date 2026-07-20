@@ -14,7 +14,12 @@ public interface IMeshVertex
     public FMeshUVFloat Uv { get; }
 }
 
-public readonly struct MeshVertex : IMeshVertex
+public interface INaniteVertex<T> where T : struct, IMeshVertex
+{
+    static abstract T FromNanite(FVector position, FNaniteVertexAttributes attributes, bool hasTangents);
+}
+
+public readonly struct MeshVertex : IMeshVertex, INaniteVertex<MeshVertex>
 {
     public FVector Position { get; } = FVector.ZeroVector;
     public FVector4 Normal { get; } = FVector4.ZeroVector;
@@ -34,7 +39,7 @@ public readonly struct MeshVertex : IMeshVertex
 
     }
 
-    public MeshVertex(FVector position, FNaniteVertexAttributes attributes, bool hasTangents) : this(position, new FVector4(attributes.Normal), hasTangents ? attributes.TangentXAndSign : FVector4.ZeroVector, new FMeshUVFloat(attributes.UVs[0].X, attributes.UVs[0].Y))
+    private MeshVertex(FVector position, FNaniteVertexAttributes attributes, bool hasTangents) : this(position, new FVector4(attributes.Normal), hasTangents ? attributes.TangentXAndSign : FVector4.ZeroVector, new FMeshUVFloat(attributes.UVs[0].X, attributes.UVs[0].Y))
     {
 
     }
@@ -43,15 +48,22 @@ public readonly struct MeshVertex : IMeshVertex
     {
 
     }
+
+    public static MeshVertex FromNanite(FVector position, FNaniteVertexAttributes attributes, bool hasTangents)
+    {
+        return new MeshVertex(position, attributes, hasTangents);
+    }
 }
 
-public readonly struct SkinnedMeshVertex : IMeshVertex
+public readonly struct SkinnedMeshVertex : IMeshVertex, INaniteVertex<SkinnedMeshVertex>
 {
     public FVector Position { get; } = FVector.ZeroVector;
     public FVector4 Normal { get; } = FVector4.ZeroVector;
     public FVector4 Tangent { get; } = FVector4.ZeroVector;
     public FMeshUVFloat Uv { get; } = FMeshUVFloat.ZeroVector;
-    public MeshBoneInfluenceDto[] Influences { get; } = [];
+
+    private readonly MeshBoneInfluenceDto[]? _influences; // because this can be zero-init we must ensure Influences is never null
+    public MeshBoneInfluenceDto[] Influences => _influences ?? [];
 
     private SkinnedMeshVertex(FVector position, FVector4 normal, FVector4 tangent, FMeshUVFloat uv)
     {
@@ -84,6 +96,20 @@ public readonly struct SkinnedMeshVertex : IMeshVertex
             influences[idx++] = new MeshBoneInfluenceDto(boneMap[vertex.Infs.BoneIndex[i]], weight, weight * scale);
         }
 
-        Influences = idx == count ? influences : influences[..idx];
+        _influences = idx == count ? influences : influences[..idx];
+    }
+
+    private SkinnedMeshVertex(FVector position, FNaniteVertexAttributes attributes, bool hasTangents) : this(position, new FVector4(attributes.Normal), hasTangents ? attributes.TangentXAndSign : FVector4.ZeroVector, new FMeshUVFloat(attributes.UVs[0].X, attributes.UVs[0].Y))
+    {
+        _influences = new MeshBoneInfluenceDto[attributes.Influences.Length];
+        for (var i = 0; i < _influences.Length; i++)
+        {
+            _influences[i] = new MeshBoneInfluenceDto(attributes.Influences[i]);
+        }
+    }
+
+    public static SkinnedMeshVertex FromNanite(FVector position, FNaniteVertexAttributes attributes, bool hasTangents)
+    {
+        return new SkinnedMeshVertex(position, attributes, hasTangents);
     }
 }

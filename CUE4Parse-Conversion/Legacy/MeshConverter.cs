@@ -12,7 +12,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using SixLabors.ImageSharp;
 using SkiaSharp;
-using Serilog;
+using Log = Serilog.Log;
 
 namespace CUE4Parse_Conversion.Meshes;
 

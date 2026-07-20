@@ -7,7 +7,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
+using Log = Serilog.Log;
 
 namespace CUE4Parse_Conversion.Dto;
 

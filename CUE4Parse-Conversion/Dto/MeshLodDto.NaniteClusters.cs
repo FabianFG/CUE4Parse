@@ -6,7 +6,7 @@ namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<MeshVertex> FromNaniteClusters(StaticMeshDto owner, FCluster[] clusters, int sectionCount, int numTexCoords, int numVertices)
+    internal static MeshLodDto<TNaniteVertex> FromNaniteClusters<TNaniteVertex>(MeshDto<TNaniteVertex> owner, FCluster[] clusters, int sectionCount, int numTexCoords, int numVertices) where TNaniteVertex : struct, IMeshVertex, INaniteVertex<TNaniteVertex>
     {
         var sections = new MeshSectionDto[sectionCount];
         for (var i = 0; i < sectionCount; i++)
@@ -38,7 +38,7 @@ public partial class MeshLodDto<TVertex>
 
         var indices = new uint[triBufferWriteOffsets[^1] + sections[^1].NumFaces * 3];
         var extraUvs = new FMeshUVFloat[numTexCoords - 1][];
-        var vertices = new MeshVertex[numVertices];
+        var vertices = new TNaniteVertex[numVertices];
         var vertexColors = new FColor[vertices.Length];
 
         for (var i = 0; i < extraUvs.Length; i++)
@@ -54,24 +54,18 @@ public partial class MeshLodDto<TVertex>
 
             for (var i = 0u; i < cluster.Vertices.Length; i++)
             {
+                if (cluster.Vertices[i] is not { Attributes: { } attributes } vert) continue;
+
                 var vertOffset = i + globalVertOffset;
+                vertices[vertOffset] = TNaniteVertex.FromNanite(vert.Pos, attributes, cluster.bHasTangents);
 
-                if (cluster.Vertices[i] is { Attributes: { } attributes } vert)
+                for (var j = 0; j < extraUvs.Length; j++)
                 {
-                    vertices[vertOffset] = new MeshVertex(vert.Pos, attributes, cluster.bHasTangents);
-
-                    for (var j = 0; j < extraUvs.Length; j++)
-                    {
-                        extraUvs[j][vertOffset].U = attributes.UVs[j + 1].X;
-                        extraUvs[j][vertOffset].V = attributes.UVs[j + 1].Y;
-                    }
-
-                    vertexColors[vertOffset] = attributes.Color;
+                    extraUvs[j][vertOffset].U = attributes.UVs[j + 1].X;
+                    extraUvs[j][vertOffset].V = attributes.UVs[j + 1].Y;
                 }
-                else
-                {
-                    vertices[vertOffset] = new MeshVertex();
-                }
+
+                vertexColors[vertOffset] = attributes.Color;
             }
 
             if (!cluster.ShouldUseMaterialTable())
@@ -99,13 +93,8 @@ public partial class MeshLodDto<TVertex>
             }
         });
 
-        return new MeshLodDto<MeshVertex>(owner, 0, indices, vertices, sections, extraUvs, vertexColors, 1.0f, false, true);
+        return new MeshLodDto<TNaniteVertex>(owner, 0, indices, vertices, sections, extraUvs, vertexColors, 1.0f, false, true);
 
         int FetchAdd(ref int location, int value) => Interlocked.Add(ref location, value) - value;
     }
-
-    // internal static MeshLodDto<SkinnedMeshVertex> FromNaniteClusters(SkeletalMeshDto owner, FCluster[] clusters, int sectionCount, int numTexCoords, int numVertices)
-    // {
-    //
-    // }
 }

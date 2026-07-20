@@ -81,6 +81,68 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         return Materials[index];
     }
 
+    protected void ParseNaniteResources<TNaniteVertex>(MeshDto<TNaniteVertex> owner, FNaniteResources nanite, ENaniteMeshFormat naniteFormat) where TNaniteVertex : struct, IMeshVertex, INaniteVertex<TNaniteVertex>
+    {
+        nanite.LoadAllPages();
+
+        // Identify all high quality clusters
+        var clusters = nanite.LoadedPages.Where(p => p != null)
+            .SelectMany(p => p!.Clusters).Where(x => x.EdgeLength < 0.0f)
+            .ToArray();
+
+        // Check if we even have tris to parse.
+        var numTris = 0;
+        var numVerts = 0;
+        var numUVs = 0u;
+        var sectionCount = owner.Materials.Length;
+        foreach (var cluster in clusters)
+        {
+            numTris += cluster.TriIndices.Length;
+            numVerts += cluster.Vertices.Length;
+            numUVs = Math.Max(numUVs, cluster.NumUVs);
+
+            // unfortunately we can't trust these indices
+            if (!cluster.ShouldUseMaterialTable())
+            {
+                Clamp(ref cluster.Material0Index);
+                Clamp(ref cluster.Material1Index);
+                Clamp(ref cluster.Material2Index);
+            }
+            else for (var i = 0; i < cluster.MaterialRanges.Length; i++)
+            {
+                var index = cluster.MaterialRanges[i].MaterialIndex;
+                Clamp(ref index);
+                cluster.MaterialRanges[i] = new FMaterialRange(cluster.MaterialRanges[i], index);
+            }
+        }
+
+        if (numTris > 0 && numVerts > 0)
+        {
+            var numTexCoords = nanite.Archive.Game >= EGame.GAME_UE5_6 ? (int) numUVs : nanite.NumInputTexCoords;
+            var naniteLod = MeshLodDto<TNaniteVertex>.FromNaniteClusters(owner, clusters, sectionCount, numTexCoords, numVerts);
+
+            if (naniteFormat == ENaniteMeshFormat.NaniteFirst)
+            {
+                owner.LODs.Insert(0, naniteLod);
+            }
+            else
+            {
+                owner.LODs.Add(naniteLod); // covers: OnlyNaniteLOD, AllLayersNaniteLast, and the OnlyNormalLODs fallback
+            }
+        }
+
+        // aggressively garbage collect since the asset is re-parsed every time by FModel
+        // we don't need most of this data to still exist post mesh export anyway.
+        // we also don't want that to json serialize anyway since 400mb+ json files are no fun.
+        nanite.UnloadAllPages();
+        GC.Collect();
+
+        void Clamp(ref uint materialIndex)
+        {
+            materialIndex = Math.Clamp(materialIndex, 0, (uint) sectionCount - 1);
+        }
+    }
+
     protected void SetLodSuffixes()
     {
         // suffix is used for writing to disk
@@ -129,7 +191,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
         if (shouldParseNanite && mesh.RenderData.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
         {
-            ParseNaniteResources(nanite, naniteFormat);
+            ParseNaniteResources(this, nanite, naniteFormat);
         }
         else if (LODs.Count == 0) // in case someone put NaniteOnly but there was no nanite to parse
         {
@@ -160,68 +222,6 @@ public class StaticMeshDto : MeshDto<MeshVertex>
             }
 
             LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, sourceLodIndex, renderData.LODs[sourceLodIndex], screenSize, spline));
-        }
-    }
-
-    private void ParseNaniteResources(FNaniteResources nanite, ENaniteMeshFormat naniteFormat)
-    {
-        nanite.LoadAllPages();
-
-        // Identify all high quality clusters
-        var clusters = nanite.LoadedPages.Where(p => p != null)
-            .SelectMany(p => p!.Clusters).Where(x => x.EdgeLength < 0.0f)
-            .ToArray();
-
-        // Check if we even have tris to parse.
-        var numTris = 0;
-        var numVerts = 0;
-        var numUVs = 0u;
-        var sectionCount = Materials.Length;
-        foreach (var cluster in clusters)
-        {
-            numTris += cluster.TriIndices.Length;
-            numVerts += cluster.Vertices.Length;
-            numUVs = Math.Max(numUVs, cluster.NumUVs);
-
-            // unfortunately we can't trust these indices
-            if (!cluster.ShouldUseMaterialTable())
-            {
-                Clamp(ref cluster.Material0Index);
-                Clamp(ref cluster.Material1Index);
-                Clamp(ref cluster.Material2Index);
-            }
-            else for (var i = 0; i < cluster.MaterialRanges.Length; i++)
-            {
-                var index = cluster.MaterialRanges[i].MaterialIndex;
-                Clamp(ref index);
-                cluster.MaterialRanges[i] = new FMaterialRange(cluster.MaterialRanges[i], index);
-            }
-        }
-
-        if (numTris > 0 && numVerts > 0)
-        {
-            var numTexCoords = nanite.Archive.Game >= EGame.GAME_UE5_6 ? (int) numUVs : nanite.NumInputTexCoords;
-            var naniteLod = MeshLodDto<MeshVertex>.FromNaniteClusters(this, clusters, sectionCount, numTexCoords, numVerts);
-
-            if (naniteFormat == ENaniteMeshFormat.NaniteFirst)
-            {
-                LODs.Insert(0, naniteLod);
-            }
-            else
-            {
-                LODs.Add(naniteLod); // covers: OnlyNaniteLOD, AllLayersNaniteLast, and the OnlyNormalLODs fallback
-            }
-        }
-
-        // aggressively garbage collect since the asset is re-parsed every time by FModel
-        // we don't need most of this data to still exist post mesh export anyway.
-        // we also don't want that to json serialize anyway since 400mb+ json files are no fun.
-        nanite.UnloadAllPages();
-        GC.Collect();
-
-        void Clamp(ref uint materialIndex)
-        {
-            materialIndex = Math.Clamp(materialIndex, 0, (uint) sectionCount - 1);
         }
     }
 
@@ -301,18 +301,30 @@ public sealed class SkeletalMeshDto : SkeletonDto
         MorphTargets = mesh.MorphTargets;
         AssetUserData = mesh.AssetUserData;
 
-        // TODO: nanite skel mesh: FarFarWest/Content/Characters/Characters/Goat/SKM_Goat.uasset
-        // if (mesh.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
-        // {
-        //
-        // }
-
-        foreach (var sourceLodIndex in quality.GetRange(mesh.LODModels.Length, i => mesh.LODModels[i].SkipLod))
+        if (naniteFormat != ENaniteMeshFormat.NaniteOnly) // just so we don't waste time
         {
-            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, sourceLodIndex, mesh.LODModels[sourceLodIndex], mesh.LODInfo[sourceLodIndex].ScreenSize.Value));
+            ParseMeshRenderData(mesh, quality);
+        }
+
+        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
+        if (shouldParseNanite && mesh.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
+        {
+            ParseNaniteResources(this, nanite, naniteFormat);
+        }
+        else if (LODs.Count == 0) // in case someone put NaniteOnly but there was no nanite to parse
+        {
+            ParseMeshRenderData(mesh, quality);
         }
 
         SetLodSuffixes();
+    }
+
+    private void ParseMeshRenderData(USkeletalMesh mesh, EMeshQuality quality)
+    {
+        foreach (var sourceLodIndex in quality.GetRange(mesh.LODModels!.Length, i => mesh.LODModels[i].SkipLod))
+        {
+            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, sourceLodIndex, mesh.LODModels[sourceLodIndex], mesh.LODInfo[sourceLodIndex].ScreenSize.Value));
+        }
     }
 
     public override void Dispose()
