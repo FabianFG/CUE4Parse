@@ -111,6 +111,9 @@ public partial class FPakInfo
             return;
         }
 
+        // Xor bytes for PUBG footer are generated with Zuc128
+        // Key: 0x01010101010101010101010101010101
+        // IV:  0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         if (Ar.Game is GAME_PUBGMobile or GAME_PUBGLite)
         {
             EncryptionKeyGuid = default;
