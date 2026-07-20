@@ -384,7 +384,7 @@ public class FScriptStruct
 
             "ActorReference" when Ar.Game is GAME_DarkPicturesAnthologyHouseOfAshes or GAME_DarkPicturesAnthologyManofMedan or
                 GAME_DarkPicturesAnthologyLittleHope or GAME_DarkPicturesAnthologyTheDevilinMe or
-                GAME_TheQuarry or GAME_TheCastingofFrankStone or GAME_Directive8020 => new FActorReference(Ar),
+                GAME_TheQuarry or GAME_TheCastingofFrankStone or GAME_Directive8020 or < GAME_UE4_0 => new FActorReference(Ar),
 
             "ParameterWrapperArray" when Ar.Game is GAME_NevernessToEverness => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
 

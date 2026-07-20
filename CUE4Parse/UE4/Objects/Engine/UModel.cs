@@ -290,7 +290,7 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_ZONES_FROM_MODEL)
             {
-                var dummyPortalNodes = Ar.ReadBulkArray<int>();
+                Ar.ReadBulkArray<int>(); // PortalNodes
             }
 
             NumUniqueVertices = Ar.Read<uint>();

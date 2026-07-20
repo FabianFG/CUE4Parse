@@ -30,6 +30,11 @@ namespace CUE4Parse.UE4.Readers
             get => Versions.Ver;
             set => Versions.Ver = value;
         }
+        public EUnrealEngineObjectLicenseeUEVersion LicenseeVer
+        {
+            get => Versions.LicenseeVer;
+            set => Versions.LicenseeVer = value;
+        }
         public ETexturePlatform Platform
         {
             get => Versions.Platform;
@@ -114,7 +119,7 @@ namespace CUE4Parse.UE4.Readers
             var size = Unsafe.SizeOf<T>();
             var readLength = size * length;
             CheckReadSize(readLength);
-            
+
             var buffer = ReadBytes(readLength);
             var result = new T[length];
             if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(readLength));
@@ -136,7 +141,7 @@ namespace CUE4Parse.UE4.Readers
         {
             Versions = versions ?? new VersionContainer();
         }
-        
+
         public override void Flush() { }
         public override bool CanRead { get; } = true;
         public override bool CanWrite { get; } = false;
@@ -625,8 +630,8 @@ namespace CUE4Parse.UE4.Readers
             }
 
             // Read in base summary, contains total sizes :
-            var summary = Read<FCompressedChunkInfo>();
-            
+            var summary = new FCompressedChunkInfo(this);
+
             if (bWasByteSwapped)
             {
                 summary.CompressedSize = (long) BYTESWAP_ORDER64((ulong) summary.CompressedSize);

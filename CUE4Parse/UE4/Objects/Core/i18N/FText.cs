@@ -121,7 +121,7 @@ public class FText : IUStruct
     {
         if (Ar.Ver < EUnrealEngineObjectUE4Version.FTEXT_HISTORY)
         {
-            var SourceStringToImplantIntoHistory = Ar.ReadFString(); // 
+            var SourceStringToImplantIntoHistory = Ar.ReadFString();
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADDED_NAMESPACE_AND_KEY_DATA_TO_FTEXT)
             {
                 var @namespace = Ar.ReadFString();
@@ -488,7 +488,7 @@ public class FNumberFormattingOptions : IUStruct
 
     public FNumberFormattingOptions(FAssetArchive Ar)
     {
-        AlwaysSign = FEditorObjectVersion.Get(Ar) > FEditorObjectVersion.Type.AddedAlwaysSignNumberFormattingOption && Ar.ReadBoolean();
+        AlwaysSign = FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.AddedAlwaysSignNumberFormattingOption && Ar.ReadBoolean();
         UseGrouping = Ar.ReadBoolean();
         RoundingMode = Ar.Read<ERoundingMode>();
         MinimumIntegralDigits = Ar.Read<int>();

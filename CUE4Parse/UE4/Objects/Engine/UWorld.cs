@@ -16,9 +16,20 @@ namespace CUE4Parse.UE4.Objects.Engine
             if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 8;
             base.Deserialize(Ar, validPos);
             PersistentLevel = new FPackageIndex(Ar);
-            ExtraReferencedObjects = Ar.ReadArray(() => new FPackageIndex(Ar));
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_WORLD_EXTRA_REFERENCED_OBJECTS)
+            {
+                ExtraReferencedObjects = Ar.ReadArray(() => new FPackageIndex(Ar));
+            }
             if (Ar.Game is GAME_AssaultFireFuture && TryGetValue<FPackageIndex>(out var composition, "MiniWorldComposition")) return;
-            StreamingLevels = Ar.ReadArray(() => new FPackageIndex(Ar));
+            if (Ar.Game >= GAME_UE4_0)
+            {
+                StreamingLevels = Ar.ReadArray(() => new FPackageIndex(Ar));
+            }
+
+            if (Ar.Game >= GAME_UE4_0 && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_CLIENTDESTROYEDACTORCONTENT)
+            {
+                Ar.ReadArray(() => new FPackageIndex(Ar)); // TempClientDestroyedActorContent
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
