@@ -11,7 +11,7 @@ public readonly struct MeshBoneDto
     public readonly int ParentIndex;
     public readonly FTransform Transform;
 
-    public MeshBoneDto(string name, int parentIndex, FTransform transform)
+    private MeshBoneDto(string name, int parentIndex, FTransform transform)
     {
         Name = name;
         ParentIndex = parentIndex;

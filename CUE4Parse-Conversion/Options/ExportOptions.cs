@@ -6,7 +6,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 namespace CUE4Parse_Conversion.Options;
 
 public class ExportOptions(
-    EMeshFormat meshFormat = EMeshFormat.USD,
+    EMeshFormat meshFormat = EMeshFormat.UEFormat,
     ENaniteMeshFormat naniteMeshFormat = ENaniteMeshFormat.NoNanite,
     EMeshQuality meshQuality = EMeshQuality.Highest,
     ETexturePlatform texturePlatform = ETexturePlatform.DesktopMobile,
