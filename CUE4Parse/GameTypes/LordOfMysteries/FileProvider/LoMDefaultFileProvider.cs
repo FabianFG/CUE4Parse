@@ -6,6 +6,7 @@ namespace CUE4Parse.GameTypes.LordOfMysteries.FileProvider;
 
 public class LoMDefaultFileProvider(string directory, SearchOption searchOption, VersionContainer? versions = null, StringComparer? pathComparer = null) : DefaultFileProvider(directory, searchOption, versions, pathComparer)
 {
+
     public override void Initialize()
     {
         base.Initialize();
@@ -13,7 +14,8 @@ public class LoMDefaultFileProvider(string directory, SearchOption searchOption,
         if (!_workingDirectory.Exists)
             throw new DirectoryNotFoundException("The game directory could not be found.");
 
-        var directory = LoMDirectoryIndex.Read(_workingDirectory);
+        var fileList = _workingDirectory.EnumerateFiles("Manifest_UFSFiles_Win64.txt", _searchOption).FirstOrDefault();
+        var directoryIndex = LoMDirectoryIndex.Read(fileList);
         var manifest = _workingDirectory.EnumerateFiles("package.manifest", _searchOption).FirstOrDefault();
         if (manifest == null)
         {
@@ -36,7 +38,7 @@ public class LoMDefaultFileProvider(string directory, SearchOption searchOption,
         {
             try
             {
-                PostLoadReader(new LoMIoStoreReader(container, directory, Versions));
+                PostLoadReader(new LoMIoStoreReader(container, directoryIndex, Versions));
             }
             catch (Exception e)
             {

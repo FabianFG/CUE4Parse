@@ -3,12 +3,12 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine;
 
 public class UDataTable : UObject
 {
+    
     public Dictionary<FName, FStructFallback> RowMap { get; protected set; }
     public string? RowStructName { get; protected set; } // Set by inheritor or during deserialization
 

@@ -4,7 +4,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.IO.Objects
 {
@@ -19,6 +18,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
     public class FIoStoreTocResource
     {
+
         private readonly FArchive? _tocAr;
         public readonly FIoStoreTocHeader Header;
         public readonly FIoChunkId[] ChunkIds;
@@ -109,11 +109,19 @@ namespace CUE4Parse.UE4.IO.Objects
 
             // Compression blocks
             var isFragPunk = archive.Game == GAME_FragPunk;
-            CompressionBlocks = new FIoStoreTocCompressedBlockEntry[Header.TocCompressedBlockEntryCount];
-            for (int i = 0; i < Header.TocCompressedBlockEntryCount; i++)
+            if (!isFragPunk)
             {
-                CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
-                if (isFragPunk) archive.Position += 4;
+                CompressionBlocks = archive.ReadArray<FIoStoreTocCompressedBlockEntry>(
+                    (int) Header.TocCompressedBlockEntryCount);
+            }
+            else
+            {
+                CompressionBlocks = new FIoStoreTocCompressedBlockEntry[Header.TocCompressedBlockEntryCount];
+                for (var i = 0; i < Header.TocCompressedBlockEntryCount; i++)
+                {
+                    CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
+                    archive.Position += 4;
+                }
             }
 
             // Compression methods
@@ -131,7 +139,7 @@ namespace CUE4Parse.UE4.IO.Objects
                         continue;
                     if (!Enum.TryParse(name, true, out CompressionMethod method))
                     {
-                        Log.Warning($"Unknown compression method '{name}' in {Ar.Name}");
+                        Log.Warning("Unknown compression method '{CompressionMethod}' in {ArchiveName}", name, Ar.Name);
                         method = CompressionMethod.Unknown;
                     }
 

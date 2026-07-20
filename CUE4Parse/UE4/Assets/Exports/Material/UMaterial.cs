@@ -6,12 +6,12 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public class UMaterial : UMaterialInterface
 {
+    
     public bool TwoSided { get; private set; }
     public bool bDisableDepthTest { get; private set; }
     public bool bIsMasked { get; private set; }

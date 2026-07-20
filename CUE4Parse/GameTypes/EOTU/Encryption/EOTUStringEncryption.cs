@@ -1,5 +1,6 @@
 using System.Text;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.EOTU.Encryption;
 
@@ -18,8 +19,7 @@ public class EOTUStringEncryption
         var data = Convert.FromBase64String(payload);
         var keyBytes = Encoding.ASCII.GetBytes(Key);
 
-        for (int i = 0; i < data.Length; i++)
-            data[i] ^= keyBytes[i % keyBytes.Length];
+        TensorUtils.Xor(data, keyBytes);
 
         return Encoding.Unicode.GetString(data).TrimEnd('\0');
     }

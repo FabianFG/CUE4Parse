@@ -11,12 +11,12 @@ using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureDecoder
 {
+
     public static bool UseAssetRipperTextureDecoder { get; set; } = false;
 
     public static CTexture? Decode(this UTexture texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetMipIndexByMaxSize(maxMipSize), platform);

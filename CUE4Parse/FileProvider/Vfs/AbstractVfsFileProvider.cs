@@ -8,7 +8,7 @@ using CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
 using CUE4Parse.GameTypes.ArcRaiders.Encryption.Aes;
 using CUE4Parse.GameTypes.BB3.Encryption.Aes;
 using CUE4Parse.GameTypes.DBD.Encryption.Aes;
-using CUE4Parse.GameTypes.DeltaForce.Encryption.Aes;
+using CUE4Parse.GameTypes.DFHO.Encryption.Aes;
 using CUE4Parse.GameTypes.DragonSword.Encryption.Aes;
 using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
 using CUE4Parse.GameTypes.FSR.Encryption.Aes;
@@ -48,6 +48,7 @@ namespace CUE4Parse.FileProvider.Vfs
 {
     public abstract class AbstractVfsFileProvider : AbstractFileProvider, IVfsFileProvider
     {
+        
         protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs => (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
 
@@ -278,38 +279,56 @@ namespace CUE4Parse.FileProvider.Vfs
             VfsRegistered?.Invoke(reader, _unloadedVfs.Count);
         }
 
-        public int Mount() => MountAsync().Result;
+        private void TryMountReader(IAesVfsReader reader, ref int countNewMounts)
+        {
+            if ((reader.IsEncrypted && CustomEncryption == null) || !reader.HasDirectoryIndex)
+                return;
+
+            try
+            {
+                reader.MountTo(Files, PathComparer, VfsMounted);
+                _unloadedVfs.TryRemove(reader, out _);
+                _mountedVfs[reader] = null;
+                Interlocked.Increment(ref countNewMounts);
+            }
+            catch (InvalidAesKeyException)
+            {
+                // Ignore this
+            }
+            catch (Exception e)
+            {
+                Log.Warning(e, "Uncaught exception while loading file {FileName}", reader.Path.SubstringAfterLast('/'));
+            }
+        }
+
+        public int Mount()
+        {
+            var countNewMounts = 0;
+            var readers = _unloadedVfs.Keys.ToArray();
+            Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader =>
+                (!reader.IsEncrypted || CustomEncryption != null) && reader.HasDirectoryIndex)));
+
+            foreach (var reader in readers)
+            {
+                VerifyGlobalData(reader);
+                TryMountReader(reader, ref countNewMounts);
+            }
+
+            return countNewMounts;
+        }
+
         public async Task<int> MountAsync()
         {
             var countNewMounts = 0;
             var tasks = new LinkedList<Task>();
-            foreach (var reader in _unloadedVfs.Keys)
+            var readers = _unloadedVfs.Keys.ToArray();
+            Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader =>
+                (!reader.IsEncrypted || CustomEncryption != null) && reader.HasDirectoryIndex)));
+
+            foreach (var reader in readers)
             {
                 VerifyGlobalData(reader);
-
-                if (reader.IsEncrypted && CustomEncryption == null || !reader.HasDirectoryIndex)
-                    continue;
-
-                tasks.AddLast(Task.Run(() =>
-                {
-                    try
-                    {
-                        reader.MountTo(Files, PathComparer, VfsMounted);
-                        _unloadedVfs.TryRemove(reader, out _);
-                        _mountedVfs[reader] = null;
-                        Interlocked.Increment(ref countNewMounts);
-                        return reader;
-                    }
-                    catch (InvalidAesKeyException)
-                    {
-                        // Ignore this
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Warning(e, $"Uncaught exception while loading file {reader.Path.SubstringAfterLast('/')}");
-                    }
-                    return null;
-                }));
+                tasks.AddLast(Task.Run(() => TryMountReader(reader, ref countNewMounts)));
             }
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -327,9 +346,14 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             var countNewMounts = 0;
             var tasks = new LinkedList<Task<IAesVfsReader?>>();
-            foreach (var (guid, key) in keys)
+            var submittedKeys = keys as IReadOnlyCollection<KeyValuePair<FGuid, FAesKey>> ?? keys.ToArray();
+            var submittedKeyGuids = submittedKeys.Select(x => x.Key).ToHashSet();
+            var readers = _unloadedVfs.Keys.Where(reader => submittedKeyGuids.Contains(reader.EncryptionKeyGuid)).ToArray();
+            Files.PreallocatePackageIndex(EstimatePackageIndexCapacity(readers.Where(reader => reader.HasDirectoryIndex)));
+
+            foreach (var (guid, key) in submittedKeys)
             {
-                foreach (var reader in _unloadedVfs.Keys.Where(it => it.EncryptionKeyGuid == guid))
+                foreach (var reader in readers.Where(it => it.EncryptionKeyGuid == guid))
                 {
                     if (reader.Game == GAME_FragPunk && reader.Name.Contains("global")) reader.AesKey = key;
                     VerifyGlobalData(reader);
@@ -353,7 +377,7 @@ namespace CUE4Parse.FileProvider.Vfs
                         }
                         catch (Exception e)
                         {
-                            Log.Warning(e, $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
+                            Log.Warning(e, "Uncaught exception while loading pak file {FileName}", reader.Path.SubstringAfterLast('/'));
                         }
                         return null;
                     }));
@@ -370,6 +394,18 @@ namespace CUE4Parse.FileProvider.Vfs
             }
 
             return countNewMounts;
+        }
+
+        private static int EstimatePackageIndexCapacity(IEnumerable<IAesVfsReader> readers)
+        {
+            long capacity = 0;
+            foreach (var reader in readers)
+            {
+                if (reader is IoStoreReader ioStoreReader)
+                    capacity += ioStoreReader.GetPackageDataChunkCount();
+            }
+
+            return (int) Math.Min(capacity, int.MaxValue);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

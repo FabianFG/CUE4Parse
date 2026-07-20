@@ -24,6 +24,7 @@
     <PackageVersion Include="SkiaSharp" Version="[2.88.9]" />
     <PackageVersion Include="SubstreamSharp" Version="1.0.3" />
     <PackageVersion Include="System.IO.Hashing" Version="10.0.8" />
+    <PackageVersion Include="System.Numerics.Tensors" Version="10.0.10" />
     <PackageVersion Include="VGAudio" Version="2.2.1" />
     <PackageVersion Include="Zlib-ng.NET" Version="1.2.0" />
     <PackageVersion Include="ZstdSharp.Port" Version="0.8.8" />

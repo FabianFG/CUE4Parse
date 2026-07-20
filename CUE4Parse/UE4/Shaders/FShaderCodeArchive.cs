@@ -23,10 +23,11 @@ namespace CUE4Parse.UE4.Shaders
             {
                 if (archiveVersion == 1) bIsIoStore = true;
             }
-        if (Ar.Game is GAME_ArenaBreakoutMobile)
-        {
-            archiveVersion = 2;
-        }
+
+            if (Ar.Game is GAME_ArenaBreakoutMobile)
+            {
+                archiveVersion = 2;
+            }
 
             switch (archiveVersion)
             {

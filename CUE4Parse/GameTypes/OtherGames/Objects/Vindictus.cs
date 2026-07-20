@@ -2,12 +2,12 @@ using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.OtherGames.Objects;
 
 public struct FAnyValue : IUStruct
 {
+    
     public readonly FStructFallback? NonConstStruct;
 
     public FAnyValue(FAssetArchive Ar)

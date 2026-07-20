@@ -9,12 +9,12 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.OctopathTraveler.Exports;
 
 public class UBinaryAsset : UObject
 {
+    
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);

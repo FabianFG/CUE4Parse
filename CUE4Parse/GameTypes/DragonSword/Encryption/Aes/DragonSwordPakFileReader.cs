@@ -5,6 +5,7 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.Utils;
 using GenericReader;
 
 namespace CUE4Parse.UE4.Pak;
@@ -23,8 +24,7 @@ public partial class PakFileReader
                 Span<byte> span = len < 512 ? stackalloc byte[len] : new byte[len];
                 Ar.ReadExactly(span);
                 var xorKey = span[^1];
-                for (var i = 0; i < len; i++)
-                    span[i] ^= xorKey;
+                TensorUtils.Xor(span, xorKey);
                 return Encoding.UTF8.GetString(span[..^1]);
             }
             
@@ -33,8 +33,7 @@ public partial class PakFileReader
                 Span<char> span = len < 512 ? stackalloc char[len] : new char[len];
                 Ar.ReadExactly(span.Cast<char, byte>());
                 var xorKey = span[^1];
-                for (var i = 0; i < len; i++)
-                    span[i] ^= xorKey;
+                TensorUtils.Xor(span, xorKey);
                 return Encoding.Unicode.GetString(span[..^1].Cast<char, byte>());
             }
         }
@@ -79,8 +78,7 @@ public partial class PakFileReader
         if (encodedPakEntriesSize > 0)
         {
             var xorByte = encodedPakEntriesData[5];
-            for (var i = 0; i < encodedPakEntriesSize; i++)
-                encodedPakEntriesData[i] ^= xorByte;
+            TensorUtils.Xor(encodedPakEntriesData, xorByte);
         }
         using var encodedPakEntries = new GenericBufferReader(encodedPakEntriesData);
 

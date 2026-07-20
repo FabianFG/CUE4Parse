@@ -11,7 +11,6 @@ using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -19,6 +18,7 @@ public class FMaterialResource : FMaterial;
 
 public class FMaterial
 {
+    
     public FMaterialShaderMap? LoadedShaderMap;
 
     public void DeserializeInlineShaderMap(FMaterialResourceProxyReader Ar)
@@ -750,6 +750,7 @@ public class FUniformExpressionSet
             UniformScalarParameters = Ar.ReadArray(() => new FMaterialScalarParameterInfo(Ar));
             UniformVectorParameters = Ar.ReadArray(() => new FMaterialVectorParameterInfo(Ar));
             Ar.ReadArray(UniformTextureParameters, () => Ar.ReadArray(() => new FMaterialTextureParameterInfo(Ar)));
+            if (Ar.Game is GAME_WutheringWaves) Ar.Position += 16;
             UniformExternalTextureParameters = Ar.ReadArray(() => new FMaterialExternalTextureParameterInfo(Ar));
             UniformPreshaderData = new FMaterialPreshaderData(Ar);
         }

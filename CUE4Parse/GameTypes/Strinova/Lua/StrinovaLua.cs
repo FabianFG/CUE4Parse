@@ -1,3 +1,5 @@
+using CUE4Parse.Utils;
+
 namespace CUE4Parse.GameTypes.Strinova.Lua;
 
 // Credits to Shiragasane
@@ -25,9 +27,7 @@ public static class StrinovaLua
 
     public static byte[] DecryptLuaBytecode(byte[] encryptedData)
     {
-        for (var i = 0; i < encryptedData.Length; i++)
-            encryptedData[i] ^= _rsaKey[i % _rsaKey.Length];
-
+        TensorUtils.Xor(encryptedData, _rsaKey);
         return encryptedData;
     }
 }

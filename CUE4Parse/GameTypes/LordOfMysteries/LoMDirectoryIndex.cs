@@ -30,23 +30,16 @@ public sealed class LoMDirectoryIndex
         return result;
     }
 
-    public static LoMDirectoryIndex Read(DirectoryInfo workingDirectory)
+    public static LoMDirectoryIndex Read(FileInfo? fileList)
     {
         var packagePaths = new Dictionary<ulong, string>();
-        string? fileListPath = null;
-        for (var current = workingDirectory; current != null; current = current.Parent)
+        if (fileList is null || !fileList.Exists)
         {
-            fileListPath = Path.Combine(current.FullName, "Manifest_UFSFiles_Win64.txt");
-            if (File.Exists(fileListPath))
-                break;
-
-            fileListPath = null;
+            Log.Warning("Failed to find 'Manifest_UFSFiles_Win64.txt', assets won't be indexed");
+            return new LoMDirectoryIndex(packagePaths);
         }
 
-        if (fileListPath == null)
-            return new LoMDirectoryIndex(packagePaths);
-
-        foreach (var line in File.ReadLines(fileListPath))
+        foreach (var line in File.ReadLines(fileList.FullName))
         {
             if (TryReadPackagePath(line, out var path, out var packageName))
             {

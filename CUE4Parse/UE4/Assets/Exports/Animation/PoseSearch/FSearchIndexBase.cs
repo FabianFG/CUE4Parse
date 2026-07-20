@@ -1,5 +1,4 @@
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.PoseSearch;
 
@@ -27,6 +26,7 @@ public class FSearchIndexBase
             EventData = new FEventData(Ar);
         }
         MinCostAddend = Ar.Read<float>();
-        Stats = Ar.Read<FSearchStats>();
+        if (Ar.Game < GAME_UE5_8 || !Ar.IsFilterEditorOnly)
+            Stats = Ar.Read<FSearchStats>();
     }
 }

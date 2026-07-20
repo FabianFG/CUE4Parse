@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 
 namespace CUE4Parse.MappingsProvider;
 
@@ -63,6 +62,7 @@ public class Struct
 
 public class SerializedStruct : Struct
 {
+
     public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
     {
         Super = new Lazy<Struct?>(() =>

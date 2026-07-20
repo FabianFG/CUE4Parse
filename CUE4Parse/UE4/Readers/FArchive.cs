@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -9,7 +10,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using OffiUtils;
-using Serilog;
 using static CUE4Parse.Compression.Compression;
 using static CUE4Parse.UE4.Objects.Core.Misc.ECompressionFlags;
 using static CUE4Parse.UE4.Objects.UObject.FPackageFileSummary;
@@ -18,6 +18,7 @@ namespace CUE4Parse.UE4.Readers
 {
     public abstract class FArchive : RandomAccessStream, ICloneable
     {
+        
         public VersionContainer Versions;
         public EGame Game
         {
@@ -87,6 +88,18 @@ namespace CUE4Parse.UE4.Readers
         {
             var bytes = ReadBytes(length);
             Unsafe.CopyBlockUnaligned(ref ptr[0], ref bytes[0], (uint) length);
+        }
+
+        public virtual T Peek<T>()
+        {
+            var size = Unsafe.SizeOf<T>();
+            var saved = Position;
+            var buffer = ArrayPool<byte>.Shared.Rent(size);
+            Read(buffer, 0,  size);
+            Position = saved;
+            var result = Unsafe.ReadUnaligned<T>(ref buffer[0]);    
+            ArrayPool<byte>.Shared.Return(buffer);
+            return result;
         }
 
         public virtual T Read<T>()
