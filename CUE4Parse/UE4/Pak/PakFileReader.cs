@@ -62,7 +62,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         }
     }
 
-    // These games use version >= 12 to indicate their custom formats
+    // These games use custom versions to indicate their custom formats
     private bool UsingCustomPakVersion()
     {
         return Ar.Game switch

@@ -133,6 +133,7 @@ public class FKismetArchive : FArchive
             EExprToken.EX_AutoRtfmStopTransact => new EX_AutoRtfmStopTransact(this),
             EExprToken.EX_AutoRtfmTransact => new EX_AutoRtfmTransact(this),
             EExprToken.EX_AutoRtfmAbortIfNot => new EX_AutoRtfmAbortIfNot(),
+            EExprToken.EX_AutoRtfmAbort => new EX_AutoRtfmAbort(),
 
             EExprToken.EX_6E when Versions.Game == GAME_WutheringWaves => new EX_WuWaInstr1(this),
             EExprToken.EX_6F when Versions.Game == GAME_WutheringWaves => new EX_WuWaInstr2(this),

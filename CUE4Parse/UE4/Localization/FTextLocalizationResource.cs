@@ -13,7 +13,7 @@ namespace CUE4Parse.UE4.Localization;
 [JsonConverter(typeof(FTextLocalizationResourceConverter))]
 public class FTextLocalizationResource
 {
-    
+
     private readonly FGuid _locResMagic = new (0x7574140Eu, 0xFC034A67u, 0x9D90154Au, 0x1B7F37C3u);
     public readonly Dictionary<FTextKey, Dictionary<FTextKey, FEntry>> Entries = [];
 
@@ -31,7 +31,6 @@ public class FTextLocalizationResource
             Log.Warning("LocRes '{Name}' failed the magic number check! Assuming this is a legacy resource", Ar.Name);
         }
 
-        // Is this LocRes file too new to load?
         if (versionNumber > ELocResVersion.Latest)
         {
             if (Ar.Game is not (GAME_StellarBlade or GAME_HonorofKingsWorld))

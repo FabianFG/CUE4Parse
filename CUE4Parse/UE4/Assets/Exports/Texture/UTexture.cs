@@ -89,7 +89,7 @@ public abstract class UTexture : UUnrealMaterial, IAssetUserData
             {
                 if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.TextureSourceVirtualization)
                 {
-                    new FByteBulkData(Ar);
+                    SourceArt = new FByteBulkData(Ar);
                 }
                 else
                 {
