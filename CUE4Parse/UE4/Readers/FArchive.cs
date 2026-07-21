@@ -18,7 +18,7 @@ namespace CUE4Parse.UE4.Readers
 {
     public abstract class FArchive : RandomAccessStream, ICloneable
     {
-        
+
         public VersionContainer Versions;
         public EGame Game
         {
@@ -97,7 +97,7 @@ namespace CUE4Parse.UE4.Readers
             var buffer = ArrayPool<byte>.Shared.Rent(size);
             Read(buffer, 0,  size);
             Position = saved;
-            var result = Unsafe.ReadUnaligned<T>(ref buffer[0]);    
+            var result = Unsafe.ReadUnaligned<T>(ref buffer[0]);
             ArrayPool<byte>.Shared.Return(buffer);
             return result;
         }
@@ -114,7 +114,7 @@ namespace CUE4Parse.UE4.Readers
             var size = Unsafe.SizeOf<T>();
             var readLength = size * length;
             CheckReadSize(readLength);
-            
+
             var buffer = ReadBytes(readLength);
             var result = new T[length];
             if (length > 0) Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref result[0]), ref buffer[0], (uint)(readLength));
@@ -136,7 +136,7 @@ namespace CUE4Parse.UE4.Readers
         {
             Versions = versions ?? new VersionContainer();
         }
-        
+
         public override void Flush() { }
         public override bool CanRead { get; } = true;
         public override bool CanWrite { get; } = false;
@@ -264,6 +264,21 @@ namespace CUE4Parse.UE4.Readers
         {
             var num = Read<int>();
             Position += num * size;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipArray<T>()
+        {
+            var length = Read<int>();
+            var size = Unsafe.SizeOf<T>();
+            Position += length * size;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipArray<T>(int length)
+        {
+            var size = Unsafe.SizeOf<T>();
+            Position += length * size;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -626,7 +641,7 @@ namespace CUE4Parse.UE4.Readers
 
             // Read in base summary, contains total sizes :
             var summary = Read<FCompressedChunkInfo>();
-            
+
             if (bWasByteSwapped)
             {
                 summary.CompressedSize = (long) BYTESWAP_ORDER64((ulong) summary.CompressedSize);

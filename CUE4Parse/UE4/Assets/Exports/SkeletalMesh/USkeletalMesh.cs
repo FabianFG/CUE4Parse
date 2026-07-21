@@ -121,7 +121,7 @@ public partial class USkeletalMesh : UObject
                     }
                 }
 
-                if (Ar.Game >= GAME_UE5_5)
+                if (Ar.Game >= GAME_UE5_5 || Ar.Game is GAME_SilverPalace)
                 {
                     NaniteResources = new FNaniteResources(Ar);
                 }

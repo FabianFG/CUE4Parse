@@ -435,6 +435,8 @@ public class FScriptStruct
 
             "KGVariantValue" when Ar.Game is GAME_LordOfMysteries => new FKGVariantValue(Ar),
 
+            "SPBattleGenericID" when Ar.Game is GAME_SilverPalace => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
             _ => Ar.Game switch
             {
                 GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),

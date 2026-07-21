@@ -50,7 +50,7 @@ public static class SilverPalaceAes
     private static void DecryptCustomAes(Span<byte> data, Span<byte> key)
     {
         DecryptData(data, key);
-        TensorUtils.Xor(data, XorKey);
+        TensorUtils.Xor(data, XorKey[..16]);
     }
 
     private const int BlockSize = 16;

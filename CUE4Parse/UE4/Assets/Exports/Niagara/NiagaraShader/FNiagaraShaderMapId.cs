@@ -25,7 +25,7 @@ public class FNiagaraShaderMapId
         FeatureLevel = Ar.Read<ERHIFeatureLevel>();
         Ar.Position = Ar.Position.Align(8);
 
-        if (Ar.Game < GAME_UE5_6)
+        if (Ar.Game < GAME_UE5_6 && Ar.Game != GAME_SilverPalace)
         {
             _ = Ar.Read<FGuid>(); // BaseScriptID_DEPRECATED
         }

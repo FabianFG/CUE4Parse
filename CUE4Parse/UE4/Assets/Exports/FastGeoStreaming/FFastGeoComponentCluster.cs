@@ -17,6 +17,7 @@ public class FFastGeoComponentCluster
         StaticMeshComponents = Ar.ReadArray(() => new FFastGeoStaticMeshComponent(Ar));
         if (Ar.Game is GAME_WutheringWaves) return;
         InstancedStaticMeshComponents = Ar.ReadArray(() => new FFastGeoInstancedStaticMeshComponent(Ar));
+        if (Ar.Game is GAME_SilverPalace) return;
         SkinnedMeshComponents = Ar.ReadArray(() => new FFastGeoSkinnedMeshComponent(Ar));
         InstancedSkinnedMeshComponents = Ar.ReadArray(() => new FFastGeoInstancedSkinnedMeshComponent(Ar));
         ProceduralISMComponents = Ar.Game >= GAME_UE5_7 ? Ar.ReadArray(() => new FFastGeoProceduralISMComponent(Ar)) : [];
