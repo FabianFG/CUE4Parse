@@ -1,6 +1,7 @@
 using CUE4Parse.GameTypes._2XKO.Assets.Exports;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Brickadia.Objects;
+using CUE4Parse.GameTypes.DeadByDaylight.Objects;
 using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
@@ -400,6 +401,7 @@ public class FScriptStruct
             "AnimMontageContainer" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
             "BHVRVariantConfigurator" when Ar.Game is GAME_DeadByDaylight => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "BhvrBarkNodeTemplate" when Ar.Game is GAME_DeadByDaylight => type == ReadType.ZERO ? new FBhvrBarkNodeTemplate() : new FBhvrBarkNodeTemplate(Ar),
 
             "NiagaraEventGeneratorProperties" when Ar.Game is GAME_RocoKingdomWorld => new FNiagaraEventGeneratorProperties(Ar),
 
