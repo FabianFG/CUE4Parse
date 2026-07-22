@@ -2,7 +2,7 @@ using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 
-namespace CUE4Parse.GameTypes.DeadByDaylight.Objects;
+namespace CUE4Parse.GameTypes.DBD.Objects;
 
 public class FBhvrBarkNodeTemplate : IUStruct
 {
