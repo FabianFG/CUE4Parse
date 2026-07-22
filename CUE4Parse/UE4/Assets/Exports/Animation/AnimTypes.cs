@@ -11,8 +11,8 @@ public class FAnimNotifyEvent : FAnimLinkableElement
 	public float EndTriggerTimeOffset;
 	public float TriggerWeightThreshold;
 	public FName NotifyName;
-	public FPackageIndex Notify;
-	public FPackageIndex NotifyStateClass;
+	public FPackageIndex? Notify;
+	public FPackageIndex? NotifyStateClass;
 	public float Duration;
 	public FAnimLinkableElement EndLink;
 	public bool bConvertedFromBranchingPoint;

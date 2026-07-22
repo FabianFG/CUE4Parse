@@ -70,12 +70,12 @@ public class FVirtualTextureBuiltData
 {
     public readonly uint NumLayers;
     public readonly uint NumMips;
-    public readonly uint Width;
-    public readonly uint Height;
-    public readonly uint WidthInBlocks;
+    public readonly uint Width; // Width of the texture in pixels. Note the physical width may be larger due to tiling
+    public readonly uint Height; // Height of the texture in pixels. Note the physical height may be larger due to tiling
+    public readonly uint WidthInBlocks; // Number of UDIM blocks that make up the texture, used to compute UV scaling factor
     public readonly uint HeightInBlocks;
-    public readonly uint TileSize;
-    public readonly uint TileBorderSize;
+    public readonly uint TileSize; // Tile size excluding borders
+    public readonly uint TileBorderSize; // A BorderSize pixel border will be added around all tiles
     public readonly EPixelFormat[] LayerTypes;
     public readonly FVirtualTextureDataChunk[] Chunks;
     public readonly uint[]? TileIndexPerChunk;

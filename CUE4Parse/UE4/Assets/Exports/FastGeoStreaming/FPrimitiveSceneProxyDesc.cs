@@ -163,6 +163,11 @@ public class FStaticMeshSceneProxyDesc
             Ar.Position += 84;
             return;
         }
+        else if (Ar.Game is GAME_SilverPalace)
+        {
+            Ar.Position += 92;
+            return;
+        }
         MeshPaintTexture = Ar.Game >= GAME_UE5_8 ? Ar.ReadFPackageIndex() : new FPackageIndex();
         OverlayMaterial = Ar.ReadFPackageIndex();
         MaterialSlotsOverlayMaterial = Ar.ReadArray(Ar.ReadFPackageIndex);

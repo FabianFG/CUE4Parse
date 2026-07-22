@@ -20,9 +20,10 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
     public float[] CustomPrimitiveData;
     public EDetailMode DetailMode;
     public EHasCustomNavigableGeometry bHasCustomNavigableGeometry;
-    public FPackageIndex[] RuntimeVirtualTextures;
+    public FPackageIndex[]? RuntimeVirtualTextures;
     public FStructFallback? BodyInstance;
     public FSceneProxyDesc SceneProxyDesc;
+    public object? CustomGameData;
 
     public FFastGeoPrimitiveComponent(FFastGeoArchive Ar) : base(Ar)
     {
@@ -32,6 +33,17 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
         WorldBounds = new FBoxSphereBounds(Ar);
         bVisible = Ar.ReadBoolean();
         bStaticWhenNotMoveable = Ar.ReadBoolean();
+        if (Ar.Game is GAME_SilverPalace)
+        {
+            Ar.SkipArray<float>();
+            Ar.Position += 4;
+            BodyInstance = new FStructFallback();
+            UObject.DeserializePropertiesTagged(BodyInstance.Properties, Ar, false);
+            SceneProxyDesc = new FSceneProxyDesc();
+            Ar.Position += 266;
+            CustomGameData = (Ar.ReadFName(), Ar.ReadFString(), Ar.ReadFString());
+            return;
+        }
         bFillCollisionUnderneathForNavmesh = Ar.ReadBoolean();
         bRasterizeAsFilledConvexVolume = Ar.ReadBoolean();
         bCanEverAffectNavigation = Ar.ReadBoolean();

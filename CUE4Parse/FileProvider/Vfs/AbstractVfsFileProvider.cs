@@ -111,8 +111,8 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public abstract void Initialize();
 
-        public void RegisterVfs(FileInfo file) => RegisterVfs(file.FullName);
-        public void RegisterVfs(string file) => RegisterRandomAccessVfs(new FRandomAccessFileStreamArchive(file, Versions), null, openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
+        public virtual void RegisterVfs(FileInfo file) => RegisterVfs(file.FullName);
+        public virtual void RegisterVfs(string file) => RegisterRandomAccessVfs(new FRandomAccessFileStreamArchive(file, Versions), null, openPath => new FRandomAccessFileStreamArchive(openPath, Versions));
 
         public void RegisterVfs(FRandomAccessFileStreamArchive[] stream, Func<string, FArchive>? openContainerStreamFunc = null)
             => RegisterRandomAccessVfs(stream[0], stream.Length > 1 ? stream[1] : null, openContainerStreamFunc);

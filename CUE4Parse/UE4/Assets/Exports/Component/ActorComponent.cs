@@ -142,7 +142,6 @@ public class UGameplayCameraSystemComponent : USceneComponent;
 public class UGameplayDebuggerRenderingComponent : UDebugDrawComponent;
 public class UGameplayTasksComponent : UActorComponent;
 public class UGeometryCacheComponent : UMeshComponent;
-public class UGeometryCollectionComponent : UMeshComponent;
 public class UGeometryCollectionDebugDrawComponent : UActorComponent;
 public class UGeometryCollectionISMPoolComponent : USceneComponent;
 public class UGeometryCollectionISMPoolDebugDrawComponent : UDebugDrawComponent;

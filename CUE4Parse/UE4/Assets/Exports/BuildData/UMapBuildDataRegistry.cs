@@ -42,7 +42,7 @@ public class UMapBuildDataRegistry : UObject
             if (FReflectionCaptureObjectVersion.Get(Ar) >= FReflectionCaptureObjectVersion.Type.MoveReflectionCaptureDataToMapBuildData)
             {
                 if (Ar.Game is GAME_TheFirstDescendant) return;
-
+                if (Ar.Game is GAME_SilverPalace) Ar.SkipFixedArray(17);
                 ReflectionCaptureBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FReflectionCaptureMapBuildData(Ar));
             }
 
@@ -330,7 +330,7 @@ public class FPrecomputedVolumetricLightmapData
 
             if (FMobileObjectVersion.Get(Ar) >= FMobileObjectVersion.Type.LQVolumetricLightmapLayers)
             {
-                if (FUE5MainStreamObjectVersion.Get(Ar) <= FUE5MainStreamObjectVersion.Type.MobileStationaryLocalLights)
+                if (FUE5MainStreamObjectVersion.Get(Ar) <= FUE5MainStreamObjectVersion.Type.MobileStationaryLocalLights || Ar.Game is GAME_SilverPalace)
                 {
                     BrickData.LQLightColor = new FVolumetricLightmapDataLayer(Ar);
                     BrickData.LQLightDirection = new FVolumetricLightmapDataLayer(Ar);
@@ -341,6 +341,7 @@ public class FPrecomputedVolumetricLightmapData
             {
                 SubLevelBrickPositions = Ar.ReadArray<FIntVector>();
                 IndirectionTextureOriginalValues = Ar.ReadArray<FColor>();
+                if (Ar.Game is GAME_SilverPalace) Ar.SkipMultipleFixedArrays([1, 4]);
             }
 
             if (Ar.Game == GAME_SplitFiction) Ar.Position += 8;
