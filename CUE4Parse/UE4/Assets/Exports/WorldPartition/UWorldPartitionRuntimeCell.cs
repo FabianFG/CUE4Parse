@@ -17,9 +17,9 @@ public class UWorldPartitionRuntimeCell : UObject
     {
         base.Deserialize(Ar, validPos);
         bIsSpatiallyLoaded = GetOrDefault<bool>(nameof(bIsSpatiallyLoaded));
-        DataLayers = Ar.Game is not GAME_WutheringWaves
+        DataLayers = Ar.Game is not (GAME_WutheringWaves or GAME_ArcRaiders)
             ? GetOrDefault<FDataLayerInstanceNames?>(nameof(DataLayers))
-            : new FDataLayerInstanceNames(new FStructFallback(this.Properties));
+            : new FDataLayerInstanceNames(new FStructFallback(Properties));
         CellDebugColor = GetOrDefault<FLinearColor>(nameof(CellDebugColor));
         RuntimeCellData = GetOrDefault<FPackageIndex>(nameof(RuntimeCellData));
     }
