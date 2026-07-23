@@ -6,7 +6,6 @@ namespace CUE4Parse_Conversion.PoseAsset;
 
 public class PoseAssetExporter : ExporterBase
 {
-    
     public PoseAsset PoseAsset;
 
     public PoseAssetExporter(UPoseAsset poseAsset, ExporterOptions options) : base(poseAsset, options)
@@ -23,7 +22,7 @@ public class PoseAssetExporter : ExporterBase
         {
             case EPoseFormat.UEFormat:
                 ext = "uepose";
-                new UEPose(poseAsset.Name, convertedPoseAsset, Options).Save(Ar);
+                Ar.Write(UEPose.Export(poseAsset.Name, PackagePath, convertedPoseAsset, Options));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(Options.PoseFormat), Options.PoseFormat, null);
