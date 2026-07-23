@@ -50,11 +50,11 @@ public class UFortAnimNotifyState_SpawnProp : UAnimNotifyState
         LocationOffset = GetOrDefault<FVector>(nameof(LocationOffset));
         RotationOffset = GetOrDefault<FRotator>(nameof(RotationOffset));
         Scale = GetOrDefault(nameof(Scale), Scale);
-        ActorProp = GetOrDefault<FPackageIndex>(nameof(ActorProp));
+        ActorProp = GetOrDefault<FPackageIndex?>(nameof(ActorProp));
         bCanEditSkeletalMeshProp = GetOrDefault<bool>(nameof(bCanEditSkeletalMeshProp));
-        SkeletalMeshProp = GetOrDefault<FPackageIndex>(nameof(SkeletalMeshProp));
-        SkeletalMeshPropAnimation = GetOrDefault<FPackageIndex>(nameof(SkeletalMeshPropAnimation));
-        SkeletalMeshPropAnimClass = GetOrDefault<FPackageIndex>(nameof(SkeletalMeshPropAnimClass));
+        SkeletalMeshProp = GetOrDefault<FPackageIndex?>(nameof(SkeletalMeshProp));
+        SkeletalMeshPropAnimation = GetOrDefault<FPackageIndex?>(nameof(SkeletalMeshPropAnimation));
+        SkeletalMeshPropAnimClass = GetOrDefault<FPackageIndex?>(nameof(SkeletalMeshPropAnimClass));
         bInheritScale = GetOrDefault<bool>(nameof(bInheritScale));
         bAbsoluteScale = GetOrDefault<bool>(nameof(bAbsoluteScale));
         bUseAttachParentBound = GetOrDefault<bool>(nameof(bUseAttachParentBound));
@@ -62,7 +62,7 @@ public class UFortAnimNotifyState_SpawnProp : UAnimNotifyState
         bSyncMontage = GetOrDefault<bool>(nameof(bSyncMontage));
         bPrestreamTextures = GetOrDefault<bool>(nameof(bPrestreamTextures));
         PrestreamTextureDuration = GetOrDefault<float>(nameof(PrestreamTextureDuration));
-        StaticMeshProp = GetOrDefault<FPackageIndex>(nameof(StaticMeshProp));
+        StaticMeshProp = GetOrDefault<FPackageIndex?>(nameof(StaticMeshProp));
     }
 }
 
