@@ -265,10 +265,13 @@ public class SkeletonDto : MeshDto<SkinnedMeshVertex>
     {
         var refSkeleton = skeleton.ReferenceSkeleton;
         Bones = new MeshBoneDto[refSkeleton.FinalRefBonePose.Length];
+
+        var componentSpace = new FTransform[Bones.Length];
         for (var i = 0; i < Bones.Length; i++)
         {
             var bone = new MeshBoneDto(refSkeleton.FinalRefBoneInfo[i], refSkeleton.FinalRefBonePose[i]);
-            Bounds = Bounds.ExpandBy(bone.Transform.Translation);
+            componentSpace[i] = bone.ParentIndex >= 0 ? bone.Transform * componentSpace[bone.ParentIndex] : bone.Transform;
+            Bounds += componentSpace[i].Translation;
             Bones[i] = bone;
         }
 
