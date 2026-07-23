@@ -1,15 +1,10 @@
 using System.Buffers.Binary;
+using Blake3;
 
 namespace CUE4Parse.GameTypes.Theia.Encryption;
 
 public static class TheiaSchedule
 {
-    public static readonly byte[] GLOBAL_KEY =
-    [
-        0x4D, 0xEA, 0x1D, 0xC5, 0x69, 0x9F, 0x44, 0xB0, 0x86, 0x1D, 0x71, 0x5F, 0x68, 0x01, 0x7D, 0x59,
-        0xC9, 0x0B, 0x51, 0x2E, 0x5B, 0xEC, 0xB5, 0x5D, 0x02, 0xE6, 0x83, 0x52, 0x34, 0x91, 0xD7, 0x19,
-    ];
-
     public static readonly uint[] CONST8 =
     [
         0xBEDC8A41, 0xC2083AA2, 0x7A40B8E0, 0x07D37C60,
@@ -233,10 +228,16 @@ public static class TheiaSchedule
         if (meta.Length < off + 32)
             throw new ArgumentException($"meta too small for page {page}", nameof(meta));
 
+        // For Arc Raiders this key is constant
+        var rawMasterKey = meta.Slice(0x60, 32);
+        Span<byte> hashBlock = stackalloc byte[64];
+        rawMasterKey.CopyTo(hashBlock);
+        var masterKey = Hasher.Hash(hashBlock).AsSpan().ToArray();
+
         var pageKey = meta.Slice(off, 32);
         Span<uint> arg2 = stackalloc uint[16];
         for (var i = 0; i < 8; i++)
-            arg2[i] = BinaryPrimitives.ReadUInt32LittleEndian(GLOBAL_KEY.AsSpan(i * 4, 4));
+            arg2[i] = BinaryPrimitives.ReadUInt32LittleEndian(masterKey.AsSpan(i * 4, 4));
         for (var i = 0; i < 8; i++)
             arg2[8 + i] = BinaryPrimitives.ReadUInt32LittleEndian(pageKey.Slice(i * 4, 4));
 

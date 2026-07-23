@@ -7,7 +7,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation;
 [StructFallback]
 public class FAnimLinkableElement
 {
-    public FPackageIndex LinkedMontage;
+    public FPackageIndex? LinkedMontage;
     public int SlotIndex;
     public int SegmentIndex;
     public EAnimLinkMethod LinkMethod;
@@ -15,11 +15,11 @@ public class FAnimLinkableElement
     public float SegmentBeginTime;
     public float SegmentLength;
     public float LinkValue;
-    public FPackageIndex LinkedSequence;
+    public FPackageIndex? LinkedSequence;
 
     public FAnimLinkableElement(FStructFallback fallback)
     {
-        LinkedMontage = fallback.GetOrDefault<FPackageIndex>(nameof(LinkedMontage));
+        LinkedMontage = fallback.GetOrDefault<FPackageIndex?>(nameof(LinkedMontage));
         SlotIndex = fallback.GetOrDefault<int>(nameof(SlotIndex));
         SegmentIndex = fallback.GetOrDefault<int>(nameof(SegmentIndex));
         LinkMethod = fallback.GetOrDefault<EAnimLinkMethod>(nameof(LinkMethod));
@@ -27,7 +27,7 @@ public class FAnimLinkableElement
         SegmentBeginTime = fallback.GetOrDefault<float>(nameof(SegmentBeginTime));
         SegmentLength = fallback.GetOrDefault<float>(nameof(SegmentLength));
         LinkValue = fallback.GetOrDefault<float>(nameof(LinkValue));
-        LinkedSequence = fallback.GetOrDefault<FPackageIndex>(nameof(LinkedSequence));
+        LinkedSequence = fallback.GetOrDefault<FPackageIndex?>(nameof(LinkedSequence));
     }
 }
 

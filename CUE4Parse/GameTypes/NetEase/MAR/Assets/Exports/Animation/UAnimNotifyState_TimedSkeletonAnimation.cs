@@ -39,10 +39,10 @@ public class UAnimNotifyState_TimedSkeletonAnimation : UAnimNotifyState
     {
         base.Deserialize(Ar, validPos);
 
-        SkeletalMeshTemplate = GetOrDefault<FSoftObjectPath>(nameof(SkeletalMeshTemplate));
-        OverrideMaterials = GetOrDefault<FSoftObjectPath?[]>(nameof(OverrideMaterials));
+        SkeletalMeshTemplate = GetOrDefault<FSoftObjectPath?>(nameof(SkeletalMeshTemplate));
+        OverrideMaterials = GetOrDefault<FSoftObjectPath?[]?>(nameof(OverrideMaterials));
         TargetComponentTag = GetOrDefault<FName>(nameof(TargetComponentTag));
-        SocketName = GetOrDefault<FName>(nameof(SocketName));
+        SocketName = GetOrDefault<FName?>(nameof(SocketName));
         LocationOffset = GetOrDefault<FVector>(nameof(LocationOffset));
         RotationOffset = GetOrDefault<FRotator>(nameof(RotationOffset));
         bDoNotAttach = GetOrDefault<bool>(nameof(bDoNotAttach));
@@ -55,16 +55,16 @@ public class UAnimNotifyState_TimedSkeletonAnimation : UAnimNotifyState
         bReceiveDecal = GetOrDefault<bool>(nameof(bReceiveDecal));
         VisibilityBasedAnimTickOption = GetOrDefault<EVisibilityBasedAnimTickOption>(nameof(VisibilityBasedAnimTickOption));
         bDoNotTickWhenInvisibleOrHiddenInGame = GetOrDefault<bool>(nameof(bDoNotTickWhenInvisibleOrHiddenInGame));
-        AnimToPlay = GetOrDefault<FSoftObjectPath>(nameof(AnimToPlay));
+        AnimToPlay = GetOrDefault<FSoftObjectPath?>(nameof(AnimToPlay));
         bIsLoop = GetOrDefault<bool>(nameof(bIsLoop));
         bSyncAnimPosFromNotify = GetOrDefault<bool>(nameof(bSyncAnimPosFromNotify));
         bSyncMontageSection = GetOrDefault<bool>(nameof(bSyncMontageSection));
         AnimStartPos = GetOrDefault<float>(nameof(AnimStartPos));
         bSkeletalUseAttachParentBound = GetOrDefault<bool>(nameof(bSkeletalUseAttachParentBound));
         bCustomLightingChannels = GetOrDefault<bool>(nameof(bCustomLightingChannels));
-        LightingChannels = GetOrDefault<FLightingChannels>(nameof(LightingChannels));
-        DelayHandleSkeletaMesh = GetOrDefault<FPackageIndex>(nameof(DelayHandleSkeletaMesh));
-        OwnerMeshActor = GetOrDefault<FPackageIndex>(nameof(OwnerMeshActor));
+        LightingChannels = GetOrDefault<FLightingChannels?>(nameof(LightingChannels));
+        DelayHandleSkeletaMesh = GetOrDefault<FPackageIndex?>(nameof(DelayHandleSkeletaMesh));
+        OwnerMeshActor = GetOrDefault<FPackageIndex?>(nameof(OwnerMeshActor));
     }
 }
 
