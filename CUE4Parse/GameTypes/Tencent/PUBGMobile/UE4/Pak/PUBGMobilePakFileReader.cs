@@ -91,7 +91,7 @@ public partial class PakFileReader
             var readSize = checked((dataOffset + requestedSize).Align(alignment));
             var data = Ar.ReadBytesAt(pakEntry.Offset + readOffset, readSize);
             if (pakEntry.IsEncrypted)
-                data = PUBGMobileSM4.Decrypt(data, 0, data.Length, pakEntry.Path, pakEntry.EncryptionMethod);
+                data = PUBGMobileSM4.Decrypt(data, 0, data.Length, pakEntry.Path, pakEntry.EncryptionMethod, pakEntry.EncryptionKeyId);
 
             var output = dataOffset == 0 && requestedSize == data.Length
                 ? data
@@ -130,7 +130,7 @@ public partial class PakFileReader
             var readSize = compressedSize.Align(alignment);
             var compressed = Ar.ReadBytesAt(block.CompressedStart, readSize);
             if (pakEntry.IsEncrypted)
-                compressed = PUBGMobileSM4.Decrypt(compressed, 0, compressed.Length, pakEntry.Path, pakEntry.EncryptionMethod);
+                compressed = PUBGMobileSM4.Decrypt(compressed, 0, compressed.Length, pakEntry.Path, pakEntry.EncryptionMethod, pakEntry.EncryptionKeyId);
 
             var globalBlockOffset = (long) blockIndex * compressionBlockSize;
             var destinationSize = checked((int) Math.Min(compressionBlockSize, pakEntry.UncompressedSize - globalBlockOffset));

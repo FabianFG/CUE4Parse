@@ -35,13 +35,19 @@ public static class PUBGMobileSM4
         "iQ0eM0mJ7uT0kV6kL5zY"
     ];
 
-    public static byte[] Decrypt(byte[] bytes, int beginOffset, int count, string path, EPUBGMobileEncryptionMethod encryptionMethod)
+    public static byte[] Decrypt(byte[] bytes, int beginOffset, int count, string path, EPUBGMobileEncryptionMethod encryptionMethod, uint encryptionKeyId)
     {
         if (beginOffset > bytes.Length - count)
             throw new ArgumentException("beginOffset + count is larger than the length of bytes");
         if (encryptionMethod is EPUBGMobileEncryptionMethod.SM4 or EPUBGMobileEncryptionMethod.LiteSaltSM4
                 or (>= EPUBGMobileEncryptionMethod.SaltSM4Min and <= EPUBGMobileEncryptionMethod.SaltSM4Max) && count % BLOCK_SIZE != 0)
             throw new ArgumentException($"{nameof(count)} must be a multiple of {BLOCK_SIZE}", nameof(count));
+
+        var isDynamicallyEncrypted = (encryptionKeyId & 0xFF000000) == 0x01000000;
+        var encryptionKeyIndex = encryptionKeyId & 0xFFFFFF;
+
+        if (isDynamicallyEncrypted)
+            throw new ParserException($"Dynamically encrypted assets aren't supported (EncryptionKeyId: 0x{encryptionKeyId:X})");
 
         var output = new byte[count];
         Buffer.BlockCopy(bytes, beginOffset, output, 0, count);
