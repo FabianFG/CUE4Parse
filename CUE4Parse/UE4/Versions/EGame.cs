@@ -20,6 +20,7 @@ public enum EGame : uint
     GAME_UE4_9 = GameUtils.GameUe4Base + (9 << 16),
     GAME_UE4_10 = GameUtils.GameUe4Base + (10 << 16),
         GAME_SeaOfThieves = GAME_UE4_10 + 1,
+        GAME_WhatRemainsofEdithFinch = GAME_UE4_10 + 2,
     GAME_UE4_11 = GameUtils.GameUe4Base + (11 << 16),
         GAME_GearsOfWar4 = GAME_UE4_11 + 1,
         GAME_DaysGone = GAME_UE4_11 + 2,
