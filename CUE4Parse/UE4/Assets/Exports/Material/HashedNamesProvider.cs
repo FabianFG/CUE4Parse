@@ -3,12 +3,12 @@ using System.Reflection;
 using System.Text;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public sealed class HashedNamesProvider
 {
+
     public static readonly Lazy<HashedNamesProvider> LazyInstance = new(() => new HashedNamesProvider());
     public static HashedNamesProvider Instance => LazyInstance.Value;
 

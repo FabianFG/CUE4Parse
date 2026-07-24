@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.TQ2.Objects;
 
@@ -225,6 +224,7 @@ public struct FArticyId(FAssetArchive Ar) : IUStruct
 
 public class FGrimInstancedObjectPtr : IUStruct
 {
+    
     public int Type;
     public int Index;
     public FPackageIndex StructType;

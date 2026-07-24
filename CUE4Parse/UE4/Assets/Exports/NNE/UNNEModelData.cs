@@ -2,26 +2,30 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.NNE;
 
 public class UNNEModelData : UObject
 {
-    string[] TargetRuntimes;
+    public string[] TargetRuntimes;
     // A string identifying the type of data inside this asset. Corresponds to the extension of the imported file.
-    string FileType;
+    public string FileType;
     // The raw binary file data of the imported model.
-    byte[] FileData;
+    public byte[] FileData;
     // Additional raw binary data of the imported model.
-    Dictionary<string, byte[]> AdditionalFileData;
+    public Dictionary<string, byte[]>? AdditionalFileData;
+    // Mapping between a runtime name and the serialized version of it's runtime settings.
+    public Dictionary<string, byte[]>? RuntimeSettings;
     // A Guid that uniquely identifies this model. This is used to cache optimized models in the editor.
-    FGuid FileId;
+    public FGuid FileId;
     // The processed / optimized model data for the different runtimes.
-    Dictionary<string, byte[]> ModelData;
+    public Dictionary<string, byte[]> ModelData;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        switch (NNEModelDataVersion.Get(Ar))
+        var version = NNEModelDataVersion.Get(Ar);
+        switch (version)
         {
             case NNEModelDataVersion.Type.V0:
             case NNEModelDataVersion.Type.V1:
@@ -62,10 +66,15 @@ public class UNNEModelData : UObject
                 }
                 break;
             case NNEModelDataVersion.Type.V4:
+            case NNEModelDataVersion.Type.V5:
                 TargetRuntimes = Ar.ReadArray(Ar.ReadFString);
                 FileType = Ar.ReadFString();
                 FileData = Ar.ReadArray<byte>((int)Ar.Read<ulong>());
                 AdditionalFileData = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadArray<byte>((int)Ar.Read<ulong>()));
+                if (version >= NNEModelDataVersion.Type.V5)
+                {
+                    RuntimeSettings = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadArray<byte>((int) Ar.Read<ulong>()));
+                }   
                 FileId = Ar.Read<FGuid>();
                 numItems = Ar.Read<int>();
                 ModelData = [];
@@ -79,6 +88,27 @@ public class UNNEModelData : UObject
                 break;
         }
     }
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        base.WriteJson(writer, serializer);
+        writer.WritePropertyName(nameof(TargetRuntimes));
+        serializer.Serialize(writer, TargetRuntimes);
+        writer.WritePropertyName(nameof(FileType));
+        serializer.Serialize(writer, FileType);
+        writer.WritePropertyName(nameof(FileData));
+        serializer.Serialize(writer, FileData);
+        writer.WritePropertyName(nameof(AdditionalFileData));
+        serializer.Serialize(writer, AdditionalFileData?.Keys);
+        writer.WritePropertyName(nameof(RuntimeSettings));
+        serializer.Serialize(writer, RuntimeSettings?.Keys);
+        writer.WritePropertyName(nameof(FileId));
+        serializer.Serialize(writer, FileId);
+        writer.WritePropertyName(nameof(ModelData));
+        serializer.Serialize(writer, ModelData?.Keys);
+    }
+
+
 }
 
 public static class NNEModelDataVersion
@@ -90,6 +120,7 @@ public static class NNEModelDataVersion
         V2 = 2, // Re-arrange fields and store only ModelData in cooked assets
         V3 = 3, // Adding AdditionalFileData
         V4 = 4, // Support for > 2GB models
+        V5 = 5, // Adding RuntimeSettings
 
         // -----<new versions can be added above this line>-----
         VersionPlusOne,
@@ -110,7 +141,7 @@ public static class NNEModelDataVersion
             < GAME_UE5_3 => Type.V0,
             < GAME_UE5_4 => Type.V1,
             < GAME_UE5_5 => Type.V3,
-            < GAME_UE5_6 => Type.V4,
+            < GAME_UE5_8 => Type.V4,
             _ => Type.LatestVersion
         };
     }

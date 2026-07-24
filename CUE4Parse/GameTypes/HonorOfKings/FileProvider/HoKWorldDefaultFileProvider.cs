@@ -9,6 +9,7 @@ namespace CUE4Parse.GameTypes.HonorOfKings.FileProvider;
 
 public class HoKWDefaultFileProvider : DefaultFileProvider
 {
+    
     public static string GeneratedIndexFolder;
 
     public HoKWDefaultFileProvider(string directory, SearchOption searchOption, VersionContainer? versions = null,

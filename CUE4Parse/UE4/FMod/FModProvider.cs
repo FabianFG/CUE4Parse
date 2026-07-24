@@ -9,7 +9,6 @@ using CUE4Parse.UE4.FMod.Utils;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.Utils;
 using Fmod5Sharp.FmodTypes;
-using Serilog;
 using UE4Config.Parsing;
 
 namespace CUE4Parse.UE4.FMod;
@@ -25,6 +24,7 @@ public class FModExtractedSound
 
 public class FModProvider
 {
+    
     private Dictionary<FModGuid, List<FmodSample>> _resolvedEventsCache = [];
     private Dictionary<FModGuid, bool> _eventResolutionStatus = [];
     private Dictionary<FModGuid, FModGuid> _eventToReaderMap = [];
@@ -171,7 +171,7 @@ public class FModProvider
         if (!string.IsNullOrEmpty(token?.Value))
         {
             _encryptionKey = Encoding.UTF8.GetBytes(Regex.Unescape(token.Value.Trim('"')));
-            Log.Information($"FMod encryption key found: {token.Value}");
+            Log.Information("FMod encryption key found: {EncryptionKey}", token.Value);
         }
         else
         {

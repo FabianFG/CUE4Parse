@@ -8,7 +8,6 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
-using Serilog;
 using static CUE4Parse.UE4.Assets.Objects.EBulkDataFlags;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -16,6 +15,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(TBulkDataConverter))]
 public abstract class TBulkData<T> where T: struct
 {
+    
     public FByteBulkDataHeader Header { get; init; }
     public EBulkDataFlags BulkDataFlags => Header.BulkDataFlags;
 
@@ -62,6 +62,23 @@ public abstract class TBulkData<T> where T: struct
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual int GetDataSize() => Header.ElementCount * Unsafe.SizeOf<T>();
+
+    /// <summary>
+    /// Reads bulk data once without storing it in this instance.
+    /// If data is already cached, optionally returns a copy of a cached data.
+    /// </summary>
+    public T[]? ReadDataOnce(bool returnCachedData = true)
+    {
+        if (_data is { IsValueCreated: true })
+        {
+            var cached = _data.Value;
+            if (cached is null) return null;
+
+            return returnCachedData ? cached : (T[]) cached.Clone();
+        }
+
+        return ReadBulkDataInto(out var data) ? data : null;
+    }
 
     protected virtual bool ReadBulkDataInto(out T[] data)
     {

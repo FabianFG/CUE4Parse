@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse.UE4.Assets.Exports.Nanite;
 
@@ -12,4 +12,6 @@ public class FNaniteVertexAttributes
     public FColor Color;
     /// <summary>The uv coordinates of the vertex.</summary>
     public FVector2D[] UVs = new FVector2D[NaniteConstants.NANITE_MAX_UVS];
+    /// <summary> The bone influences of the vertex.</summary>
+    public FBoneInfluence[] Influences = [];
 }

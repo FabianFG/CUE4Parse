@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Landscape;
@@ -28,6 +29,7 @@ public class ULandscapeComponent : UPrimitiveComponent
     public FLandscapeComponentGrassData GrassData;
     public bool bCooked;
     public FLandscapeComponentDerivedData? PlatformData;
+    public Dictionary<FName, FPackageIndex> NamedGrassTypes;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -45,6 +47,7 @@ public class ULandscapeComponent : UPrimitiveComponent
         CachedLocalBox = GetOrDefault<FBox>(nameof(CachedLocalBox));
         MapBuildDataId = GetOrDefault<FGuid>(nameof(MapBuildDataId));
         WeightmapTextures = new Lazy<UTexture2D[]>(() => GetOrDefault<UTexture2D[]>("WeightmapTextures", []));
+        NamedGrassTypes = GetOrDefault<Dictionary<FName, FPackageIndex>>(nameof(NamedGrassTypes), []);
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
@@ -70,7 +73,7 @@ public class ULandscapeComponent : UPrimitiveComponent
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SERIALIZE_LANDSCAPE_GRASS_DATA)
         {
-            GrassData = new FLandscapeComponentGrassData(Ar);
+            GrassData = new FLandscapeComponentGrassData(Ar, NamedGrassTypes);
         }
 
         if (!Ar.IsFilterEditorOnly && Ar.Game >= GAME_UE4_0)
@@ -91,6 +94,12 @@ public class ULandscapeComponent : UPrimitiveComponent
             var some = Ar.ReadBulkArray<FVector>();
             var idk = Ar.ReadBulkArray<ushort>();
             return;
+        }
+
+        if (Ar.Game is GAME_ArcRaiders)
+        {
+            // indices into vector array, also some other data after
+            CustomGameData = (Ar.ReadArray<FVector>(), Ar.ReadArray<uint>());
         }
 
         if (Ar.Game >= GAME_UE4_0 && Ar.Game < GAME_UE5_1 && Ar.Position + 4 <= validPos)

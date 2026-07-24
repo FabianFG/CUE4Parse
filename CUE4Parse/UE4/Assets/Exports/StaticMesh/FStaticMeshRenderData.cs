@@ -38,7 +38,7 @@ public class FStaticMeshRenderData
             _ => 0
         };
 
-        if (Ar.Game == GAME_Undawn)
+        if (Ar.Game is GAME_Undawn or GAME_PUBGLite)
         {
             var size = Ar.Read<int>();
             LODs = new FStaticMeshLODResources[size];
@@ -46,7 +46,7 @@ public class FStaticMeshRenderData
             {
                 var savedPos = Ar.Position;
                 var bulkData = new FByteBulkData(Ar);
-                if (bulkData.Header.ElementCount > 0 && bulkData.Data != null)
+                if (bulkData.Header.ElementCount > 0 && bulkData.Data != null && bulkData.Data.Length > 0)
                 {
                     using var tempAr = new FByteArchive("StaticMeshLODResources", bulkData.Data, Ar.Versions);
                     LODs[i] = new FStaticMeshLODResources(tempAr);

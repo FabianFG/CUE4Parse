@@ -8,7 +8,6 @@ using CUE4Parse.Utils;
 
 using OodleDotNet;
 
-using Serilog;
 
 namespace CUE4Parse.Compression;
 
@@ -20,6 +19,7 @@ public class OodleException : ParserException
 
 public static class OodleHelper
 {
+    
     public const string OODLE_NAME_OLD = "oo2core_9_win64.dll";
     public const string OODLE_NAME_CURRENT = "oodle-data-shared.dll";
     public const string OODLE_NAME_LINUX = "liboodle-data-shared.so";

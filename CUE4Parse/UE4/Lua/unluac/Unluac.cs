@@ -1,10 +1,10 @@
-﻿using System.Runtime.InteropServices;
-using Serilog;
+using System.Runtime.InteropServices;
 
 namespace CUE4Parse.UE4.Lua.unluac;
 
 public class Unluac : IDisposable
 {
+    
     private nint Handle { get; set; }
     private readonly unluac_create_isolate _createIsolate;
     private readonly unluac_tear_down_isolate _tearDownIsolate;

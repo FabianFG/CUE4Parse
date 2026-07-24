@@ -9,7 +9,6 @@ using CUE4Parse.UE4.Wwise.Objects.Actions;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
@@ -25,6 +24,7 @@ public class WwiseExtractedSound
 
 public partial class WwiseProvider
 {
+    
     private readonly AbstractVfsFileProvider _provider;
     private readonly string _gameDirectory;
     private string _baseWwiseAudioPath;
@@ -318,7 +318,7 @@ public partial class WwiseProvider
             }
             catch (Exception e)
             {
-                Log.Warning(e, $"Failed to read soundbank file '{file.Key}'");
+                Log.Warning(e, "Failed to read soundbank file '{FileName}'", file.Key);
             }
         }
 
@@ -498,7 +498,7 @@ public partial class WwiseProvider
 
         if (wwiseDir is null)
         {
-            Log.Warning($"Wwise directory not found under '{searchDirectory}', external Wwise files might not exist");
+            Log.Warning("Wwise directory not found under '{SearchDirectory}', external Wwise files might not exist", searchDirectory);
             return 0;
         }
 
@@ -550,7 +550,7 @@ public partial class WwiseProvider
             {
                 // TEMP: Init bnk was found, but caching isn't supported yet, prevent exception from throwing
                 _completedWwiseFullBnkInit = true;
-                Log.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size in bytes {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
+                Log.Debug("Preloaded total of {LoadedBankCount} soundbanks, loaded size in bytes {LoadedSize}/{TotalSize}", totalLoadedBanks, _totalLoadedWwiseSize, _totalWwiseBanksSize);
                 return;
             }
         }
@@ -578,7 +578,7 @@ public partial class WwiseProvider
             totalLoadedBanks += 1;
         }
 
-        Log.Debug($"Preloaded total of {totalLoadedBanks} soundbanks, loaded size in bytes {_totalLoadedWwiseSize}/{_totalWwiseBanksSize}");
+        Log.Debug("Preloaded total of {LoadedBankCount} soundbanks, loaded size in bytes {LoadedSize}/{TotalSize}", totalLoadedBanks, _totalLoadedWwiseSize, _totalWwiseBanksSize);
         _completedWwiseFullBnkInit = totalLoadedBanks > 0;
     }
 

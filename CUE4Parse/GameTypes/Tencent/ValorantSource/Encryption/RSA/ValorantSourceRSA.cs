@@ -1,16 +1,14 @@
 using System.Buffers.Binary;
-using System.Numerics;
 using System.Security.Cryptography;
+using CUE4Parse.GameTypes.Tencent.Encryption;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using GenericReader;
 
-namespace CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption;
+namespace CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.RSA;
 
 public static class ValorantSourceRSA
 {
-    private const int Sha1Size = 20;
-    private const int RsaSize = 256;
     private static readonly byte[] _modulus =
     [
         0x49, 0x2B, 0xC9, 0x0C, 0x85, 0xCA, 0xDD, 0x42, 0xEE, 0x24, 0x3E, 0x53, 0xA2, 0xEB, 0xBE, 0x06,
@@ -47,7 +45,7 @@ public static class ValorantSourceRSA
 
     private static byte[] DerivePakKey(FArchive Ar, long offset, int size)
     {
-        if (size != RsaSize || offset < 0 || offset + size > Ar.Length)
+        if (size != TencentEncryptionUtils.RSA_SIZE || offset < 0 || offset + size > Ar.Length)
             throw new ParserException(Ar, "Invalid Valorant Source RSA key data");
 
         var savedPosition = Ar.Position;
@@ -55,12 +53,7 @@ public static class ValorantSourceRSA
         var encrypted = Ar.ReadBytes(size);
         Ar.Position = savedPosition;
 
-        var value = BigInteger.ModPow(new BigInteger(encrypted, isUnsigned: true, isBigEndian: false), 65537, new BigInteger(_modulus, isUnsigned: true, isBigEndian: false));
-
-        var encoded = value.ToByteArray(isUnsigned: true, isBigEndian: false);
-        Array.Resize(ref encoded, (encoded.Length + 3) & ~3);
-
-        var payload = DecodeOaep(encoded);
+        var payload = TencentEncryptionUtils.DecryptRsaOaep(encrypted, _modulus);
 
         using var reader = new GenericBufferReader(payload);
         var first = reader.ReadSpan(reader.Read<int>());
@@ -68,38 +61,11 @@ public static class ValorantSourceRSA
 
         var key = new byte[32];
         SHA1.HashData(first).CopyTo(key);
-        SHA1.HashData(second).AsSpan(0, 12).CopyTo(key.AsSpan(Sha1Size));
+        SHA1.HashData(second).AsSpan(0, 12).CopyTo(key.AsSpan(TencentEncryptionUtils.SHA1_SIZE));
 
         for (var i = 0; i < key.Length; i += sizeof(uint))
             key.AsSpan(i, sizeof(uint)).Reverse();
 
         return key;
-    }
-
-    private static byte[] DecodeOaep(ReadOnlySpan<byte> encoded)
-    {
-        if (encoded.Length < Sha1Size * 2 + 2 || encoded[0] != 0)
-            throw new ParserException("Invalid Valorant Source OAEP block");
-
-        var seed = encoded.Slice(1, Sha1Size).ToArray();
-        var database = encoded[(1 + Sha1Size)..].ToArray();
-        XorRepeatedHash(database, seed);
-        XorRepeatedHash(seed, database);
-
-        var expectedLabelHash = SHA1.HashData(new byte[Sha1Size]);
-        if (!database.AsSpan(0, Sha1Size).SequenceEqual(expectedLabelHash))
-            throw new ParserException("Invalid Valorant Source OAEP label hash");
-
-        var marker = database.AsSpan(Sha1Size).IndexOf((byte) 1);
-        if (marker < 0)
-            throw new ParserException("Invalid Valorant Source OAEP padding");
-
-        return database[(Sha1Size + marker + 1)..];
-    }
-
-    private static void XorRepeatedHash(ReadOnlySpan<byte> source, Span<byte> target)
-    {
-        var hash = SHA1.HashData(source);
-        for (var i = 0; i < target.Length; i++) target[i] ^= hash[i % hash.Length];
     }
 }

@@ -1,8 +1,10 @@
+using System.Numerics.Tensors;
 using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.Tencent.ValorantSource.Lua;
 
@@ -27,11 +29,7 @@ public class ValorantSourceLua
 
             var length = (int) size - 1;
             var b = ReadBytes(length);
-
-            for (int i = 0; i < length; i++)
-            {
-                b[i] = (byte) (b[i] ^ _xorKey[i % _xorKey.Length]);
-            }
+            TensorUtils.Xor(b, _xorKey);
 
             return Encoding.UTF8.GetString(b);
         }

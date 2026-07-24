@@ -3,7 +3,6 @@ using System.Resources;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Wwise;
 
@@ -21,7 +20,7 @@ public partial class WwiseProvider
         {
             if (!_bl4SoundTagsMap.TryGetValue(audioEventName.Text, out var soundTagData))
             {
-                Log.Warning($"Couldn't find Sound Tag '{audioEventName.Text}' in the Sound Tags map");
+                Log.Warning("Couldn't find Sound Tag '{SoundTag}' in the Sound Tags map", audioEventName.Text);
                 return [];
             }
 

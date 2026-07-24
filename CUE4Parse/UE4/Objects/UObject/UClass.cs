@@ -9,13 +9,13 @@ using CUE4Parse.UE4.Objects.UObject.Editor;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Objects.UObject;
 
 [SkipObjectRegistration]
 public class UClass : UStruct
 {
+    
     /** Used to check if the class was cooked or not */
     public bool bCooked;
 

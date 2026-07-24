@@ -58,7 +58,7 @@ public class CMaterialParams2
             "Simple_BaseColor_Texture", "AlbedoTexture", "Albedo Texture", "BC_LUT", "BCO", "CR", "C/R" /*Finals*/, "BaseColor_Tex(a:mask)", "Base Color Map VT",
             "Basecolor_VT", "BaseColor_Map", "BaceColor_Map", "ColorAo", "RGBMask", "Color & Alpha", "BaseColor - Texture", "Clothing Diffuse",
             "Base Color [Standard]", "Base Color VT", "BaseColorRoughness", "BaseColorAlpha", "Color Map (Packed)", "D(ID)", "BC Texture (BC/BCO)",
-            "BCM BaseColor|Metallic Map", "Color_Main", "Texture_BC", "DF"
+            "BCM BaseColor|Metallic Map", "Color_Main", "Texture_BC", "Virtual Texture Base Color", "DF"
         ],
         ["Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "Diffuse B Map", "BaseColorB", "CO_2", "M2_T_BC"],
         ["Background Diffuse 3", "Diffuse_Texture_3", "DiffuseLayer3", "Diffuse C", "Diffuse C Map", "BaseColorC", "CO_3", "M3_T_BC"],
@@ -82,7 +82,7 @@ public class CMaterialParams2
             "Primary Normal Map", "ORN" /*ABI*/, "NRO_Base_Normal", "Layer00_Normal_Tex", "Tex_SkinBase_N", "Tex_Core_Layer_Normal",
             "Simple_Normal_Texture", "BaseNormal Texture", "NOH", "N/O/H", "NMH", "NWO" /*Finals*/, "Normal_VT", "NRM_Map",
             "Normal - Texture", "Clothing Normal", "Normal [Standard]", "NCD_Mask", "Normal Map (Packed)", "N2R(M)", "Normal Texture (N)",
-            "Normal(HrNM)_Texture",
+            "Normal(HrNM)_Texture", "VT Normal"
         ],
         ["Normals_Texture_2", "Texture B Normal", "NormalB", "Normal B Map", "NM_2", "M2_T_NRM"],
         ["Normals_Texture_3", "Texture C Normal", "NormalC", "Normal C Map", "NM_3", "M3_T_NRM"],
@@ -107,7 +107,7 @@ public class CMaterialParams2
             "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture",
             "Simple_OcclRoughMet_Texture", "P (NoneVT)", "Pack Tex1", "CASR", "Roughness_VT", "OcclusionRoughnessMetallicTexture",
             "Clothing ORM", "ORC [Standard]", "ORME_Tex", "Roughness VT", "RMAO VT", "Mix(AO,Rough,Mask,Metal)", "Texture_S",
-            "MetallicRoughnessOcclusionSpecularTexture"
+            "MetallicRoughnessOcclusionSpecularTexture", "Virtual Texture ORM"
         ],
         ["SpecularMasks_2", "MRA B", "LP_2", "M2_T_PAK"],
         ["SpecularMasks_3", "MRA C", "LP_3", "M3_T_PAK"],
@@ -122,7 +122,7 @@ public class CMaterialParams2
     [
         [
             "Emissive", "EmissiveTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
-            "EmmisiveColor_A", "TextureEmissive", "TexEm", "Main_T_Emissive"
+            "EmmisiveColor_A", "TextureEmissive", "TexEm", "Main_T_Emissive", "VT Emissive"
         ],
         ["L1_Emissive", "EmmisiveColor_B"],
         ["L2_Emissive", "EmmisiveColor_C"],

@@ -115,9 +115,10 @@ public sealed class LoMIoStoreManifest
             if (!ownerSet.Add(entry.Owner))
                 continue;
 
-            var containerPath = names[entry.Owner].Replace('/', Path.DirectorySeparatorChar);
-            if (!Path.IsPathRooted(containerPath))
-                containerPath = Path.Combine(baseDirectory, containerPath);
+            var containerName = Path.GetFileName(names[entry.Owner].Replace('/', Path.DirectorySeparatorChar));
+            var containerPath = Directory.EnumerateFiles(baseDirectory, containerName, SearchOption.AllDirectories).FirstOrDefault();
+            if (containerPath is null)
+                continue;
 
             var basePath = GetPartitionBasePath(containerPath, out var partitionIndex);
             if (!groups.TryGetValue(basePath, out var group))

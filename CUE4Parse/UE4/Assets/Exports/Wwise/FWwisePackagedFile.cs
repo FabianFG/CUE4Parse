@@ -4,13 +4,13 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 
 [JsonConverter(typeof(FWwisePackagedFileConverter))]
 public class FWwisePackagedFile : FStructFallback
 {
+    
     public EWwisePackagingStrategy PackagingStrategy;
     public FName PathName;
     public FName ModularGameplayName;

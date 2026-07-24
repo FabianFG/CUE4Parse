@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
+using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.GameTypes.DFHO.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -8,7 +11,24 @@ namespace CUE4Parse.UE4.Assets.Exports.Internationalization;
 
 public class UStringTable : UObject
 {
+    private static readonly ConcurrentDictionary<string, UStringTable> _cache = new();
+
     public FStringTable StringTable { get; private set; }
+
+    internal static bool TryGet(IFileProvider provider, string tableId, [MaybeNullWhen(false)] out UStringTable table)
+    {
+        if (_cache.TryGetValue(tableId, out table))
+            return true;
+
+        if (provider.TryLoadPackageObject(tableId, out table))
+        {
+            _cache.TryAdd(tableId, table);
+            return true;
+        }
+
+        table = null;
+        return false;
+    }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {

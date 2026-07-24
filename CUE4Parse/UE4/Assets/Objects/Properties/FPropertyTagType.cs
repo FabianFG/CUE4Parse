@@ -11,7 +11,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects.Properties;
 
@@ -37,6 +36,7 @@ public abstract class FPropertyTagType<T> : FPropertyTagType
 [JsonConverter(typeof(FPropertyTagTypeConverter))]
 public abstract class FPropertyTagType
 {
+    
     public abstract object? GenericValue { get; }
     public object? GetValue(Type type)
     {
@@ -85,7 +85,10 @@ public abstract class FPropertyTagType
             //TODO There are also Enums stored as ByteProperty but UModel uses them nowhere besides in UE2
             case FPropertyTagType<UScriptMap> mapProp when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>):
                 return CreateDictionary(type, mapProp.Value!.Properties);
+            case OptionalProperty optionalProperty:
+                return optionalProperty.Value?.GetValue(type);
             default:
+                Log.Warning("Incorrect type conversion from {0} to {1}", this, type);
                 return null;
         }
     }

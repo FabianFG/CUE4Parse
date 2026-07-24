@@ -3,12 +3,12 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public class UTexture2D : UTexture
 {
+    
     public FIntPoint ImportedSize { get; private set; }
     public TextureAddress AddressX { get; private set; }
     public TextureAddress AddressY { get; private set; }
@@ -54,7 +54,7 @@ public class UTexture2D : UTexture
             var bSerializeMipData = true;
             if (Ar.Game >= GAME_UE5_3 || Ar.Game == GAME_TheFirstDescendant)
             {
-                // Controls whether FByteBulkData is serialized??
+                // Controls whether FByteBulkData
                 bSerializeMipData = Ar.ReadBoolean();
             }
 

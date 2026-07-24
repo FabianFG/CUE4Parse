@@ -2,12 +2,12 @@ using System.Diagnostics;
 using System.IO.Compression;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
-using Serilog;
 
 namespace CUE4Parse.UE4.Lua.unluac;
 
 public static class UnluacHelper
 {
+    
     public const uint LuaMagic = 0x61754c1B;
     private const string _currentVersion = "1.0.0";
 

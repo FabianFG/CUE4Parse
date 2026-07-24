@@ -1,6 +1,7 @@
 using CUE4Parse.GameTypes._2XKO.Assets.Exports;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Brickadia.Objects;
+using CUE4Parse.GameTypes.DBD.Objects;
 using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.GameTypes.FN.Objects;
 using CUE4Parse.GameTypes.Gothic1R.Assets.Objects;
@@ -58,7 +59,6 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.WorldCondition;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 using FRawUIntStruct = CUE4Parse.UE4.Objects.StructUtils.FRawStruct<uint>;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -66,6 +66,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FScriptStructConverter))]
 public class FScriptStruct
 {
+
     public readonly IUStruct StructType;
 
     public FScriptStruct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)
@@ -400,6 +401,7 @@ public class FScriptStruct
             "AnimMontageContainer" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
             "BHVRVariantConfigurator" when Ar.Game is GAME_DeadByDaylight => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "BhvrBarkNodeTemplate" when Ar.Game is GAME_DeadByDaylight => type == ReadType.ZERO ? new FBhvrBarkNodeTemplate() : new FBhvrBarkNodeTemplate(Ar),
 
             "NiagaraEventGeneratorProperties" when Ar.Game is GAME_RocoKingdomWorld => new FNiagaraEventGeneratorProperties(Ar),
 
@@ -434,6 +436,11 @@ public class FScriptStruct
             "RDialogueFactValue" => new FFixedSizeStruct(Ar, 13),
 
             "KGVariantValue" when Ar.Game is GAME_LordOfMysteries => new FKGVariantValue(Ar),
+
+            "SPBattleGenericID" when Ar.Game is GAME_SilverPalace => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+
+            "GameplayEffectVersion" when Ar.Game is GAME_ArcRaiders => Ar.Read<FRawStruct<byte>>(),
+            "AISensingStatusTransition" when Ar.Game is GAME_ArcRaiders => new FStructFallback(Ar, "AISensingStatusTransitionStruct"),//hack for struct/class with the same name
 
             _ => Ar.Game switch
             {

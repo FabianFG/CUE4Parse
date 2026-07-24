@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.PUBG.UE4.Lua;
 
@@ -30,10 +31,7 @@ public class FGFPLuaArchive(string name, byte[] data, VersionContainer? versions
             return string.Empty;
 
         var buffer = ReadBytes(length);
-        for (int i = 0; i < length; i++)
-        {
-            buffer[i] ^= _stringKey[i % _stringKey.Length];
-        }
+        TensorUtils.Xor(buffer, _stringKey);
 
         return Encoding.UTF8.GetString(buffer);
     }

@@ -5,13 +5,13 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
 [JsonConverter(typeof(UScriptSetConverter))]
 public class UScriptSet
 {
+    
     public readonly List<FPropertyTagType> Properties;
 
     public UScriptSet() => Properties = [];
@@ -77,7 +77,7 @@ public class UScriptSet
             if (property != null)
                 Properties.Add(property);
             else
-                Log.Debug($"Failed to read element for index {i} in set");
+                Log.Debug("Failed to read element for index {Index} in set", i);
         }
     }
 }

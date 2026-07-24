@@ -117,6 +117,11 @@ public class NaniteUtils
         return (value >> offset) & mask;
     }
 
+    public static float Unpack10F(uint Value)
+    {
+        return (float)(Half)((Value << 5) & 0x7FE0);
+    }
+
     public static int UIntToInt(uint value, int bitLength)
     {
         return unchecked((int) (value << (32-bitLength)) ) >> (32-bitLength);

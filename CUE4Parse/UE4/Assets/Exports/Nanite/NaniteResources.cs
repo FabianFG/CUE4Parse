@@ -7,12 +7,12 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Exports.Nanite;
 
 public class FNaniteResources
 {
+
     // Persistent State
     public FByteBulkData? StreamablePages = null; // Remaining pages are streamed on demand.
     [JsonIgnore] public ushort[] ImposterAtlas = [];

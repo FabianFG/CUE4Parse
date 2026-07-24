@@ -1,7 +1,6 @@
 using System.Runtime.Intrinsics;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteConstants;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteUtils;
 
@@ -148,7 +147,6 @@ public class FNaniteVertex
                 new(bitStreamReader.Read(Ar, (int) uvPrec.X, NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_500),
                     bitStreamReader.Read(Ar, (int) uvPrec.Y, NANITE_MAX_TEXCOORD_QUANTIZATION_BITS_500));
             Attributes.UVs[texCoordIndex] = UnpackTexCoord(UVBits, cluster.UVRanges_Old[texCoordIndex]);
-
         }
     }
 }

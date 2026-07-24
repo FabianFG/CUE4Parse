@@ -44,6 +44,11 @@ public class FFastGeoInstancedStaticMeshComponent : FFastGeoStaticMeshComponentB
         InstancingRandomSeed = Ar.Read<int>();
         PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
         AdditionalRandomSeeds = Ar.ReadArray<FInstancedStaticMeshRandomSeed>();
+        if (Ar.Game is GAME_SilverPalace)
+        {
+            Ar.Position += 16;            
+            return;
+        }
         NavigationBounds = new FBox(Ar);
         SceneProxyDesc.InstancedStaticMeshSceneProxyDesc = new FInstancedStaticMeshSceneProxyDesc(Ar);
         SpatialHashes = Ar.Game >= GAME_UE5_8 ? Ar.ReadBulkArray<FCompressedSpatialHashItem>() : [] ;

@@ -1,9 +1,7 @@
 using System.Runtime.InteropServices;
-using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Shaders;

@@ -56,5 +56,6 @@ public static class FAssetRegistryVersion
     {
         var guid = Ar.Read<FGuid>();
         version = guid == GUID ? Ar.Read<FAssetRegistryVersionType>() : FAssetRegistryVersionType.PreVersioning;
+        if (version == FAssetRegistryVersionType.PreVersioning) Ar.Position = 0; // This is an old format file, so skip back to where we started
     }
 }

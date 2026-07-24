@@ -1,12 +1,12 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
-using Serilog;
 
 namespace CUE4Parse_Conversion.Textures.BC;
 
 public static class DetexHelper
 {
+    
     private const string MANIFEST_URL = "CUE4Parse_Conversion.Resources.Detex.dll";
     public const string DLL_NAME = "Detex.dll";
 
@@ -69,7 +69,7 @@ public static class DetexHelper
 
             if (File.Exists(dllPath))
             {
-                Log.Information($"Detex DLL already exists at \"{dllPath}\".");
+                Log.Information("Detex DLL already exists at \"{DllPath}\".", dllPath);
                 return true;
             }
 
@@ -82,7 +82,7 @@ public static class DetexHelper
             await using var dllFs = File.Create(dllPath);
             await stream.CopyToAsync(dllFs).ConfigureAwait(false);
 
-            Log.Information($"Successfully loaded Detex DLL from embedded resources to \"{dllPath}\"");
+            Log.Information("Successfully loaded Detex DLL from embedded resources to \"{DllPath}\"", dllPath);
             return true;
         }
         catch (Exception ex)

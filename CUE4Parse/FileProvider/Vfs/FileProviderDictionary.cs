@@ -12,8 +12,9 @@ namespace CUE4Parse.FileProvider.Vfs
     {
         private readonly ConcurrentBag<KeyValuePair<long, IReadOnlyDictionary<string, GameFile>>> _indicesBag = new ();
 
-        private readonly ConcurrentDictionary<FPackageId, GameFile> _byId = new ();
-        public IReadOnlyDictionary<FPackageId, GameFile> ById => _byId;
+        private ConcurrentDictionary<FPackageId, GameFile>? _byId;
+        private int _count;
+        public IReadOnlyDictionary<FPackageId, GameFile> ById => GetPackageIndex();
 
         private readonly KeyEnumerable _keys;
         public IEnumerable<string> Keys => _keys;
@@ -25,6 +26,26 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             _keys = new KeyEnumerable(this);
             _values = new ValueEnumerable(this);
+        }
+
+        internal void PreallocatePackageIndex(int capacity)
+        {
+            if (capacity <= 0 || Volatile.Read(ref _byId) is not null)
+                return;
+
+            var packageIndex = new ConcurrentDictionary<FPackageId, GameFile>(
+                Environment.ProcessorCount, capacity);
+            Interlocked.CompareExchange(ref _byId, packageIndex, null);
+        }
+
+        private ConcurrentDictionary<FPackageId, GameFile> GetPackageIndex()
+        {
+            var packageIndex = Volatile.Read(ref _byId);
+            if (packageIndex is not null)
+                return packageIndex;
+
+            var newPackageIndex = new ConcurrentDictionary<FPackageId, GameFile>();
+            return Interlocked.CompareExchange(ref _byId, newPackageIndex, null) ?? newPackageIndex;
         }
 
         public void FindPayloads(GameFile file, out GameFile? uexp, out IReadOnlyList<GameFile> ubulks, out IReadOnlyList<GameFile> uptnls, bool cookedIndexLookup = false)
@@ -75,25 +96,39 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddFiles(IReadOnlyDictionary<string, GameFile> newFiles, long readOrder = 0)
+        public void AddFiles(IReadOnlyDictionary<string, GameFile> newFiles, long readOrder = 0,
+            IReadOnlyDictionary<FPackageId, GameFile>? packageFiles = null)
         {
-            foreach (var file in newFiles.Values)
+            if (packageFiles is null)
             {
-                // packages, their optional variant and their respective payloads share the same id
-                // only load the normal package in this dict for later use by IoPackage.ImportedPackages
-                if (file is FIoStoreEntry { IsUePackage: true } ioEntry && !file.NameWithoutExtension.EndsWith(".o"))
+                ConcurrentDictionary<FPackageId, GameFile>? packageIndex = null;
+                foreach (var file in newFiles.Values)
                 {
-                    _byId[ioEntry.ChunkId.AsPackageId()] = file;
+                    // packages, their optional variant and their respective payloads share the same id
+                    // only load the normal package in this dict for later use by IoPackage.ImportedPackages
+                    if (file is FIoStoreEntry { IsPackageData: true, IsOptionalPackage: false } ioEntry)
+                    {
+                        (packageIndex ??= GetPackageIndex())[ioEntry.ChunkId.AsPackageId()] = file;
+                    }
                 }
             }
+            else
+            {
+                var packageIndex = GetPackageIndex();
+                foreach (var (packageId, file) in packageFiles)
+                    packageIndex[packageId] = file;
+            }
+
             _indicesBag.Add(new KeyValuePair<long, IReadOnlyDictionary<string, GameFile>>(readOrder, newFiles));
+            Interlocked.Add(ref _count, newFiles.Count);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             _indicesBag.Clear();
-            _byId.Clear();
+            Volatile.Read(ref _byId)?.Clear();
+            Interlocked.Exchange(ref _count, 0);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -152,7 +187,7 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-        public int Count => _indicesBag.Sum(it => it.Value.Count);
+        public int Count => Volatile.Read(ref _count);
 
         private class KeyEnumerable : IEnumerable<string>
         {

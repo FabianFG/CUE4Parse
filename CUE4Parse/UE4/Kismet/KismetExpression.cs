@@ -1472,6 +1472,11 @@ public class EX_AutoRtfmAbortIfNot : KismetExpression
     public override EExprToken Token => EExprToken.EX_AutoRtfmAbortIfNot;
 }
 
+public class EX_AutoRtfmAbort : KismetExpression
+{
+    public override EExprToken Token => EExprToken.EX_AutoRtfmAbort;
+}
+
 [JsonConverter(typeof(FScriptTextConverter))]
 public class FScriptText
 {

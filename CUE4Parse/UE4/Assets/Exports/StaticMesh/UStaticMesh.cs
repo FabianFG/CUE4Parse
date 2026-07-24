@@ -93,7 +93,7 @@ public class UStaticMesh : UObject
             Ar.Position += 64; // 8 per-platform floats
         }
 
-        if (Ar.Game is GAME_RocoKingdomWorld) Ar.Position += 4;
+        if (Ar.Game is GAME_RocoKingdomWorld or GAME_SilverPalace) Ar.Position += 4;
 
         if (bCooked && Ar.Game is >= GAME_UE4_20 and < GAME_UE5_0 && Ar.Game != GAME_DreamStar) // DS removed this for some reason
         {
@@ -157,6 +157,9 @@ public class UStaticMesh : UObject
                     Ar.SkipFixedArray(16);
                 }
                 Ar.SkipFixedArray(12);
+                break;
+            case GAME_PUBGLite when Ar.ReadBoolean():
+                Ar.SkipMultipleBulkArrayData(2);
                 break;
         }
 

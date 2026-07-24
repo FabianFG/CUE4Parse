@@ -7,7 +7,6 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.Assets.Objects;
 
@@ -77,6 +76,7 @@ public static class FPropertyTypeNameUtils
 
 public class FPropertyTag
 {
+    
     public FName Name;
     public FName PropertyType;
     public int Size;

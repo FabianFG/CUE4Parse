@@ -4,12 +4,12 @@ using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-using Serilog;
 
 namespace CUE4Parse.UE4.Objects.ControlRig;
 
 public class FControlRigOverrideValue
 {
+    
     public FName SubjectKey; // TOptional
     public FPropertyInfo[] Properties;
     public long OffsetForData;

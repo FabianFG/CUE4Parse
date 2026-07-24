@@ -1,12 +1,12 @@
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Objects;
-using Serilog;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
 
 public class FAion2MapDataFile : FAion2DataFile
 {
+    
     public FAion2MapDataFile(GameFile file, IFileProvider provider)
     {
         var data = file.SafeRead();

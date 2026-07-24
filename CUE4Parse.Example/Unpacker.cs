@@ -2,19 +2,21 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using CUE4Parse;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
-using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using static CUE4Parse.CUE4ParseLog;
 
 namespace CUE4Parse.Example;
 
 public static class Unpacker
 {
+
     private const string _archiveDirectory = "D:\\Games\\Fortnite\\FortniteGame\\Content\\Paks";
     private const string _aesKey = "0x61D4FD0F3AC7768A08E82A99D275A13762A299FCC28CCF53C46BB221BB90D2B8";
 
@@ -22,7 +24,10 @@ public static class Unpacker
 
     public static void Unpack()
     {
-        Log.Logger = new LoggerConfiguration().WriteTo.Console(theme: AnsiConsoleTheme.Literate).CreateLogger();
+        var loggerConfiguration = new Serilog.LoggerConfiguration();
+        Serilog.ConsoleLoggerConfigurationExtensions.Console(loggerConfiguration.WriteTo, theme: AnsiConsoleTheme.Literate);
+        Serilog.Log.Logger = loggerConfiguration.CreateLogger();
+        CUE4ParseLog.UseLogger(Serilog.Log.Logger);
 
         ZlibHelper.Initialize();
         OodleHelper.Initialize();

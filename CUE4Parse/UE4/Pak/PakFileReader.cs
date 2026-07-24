@@ -7,6 +7,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
+using CUE4Parse.GameTypes.ChasingKaleidoRIDER.Encryption;
 using CUE4Parse.GameTypes.LordOfMysteries.UE4.Lua;
 using CUE4Parse.GameTypes.Netmarble.NiNoKuni.UE4.Encryption;
 using CUE4Parse.GameTypes.NFS.Mobile.Lua;
@@ -35,6 +36,7 @@ namespace CUE4Parse.UE4.Pak;
 
 public partial class PakFileReader : AbstractAesVfsReader
 {
+
     public readonly FArchive Ar;
     public readonly FPakInfo Info;
 
@@ -56,11 +58,11 @@ public partial class PakFileReader : AbstractAesVfsReader
                                     || (Ar.Game >= GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
         if (hasUnsupportedVersion && !UsingCustomPakVersion())
         {
-            Log.Warning($"Pak file \"{Name}\" has unsupported version {(int) Info.Version}");
+            Log.Warning("Pak file \"{Name}\" has unsupported version {Version}", Name, (int) Info.Version);
         }
     }
 
-    // These games use version >= 12 to indicate their custom formats
+    // These games use custom versions to indicate their custom formats
     private bool UsingCustomPakVersion()
     {
         return Ar.Game switch
@@ -69,7 +71,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                 or GAME_Snowbreak or GAME_TorchlightInfinite or GAME_TowerOfFantasy
                 or GAME_TheDivisionResurgence or GAME_QQ or GAME_DreamStar
                 or GAME_EtheriaRestart or GAME_DeadByDaylight_Old or GAME_WorldofJadeDynasty
-                or GAME_EmbersofTheUncrowned or GAME_ValorantSource => true,
+                or GAME_EmbersofTheUncrowned or GAME_ValorantSource or GAME_PUBGMobile
+                or GAME_PUBGLite => true,
             _ => false
         };
     }
@@ -89,6 +92,9 @@ public partial class PakFileReader : AbstractAesVfsReader
         // If this reader is used as a concurrent reader create a clone of the main reader to provide thread safety
         var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
         var alignment = pakEntry.IsEncrypted ? Aes.ALIGN : 1;
+
+        if (Game is GAME_PUBGMobile or GAME_PUBGLite) // There's so many changes I'll just leave it here
+            return PUBGMobileExtract(reader, pakEntry, header);
 
         long offset = 0;
         var requestedSize = (int) pakEntry.UncompressedSize;
@@ -116,6 +122,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                     return ABIExtract(reader, pakEntry);
                 case GAME_eBaseballProSpirit:
                     return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
+                case GAME_ChasingKaleidoRIDER:
+                    return CKRExtract(reader, pakEntry, header);
             }
 
             var compressionBlockSize = (int) pakEntry.CompressionBlockSize;
@@ -202,6 +210,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                 return ABIExtract(reader, pakEntry);
             case GAME_eBaseballProSpirit:
                 return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
+            case GAME_ChasingKaleidoRIDER:
+                    return CKRExtract(reader, pakEntry, header);
         }
 
         // Pak Entry is written before the file data,
@@ -278,7 +288,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         if (!IsEncrypted && EncryptedFileCount > 0)
         {
-            Log.Warning($"Pak file \"{Name}\" is not encrypted but contains encrypted files");
+            Log.Warning("Pak file \"{Name}\" is not encrypted but contains encrypted files", Name);
         }
 
         if (Globals.LogVfsMounts)
@@ -313,15 +323,17 @@ public partial class PakFileReader : AbstractAesVfsReader
         ValidateMountPoint(ref mountPoint);
         MountPoint = mountPoint;
 
-        if (Ar.Game == GAME_GameForPeace)
+        switch (Ar.Game)
         {
-            GameForPeaceReadIndex(pathComparer, index);
-            return;
-        }
-        if (Ar.Game == GAME_DragonQuestXI)
-        {
-            DQXIReadIndexLegacy(pathComparer, index);
-            return;
+            case GAME_GameForPeace:
+                GameForPeaceReadIndex(pathComparer, index);
+                return;
+            case GAME_DragonQuestXI:
+                DQXIReadIndexLegacy(pathComparer, index);
+                return;
+            case GAME_PUBGMobile or GAME_PUBGLite:
+                PUBGMobileReadIndex(pathComparer, index);
+                return;
         }
 
         var fileCount = index.Read<int>();
@@ -344,7 +356,12 @@ public partial class PakFileReader : AbstractAesVfsReader
     {
         // Prepare primary index and decrypt if necessary
         Ar.Position = Info.IndexOffset;
-        using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", ReadAndDecryptIndex((int) Info.IndexSize));
+        var indexData = Ar.Game switch
+        {
+            GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt(Ar.ReadBytes((int) Info.IndexSize), 0, (int) Info.IndexSize, 0, Info.IndexOffset, this),
+            _ => ReadAndDecryptIndex((int) Info.IndexSize)
+        };
+        using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", indexData, Versions);
 
         var fileCount = 0;
         EncryptedFileCount = 0;
@@ -410,6 +427,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         var data = Ar.Game switch
         {
             GAME_Rennsport => RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true),
+            GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, 0, directoryIndexOffset, this),
             _ => ReadAndDecryptIndex((int) directoryIndexSize),
         };
 
@@ -626,6 +644,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
     public override void Dispose()
     {
+        _pubgMobileZstdDecompressor?.Dispose();
         Ar.Dispose();
     }
 }

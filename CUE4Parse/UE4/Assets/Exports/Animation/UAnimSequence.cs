@@ -11,13 +11,13 @@ using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
-using Serilog;
 using static CUE4Parse.UE4.Assets.Exports.Animation.AnimationCompressionFormat;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public class UAnimSequence : UAnimSequenceBase
     {
+        
         public int NumFrames;
         public FTrackToSkeletonMap[]? TrackToSkeletonMapTable; // used for raw data
         public FRawAnimSequenceTrack[] RawAnimationData;
