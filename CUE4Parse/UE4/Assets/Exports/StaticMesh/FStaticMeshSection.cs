@@ -1,3 +1,5 @@
+using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -23,15 +25,38 @@ public class FStaticMeshSection
 
     public FStaticMeshSection(FArchive Ar)
     {
-        MaterialIndex = Ar.Read<int>();
+        if (Ar.Game < GAME_UE4_0)
+        {
+            new FPackageIndex((FAssetArchive)Ar); // Material
+            bEnableCollision = Ar.ReadBoolean();
+            Ar.ReadBoolean(); // OldEnableCollision
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedCastShadow) bCastShadow = Ar.ReadBoolean();
+        }
+        else
+        {
+            MaterialIndex = Ar.Read<int>();
+        }
         FirstIndex = Ar.Read<int>();
         NumTriangles = Ar.Read<int>();
         MinVertexIndex = Ar.Read<int>();
         MaxVertexIndex = Ar.Read<int>();
-        if (Ar.Game >= EGame.GAME_UE4_0)
+        if (Ar.Game >= GAME_UE4_0)
         {
             bEnableCollision = Ar.ReadBoolean();
             bCastShadow = Ar.ReadBoolean();
+        }
+        else
+        {
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERSION_16) MaterialIndex = Ar.Read<int>();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_FRAGMENTINDEX) Ar.SkipFixedArray(8); // Fragment
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_PLATFORMMESHDATA)
+            {
+                var bLoadPlatformData = Ar.ReadFlag();
+                if (bLoadPlatformData)
+                {
+                    new FPS3StaticMeshData(Ar);
+                }
+            }
         }
         if (Ar.Game == GAME_PlayerUnknownsBattlegrounds) Ar.Position += 5; // byte + int
         if (Ar.Game == GAME_NeedForSpeedMobile) CustomData = Ar.Read<int>();
