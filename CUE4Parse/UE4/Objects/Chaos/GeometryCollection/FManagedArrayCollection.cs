@@ -47,6 +47,13 @@ public class FManagedArrayCollection
             Map[key] = new FValueType(Ar, Version);
         }
     }
+
+    public T[]? GetAttributeValue<T>(string attribute, string group) => GetAttributeValue<T>(attribute, new FName(group));
+    public T[]? GetAttributeValue<T>(string attribute, FName group) => GetAttributeValue<T>(new FKeyType(attribute, group));
+    public T[]? GetAttributeValue<T>(FKeyType key)
+    {
+        return Map.TryGetValue(key, out var value) ? value.Value?.GetData<T>() : null;
+    }
 }
 
 public class FManagedArrayCollectionConverter : JsonConverter<FManagedArrayCollection>
