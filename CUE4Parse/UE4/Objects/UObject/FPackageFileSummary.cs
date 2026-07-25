@@ -359,7 +359,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
             }
 
-            Generations = Ar.ReadArray<FGenerationInfo>();
+            Generations = Ar.ReadArray(() => new FGenerationInfo(Ar));
 
             if (FileVersionUE >= EUnrealEngineObjectUE4Version.ENGINE_VERSION_OBJECT)
             {
