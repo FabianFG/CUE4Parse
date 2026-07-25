@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 
 public static class BlueprintDecompilerUtils
 {
-    
+
     public static TypeMappings? Mappings { get; set; }
     public static UFunction Function { get; set; }
     private static readonly Stack<int> _executionFlowStack = new();
@@ -520,11 +520,6 @@ public static class BlueprintDecompilerUtils
             case FFieldPathProperty fieldPathProperty:
             {
                 type = $"TFieldPath<F{fieldPathProperty.PropertyClass}>";
-                break;
-            }
-            case FMulticastInlineDelegateProperty multicastInlineDelegateProperty:
-            {
-                type = $"F{multicastInlineDelegateProperty.SignatureFunction.Name.SubstringBefore("__DelegateSignature")}";
                 break;
             }
             case FMulticastDelegateProperty multicastDelegateProperty:
@@ -1372,7 +1367,7 @@ public static class BlueprintDecompilerUtils
             }
             case FInstancedStruct instancedStruct:
             {
-                if (instancedStruct.NonConstIUSturct is { } inner)
+                if (instancedStruct.NonConstStruct is { } inner)
                     GetPropertyTagVariable(inner, out value);
                 else
                     value = "{}";

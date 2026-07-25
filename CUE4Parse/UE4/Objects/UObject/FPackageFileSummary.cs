@@ -46,7 +46,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     [JsonConverter(typeof(FPackageFileSummaryConverter))]
     public class FPackageFileSummary
     {
-        
+
         public const uint PACKAGE_FILE_TAG = 0x9E2A83C1U;
         public const uint PACKAGE_FILE_TAG_SWAPPED = 0xC1832A9EU;
         public const uint PACKAGE_FILE_TAG_ACE7 = 0x37454341U; // ACE7
@@ -73,6 +73,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         public int ExportOffset;
         public int ImportCount;
         public int ImportOffset;
+        public int HeritageOffset;
+        public int HeritageCount;
         public int CellExportCount;
         public int CellExportOffset;
         public int CellImportCount;
@@ -281,7 +283,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ExportOffset = Ar.Read<int>();
             ImportCount = Ar.Read<int>();
             ImportOffset = Ar.Read<int>();
-            
+
             if (FileVersionUE < EUnrealEngineObjectUE3Version.DeprecatedHeritageTable)
             {
                 HeritageOffset = Ar.Read<int>();

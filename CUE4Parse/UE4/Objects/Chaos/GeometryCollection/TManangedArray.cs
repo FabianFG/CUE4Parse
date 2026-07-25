@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.Chaos;
 using CUE4Parse.UE4.Assets.Exports.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -39,7 +40,7 @@ public class TManangedArray : FManagedArrayBase
                 SerializeAsBulk<FIntVector>(Ar);
                 break;
             case EManagedArrayType.FStringType:
-                Data = Ar.ReadArray(() => Ar.ReadFString()) as object[];
+                Data = Ar.ReadArray(Ar.ReadFString);
                 break;
             case EManagedArrayType.FLinearColorType:
                 Serialize<FLinearColor>(Ar);
