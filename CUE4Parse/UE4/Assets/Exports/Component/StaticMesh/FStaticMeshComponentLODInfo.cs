@@ -99,6 +99,11 @@ public class FStaticMeshComponentLODInfo
             }
         }
 
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRESERVE_SMC_VERT_COLORS && Ar.Ver < EUnrealEngineObjectUE3Version.STATIC_MESH_SOURCE_DATA_COPY)
+        {
+            Ar.ReadArray<FVector>(); // VertexColorPositions
+        }
+
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRESERVE_SMC_VERT_COLORS && !stripFlags.IsEditorDataStripped() && !Ar.IsFilterEditorOnly)
         {
             PaintedVertices = Ar.ReadArray(() => new FPaintedVertex(Ar));

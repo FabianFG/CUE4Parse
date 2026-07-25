@@ -78,6 +78,10 @@ public class UMaterialInterface : UUnrealMaterial
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
     {
+        if (FlattenedTexture != null) parameters.VerifyTexture("Diffuse", FlattenedTexture, false);
+        if (MobileBaseTexture != null) parameters.VerifyTexture("Diffuse", MobileBaseTexture, false);
+        if (MobileNormalTexture != null) parameters.VerifyTexture("Normal", MobileNormalTexture, false);
+
         for (int i = 0; i < TextureStreamingData.Length; i++)
         {
             var name = TextureStreamingData[i].TextureName.Text;

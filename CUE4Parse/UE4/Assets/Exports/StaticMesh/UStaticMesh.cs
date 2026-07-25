@@ -45,7 +45,10 @@ public class UStaticMesh : UObject
             if (Ar.Ver < EUnrealEngineObjectUE4Version.DEPRECATED_STATIC_MESH_THUMBNAIL_PROPERTIES_REMOVED)
             {
                  var dummyThumbnailAngle = new FRotator(Ar);
-                 var dummyThumbnailDistance = Ar.Read<float>();
+                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_THUMBNAIL_DISTANCE)
+                 {
+                     var dummyThumbnailDistance = Ar.Read<float>();
+                 }
             }
 
             if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh)
@@ -55,8 +58,19 @@ public class UStaticMesh : UObject
             }
         }
 
-        LightingGuid = Ar.Read<FGuid>(); // LocalLightingGuid
-        Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.INTEGRATED_LIGHTMASS)
+        {
+            LightingGuid = Ar.Read<FGuid>(); // LocalLightingGuid
+        }
+        else
+        {
+            LightingGuid = FGuid.Random();
+        }
+
+        if (Ar.Ver > EUnrealEngineObjectUE4Version.STATIC_MESH_SOCKETS)
+        {
+            Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
+        }
 
         if (!Ar.IsFilterEditorOnly)
         {

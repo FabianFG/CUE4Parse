@@ -16,8 +16,8 @@ namespace CUE4Parse.UE4.Objects.UObject
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
             base.WriteJson(writer, serializer);
-            
-            writer.WritePropertyName("Value");
+
+            writer.WritePropertyName(nameof(Value));
             writer.WriteValue(Value);
         }
     }
