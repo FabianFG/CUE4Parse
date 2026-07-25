@@ -96,6 +96,12 @@ public class ULandscapeComponent : UPrimitiveComponent
             return;
         }
 
+        if (Ar.Game is GAME_ArcRaiders)
+        {
+            // indices into vector array, also some other data after
+            CustomGameData = (Ar.ReadArray<FVector>(), Ar.ReadArray<uint>());
+        }
+
         if (Ar.Game >= GAME_UE4_0 && Ar.Game < GAME_UE5_1 && Ar.Position + 4 <= validPos)
         {
             var bCookedMobileData = Ar.ReadBoolean();

@@ -91,8 +91,7 @@ public class TManangedArray : FManagedArrayBase
 
         // if (FDestructionObjectVersion.Get(Ar) < FDestructionObjectVersion.Type.BulkSerializeArrays)
         // {
-        var readArraydata = Ar.ReadArray<T2>();
-        Data = Array.ConvertAll(readArraydata, x => (object)x);
+        Data = Ar.ReadArray<T2>();
         // }
         // else
         // {
@@ -106,8 +105,7 @@ public class TManangedArray : FManagedArrayBase
 
         // if (FDestructionObjectVersion.Get(Ar) < FDestructionObjectVersion.Type.BulkSerializeArrays)
         // {
-        var readArraydata = Ar.ReadArray<T2>(getter);
-        Data = Array.ConvertAll(readArraydata, x => (object)x);
+        Data = Ar.ReadArray(getter);
         // }
         // else
         // {
@@ -121,8 +119,7 @@ public class TManangedArray : FManagedArrayBase
 
         // if (FDestructionObjectVersion.Get(Ar) < FDestructionObjectVersion.Type.BulkSerializeArrays)
         // {
-        var readArraydata = Ar.ReadArray(getter);
-        Data = Array.ConvertAll(readArraydata, x => (object)x);
+        Data = Ar.ReadArray(getter);
         // }
         // else
         // {
@@ -132,14 +129,12 @@ public class TManangedArray : FManagedArrayBase
 
     private void SerializeAsBulk<T2>(FChaosArchive Ar) where T2 : struct
     {
-        var readArraydata = Ar.ReadBulkArray<T2>();
-        Data = Array.ConvertAll(readArraydata, x => (object)x);
+        Data = Ar.ReadBulkArray<T2>();
     }
 
     private void SerializeAsBulk(FChaosArchive Ar, Func<object> getter)
     {
-        var readArraydata = Ar.ReadBulkArray(getter);
-        Data = Array.ConvertAll(readArraydata, x => (object)x);
+        Data = Ar.ReadBulkArray(getter);
     }
 
     private void SerializeAsArray(FChaosArchive Ar, Func<object> getter)
@@ -148,7 +143,7 @@ public class TManangedArray : FManagedArrayBase
         // Debug.Assert(version == 1);
         // if (FDestructionObjectVersion.Get(Ar)< FDestructionObjectVersion.Type.BulkSerializeArrays)
         // {
-            Data = Ar.ReadArray(getter) as object[];
+            Data = Ar.ReadArray(getter);
         // }
         // else
         // {
@@ -179,19 +174,20 @@ public class TManangedArray : FManagedArrayBase
         var result = new T2[count];
         for (int i = 0; i < count; i++)
         {
-            result[i] = Ar.SerializePtr<T2>(getter());
+            result[i] = Ar.SerializePtr(getter());
         }
 
-        Data = Array.ConvertAll(result, x => (object)x);
+        Data = result;
     }
 }
 
 public abstract class FManagedArrayBase
 {
     [JsonIgnore]
-    public object[] Data;
+    protected Array? Data;
 
     public int DataLength => Data?.Length ?? 0;
+    public T[]? GetData<T>() => Data as T[];
 
     // FFVector3fType => Vector
     // FFIntVectorType => IntVector

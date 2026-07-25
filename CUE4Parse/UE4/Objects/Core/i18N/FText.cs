@@ -396,14 +396,22 @@ public abstract class FTextHistory : IUStruct
             TableId = Ar.ReadFName();
             Key = Ar.ReadFString();
 
-            if (Ar.Owner?.Provider is not null &&
-                UStringTable.TryGet(Ar.Owner.Provider, TableId.Text, out var table) &&
-                table.StringTable.KeysToEntries.TryGetValue(Key, out var t))
+            if (Ar.Owner?.Provider is { } provider)
             {
-                SourceString = t;
-                LocalizedString = Ar.Owner.Provider.Internationalization.SafeGet(table.StringTable.TableNamespace, Key, t);
+                if (UStringTable.TryGet(provider, TableId.Text, out var table) &&
+                    table.StringTable.KeysToEntries.TryGetValue(Key, out var t))
+                {
+                    SourceString = t;
+                    LocalizedString = provider.Internationalization.SafeGet(table.StringTable.TableNamespace, Key, t);
+                }
+                else
+                {
+                    // some games incorrectly utilize StringTableEntry for generated locres.
+                    // fallback to loading from loaded internationalization where TableId isn't a filepath.
+                    LocalizedString = provider.Internationalization.SafeGet(TableId.Text, Key);
+                }
             }
-            
+
             if (Ar.Game is GAME_DeltaForce) Ar.Position += 4;
         }
     }

@@ -1,5 +1,6 @@
-using System.Buffers.Binary;
-using Blake3;
+using System.Runtime.CompilerServices;
+using CommunityToolkit.HighPerformance;
+using static System.Numerics.BitOperations;
 
 namespace CUE4Parse.GameTypes.Theia.Encryption;
 
@@ -7,15 +8,12 @@ public static class TheiaSchedule
 {
     public static readonly uint[] CONST8 =
     [
-        0xBEDC8A41, 0xC2083AA2, 0x7A40B8E0, 0x07D37C60,
-        0x16B42333, 0x5F76DE9B, 0x53881F06, 0x107B149C,
+        0xBEDC8A41, 0xC2083AA2, 0x7A40B8E0, 0x07D37C60, 0x16B42333, 0x5F76DE9B, 0x53881F06, 0x107B149C,
     ];
 
     private static readonly uint[] SHA256_IV4 = [0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A];
 
-    private static uint RotateLeft(uint x, int n) => (x << n) | (x >> (32 - n));
-    private static uint RotateRight(uint x, int n) => (x >> n) | (x << (32 - n));
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void Round3B40(Span<uint> s, ReadOnlySpan<uint> k)
     {
         unchecked
@@ -144,6 +142,7 @@ public static class TheiaSchedule
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ShuffleKey(Span<uint> k)
     {
         Span<uint> tmp =
@@ -179,14 +178,14 @@ public static class TheiaSchedule
 
         Span<uint> state = stackalloc uint[16];
         arg1_8[..8].CopyTo(state);
-        SHA256_IV4.AsSpan().CopyTo(state[8..]);
-        state[12] = (uint)r8;
-        state[13] = (uint)(r8 >> 32);
+        state[8] = SHA256_IV4[0];
+        state[9] = SHA256_IV4[1];
+        state[10] = SHA256_IV4[2];
+        state[11] = SHA256_IV4[3];
+        state[12] = (uint) r8;
+        state[13] = (uint) (r8 >> 32);
         state[14] = r9;
         state[15] = fifth;
-
-        Span<uint> orig = stackalloc uint[16];
-        state.CopyTo(orig);
 
         Span<uint> key = stackalloc uint[16];
         arg2_16[..16].CopyTo(key);
@@ -198,18 +197,12 @@ public static class TheiaSchedule
                 ShuffleKey(key);
         }
 
-        Span<uint> outW = stackalloc uint[16];
-        unchecked
+        Span<uint> outW = output.Cast<byte, uint>();
+        for (int i = 0; i < 8; i++)
         {
-            for (var i = 0; i < 8; i++)
-            {
-                outW[i] = state[i] ^ state[i + 8];
-                outW[i + 8] = state[i + 8] ^ orig[i];
-            }
+            outW[i] = state[i] ^ state[i + 8];
+            outW[i + 8] = state[i + 8] ^ arg1_8[i];
         }
-
-        for (var i = 0; i < 16; i++)
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(i * 4, 4), outW[i]);
     }
 
     public static byte[] TheiaHash(ReadOnlySpan<uint> arg1_8, ReadOnlySpan<uint> arg2_16, ulong r8, uint r9, uint fifth)
@@ -219,62 +212,35 @@ public static class TheiaSchedule
         return output;
     }
 
-    public static void InitPageState(ReadOnlySpan<byte> meta, int page, Span<byte> output)
+    public static TheiaState InitPageState(TheiaPageKey pageKey, ReadOnlySpan<uint> globalKey)
     {
-        if (output.Length < 33)
-            throw new ArgumentException("output must be at least 33 bytes", nameof(output));
-
-        var off = (page + 8) * 64 + 0x20;
-        if (meta.Length < off + 32)
-            throw new ArgumentException($"meta too small for page {page}", nameof(meta));
-
-        // For Arc Raiders this key is constant
-        var rawMasterKey = meta.Slice(0x60, 32);
-        Span<byte> hashBlock = stackalloc byte[64];
-        rawMasterKey.CopyTo(hashBlock);
-        var masterKey = Hasher.Hash(hashBlock).AsSpan().ToArray();
-
-        var pageKey = meta.Slice(off, 32);
         Span<uint> arg2 = stackalloc uint[16];
-        for (var i = 0; i < 8; i++)
-            arg2[i] = BinaryPrimitives.ReadUInt32LittleEndian(masterKey.AsSpan(i * 4, 4));
-        for (var i = 0; i < 8; i++)
-            arg2[8 + i] = BinaryPrimitives.ReadUInt32LittleEndian(pageKey.Slice(i * 4, 4));
+        globalKey.CopyTo(arg2);
+
+        ReadOnlySpan<byte> pageKeySpan = pageKey.Key;
+        pageKeySpan.Cast<byte, uint>().CopyTo(arg2[8..]);
 
         Span<byte> digest = stackalloc byte[64];
         TheiaHash(CONST8, arg2, 0, 0x40, 0x11, digest);
-        digest[..32].CopyTo(output);
-        output[32] = 0x01;
+
+        return new TheiaState(digest);
     }
 
-    public static byte[] InitPageState(ReadOnlySpan<byte> meta, int page)
+    public static void KeystreamBlock(TheiaState state, ulong block, Span<byte> output)
     {
-        var output = new byte[33];
-        InitPageState(meta, page, output);
-        return output;
-    }
-
-    public static void KeystreamBlock(ReadOnlySpan<byte> state33, ulong block, Span<byte> output)
-    {
-        if (state33.Length < 33)
-            throw new ArgumentException("state33 must be 33 bytes", nameof(state33));
+        ReadOnlySpan<byte> state33 = state.State;
         if (output.Length < 64)
             throw new ArgumentException("output must be at least 64 bytes", nameof(output));
 
-        Span<uint> arg1 = stackalloc uint[8];
-        for (var i = 0; i < 8; i++)
-            arg1[i] = BinaryPrimitives.ReadUInt32LittleEndian(state33.Slice(i * 4, 4));
-
-        var sb = (uint)state33[32];
+        var sb = (uint) state33[^1];
         Span<uint> zeros = stackalloc uint[16];
-        zeros.Clear();
-        TheiaHash(arg1, zeros, block, sb, sb ^ 0x1Bu, output);
+        TheiaHash(state33[..^1].Cast<byte, uint>(), zeros, block, sb, sb ^ 0x1Bu, output);
     }
 
-    public static byte[] KeystreamBlock(ReadOnlySpan<byte> state33, ulong block)
+    public static byte[] KeystreamBlock(TheiaState state, ulong block)
     {
         var output = new byte[64];
-        KeystreamBlock(state33, block, output);
+        KeystreamBlock(state, block, output);
         return output;
     }
 }

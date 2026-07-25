@@ -7,6 +7,8 @@ using AssetRipper.TextureDecoder.Rgb.Formats;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.DXT;
+using CUE4Parse_Conversion.Textures.ETC;
+using CUE4Parse_Conversion.Textures.Crunch;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
@@ -130,7 +132,7 @@ public static class TextureDecoder
                 var packedOutputSize = packedStride * tileHeightInBlocks;
 
                 var layerData = ArrayPool<byte>.Shared.Rent(packedOutputSize);
-                var crunchContextCache = new Dictionary<(int ChunkIndex, uint Layer), IntPtr>();
+                var crunchContextCache = new Dictionary<(int ChunkIndex, uint Layer), CrunchDecoder.CrunchContext>();
 
                 for (uint tileIndexInMip = 0; tileIndexInMip < tileOffsetData.MaxAddress; tileIndexInMip++)
                 {
@@ -149,7 +151,7 @@ public static class TextureDecoder
                         var contextKey = (chunkIndex, layer);
                         try
                         {
-                            if (!crunchContextCache.TryGetValue(contextKey, out var ctx))
+                            if (!crunchContextCache.TryGetValue(contextKey, out var context))
                             {
                                 var headerOffset = (int) chunk.CodecPayloadOffset[layer];
                                 var headerEnd = (int) chunk.CodecPayloadSize;
@@ -164,28 +166,13 @@ public static class TextureDecoder
                                 if (headerSize <= 0 || (headerOffset + headerSize) > chunkData.Length)
                                     throw new ParserException("Incorrect crunch codec payload");
 
-                                fixed (byte* pHeader = &chunkData[headerOffset])
-                                {
-                                    ctx = (IntPtr) PlatformDeswizzlers.crnd_unpack_begin(pHeader, (uint) headerSize);
-                                }
-
-                                if (ctx == IntPtr.Zero)
-                                    throw new ParserException("Failed to unpack crunch codec header");
-
-                                crunchContextCache[contextKey] = ctx;
+                                context = new CrunchDecoder.CrunchContext(chunkData, headerOffset, headerSize);
+                                crunchContextCache[contextKey] = context;
                             }
 
-                            fixed (byte* srcPtr = &chunkData[(int) tileStart])
-                            fixed (byte* outPtr = layerData)
-                            {
-                                void* dst = outPtr;
-                                uint rowPitch = (uint) (tilePixelSize / formatInfo.BlockSizeX * formatInfo.BlockBytes);
-
-                                bool ok = PlatformDeswizzlers.crnd_unpack_level_segmented((void*) ctx, srcPtr, tileLength, &dst, (uint) packedOutputSize, rowPitch, 0);
-
-                                if (!ok)
-                                    throw new ParserException($"Failed to unpack tile ({tileX}, {tileY}) at {tileStart}");
-                            }
+                            var rowPitch = (uint) (tilePixelSize / formatInfo.BlockSizeX * formatInfo.BlockBytes);
+                            if (!context.TryDecompressSegment(chunkData, checked((int) tileStart), tileLength, layerData, rowPitch, 0))
+                                throw new ParserException($"Failed to unpack tile ({tileX}, {tileY}) at {tileStart}");
                         }
                         catch (ParserException e)
                         {
@@ -224,10 +211,8 @@ public static class TextureDecoder
                 }
 
                 // free crunch context
-                foreach (var ctx in crunchContextCache.Values)
-                {
-                    PlatformDeswizzlers.crnd_unpack_end((void*) ctx);
-                }
+                foreach (var context in crunchContextCache.Values)
+                    context.Dispose();
 
                 ArrayPool<byte>.Shared.Return(layerData);
             }
@@ -281,6 +266,10 @@ public static class TextureDecoder
             throw new NotImplementedException($"The supplied pixel format {format} is not supported!");
 
         var bytes = mip.BulkData.Data;
+
+        // TODO: Only known game to use this is PUBG Mobile, not sure if this is right place to decompress, probably not and should be refactored
+        if (texture.PlatformData.PixelFormat.EndsWith("_crunched", StringComparison.OrdinalIgnoreCase))
+            bytes = CrunchDecoder.DecompressMip(bytes, sizeX, sizeY, sizeZ, formatInfo);
 
         // If the platform requires deswizzling, check if we should even try.
         if (platform is not ETexturePlatform.DesktopMobile)
@@ -436,6 +425,11 @@ public static class TextureDecoder
                 break;
             case EPixelFormat.PF_ETC2_RGBA:
                 data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
+                colorType = EPixelFormat.PF_B8G8R8A8;
+                break;
+            case EPixelFormat.PF_ETC2_R11:
+            case EPixelFormat.PF_ETC2_R11_EAC:
+                data = EacDecoder.DecodeR11(bytes, sizeX, sizeY);
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
 

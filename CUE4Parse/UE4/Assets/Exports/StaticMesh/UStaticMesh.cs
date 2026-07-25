@@ -143,6 +143,9 @@ public class UStaticMesh : UObject
                 }
                 Ar.SkipFixedArray(12);
                 break;
+            case GAME_PUBGLite when Ar.ReadBoolean():
+                Ar.SkipMultipleBulkArrayData(2);
+                break;
         }
 
         // (Ar.Ver >= EUnrealEngineObjectUE4Version.SPEEDTREE_STATICMESH), but we check UE version for Materials

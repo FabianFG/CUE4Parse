@@ -439,6 +439,9 @@ public class FScriptStruct
 
             "SPBattleGenericID" when Ar.Game is GAME_SilverPalace => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
+            "GameplayEffectVersion" when Ar.Game is GAME_ArcRaiders => Ar.Read<FRawStruct<byte>>(),
+            "AISensingStatusTransition" when Ar.Game is GAME_ArcRaiders => new FStructFallback(Ar, "AISensingStatusTransitionStruct"),//hack for struct/class with the same name
+
             _ => Ar.Game switch
             {
                 GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
