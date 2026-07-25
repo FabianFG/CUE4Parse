@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Objects.UObject;
+﻿using CUE4Parse.UE4.Objects.Core.i18N;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
