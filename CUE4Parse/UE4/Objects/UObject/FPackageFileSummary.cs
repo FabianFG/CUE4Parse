@@ -368,7 +368,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SavedByEngineVersion = new FEngineVersion(Ar);
                 FixCorruptEngineVersion(FileVersionUE, SavedByEngineVersion);
             }
-            else if (Ar.Game >= EGame.GAME_UE4_0)
+            else if (Ar.Game >= GAME_UE4_0)
             {
                 var engineChangelist = Ar.Read<int>();
 

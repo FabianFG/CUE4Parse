@@ -226,7 +226,7 @@ public class FStaticMeshLODResources
                 DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
                 ReversedDepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
             }
-            else if (Ar.Game >= EGame.GAME_UE4_0)
+            else if (Ar.Game >= GAME_UE4_0)
             {
                 // UE4.8 or older, or when has CDSF_ReversedIndexBuffer
                 DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);

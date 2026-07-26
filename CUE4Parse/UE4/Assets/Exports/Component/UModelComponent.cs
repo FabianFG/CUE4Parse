@@ -67,7 +67,7 @@ public class FModelElement
         Material = new FPackageIndex(Ar);
         Nodes = Ar.ReadArray<ushort>();
 
-        if (Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.Game < GAME_UE4_0)
         {
             Ar.ReadArray(() => new FPackageIndex(Ar)); // ShadowMaps
         }
