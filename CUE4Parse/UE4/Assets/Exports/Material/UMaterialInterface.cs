@@ -16,10 +16,10 @@ public class UMaterialInterface : UUnrealMaterial
     public bool bUseMobileSpecular;
     public float MobileSpecularPower = 16.0f;
     public EMobileSpecularMask MobileSpecularMask = EMobileSpecularMask.MSM_Constant;
-    public UTexture? FlattenedTexture;
-    public UTexture? MobileBaseTexture;
-    public UTexture? MobileNormalTexture;
-    public UTexture? MobileMaskTexture;
+    public FPackageIndex? FlattenedTexture;
+    public FPackageIndex? MobileBaseTexture;
+    public FPackageIndex? MobileNormalTexture;
+    public FPackageIndex? MobileMaskTexture;
 
     public FStructFallback? CachedExpressionData;
     public FMaterialTextureInfo[] TextureStreamingData = Array.Empty<FMaterialTextureInfo>();
@@ -32,10 +32,10 @@ public class UMaterialInterface : UUnrealMaterial
         bUseMobileSpecular = GetOrDefault<bool>(nameof(bUseMobileSpecular));
         MobileSpecularPower = GetOrDefault<float>(nameof(MobileSpecularPower));
         MobileSpecularMask = GetOrDefault<EMobileSpecularMask>(nameof(MobileSpecularMask));
-        FlattenedTexture = GetOrDefault<UTexture>(nameof(FlattenedTexture));
-        MobileBaseTexture = GetOrDefault<UTexture>(nameof(MobileBaseTexture));
-        MobileNormalTexture = GetOrDefault<UTexture>(nameof(MobileNormalTexture));
-        MobileMaskTexture = GetOrDefault<UTexture>(nameof(MobileMaskTexture));
+        FlattenedTexture = GetOrDefault<FPackageIndex?>(nameof(FlattenedTexture));
+        MobileBaseTexture = GetOrDefault<FPackageIndex?>(nameof(MobileBaseTexture));
+        MobileNormalTexture = GetOrDefault<FPackageIndex?>(nameof(MobileNormalTexture));
+        MobileMaskTexture = GetOrDefault<FPackageIndex?>(nameof(MobileMaskTexture));
         TextureStreamingData = GetOrDefault(nameof(TextureStreamingData), Array.Empty<FMaterialTextureInfo>());
 
         var bSavedCachedExpressionData = FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData && Ar.ReadBoolean();
@@ -67,10 +67,10 @@ public class UMaterialInterface : UUnrealMaterial
 
     public override void GetParams(CMaterialParams parameters)
     {
-        if (FlattenedTexture != null) parameters.Diffuse = FlattenedTexture;
-        if (MobileBaseTexture != null) parameters.Diffuse = MobileBaseTexture;
-        if (MobileNormalTexture != null) parameters.Normal = MobileNormalTexture;
-        if (MobileMaskTexture != null) parameters.Opacity = MobileMaskTexture;
+        if (FlattenedTexture?.TryLoad<UTexture>(out var flattenedTexture) == true) parameters.Diffuse = flattenedTexture;
+        if (MobileBaseTexture?.TryLoad<UTexture>(out var mobileBaseTexture) == true) parameters.Diffuse = mobileBaseTexture;
+        if (MobileNormalTexture?.TryLoad<UTexture>(out var mobileNormalTexture) == true) parameters.Normal = mobileNormalTexture;
+        if (MobileMaskTexture?.TryLoad<UTexture>(out var mobileMaskTexture) == true) parameters.Opacity = mobileMaskTexture;
         parameters.UseMobileSpecular = bUseMobileSpecular;
         parameters.MobileSpecularPower = MobileSpecularPower;
         parameters.MobileSpecularMask = MobileSpecularMask;
@@ -78,9 +78,12 @@ public class UMaterialInterface : UUnrealMaterial
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
     {
-        if (FlattenedTexture != null) parameters.VerifyTexture("Diffuse", FlattenedTexture, false);
-        if (MobileBaseTexture != null) parameters.VerifyTexture("Diffuse", MobileBaseTexture, false);
-        if (MobileNormalTexture != null) parameters.VerifyTexture("Normal", MobileNormalTexture, false);
+        if (FlattenedTexture?.TryLoad<UTexture>(out var flattenedTexture) == true)
+            parameters.VerifyTexture("Diffuse", flattenedTexture, false);
+        if (MobileBaseTexture?.TryLoad<UTexture>(out var mobileBaseTexture) == true)
+            parameters.VerifyTexture("Diffuse", mobileBaseTexture, false);
+        if (MobileNormalTexture?.TryLoad<UTexture>(out var mobileNormalTexture) == true)
+            parameters.VerifyTexture("Normal", mobileNormalTexture, false);
 
         for (int i = 0; i < TextureStreamingData.Length; i++)
         {
