@@ -23,6 +23,7 @@ public abstract class TBulkData<T> where T: struct
     protected Lazy<T[]?>? _data { get; init; }
 
     protected FAssetArchive? _savedAr { get; init; }
+    protected string? _savedTfc { get; init; }
     protected long _dataPosition { get; init; }
 
     protected TBulkData() { }
@@ -35,6 +36,13 @@ public abstract class TBulkData<T> where T: struct
     protected TBulkData(Lazy<T[]?> data)
     {
         _data = data;
+    }
+
+    protected TBulkData(FAssetArchive ar, string? tfc = null)
+        : this(ar)
+    {
+        _savedAr = ar;
+        _savedTfc = tfc;
     }
 
     protected TBulkData(FAssetArchive Ar)
