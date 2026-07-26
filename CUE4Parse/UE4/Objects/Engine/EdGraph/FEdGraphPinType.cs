@@ -25,6 +25,8 @@ public class FEdGraphPinType : IUStruct
     public FEdGraphPinType() { }
     public FEdGraphPinType(FAssetArchive Ar)
     {
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.EDGRAPHPINTYPE_SERIALIZATION) return;
+
         if (FFrameworkObjectVersion.Get(Ar) >= FFrameworkObjectVersion.Type.PinsStoreFName)
         {
             PinCategory = Ar.ReadFName();

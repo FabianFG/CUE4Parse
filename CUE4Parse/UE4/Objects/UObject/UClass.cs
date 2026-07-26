@@ -397,8 +397,11 @@ public class UClass : UStruct
         /** the interface class */
         public FPackageIndex Class;
 
+        /** the pointer property that is located at the offset of the interface's vtable */
+        public FPackageIndex? PointerProperty;
+
         /** the pointer offset of the interface's vtable */
-        public int PointerOffset;
+        public int? PointerOffset;
 
         /** whether this interface has been implemented via K2 */
         public bool bImplementedByK2;
@@ -406,7 +409,14 @@ public class UClass : UStruct
         public FImplementedInterface(FAssetArchive Ar)
         {
             Class = new FPackageIndex(Ar);
-            PointerOffset = Ar.Read<int>();
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.NO_INTERFACE_PROPERTY)
+            {
+                PointerProperty = new FPackageIndex(Ar);
+            }
+            else
+            {
+                PointerOffset = Ar.Read<int>();
+            }
             bImplementedByK2 = Ar.ReadBoolean();
         }
     }

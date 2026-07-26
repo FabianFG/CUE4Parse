@@ -156,12 +156,12 @@ public partial class USkeletalMesh : UObject
             case GAME_Back4Blood:
                 Ar.Position += 8;
                 break;
-            default:
+            case >= EGame.GAME_UE4_0:
                 _ = Ar.ReadArray(() => new FPackageIndex(Ar)); // dummyObjs
                 break;
         }
 
-        if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.DYNAMICTEXTUREINSTANCES && FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
         {
             Ar.SkipFixedArray(sizeof(float));
         }
@@ -178,6 +178,14 @@ public partial class USkeletalMesh : UObject
             }
         }
 
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELETAL_MESH_SIMPLIFICATION && Ar.Game < EGame.GAME_UE4_0)
+        {
+            var bHaveSourceData = Ar.ReadBoolean();
+            if (bHaveSourceData)
+            {
+                new FStaticLODModel(Ar, bHasVertexColors);
+            }
+        }
         // if (bEnablePerPolyCollision)
         // {
         //     var bodySetup = new FPackageIndex(Ar);

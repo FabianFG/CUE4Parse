@@ -37,7 +37,7 @@ public static class SoundDecoder
                 nodeWave.IPhoneSound,
                 nodeWave.FlashSound
             }
-            .FirstOrDefault(s => s?.Data != null && s.Data.Length > 4)?.Data;
+            .FirstOrDefault(s => s?.Data != null && s.Header.ElementCount > 4)?.Data;
 
         if (input == null)
         {

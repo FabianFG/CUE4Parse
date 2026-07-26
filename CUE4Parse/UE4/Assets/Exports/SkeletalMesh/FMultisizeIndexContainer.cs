@@ -10,7 +10,7 @@ public class FMultisizeIndexContainer() : FRawIndexBuffer
     {
         if (Ar.Ver < EUnrealEngineObjectUE4Version.KEEP_SKEL_MESH_INDEX_DATA)
         {
-            Ar.Position += 4; //var bOldNeedsCPUAccess = Ar.ReadBoolean();
+            Ar.ReadBoolean(); // bOldNeedsCPUAccess
         }
 
         var dataSize = Ar.Read<byte>();

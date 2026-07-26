@@ -16,6 +16,8 @@ public class FSkeletalMeshVertexBuffer
     public bool bExtraBoneInfluences;
     public FGPUVertHalf[] VertsHalf;
     public FGPUVertFloat[] VertsFloat;
+    public FGPUVertHalfPacked[] VertsHalfPacked;
+    public FGPUVertFloatPacked[] VertsFloatPacked;
 
     public FSkeletalMeshVertexBuffer()
     {
@@ -49,6 +51,8 @@ public class FSkeletalMeshVertexBuffer
     {
         if (VertsHalf.Length > 0) return VertsHalf.Length;
         if (VertsFloat.Length > 0) return VertsFloat.Length;
+        if (VertsHalfPacked.Length > 0) return VertsHalfPacked.Length;
+        if (VertsFloatPacked.Length > 0) return VertsFloatPacked.Length;
         return 0;
     }
 }
