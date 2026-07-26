@@ -28,6 +28,17 @@ namespace CUE4Parse.UE4.Objects.Engine
 
         /** The vertex's shadow map coordinate for the backface of the node. */
         public readonly FVector2D BackfaceShadowTexCoord;
+
+        public FVert(FAssetArchive Ar)
+        {
+            pVertex = Ar.Read<int>();
+            iSide = Ar.Read<int>();
+            ShadowTexCoord = new FVector2D(Ar);
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.BACKFACESHADOWTEXCOORD)
+            {
+                BackfaceShadowTexCoord = new FVector2D(Ar); // why do some builds have this removed in UE3
+            }
+        }
     }
 
     /** Flags associated with a Bsp node. */
@@ -151,7 +162,16 @@ namespace CUE4Parse.UE4.Objects.Engine
             vNormal = Ar.Read<int>();
             vTextureU = Ar.Read<int>();
             vTextureV = Ar.Read<int>();
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.LightMapIndexRemovedFromPoly)
+            {
+                new FPackageIndex(Ar); // iLightMap
+            }
             iBrushPoly = Ar.Read<int>();
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.PanUVRemovedFromPoly)
+            {
+                Ar.Read<short>(); // PanU
+                Ar.Read<short>(); // PanV
+            }
             Actor = new FPackageIndex(Ar);
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.PlaneAddedToPoly)
             {
