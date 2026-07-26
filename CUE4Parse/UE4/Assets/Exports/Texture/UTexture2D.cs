@@ -1,3 +1,4 @@
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -28,24 +29,74 @@ public class UTexture2D : UTexture
         var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
         if (Ar.Ver < EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR)
         {
-            Log.Warning("Untested code: UTexture2D::LegacySerialize");
-            // https://github.com/EpicGames/UnrealEngine/blob/2092a941a52c55750072f24cd4757176dfaa8326/Engine/Source/Runtime/Engine/Private/Texture2D.cpp
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.RENDERING_REFACTOR)
+            {
+                var SizeX = Ar.Read<int>();
+                var SizeY = Ar.Read<int>();
+                Format = (EPixelFormat)Ar.Read<int>();
+            }
 
             var legacyMips = Array.Empty<FTexture2DMipMap>();
 
-            var bHasLegacyMips = GetOrDefault("bDisableDerivedDataCache_DEPRECATED", false);
+            var bHasLegacyMips =  Ar.Game >= GAME_UE4_0 ? GetOrDefault("bDisableDerivedDataCache_DEPRECATED", false) : true;
             if (bHasLegacyMips)
             {
                 legacyMips = Ar.ReadArray(() => new FTexture2DMipMap(Ar));
             }
 
-            var textureFileCacheGuidDeprecated = Ar.Read<FGuid>();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_FILECACHE_GUIDS)
+            {
+                var textureFileCacheGuidDeprecated = Ar.Read<FGuid>();
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_IPHONE_DATA)
+            {
+                Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedPVRTCMips
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.VERSION_NUMBER_FIX_FOR_FLASH_TEXTURES)
+            {
+                Ar.Read<int>(); // CachedFlashMipsMaxResolution
+                Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedATITCMips
+                new FByteBulkData(Ar); // CachedFlashMips
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ANDROID_ETC_SEPARATED)
+            {
+                Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedETCMips
+            }
 
             Format = GetOrDefault(nameof(Format), EPixelFormat.PF_Unknown);
 
             if (bHasLegacyMips && legacyMips.Length > 0)
             {
                 // TODO: Populate PlatformData.Mips[] with LegacyMips data.
+
+                /*
+                 * Todo: add the extra android stuff needed
+                 * Todo: Find a way to allow users to change Platform
+
+                if (false) // if game is ios
+                {
+                    if (Format == EPixelFormat.PF_DXT1)
+                    {
+                        Format = bForcePVRTC4 ? EPixelFormat.PF_PVRTC4 : EPixelFormat.PF_PVRTC2;
+                    }
+                    else if (Format == EPixelFormat.PF_DXT5)
+                    {
+                        Format = EPixelFormat.PF_PVRTC4;
+                    }
+                } else if (false) // if game is android
+                {
+                    if (Format == EPixelFormat.PF_DXT1)
+                    {
+                        Format = EPixelFormat.PF_ETC1;
+                    } else if (Format == EPixelFormat.PF_DXT5)
+                    {
+                        // unsupported RGBA4
+                    }
+                }*/
+
             }
         }
 

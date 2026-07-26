@@ -67,9 +67,51 @@ public struct FFoliageMeshInfo_Deprecated
         }
         else
         {
-            OldInstanceClusters = Ar.ReadArray(() => new FFoliageInstanceCluster_Deprecated(Ar));
+            if (Ar.Game >= GAME_UE4_0)
+            {
+                OldInstanceClusters = Ar.ReadArray(() => new FFoliageInstanceCluster_Deprecated(Ar));
+            }
+            else
+            {
+                Ar.ReadArray(() => new FFoliageInstanceCluster_LegacyDeprecated(Ar)); // InstanceClusters
+                Ar.ReadArray(() => new FFoliageInstance_Deprecated(Ar)); // Instances
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.FOLIAGE_SAVE_UI_DATA)
+                {
+                    new FPackageIndex(Ar); // Settings
+                }
+            }
         }
     }
+}
+
+public struct FFoliageInstance_Deprecated
+{
+    public FFoliageInstance_Deprecated(FAssetArchive Ar)
+    {
+        new FPackageIndex(Ar); // Base
+        Ar.Read<FVector>(); // Location
+        Ar.Read<FRotator>(); // Rotation
+        Ar.Read<FVector>(); // DrawScale3D
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.FOLIAGE_INSTANCE_SAVE_EDITOR_DATA)
+        {
+            Ar.Read<int>(); // ClusterIndex
+            Ar.Read<FRotator>(); // PreAlignRotation
+            Ar.Read<uint>(); // ClusterIndex
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.FOLIAGE_INSTANCE_SAVE_EDITOR_DATA)
+        {
+            Ar.Read<float>(); // ZOffset
+        }
+    }
+}
+
+public class FFoliageInstanceCluster_LegacyDeprecated(FAssetArchive Ar)
+{
+    public FBoxSphereBounds Bounds = new FBoxSphereBounds(Ar);
+    public FPackageIndex ClusterComponent = new FPackageIndex(Ar);
+    public int[] InstanceIndices = Ar.ReadArray(() => Ar.Read<int>());
 }
 
 public class FFoliageInstanceCluster_Deprecated(FAssetArchive Ar)

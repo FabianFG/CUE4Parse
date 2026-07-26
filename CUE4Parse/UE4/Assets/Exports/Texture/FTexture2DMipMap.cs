@@ -65,6 +65,15 @@ public class FTexture2DMipMap
         }
     }
 
+    public FTexture2DMipMap(FAssetArchive Ar, string tfc)
+    {
+        BulkData = new FByteBulkData(Ar, tfc);
+
+        SizeX = Ar.Read<int>();
+        SizeY = Ar.Read<int>();
+        SizeZ = 1;
+    }
+
     public bool EnsureValidBulkData(UTextureAllMipDataProviderFactory? provider, int mipLevel)
     {
         var bulkData = BulkData?.Data;

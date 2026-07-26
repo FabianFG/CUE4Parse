@@ -17,6 +17,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar, validPos);
             ArrayDim = Ar.Read<int>();
             PropertyFlags = Ar.Ver >= EUnrealEngineObjectUE3Version.PropertyFlagsSizeExpandedTo64Bits ? Ar.Read<EPropertyFlags>() : (EPropertyFlags)Ar.Read<uint>();
+            if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 10) _ = Ar.ReadFString(); // ObjectName
             if (Ar.Game >= GAME_UE4_0)
             {
                 RepNotifyFunc = Ar.ReadFName();
@@ -26,6 +27,8 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 BlueprintReplicationCondition = (ELifetimeCondition) Ar.Read<byte>();
             }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.temp10) Ar.Read<byte>(); // what is this?
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -139,7 +142,17 @@ namespace CUE4Parse.UE4.Objects.UObject
         }
     }
 
-    public class UObjectProperty : UObjectPropertyBase { }
+    public class UObjectProperty : UObjectPropertyBase
+    {
+        public override void Deserialize(FAssetArchive Ar, long validPos)
+        {
+            base.Deserialize(Ar, validPos);
+            if (Ar.Game == GAME_RocketLeague)
+            {
+                Ar.ReadFName(); // unknown
+            }
+        }
+    }
 
     public class UWeakObjectProperty : UObjectPropertyBase { }
 
@@ -216,6 +229,10 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar, validPos);
             InterfaceClass = new FPackageIndex(Ar);
+            if (Ar.Game == GAME_RocketLeague)
+            {
+                Ar.ReadFName(); // unknown
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

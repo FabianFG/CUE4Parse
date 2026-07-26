@@ -67,6 +67,33 @@ public class UStaticMesh : UObject
             LightingGuid = FGuid.Random();
         }
 
+        if (Ar.Game == GAME_Dishonored)
+        {
+            Ar.Position = validPos;
+            return; // some weird changes so just ignore
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRESERVE_SMC_VERT_COLORS && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
+        {
+            Ar.Read<int>(); // VertexPositionVersionNumber
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.DYNAMICTEXTUREINSTANCES && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_CACHED_STATIC_MESH_STREAMING_FACTORS)
+        {
+            Ar.ReadArray<float>(); // CachedStreamingTextureFactors
+        }
+
+        if (!stripDataFlags.IsEditorDataStripped() && Ar.Ver >= EUnrealEngineObjectUE3Version.KEEP_STATIC_MESH_DEGENERATES && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
+        {
+            Ar.ReadBoolean(); // bRemoveDegenerates
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.INSTANCED_STATIC_MESH_PER_LOD_STATIC_LIGHTING && Ar.Game < GAME_UE4_0)
+        {
+            Ar.ReadBoolean(); // bPerLODStaticLightingForInstancing
+            Ar.Read<int>(); // ConsolePreallocateInstanceCount
+        }
+
         if (Ar.Ver > EUnrealEngineObjectUE4Version.STATIC_MESH_SOCKETS)
         {
             Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));

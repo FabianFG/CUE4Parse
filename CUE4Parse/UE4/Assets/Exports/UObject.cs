@@ -136,6 +136,11 @@ public class UObject : AbstractPropertyHolder
         }
         else
         {
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
+            {
+                Ar.Read<int>(); // NetIndex
+            }
+
             DeserializePropertiesTagged(Properties = [], Ar, false);
         }
 
@@ -150,6 +155,16 @@ public class UObject : AbstractPropertyHolder
 
                 ObjectGuid = Ar.Read<FGuid>();
             }
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release57)
+        {
+            Ar.ReadFName(); // TempState
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release58)
+        {
+            Ar.ReadFName(); // TempGroup
         }
 
         if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SparseClassDataStructSerialization || !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))

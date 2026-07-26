@@ -57,7 +57,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly uint Tag;
         public FPackageFileVersion FileVersionUE;
         public EUnrealEngineObjectLicenseeUEVersion FileVersionLicenseeUE;
-        public FCustomVersionContainer CustomVersionContainer;
+        public FCustomVersionContainer? CustomVersionContainer;
         public EPackageFlags PackageFlags;
         public int TotalHeaderSize;
         public readonly string PackageName;
@@ -79,6 +79,9 @@ namespace CUE4Parse.UE4.Objects.UObject
         public int CellExportOffset;
         public int CellImportCount;
         public int CellImportOffset;
+        public int ExportGuidsCount;
+        public int ImportGuidsCount;
+        public int ImportExportGuidsOffset;
         public readonly int DependsOffset;
         public readonly int SoftPackageReferencesCount;
         public readonly int SoftPackageReferencesOffset;
@@ -90,6 +93,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly FGuid Guid;
         public readonly FGuid PersistentGuid;
         public readonly FGenerationInfo[] Generations;
+        public FCompressedChunk[] CompressedChunks;
         public readonly FEngineVersion? SavedByEngineVersion;
         public readonly FEngineVersion? CompatibleWithEngineVersion;
         public readonly ECompressionFlags CompressionFlags;
@@ -161,17 +165,22 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
 
             legacyFileVersion = Ar.Read<int>();
+            if (Ar.Game == GAME_MortalRoyale)
+            {
+                legacyFileVersion = (short)legacyFileVersion;
+                Ar.Position += 4;
+            }
             if (Ar.Game == GAME_DeltaForce) legacyFileVersion /= 659;
 
             if (legacyFileVersion < 0) // means we have modern version numbers
             {
                 if (legacyFileVersion < CurrentLegacyFileVersion)
                 {
-                    // we can't safely load more than this because the legacy version code differs in ways we can not predict.
-                    // Make sure that the linker will fail to load with it.
-                    FileVersionUE.Reset();
-                    FileVersionLicenseeUE = 0;
-                    throw new ParserException("Can't load legacy UE3 file");
+                    FileVersionLicenseeUE = (EUnrealEngineObjectLicenseeUEVersion)(legacyFileVersion >> 16);
+                    legacyFileVersion &= 0xFFFF;
+                    FileVersionUE.FileVersionUE3 = legacyFileVersion;
+                    Ar.Ver = FileVersionUE;
+                    Ar.LicenseeVer = FileVersionLicenseeUE;
                 }
 
                 if (legacyFileVersion != -4)
@@ -281,6 +290,16 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             ExportCount = Ar.Read<int>();
             ExportOffset = Ar.Read<int>();
+
+            if (Ar.Game == GAME_APBReloaded)
+            {
+                if ((int)FileVersionLicenseeUE > 29) Ar.Read<int>();
+                if ((int) FileVersionLicenseeUE > 28)
+                {
+                    Ar.ReadArray<int>(5);
+                }
+            }
+
             ImportCount = Ar.Read<int>();
             ImportOffset = Ar.Read<int>();
 
@@ -288,6 +307,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 HeritageOffset = Ar.Read<int>();
                 HeritageCount = Ar.Read<int>();
+                return;
             }
 
             if (FileVersionUE >= EUnrealEngineObjectUE5Version.VERSE_CELLS)
@@ -317,6 +337,13 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (FileVersionUE >= EUnrealEngineObjectUE4Version.ADDED_SEARCHABLE_NAMES)
             {
                 SearchableNamesOffset = Ar.Read<int>();
+            }
+
+            if (FileVersionUE >= EUnrealEngineObjectUE3Version.ADDED_CROSSLEVEL_REFERENCES && Ar.Game < GAME_UE4_0)
+            {
+                ImportExportGuidsOffset = Ar.Read<int>();
+                ImportGuidsCount = Ar.Read<int>();
+                ExportGuidsCount = Ar.Read<int>();
             }
 
             if (FileVersionUE >= EUnrealEngineObjectUE3Version.ASSET_THUMBNAILS_IN_PACKAGES)
@@ -361,7 +388,14 @@ namespace CUE4Parse.UE4.Objects.UObject
                 }
             }
 
-            Generations = Ar.ReadArray(() => new FGenerationInfo(Ar));
+            var Count = Ar.Read<int>();
+
+            if (Ar.Game == GAME_APBReloaded && (int)FileVersionLicenseeUE > 32)
+            {
+                Ar.Read<FGuid>();
+            }
+
+            Generations = Ar.ReadArray(Count, () => new FGenerationInfo(Ar));
 
             if (FileVersionUE >= EUnrealEngineObjectUE4Version.ENGINE_VERSION_OBJECT)
             {
@@ -406,18 +440,21 @@ namespace CUE4Parse.UE4.Objects.UObject
                 return (compressionFlags & ~CompressionFlagsMask) == 0;
             }
 
-            CompressionFlags = Ar.Read<ECompressionFlags>();
-
-            if (!VerifyCompressionFlagsValid((int) CompressionFlags))
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_PACKAGE_COMPRESSION_SUPPORT)
             {
-                throw new ParserException($"Invalid compression flags ({(uint) CompressionFlags})");
-            }
+                CompressionFlags = Ar.Read<ECompressionFlags>();
 
-            var compressedChunks = Ar.ReadArray<FCompressedChunk>();
+                if (!VerifyCompressionFlagsValid((int) CompressionFlags))
+                {
+                    throw new ParserException($"Invalid compression flags ({(uint) CompressionFlags})");
+                }
 
-            if (compressedChunks.Length > 0)
-            {
-                throw new ParserException("Package level compression is enabled");
+                var compressedChunks = Ar.ReadArray<FCompressedChunk>();
+
+                if (compressedChunks.Length > 0)
+                {
+                    CompressedChunks = Ar.ReadArray(() => new FCompressedChunk(Ar));
+                }
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedPackageSource)
@@ -514,6 +551,12 @@ namespace CUE4Parse.UE4.Objects.UObject
             if (Tag == PACKAGE_FILE_TAG_ONE && Ar is FAssetArchive assetAr)
             {
                 assetAr.AbsoluteOffset = NameOffset - (int) Ar.Position;
+            }
+            
+            if (Ar.Game == GAME_SuddenAttack2)
+            {
+                Ar.Read<int>(); // count
+                Ar.Read<int>(); // offset
             }
         }
 

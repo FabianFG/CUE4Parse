@@ -44,6 +44,17 @@ public class FStaticMeshLODResources
     {
         var stripDataFlags = new FStripDataFlags(Ar);
 
+        if (Ar.Game == GAME_APBReloaded)
+        {
+            Ar.Position += 8;
+            goto SkipRawTriangles;
+        }
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedRawTriangles && Ar.Game < GAME_UE4_0)
+        {
+            new FByteBulkData((FAssetArchive)Ar); // RawTriangles
+        }
+
+        SkipRawTriangles:
         if (Ar.Game == GAME_TheDivisionResurgence) Ar.Position += 4;
 
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
@@ -243,10 +254,23 @@ public class FStaticMeshLODResources
                 _ = new FDistanceFieldVolumeData(Ar); // distanceFieldData
             }
 
+            if (Ar.Game == GAME_APBReloaded)
+            {
+                Ar.Position += 8;
+                goto SkipWireFrame;
+            }
+
             if (!stripDataFlags.IsEditorDataStripped())
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+            SkipWireFrame:
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
+            {
+                Ar.ReadBulkArray(() => Ar.ReadBytes(16)); // LegacyEdges
+                Ar.ReadArray<byte>(); // LegacyShadowTriangleDoubleSided
+            }
+
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData) && Ar.Ver > EUnrealEngineObjectUE3Version.CRACK_FREE_DISPLACEMENT_SUPPORT)
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
 

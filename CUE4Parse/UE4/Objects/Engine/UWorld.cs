@@ -5,6 +5,13 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
+    public class FLevelViewportInfo
+    {
+        public FVector CamPosition;
+        public FRotator CamRotation;
+        public float CamOrthoZoom;
+    }
+
     public class UWorld : Assets.Exports.UObject
     {
         public FPackageIndex PersistentLevel { get; private set; }
@@ -16,6 +23,8 @@ namespace CUE4Parse.UE4.Objects.Engine
             if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 8;
             base.Deserialize(Ar, validPos);
             PersistentLevel = new FPackageIndex(Ar);
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.WORLD_PERSISTENT_FACEFXANIMSET && Ar.Game < GAME_UE4_0)
+            {
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_WORLD_EXTRA_REFERENCED_OBJECTS)
             {
                 ExtraReferencedObjects = Ar.ReadArray(() => new FPackageIndex(Ar));

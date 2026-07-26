@@ -86,6 +86,13 @@ public class FSkelMeshSection
             var dummyTriangleSorting = Ar.Read<byte>(); // TEnumAsByte<ETriangleSortOption>
         }
 
+        if (Ar.Game == GAME_LifeIsStrange && (int)Ar.LicenseeVer >= 17)
+        {
+            var bReadArray = Ar.ReadFlag();
+
+            if (bReadArray) Ar.ReadArray<byte>();
+        }
+
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH)
         {
             if (skelMeshVer < FSkeletalMeshCustomVersion.Type.DeprecateSectionDisabledFlag)
