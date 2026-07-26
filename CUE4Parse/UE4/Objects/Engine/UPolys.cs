@@ -16,8 +16,12 @@ public class UPolys : Assets.Exports.UObject
         {
             var dbNum = Ar.Read<int>();
             var dbMax = Ar.Read<int>();
+            
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.SERIALIZE_TTRANSARRAY_OWNER)
+            {
+                _ = new FPackageIndex(Ar);
+            }
 
-            _ = new FPackageIndex(Ar);
             Element = Ar.ReadArray(dbNum, () => new FPoly(Ar));
         }
         else
