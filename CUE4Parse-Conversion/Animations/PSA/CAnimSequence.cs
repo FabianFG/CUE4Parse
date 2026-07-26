@@ -9,6 +9,7 @@ namespace CUE4Parse_Conversion.Animations.PSA
         public readonly FTransform[]? RetargetBasePose;
 
         public string Name;
+        public string? SlotName;
         public readonly int NumFrames;
         public readonly float FramesPerSecond;
         public readonly bool IsAdditive;
