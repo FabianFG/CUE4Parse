@@ -213,11 +213,17 @@ namespace CUE4Parse_Conversion.Animations
                     // Now create CAnimTracks with the data from those big buffers
                     for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
                     {
-                        var track = new CAnimTrack();
-                        animSeq.Tracks.Add(track);
+
+                        // var track = new CAnimTrack();
+                        // animSeq.Tracks.Add(track);
                         var trackIndex = animSequence.FindTrackForBoneIndex(boneIndex);
                         if (trackIndex >= 0)
                         {
+                            // begin Howechammaaa change
+                            var track = new CAnimTrack();
+                            animSeq.Tracks.Add(track);
+                            // end Howechammaaa change
+
                             var offset = trackIndex * numSamples;
                             track.KeyPos = new FVector[numSamples];
                             track.KeyQuat = new FQuat[numSamples];
