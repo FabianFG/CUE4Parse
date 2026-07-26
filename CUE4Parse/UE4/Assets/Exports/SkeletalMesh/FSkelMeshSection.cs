@@ -70,6 +70,18 @@ public class FSkelMeshSection
 
         MaterialIndex = Ar.Read<short>();
 
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedOldLodformat)
+        {
+            BaseIndex = Ar.Read<short>();
+            Ar.ReadArray<short>(6);
+            NumTriangles = Ar.Read<int>();
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecateSkelMeshArray)
+            {
+                Ar.ReadArray<short>();
+            }
+            return;
+        }
+
         if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
         {
             var dummyChunkIndex = Ar.Read<ushort>();

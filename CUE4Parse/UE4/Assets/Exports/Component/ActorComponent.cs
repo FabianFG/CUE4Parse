@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Exports.BuildData;
+using CUE4Parse.UE4.Assets.Exports.Component.Atmosphere;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
@@ -15,7 +16,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component;
 
-public class UActorComponent : UObject
+public class UActorComponent : UComponent
 {
     [JsonIgnore] public FSimpleMemberReference[]? UCSModifiedProperties;
 
@@ -47,6 +48,9 @@ public class UAIPerceptionStimuliSourceComponent : UActorComponent;
 public class UActorSequenceComponent : UActorComponent;
 public class UActorTextureStreamingBuildDataComponent : UActorComponent;
 public class UApplicationLifecycleComponent : UActorComponent;
+public class UApexComponentBase : UMeshComponent;
+public class UApexStaticComponent : UApexComponentBase;
+public class ApexStaticDestructibleComponent : UApexStaticComponent;
 public class UArchVisCharMovementComponent : UCharacterMovementComponent;
 
 public class UArrowComponent : UPrimitiveComponent
@@ -65,6 +69,30 @@ public class UArrowComponent : UPrimitiveComponent
     }
 }
 public class UAsyncPhysicsInputComponent : UActorComponent;
+
+public class UAtmosphericFogComponent : USkyAtmosphereComponent;
+/*
+    // Untested
+
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RemovedAtmosphericFog)
+        {
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.ATMOSPHERIC_FOG_CACHE_DATA)
+            {
+                new FByteBulkData(Ar); // TransmittanceData
+                new FByteBulkData(Ar); // IrradianceData
+            }
+
+            new FByteBulkData(Ar); //InscatterData
+            Ar.Read<int>(); // CounterVal
+        }
+    }
+}*/
+
 public class UAudioCaptureComponent : USynthComponent;
 
 public class UAudioComponent : USceneComponent
@@ -138,6 +166,7 @@ public class UBrushComponent : UPrimitiveComponent
     public override UBodySetup? GetBodySetup() => BrushBodySetup?.Load<UBodySetup>();
 }
 
+public class UAudioOverlapComponent : UActorComponent;
 public class UCableComponent : UMeshComponent;
 public class UCameraComponent : USceneComponent;
 public class UCameraShakeSourceComponent : USceneComponent;
@@ -179,6 +208,7 @@ public class UEditorUtilityActorComponent : UActorComponent;
 public class UEnhancedInputComponent : UInputComponent;
 public class UEnvelopeFollowerListener : UActorComponent;
 public class UExponentialHeightFogComponent : USceneComponent;
+public class UHeightFogComponent : USceneComponent;
 public class UFXSystemComponent : UPrimitiveComponent;
 public class UFieldNodeBase : UActorComponent;
 public class UFieldNodeFloat : UFieldNodeBase;
@@ -235,6 +265,7 @@ public class UHLODInstancedStaticMeshComponent : UInstancedStaticMeshComponent;
 public class UHairStrandsComponent : UGroomComponent;
 public class UHeterogeneousVolumeComponent : UMeshComponent;
 public class UIKRigComponent : UActorComponent;
+public class UImageReflectionShadowPlaneComponent : UPrimitiveComponent;
 public class UImgMediaPlaybackComponent : UActorComponent;
 public class UInputComponent : UActorComponent;
 public class UInteractiveFoliageComponent : UStaticMeshComponent;
@@ -269,6 +300,7 @@ public class UMovementComp_Character : UCharacterMovementComponent;
 public class UMovementComp_Projectile : UProjectileMovementComponent;
 public class UMovementComp_Rotating : URotatingMovementComponent;
 public class UMovementComponent : UActorComponent;
+public class UMultiCueSplineAudioComponent : USplineAudioComponent;
 public class UNavLinkComponent : UPrimitiveComponent;
 public class UNavLinkCustomComponent : UNavRelevantComponent;
 public class UNavLinkRenderingComponent : UPrimitiveComponent;
@@ -345,9 +377,11 @@ public class UPostProcessComponent : USceneComponent;
 public class UProceduralFoliageComponent : UActorComponent;
 public class UProceduralMeshComponent : UMeshComponent;
 public class UProjectileMovementComponent : UMovementComponent;
+public class URadialBlurComponent : UActorComponent;
 public class URB_ConstraintComponent : UPhysicsConstraintComponent;
 public class URB_Handle : UPhysicsHandleComponent;
 public class URB_RadialForceComponent : URadialForceComponent;
+public class URB_RadialImpulseComponent : UPrimitiveComponent;
 public class URB_ThrusterComponent : UPhysicsThrusterComponent;
 public class URadialFalloff : UFieldNodeFloat;
 public class URadialForceComponent : USceneComponent;
@@ -358,17 +392,84 @@ public class UReturnResultsTerminal : UFieldNodeBase;
 public class URotatingMovementComponent : UMovementComponent;
 public class URuntimeVirtualTextureComponent : USceneComponent;
 public class USceneCaptureComponent : USceneComponent;
+public class USceneCaptureReflectComponent : USceneCaptureComponent;
 public class USceneCaptureComponent2D : USceneCaptureComponent;
 public class USceneCaptureComponentCube : USceneCaptureComponent;
 public class USensingComponent : UPawnSensingComponent;
 public class UShapeComponent : UPrimitiveComponent;
 public class USingleAnimSkeletalComponent : USkeletalMeshComponent;
 public class USkeletalMeshReplicatedComponent : USkeletalMeshComponent;
+public class UFPSSkeletalMeshComponent : USkeletalMeshComponent;
+public class USkinnedMeshComponent : UMeshComponent;
+public class USpeedTreeComponent : UPrimitiveComponent
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SPEEDTREE_STATICLIGHTING && Ar.Game < GAME_UE4_0)
+        {
+            FLightMap? BranchAndFrondLightMap = Ar.Read<ELightMapType>() switch
+            {
+                ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                _ => null
+            };
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.SPEEDTREE_5_INTEGRATION)
+            {
+                FLightMap? FrondLightMap = Ar.Read<ELightMapType>() switch
+                {
+                    ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                    ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                    _ => null
+                };
+            }
+
+            FLightMap? LeafCardLightMap = Ar.Read<ELightMapType>() switch
+            {
+                ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                _ => null
+            };
+
+            FLightMap? BillboardLightMap = Ar.Read<ELightMapType>() switch
+            {
+                ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                _ => null
+            };
+
+            if(Ar.Ver >= EUnrealEngineObjectUE3Version.SPEEDTREE_VERTEXSHADER_RENDERING)
+            {
+                FLightMap? LeafMeshLightMap = Ar.Read<ELightMapType>() switch
+                {
+                    ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                    ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                    _ => null
+                };
+            }
+        }
+    }
+};
+public class UDynamicPausedLightEnvironmentComponent : UComponent;
+public class UDynamicSpriteComponent  : USpriteComponent;
+public class ULensFlareComponent : UComponent;
+public class UMapObjectiveVisualisation : UComponent;
+public class UInteractionSocketComponent : UComponent;
+public class UDrawPylonRadiusComponent : UComponent;
+public class USceneCaptureCubeMapComponent : UComponent;
+public class UDrawLightConeComponent : UComponent;
+public class UVisConeComponent : UComponent;
+public class UDrawLightRadiusComponent : UActorComponent;
+public class UFracturedStaticMeshComponent : UStaticMeshComponent;
+public class UFracturedSkinnedMeshComponent : UStaticMeshComponent;
 public class USmartNavLinkComponent : UNavLinkCustomComponent;
 public class USparseVolumeTextureViewerComponent : UPrimitiveComponent;
 public class USpectatorPawnMovement : UFloatingPawnMovement;
 public class USphereComponent : UShapeComponent;
 public class USphereReflectionCaptureComponent : UReflectionCaptureComponent;
+public class USplineAudioComponent : UAudioComponent;
 public class USplineComponent : UPrimitiveComponent;
 public class USplineNavModifierComponent : UNavModifierComponent;
 public class USpringArmComponent : USceneComponent;

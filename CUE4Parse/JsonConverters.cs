@@ -835,6 +835,12 @@ public class FPackageFileSummaryConverter : JsonConverter<FPackageFileSummary>
             serializer.Serialize(writer, value.CustomVersionContainer?.Versions);
         }
 
+        if (value.TextureAllocations is not null)
+        {
+            writer.WritePropertyName("TextureAllocations");
+            serializer.Serialize(writer, value.TextureAllocations);
+        }
+
         writer.WritePropertyName(nameof(value.bUnversioned));
         writer.WriteValue(value.bUnversioned);
 

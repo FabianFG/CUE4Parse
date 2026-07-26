@@ -138,6 +138,45 @@ public class USpotLightComponent : UPointLightComponent
     }
 }
 
+
+public class UDominantSpotLightComponent : UPointLightComponent
+{
+    public short[] DominantLightShadowMap;
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        // Before super
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SPOTLIGHT_DOMINANTSHADOW_TRANSITION && Ar.Game < GAME_UE4_0)
+        {
+            DominantLightShadowMap = Ar.ReadArray(() => Ar.Read<short>());
+        }
+
+        base.Deserialize(Ar, validPos);
+    }
+}
+
+public class UDominantDirectionalLightComponent : UPointLightComponent
+{
+    public short[]? DominantLightShadowMap;
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        // Before super
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.DOMINANTLIGHT_NORMALSHADOWS && Ar.Game < GAME_UE4_0)
+        {
+            DominantLightShadowMap = Ar.ReadArray(() => Ar.Read<short>());
+        }
+
+        base.Deserialize(Ar, validPos);
+    }
+}
+public class UDominantPointLightComponent : UPointLightComponent;
+
+public class ULightEnvironmentComponent : UActorComponent;
+
+public class UParticleLightEnvironmentComponent : UPointLightComponent;
+public class UDynamicLightEnvironmentComponent : ULightEnvironmentComponent;
+
 public class UPointLightComponent : ULocalLightComponent
 {
     public float LightFalloffExponent { get; private set; }

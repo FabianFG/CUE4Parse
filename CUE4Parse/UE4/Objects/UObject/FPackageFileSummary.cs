@@ -99,6 +99,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public readonly ECompressionFlags CompressionFlags;
         public readonly int PackageSource;
         public bool bUnversioned;
+        public readonly FTextureAllocations[]? TextureAllocations;
         public readonly int AssetRegistryDataOffset;
         public int BulkDataStartOffset; // serialized as long
         public readonly int WorldTileInfoDataOffset;
@@ -477,11 +478,9 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (legacyFileVersion > -7)
             {
-                var numTextureAllocations = Ar.Read<int>();
-                if (numTextureAllocations != 0)
+                if (FileVersionUE >= EUnrealEngineObjectUE3Version.TEXTURE_PREALLOCATION)
                 {
-                    // We haven't used texture allocation info for ages and it's no longer supported anyway
-                    throw new ParserException("NumTextureAllocations != 0");
+                    TextureAllocations = Ar.ReadArray(() => new FTextureAllocations(Ar));
                 }
             }
 
