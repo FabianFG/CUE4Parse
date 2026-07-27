@@ -35,6 +35,40 @@ public static class PUBGMobileSM4
         "iQ0eM0mJ7uT0kV6kL5zY"
     ];
 
+    // Dynamic encryption keys come from the TCP
+    private static readonly Dictionary<uint, string> _dynamicKeySalts = new()
+    {
+        [0] = "edbcba1dc6b11068b44a",
+        [1] = "4fdf06dd5830dea4a927",
+        [2] = "92bd3c6ca58d471b03df",
+        [3] = "5267814520c2b1904294",
+        [4] = "f31085d8cefbf7e4adaf",
+        [5] = "589df0f2a3203ef9b9cc",
+        [6] = "354d3b38e8e518477d8c",
+        [7] = "b57b1eeeed9d590e4692",
+        [8] = "2cbdd9c8cc6d20867fa2",
+        [9] = "d47158ca2923a75af7ef",
+        [10] = "2a1138b5e375c7c9101a",
+        [11] = "c9347da5d7111fe9f1d9",
+        [12] = "8e74503f8a94724dbb08",
+        [13] = "0259d21abd4adf59ca05",
+        [14] = "18ca7d8e7b13f4760404",
+        [15] = "e9528dbafe091b886af5",
+        [16] = "d6860287a330f9a92210",
+        [17] = "751a5feeb49616d1cceb",
+        [18] = "6955d9dfab070681d752",
+        [19] = "068b4cfc607fa13a1ffb",
+        [20] = "4fb7a2e36b9d156b79f8",
+        [21] = "44e497e008d6789f2dbf",
+        [22] = "0dc887496bb94080f2c4",
+        [23] = "032a5c6c206b96db376a",
+        [24] = "e4bb6ceb363e5841d946",
+        [25] = "06d780b85eade141e5fd",
+        [26] = "a6a915cd11add12a94e9",
+        [28] = "87bae21ce1a1631ad6c9",
+        [29] = "14f8efdb5552af690d44"
+    };
+
     public static byte[] Decrypt(byte[] bytes, int beginOffset, int count, string path, EPUBGMobileEncryptionMethod encryptionMethod, uint encryptionKeyId)
     {
         if (beginOffset > bytes.Length - count)
@@ -42,12 +76,6 @@ public static class PUBGMobileSM4
         if (encryptionMethod is EPUBGMobileEncryptionMethod.SM4 or EPUBGMobileEncryptionMethod.LiteSaltSM4
                 or (>= EPUBGMobileEncryptionMethod.SaltSM4Min and <= EPUBGMobileEncryptionMethod.SaltSM4Max) && count % BLOCK_SIZE != 0)
             throw new ArgumentException($"{nameof(count)} must be a multiple of {BLOCK_SIZE}", nameof(count));
-
-        var isDynamicallyEncrypted = (encryptionKeyId & 0xFF000000) == 0x01000000;
-        var encryptionKeyIndex = encryptionKeyId & 0xFFFFFF;
-
-        if (isDynamicallyEncrypted)
-            throw new ParserException($"Dynamically encrypted assets aren't supported (EncryptionKeyId: 0x{encryptionKeyId:X})");
 
         var output = new byte[count];
         Buffer.BlockCopy(bytes, beginOffset, output, 0, count);
@@ -62,7 +90,7 @@ public static class PUBGMobileSM4
                 var salt = _pathKeySalts[(encryptionMethod - EPUBGMobileEncryptionMethod.SaltSM4Min) % _pathKeySalts.Length];
                 var keySource = string.Concat(cleanName, salt, encryptionMethod.ToString().ToLowerInvariant());
 
-                Span<byte> key = stackalloc byte[20];
+                Span<byte> key = stackalloc byte[SHA1.HashSizeInBytes];
                 SHA1.HashData(Encoding.ASCII.GetBytes(keySource), key);
 
                 DecryptSm4(output, key[..BLOCK_SIZE]);
@@ -76,14 +104,31 @@ public static class PUBGMobileSM4
                 var cleanName = (extension >= 0 ? name[..extension] : name).ToString().ToLowerInvariant();
                 var keySource = string.Concat(cleanName, SM4KeyLite);
 
-                Span<byte> key = stackalloc byte[20];
+                Span<byte> key = stackalloc byte[SHA1.HashSizeInBytes];
                 SHA1.HashData(Encoding.ASCII.GetBytes(keySource), key);
                 DecryptSm4(output, key[..BLOCK_SIZE]);
                 break;
             }
             case EPUBGMobileEncryptionMethod.SM4:
-                DecryptSm4(output, _sm4KeyGlobal);
+            {
+                var isDynamicallyEncrypted = (encryptionKeyId & 0xFF000000) == 0x01000000;
+
+                var key = _sm4KeyGlobal;
+                if (isDynamicallyEncrypted)
+                {
+                    var encryptionKeyIndex = encryptionKeyId & 0xFFFFFF;
+                    if (!_dynamicKeySalts.TryGetValue(encryptionKeyIndex, out var keySalt))
+                        throw new ParserException($"Dynamic encryption key index {encryptionKeyIndex} is not available");
+
+                    Span<byte> hash = stackalloc byte[SHA1.HashSizeInBytes];
+                    SHA1.HashData(Encoding.ASCII.GetBytes(keySalt), hash);
+
+                    key = hash[..16].ToArray();
+                }
+
+                DecryptSm4(output, key);
                 break;
+            }
             case EPUBGMobileEncryptionMethod.ChainedXor:
                 Decrypt16(output);
                 break;
