@@ -396,7 +396,7 @@ public static class MeshConverter
             var skeletalMeshLod = new CSkelMeshLod
             {
                 NumTexCoords = numTexCoords,
-                ScreenSize = originalMesh.LODInfo[i].ScreenSize.Default,
+                ScreenSize = originalMesh?.LODInfo?[i].ScreenSize.Default ?? 4,
                 HasNormals = true,
                 HasTangents = true,
                 LODIndex = i,

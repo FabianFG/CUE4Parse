@@ -114,4 +114,23 @@ public class FTexture2DMipMap
 
         return false;
     }
+
+    public class FLegacyMipMap
+    {
+        public FByteBulkData BulkData;
+        public int USize;
+        public int VSize;
+        public byte UBits;
+        public byte VBits;
+
+        public FLegacyMipMap(FAssetArchive Ar)
+        {
+            BulkData = new FByteBulkData(Ar);
+
+            USize = Ar.Read<int>();
+            VSize = Ar.Read<int>();
+            UBits = Ar.Read<byte>();
+            VBits = Ar.Read<byte>();
+        }
+    }
 }

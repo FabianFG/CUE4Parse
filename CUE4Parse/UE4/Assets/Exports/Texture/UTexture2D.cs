@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
@@ -13,6 +14,8 @@ public class UTexture2D : UTexture
     public FIntPoint ImportedSize { get; private set; }
     public TextureAddress AddressX { get; private set; }
     public TextureAddress AddressY { get; private set; }
+    public bool bForcePVRTC4 { get; private set; }
+    public FName TextureFileCacheName { get; private set; }
 
     public override TextureAddress GetTextureAddressX() => AddressX;
     public override TextureAddress GetTextureAddressY() => AddressY;
@@ -24,6 +27,8 @@ public class UTexture2D : UTexture
         ImportedSize = GetOrDefault<FIntPoint>(nameof(ImportedSize));
         AddressX = GetOrDefault<TextureAddress>(nameof(AddressX));
         AddressY = GetOrDefault<TextureAddress>(nameof(AddressY));
+        bForcePVRTC4 = GetOrDefault<bool>(nameof(bForcePVRTC4));
+        TextureFileCacheName = GetOrDefault<FName>(nameof(TextureFileCacheName));
 
         var stripDataFlags = new FStripDataFlags(Ar);
         var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_TEXTURE2D && Ar.ReadBoolean();
