@@ -256,14 +256,12 @@ public class FStaticMeshLODResources
 
             if (Ar.Game == GAME_APBReloaded)
             {
-                Ar.Position += 8;
-                goto SkipWireFrame;
+                Ar.Position += 8; // bulkdata
             }
 
-            if (!stripDataFlags.IsEditorDataStripped())
+            if (!stripDataFlags.IsEditorDataStripped() && Ar.Game != GAME_APBReloaded)
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
-
-            SkipWireFrame:
+            
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
                 Ar.ReadBulkArray(() => Ar.ReadBytes(16)); // LegacyEdges

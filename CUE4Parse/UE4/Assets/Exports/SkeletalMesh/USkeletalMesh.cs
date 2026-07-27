@@ -159,7 +159,8 @@ public partial class USkeletalMesh : UObject
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_SKELMESH_NAMEINDEXMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
         {
-            Ar.ReadMap(Ar.ReadFName, () => Ar.Read<int>()); // DummyNameIndexMap
+            var length = Ar.Read<int>();
+            Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELMESH_BONE_KDOP && Ar.Game < GAME_UE4_0)
