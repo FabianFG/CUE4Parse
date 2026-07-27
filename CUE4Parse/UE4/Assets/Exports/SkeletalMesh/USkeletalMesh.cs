@@ -159,8 +159,37 @@ public partial class USkeletalMesh : UObject
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_SKELMESH_NAMEINDEXMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)
         {
-            var length = Ar.Read<int>();
-            Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap
+            Ar.ReadMap(Ar.ReadFName, () => Ar.Read<int>()); // DummyNameIndexMap
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELMESH_BONE_KDOP && Ar.Game < GAME_UE4_0)
+        {
+            // this is not an array of ints, it's a complex FPerPolyBoneCollisionData struct
+            Ar.ReadArray<int>(); // PerPolyBoneKDOPs
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_MAPPING && Ar.Game < GAME_UE4_0)
+        {
+            Ar.ReadArray(Ar.ReadFString); // BoneBreakNames
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_CUSTOM_MAPPING)
+            {
+                Ar.ReadArray(Ar.Read<int>); // BoneBreakOptions
+            }
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.APEX_CLOTHING && Ar.Game < GAME_UE4_0)
+        {
+            var ApexClothingAssets = Ar.Read<int>();
+            for (var i = 0; i < ApexClothingAssets; i++)
+            {
+                var bAssetValid = Ar.ReadBoolean();
+
+                if (bAssetValid)
+                {
+                    Ar.ReadArray<byte>(); // NameBuffer
+                    Ar.ReadArray<byte>(); // Buffer
+                }
+            }
         }
 
         switch (Ar.Game)

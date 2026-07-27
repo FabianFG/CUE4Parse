@@ -89,6 +89,9 @@ namespace CUE4Parse.UE4.Assets
             
             Summary = new FPackageFileSummary(uassetAr);
 
+            // Decompresses CompressedChunks and Decrypts Rocket league encrypted files
+            DecryptAndDecompress(uassetAr, Summary);
+
             uassetAr.SeekAbsolute(Summary.NameOffset, SeekOrigin.Begin);
             NameMap = new FNameEntrySerialized[Summary.NameCount];
             uassetAr.ReadArray(NameMap, () => new FNameEntrySerialized(uassetAr));

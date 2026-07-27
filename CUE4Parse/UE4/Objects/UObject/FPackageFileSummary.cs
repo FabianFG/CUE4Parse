@@ -177,11 +177,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 if (legacyFileVersion < CurrentLegacyFileVersion)
                 {
-                    FileVersionLicenseeUE = (EUnrealEngineObjectLicenseeUEVersion)(legacyFileVersion >> 16);
-                    legacyFileVersion &= 0xFFFF;
-                    FileVersionUE.FileVersionUE3 = legacyFileVersion;
-                    Ar.Ver = FileVersionUE;
-                    Ar.LicenseeVer = FileVersionLicenseeUE;
+                    // what is this?
                 }
 
                 if (legacyFileVersion != -4)
@@ -245,8 +241,11 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
             else
             {
-                // This is probably an old UE3 file, make sure that the linker will fail to load with it.
-                throw new ParserException("Can't load legacy UE3 file");
+                FileVersionLicenseeUE = (EUnrealEngineObjectLicenseeUEVersion)(legacyFileVersion >> 16);
+                legacyFileVersion &= 0xFFFF;
+                FileVersionUE.FileVersionUE3 = legacyFileVersion;
+                Ar.Ver = FileVersionUE;
+                Ar.LicenseeVer = FileVersionLicenseeUE;
             }
 
             if (FileVersionUE >= EUnrealEngineObjectUE3Version.MOVED_EXPORTIMPORTMAPS_ADDED_TOTALHEADERSIZE && FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
