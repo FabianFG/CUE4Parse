@@ -114,6 +114,8 @@ public readonly struct FValueType
             _ => throw new NotImplementedException($"EManagedArrayType Type: '{ArrayType}' currently does not have serialization implemented")
         };
     }
+
+    public override string ToString() => $"{ArrayType}[{ManagedArray?.Data?.Length ?? 0}]";
 }
 
 public enum EManagedArrayType : byte

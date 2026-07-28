@@ -3,30 +3,22 @@ using CUE4Parse.UE4.Exceptions;
 
 namespace CUE4Parse.UE4.Objects.Chaos;
 
-public class FChaosArchive : FAssetArchive
+public class FChaosArchive(FAssetArchive ar) : FAssetArchive(ar, ar.Owner)
 {
-    private readonly List<object?> _tagToObject;
-    
-    public FChaosArchive(FAssetArchive Ar) : base(Ar, Ar.Owner)
-    {
-        _tagToObject = [];
-    }
+    private readonly List<object?> _tagToObject = [];
 
-    public T[] ReadPtrArray<T>() where T : IChaosClass
+    public T?[] ReadPtrArray<T>() where T : IChaosClass
     {
         var count = Read<int>();
         if (count < 0) throw new ParserException("Invalid ChaosClass array count");
 
-        var result = new List<T>(count);
-        for (var i = 0; i < count; i++)
+        var result = new T?[count];
+        for (var i = 0; i < result.Length; i++)
         {
-            var obj = ReadPtr<T>();
-            if (obj is null) continue;
-            
-            result.Add(obj);
+            result[i] = ReadPtr<T>();
         }
-    
-        return result.ToArray();
+
+        return result;
     }
 
     public T? ReadPtr<T>() where T : IChaosClass
@@ -62,7 +54,7 @@ public class FChaosArchive : FAssetArchive
     {
         var obj = T.SerializationFactory(this);
         obj.Serialize(this);
-        
+
         return obj;
     }
 

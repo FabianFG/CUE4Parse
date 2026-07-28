@@ -24,4 +24,6 @@ public readonly struct FKeyType(FName name, FName group) : IEquatable<FKeyType>
     }
 
     public override int GetHashCode() => HashCode.Combine(Name, Group);
+
+    public override string ToString() => $"{Group} -> {Name}";
 }
