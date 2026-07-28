@@ -1,13 +1,14 @@
-﻿using CUE4Parse.UE4.Objects.UObject;
+﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
-public class FMapKey
+public class FKeyType
 {
     public FName Name;
     public FName Group;
-    
-    public FMapKey(FChaosArchive Ar)
+
+    public FKeyType(FAssetArchive Ar)
     {
         Name = Ar.ReadFName();
         Group = Ar.ReadFName();

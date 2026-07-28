@@ -13,23 +13,24 @@ public class UGeometryCollection : UObject
 {
     public FGeometryCollection? GeometryCollection;
     public FGeometryCollectionRenderData? RenderData;
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        var chaosAr = new FChaosArchive(Ar);
 
-        var bIsCookedOrCookin = FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDC && Ar.ReadBoolean();
+        var bIsCookedOrCooking = FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDC && Ar.ReadBoolean();
         if (FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDCAndAsset)
         {
-            GeometryCollection = new FGeometryCollection(chaosAr);
+            GeometryCollection = new FGeometryCollection(new FChaosArchive(Ar));
         }
 
         if (FUE5MainStreamObjectVersion.Get(Ar) == FUE5MainStreamObjectVersion.Type.GeometryCollectionNaniteData ||
             (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.GeometryCollectionNaniteCooked &&
              FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.GeometryCollectionNaniteTransient))
+        {
             SerializeOldNaniteData(Ar);
-        
+        }
+
         if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.GeometryCollectionNaniteTransient)
         {
             var bCooked = Ar.ReadBoolean();
@@ -48,10 +49,10 @@ public class UGeometryCollection : UObject
                 _ = Ar.ReadBoolean(); // bLZCompressed
                 Ar.SkipArray<byte>(); // RootClusterPage
                 _ = new FByteBulkData(Ar); // StreamableClusterPages
-                
+
                 Ar.SkipFixedArray(5 * sizeof(uint)); // PageStreamingState
                 Ar.SkipFixedArray(64 * (2 * Unsafe.SizeOf<FSphere>()) + 3 * sizeof(uint)); // HierarchyNodes
-                
+
                 Ar.SkipArray<uint>(); // PageDependencies
                 Ar.SkipArray<ushort>(); // ImposterAtlas
             }

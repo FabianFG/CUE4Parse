@@ -9,10 +9,10 @@ namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 public readonly struct FValueType
 {
     public readonly EManagedArrayType ArrayType;
-    public readonly FName GroupIndexDependency;
+    public readonly FName? GroupIndexDependency;
     public readonly bool bPersistent;
     public readonly FManagedArrayBase ManagedArray;
-    
+
     public FValueType(FChaosArchive Ar)
     {
         var serializationVersion = Ar.Read<int>();
@@ -31,38 +31,51 @@ public readonly struct FValueType
         }
 
         ManagedArray = CreateManagedArray(Ar);
-        
+
         var bNewSavedBehaviour = FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.ManagedArrayCollectionAlwaysSerializeValue;
         if (bNewSavedBehaviour || bPersistent)
         {
-            ManagedArray.Serialize(Ar);
+            ManagedArray.Serialize(Ar, ArrayType is
+                EManagedArrayType.Vector or
+                EManagedArrayType.Guid or
+                EManagedArrayType.IntVector or
+                EManagedArrayType.Vector2D or
+                EManagedArrayType.Float or
+                EManagedArrayType.Quat or
+                EManagedArrayType.Bool or
+                EManagedArrayType.Int32 or
+                EManagedArrayType.UInt8 or
+                EManagedArrayType.UintVector2 or
+                EManagedArrayType.IntVector2 or
+                EManagedArrayType.IntVector4
+            );
         }
     }
-    
+
     private FManagedArrayBase CreateManagedArray(FChaosArchive Ar)
     {
         return ArrayType switch
         {
             // EManagedArrayType.FNoneType => expr,
-            EManagedArrayType.Vector => new TManagedArray<FVector>(Ar.Read<FVector>, false),
-            EManagedArrayType.IntVector => new TManagedArray<FIntVector>(Ar.Read<FIntVector>, false),
-            EManagedArrayType.Vector2D => new TManagedArray<FVector2D>(Ar.Read<FVector2D>, false),
-            EManagedArrayType.LinearColor => new TManagedArray<FLinearColor>(Ar.Read<FLinearColor>),
-            EManagedArrayType.Int32 => new TManagedArray<int>(Ar.Read<int>, false),
-            EManagedArrayType.Bool => new TManagedArray<bool>(Ar.ReadFlag, false),
-            EManagedArrayType.Transform => new TManagedArray<FTransform>(() => new FTransform(Ar)),
-            EManagedArrayType.String => new TManagedArray<string>(Ar.ReadFString),
-            EManagedArrayType.Float => new TManagedArray<float>(Ar.Read<float>, false),
-            EManagedArrayType.Quat => new TManagedArray<FQuat>(Ar.Read<FQuat>, false),
-            EManagedArrayType.BoneNode => new TManagedArray<FGeometryCollectionBoneNode>(() => new FGeometryCollectionBoneNode(Ar)),
-            EManagedArrayType.MeshSection => new TManagedArray<FGeometryCollectionSection>(Ar.Read<FGeometryCollectionSection>),
-            EManagedArrayType.Box => new TManagedArray<FBox>(() => new FBox(Ar)),
-            EManagedArrayType.IntArray => new TManagedArray<int[]>(Ar.ReadArray<int>), // This should be a TSet/HashSet
-            EManagedArrayType.Guid => new TManagedArray<FGuid>(Ar.Read<FGuid>, false),
-            EManagedArrayType.UInt8 => new TManagedArray<byte>(Ar.Read<byte>, false),
+            EManagedArrayType.Vector => new FManagedArray<FVector>(Ar.Read<FVector>),
+            EManagedArrayType.IntVector => new FManagedArray<FIntVector>(Ar.Read<FIntVector>),
+            EManagedArrayType.Vector2D => new FManagedArray<FVector2D>(Ar.Read<FVector2D>),
+            EManagedArrayType.LinearColor => new FManagedArray<FLinearColor>(Ar.Read<FLinearColor>),
+            EManagedArrayType.Int32 => new FManagedArray<int>(Ar.Read<int>),
+            EManagedArrayType.Bool => new FManagedArray<bool>(Ar.ReadFlag),
+            EManagedArrayType.Transform => new FManagedArray<FTransform>(() => new FTransform(Ar)),
+            EManagedArrayType.String => new FManagedArray<string>(Ar.ReadFString),
+            EManagedArrayType.Float => new FManagedArray<float>(Ar.Read<float>),
+            EManagedArrayType.Quat => new FManagedArray<FQuat>(Ar.Read<FQuat>),
+            EManagedArrayType.BoneNode => new FManagedArray<FGeometryCollectionBoneNode>(() => new FGeometryCollectionBoneNode(Ar)),
+            EManagedArrayType.MeshSection => new FManagedArray<FGeometryCollectionSection>(Ar.Read<FGeometryCollectionSection>),
+            EManagedArrayType.Box => new FManagedArray<FBox>(() => new FBox(Ar)),
+            EManagedArrayType.IntArray => new FManagedArray<int[]>(Ar.ReadArray<int>), // This should be a TSet/HashSet
+            EManagedArrayType.Guid => new FManagedArray<FGuid>(Ar.Read<FGuid>),
+            EManagedArrayType.UInt8 => new FManagedArray<byte>(Ar.Read<byte>),
             // EManagedArrayType.VectorArrayPointer => expr,
             // EManagedArrayType.VectorArrayUniquePointer => expr,
-            EManagedArrayType.FImplicitObject3Pointer => new TManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
+            EManagedArrayType.FImplicitObject3Pointer => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
             // EManagedArrayType.FImplicitObject3UniquePointer => expr,
             // EManagedArrayType.FImplicitObject3SerializablePtr => expr,
             // EManagedArrayType.FBVHParticlesFloat3Pointer => expr,
@@ -74,30 +87,30 @@ public readonly struct FValueType
             // EManagedArrayType.FImplicitObject3SharedPointer => expr,
             // EManagedArrayType.TPBDRigidClusteredParticleHandle3fPtr => expr,
             // EManagedArrayType.FConvexUniquePtr => expr,
-            EManagedArrayType.Vector2DArray => new TManagedArray<FVector2D[]>(Ar.ReadArray<FVector2D>),
-            EManagedArrayType.Double => new TManagedArray<double>(Ar.Read<double>, false),
-            EManagedArrayType.IntVector4 => new TManagedArray<TIntVector4<int>>(Ar.Read<TIntVector4<int>>, false),
-            EManagedArrayType.Vector3d => new TManagedArray<FVector>(() => new FVector(Ar)),
-            EManagedArrayType.IntVector2 => new TManagedArray<FIntVector2>(Ar.Read<FIntVector2>, false),
-            EManagedArrayType.IntVector2Array => new TManagedArray<FIntVector2[]>(Ar.ReadArray<FIntVector2>),
-            EManagedArrayType.Int32Array => new TManagedArray<int[]>(Ar.ReadArray<int>),
-            EManagedArrayType.FloatArray => new TManagedArray<float[]>(Ar.ReadArray<float>),
-            EManagedArrayType.Vector4f => new TManagedArray<FVector4>(Ar.Read<FVector4>),
-            EManagedArrayType.FVectorArray => new TManagedArray<FVector[]>(Ar.ReadArray<FVector>),
+            EManagedArrayType.Vector2DArray => new FManagedArray<FVector2D[]>(Ar.ReadArray<FVector2D>),
+            EManagedArrayType.Double => new FManagedArray<double>(Ar.Read<double>),
+            EManagedArrayType.IntVector4 => new FManagedArray<TIntVector4<int>>(Ar.Read<TIntVector4<int>>),
+            EManagedArrayType.Vector3d => new FManagedArray<FVector>(() => new FVector(Ar)),
+            EManagedArrayType.IntVector2 => new FManagedArray<FIntVector2>(Ar.Read<FIntVector2>),
+            EManagedArrayType.IntVector2Array => new FManagedArray<FIntVector2[]>(Ar.ReadArray<FIntVector2>),
+            EManagedArrayType.Int32Array => new FManagedArray<int[]>(Ar.ReadArray<int>),
+            EManagedArrayType.FloatArray => new FManagedArray<float[]>(Ar.ReadArray<float>),
+            EManagedArrayType.Vector4f => new FManagedArray<FVector4>(Ar.Read<FVector4>),
+            EManagedArrayType.FVectorArray => new FManagedArray<FVector[]>(Ar.ReadArray<FVector>),
             // EManagedArrayType.TPBDRigidParticle3fUniquePtr => expr,
-            EManagedArrayType.FImplicitObjectRefCountedPtr => new TManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
-            EManagedArrayType.FConvexRefCountedPtr => new TManagedArray<FConvex?>(Ar.ReadPtr<FConvex>),
-            EManagedArrayType.Transform3f => new TManagedArray<FTransform>(Ar.Read<FTransform>),
-            EManagedArrayType.IntVector3Array => new TManagedArray<TIntVector3<int>>(Ar.Read<TIntVector3<int>>),
-            EManagedArrayType.Vector4fArray => new TManagedArray<FVector4[]>(Ar.ReadArray<FVector4>),
-            EManagedArrayType.PMatrix33d => new TManagedArray<FMatrix>(() => new FMatrix(Ar)),
-            EManagedArrayType.PMatrix33dArray => new TManagedArray<FMatrix[]>(() => Ar.ReadArray(() => new FMatrix(Ar))),
-            EManagedArrayType.FVector3fNestedArray => new TManagedArray<FVector[][]>(() => Ar.ReadArray(Ar.ReadArray<FVector>)),
-            EManagedArrayType.UintVector2 => new TManagedArray<TIntVector2<uint>>(Ar.Read<TIntVector2<uint>>, false),
-            EManagedArrayType.UObjectArray => new TManagedArray<FPackageIndex>(() => new FPackageIndex(Ar)),
+            EManagedArrayType.FImplicitObjectRefCountedPtr => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
+            EManagedArrayType.FConvexRefCountedPtr => new FManagedArray<FConvex?>(Ar.ReadPtr<FConvex>),
+            EManagedArrayType.Transform3f => new FManagedArray<FTransform>(Ar.Read<FTransform>),
+            EManagedArrayType.IntVector3Array => new FManagedArray<TIntVector3<int>>(Ar.Read<TIntVector3<int>>),
+            EManagedArrayType.Vector4fArray => new FManagedArray<FVector4[]>(Ar.ReadArray<FVector4>),
+            EManagedArrayType.PMatrix33d => new FManagedArray<FMatrix>(() => new FMatrix(Ar)),
+            EManagedArrayType.PMatrix33dArray => new FManagedArray<FMatrix[]>(() => Ar.ReadArray(() => new FMatrix(Ar))),
+            EManagedArrayType.FVector3fNestedArray => new FManagedArray<FVector[][]>(() => Ar.ReadArray(Ar.ReadArray<FVector>)),
+            EManagedArrayType.UintVector2 => new FManagedArray<TIntVector2<uint>>(Ar.Read<TIntVector2<uint>>),
+            EManagedArrayType.UObjectArray => new FManagedArray<FPackageIndex>(() => new FPackageIndex(Ar)),
             // EManagedArrayType.LinearCurve => expr,
-            EManagedArrayType.Name => new TManagedArray<FName>(Ar.ReadFName),
-            EManagedArrayType.SoftObjectPath => new TManagedArray<FSoftObjectPath>(() => new FSoftObjectPath(Ar)),
+            EManagedArrayType.Name => new FManagedArray<FName>(Ar.ReadFName),
+            EManagedArrayType.SoftObjectPath => new FManagedArray<FSoftObjectPath>(() => new FSoftObjectPath(Ar)),
             _ => throw new NotImplementedException($"EManagedArrayType Type: '{ArrayType}' currently does not have serialization implemented")
         };
     }
