@@ -13,13 +13,13 @@ public class FManagedArray<T>(Func<T> func) : FManagedArrayBase
         var version = Ar.Read<int>();
         if (version > 1) throw new ParserException($"FManagedArray Serialization Version ({version}) > 1");
 
-        if (FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.BulkSerializeArrays || alwaysBulkSerialized)
+        if (FDestructionObjectVersion.Get(Ar) < FDestructionObjectVersion.Type.BulkSerializeArrays || !alwaysBulkSerialized)
         {
-            Data = Ar.ReadBulkArray(func);
+            Data = Ar.ReadArray(func);
         }
         else
         {
-            Data = Ar.ReadArray(func);
+            Data = Ar.ReadBulkArray(func);
         }
     }
 }
