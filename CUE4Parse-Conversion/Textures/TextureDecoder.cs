@@ -205,7 +205,7 @@ public static class TextureDecoder
                         var tileOffset = ((i + tileBorderSize) * tilePixelSize + tileBorderSize) * bytesPerPixel;
                         var offset = tileX * bytesPerPixel + (tileY + i) * rowBytes;
                         var srcSpan = data.AsSpan(tileOffset, tileRowBytes);
-                        var destSpan = result.Slice(offset);
+                        var destSpan = result[offset..];
                         srcSpan.CopyTo(destSpan);
                     }
                 }

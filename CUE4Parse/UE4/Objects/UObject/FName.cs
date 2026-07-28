@@ -37,7 +37,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ComparisonMethod = compare;
         }
 
-        public FName(FNameEntrySerialized name, int index, int number, FNameComparisonMethod compare = FNameComparisonMethod.Index)
+        public FName(FNameEntrySerialized name, int index, int number, FNameComparisonMethod compare = FNameComparisonMethod.Text)
         {
             _name = name;
             Index = index;
@@ -45,9 +45,9 @@ namespace CUE4Parse.UE4.Objects.UObject
             ComparisonMethod = compare;
         }
 
-        public FName(FNameEntrySerialized[] nameMap, int index, int number, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap[index], index, number, compare) { }
+        public FName(FNameEntrySerialized[] nameMap, int index, int number, FNameComparisonMethod compare = FNameComparisonMethod.Text) : this(nameMap[index], index, number, compare) { }
 
-        public FName(FMappedName mappedName, FNameEntrySerialized[] nameMap, FNameComparisonMethod compare = FNameComparisonMethod.Index) : this(nameMap, (int) mappedName.NameIndex, (int) mappedName.ExtraIndex, compare) { }
+        public FName(FMappedName mappedName, FNameEntrySerialized[] nameMap, FNameComparisonMethod compare = FNameComparisonMethod.Text) : this(nameMap, (int) mappedName.NameIndex, (int) mappedName.ExtraIndex, compare) { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator FName(string s) => new(s);

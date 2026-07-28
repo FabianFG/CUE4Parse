@@ -32,6 +32,13 @@ namespace CUE4Parse.UE4.Versions
             }
         }
 
+        private EUnrealEngineObjectLicenseeUEVersion _licenseever;
+        public EUnrealEngineObjectLicenseeUEVersion LicenseeVer
+        {
+            get => _licenseever;
+            set => _licenseever = value;
+        }
+
         private ETexturePlatform _platform;
         public ETexturePlatform Platform
         {

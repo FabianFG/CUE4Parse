@@ -30,6 +30,11 @@ namespace CUE4Parse.UE4.Readers
             get => Versions.Ver;
             set => Versions.Ver = value;
         }
+        public EUnrealEngineObjectLicenseeUEVersion LicenseeVer
+        {
+            get => Versions.LicenseeVer;
+            set => Versions.LicenseeVer = value;
+        }
         public ETexturePlatform Platform
         {
             get => Versions.Platform;
@@ -418,6 +423,26 @@ namespace CUE4Parse.UE4.Readers
             }
         }
 
+        public int ReadCompactIndex()
+        {
+            byte b = Read<byte>();
+            int sign = b & 0x80;
+            int shift = 6;
+            int r = b & 0x3F;
+
+            if ((b & 0x40) != 0)
+            {
+                do
+                {
+                    b = Read<byte>();
+                    r |= (b & 0x7F) << shift;
+                    shift += 7;
+                } while ((b & 0x80) != 0);
+            }
+
+            return sign != 0 ? -r : r;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Read7BitEncodedInt()
         {
@@ -640,7 +665,7 @@ namespace CUE4Parse.UE4.Readers
             }
 
             // Read in base summary, contains total sizes :
-            var summary = Read<FCompressedChunkInfo>();
+            var summary = new FCompressedChunkInfo(this);
 
             if (bWasByteSwapped)
             {

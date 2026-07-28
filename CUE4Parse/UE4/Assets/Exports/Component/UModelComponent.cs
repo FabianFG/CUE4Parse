@@ -67,6 +67,11 @@ public class FModelElement
         Material = new FPackageIndex(Ar);
         Nodes = Ar.ReadArray<ushort>();
 
+        if (Ar.Game < EGame.GAME_UE4_0)
+        {
+            Ar.ReadArray(() => new FPackageIndex(Ar)); // ShadowMaps
+        }
+
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
             LegacyMapBuildData.IrrelevantLights = Ar.ReadArray<FGuid>();

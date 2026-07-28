@@ -112,6 +112,14 @@ public abstract class TBulkData<T> where T: struct
             // var dest = MemoryMarshal.AsBytes(data.AsSpan());
             // dataAr.SerializeCompressedNew(dest, size, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }
+        else if (BulkDataFlags.HasFlag(BULKDATA_CompressedLZO))
+        {
+            var size = GetDataSize();
+            var uncompressedData = new byte[size];
+            data = new T[Header.ElementCount];
+            dataAr.SerializeCompressedNew(uncompressedData, size, "LZO", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref data[0]), ref uncompressedData[0], (uint) size);
+        }
         else
         {
             data = dataAr.ReadArray<T>(Header.ElementCount);
