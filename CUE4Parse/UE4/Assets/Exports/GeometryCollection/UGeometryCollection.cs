@@ -11,12 +11,14 @@ namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 
 public class UGeometryCollection : UObject
 {
+    public FGeometryCollectionAutoInstanceMesh[]? AutoInstanceMeshes { get; private set; }
     public FGeometryCollection? GeometryCollection;
     public FGeometryCollectionRenderData? RenderData;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        AutoInstanceMeshes = GetOrDefault<FGeometryCollectionAutoInstanceMesh[]?>(nameof(AutoInstanceMeshes));
 
         var bIsCookedOrCooking = FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDC && Ar.ReadBoolean();
         if (FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDCAndAsset)
