@@ -1,8 +1,11 @@
-﻿namespace CUE4Parse.UE4.Objects.Chaos.Convex;
+﻿using System.Runtime.InteropServices;
 
-public struct FVertexData<T>
+namespace CUE4Parse.UE4.Objects.Chaos.Convex;
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct FVertexData<T>
 {
-    public T FirstHalfEdgeIndex;
+    public readonly T FirstHalfEdgeIndex;
 
     public override string ToString() => $"FirstHalfEdgeIndex: {FirstHalfEdgeIndex}";
 }

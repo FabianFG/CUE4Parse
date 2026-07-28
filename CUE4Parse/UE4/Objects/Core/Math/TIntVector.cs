@@ -71,7 +71,7 @@ public readonly struct TIntVector4<T> : IUStruct
 }
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-public class TVector<T> where T : struct
+public readonly struct TVector<T> where T : struct
 {
     private readonly T[] _values;
 

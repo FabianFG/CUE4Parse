@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
 public class FManagedArray<T>(Func<T> func) : FManagedArrayBase
 {
-    public T[] Array = [];
+    public override Array? Data { get; internal set; }
 
     public override void Serialize(FArchive Ar, bool alwaysBulkSerialized)
     {
@@ -15,11 +15,11 @@ public class FManagedArray<T>(Func<T> func) : FManagedArrayBase
 
         if (FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.BulkSerializeArrays || alwaysBulkSerialized)
         {
-            Array = Ar.ReadBulkArray(func);
+            Data = Ar.ReadBulkArray(func);
         }
         else
         {
-            Array = Ar.ReadArray(func);
+            Data = Ar.ReadArray(func);
         }
     }
 }

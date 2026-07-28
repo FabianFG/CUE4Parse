@@ -3,13 +3,13 @@
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FGeometryCollectionMeshElement
+public readonly struct FGeometryCollectionMeshElement
 {
-    public short TransformIndex;
-    public byte MaterialIndex;
-    public byte bIsInternal;
-    public uint TriangleStart;
-    public uint TriangleCount;
-    public uint VertexStart;
-    public uint VertexEnd;
+    public readonly short TransformIndex;
+    public readonly byte MaterialIndex;
+    public readonly byte bIsInternal;
+    public readonly uint TriangleStart;
+    public readonly uint TriangleCount;
+    public readonly uint VertexStart;
+    public readonly uint VertexEnd;
 }

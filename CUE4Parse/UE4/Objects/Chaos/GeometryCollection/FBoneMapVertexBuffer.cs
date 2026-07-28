@@ -6,7 +6,7 @@ public class FBoneMapVertexBuffer
 {
     public uint NumVertices;
     public ushort[] BoneMap;
-    
+
     public FBoneMapVertexBuffer(FArchive Ar)
     {
         NumVertices = Ar.Read<uint>();

@@ -14,4 +14,11 @@ public class FManagedArrayCollection
         GroupInfo = Ar.ReadMap(Ar.ReadFName, () => new FGroupInfo(Ar));
         Map = Ar.ReadMap(() => new FKeyType(Ar), () => new FValueType(Ar));
     }
+
+    public T[]? GetAttributeValue<T>(string attribute, string group) => GetAttributeValue<T>(attribute, new FName(group));
+    public T[]? GetAttributeValue<T>(string attribute, FName group) => GetAttributeValue<T>(new FKeyType(attribute, group));
+    public T[]? GetAttributeValue<T>(FKeyType key)
+    {
+        return Map.TryGetValue(key, out var value) ? value.ManagedArray.Data as T[] : null;
+    }
 }
