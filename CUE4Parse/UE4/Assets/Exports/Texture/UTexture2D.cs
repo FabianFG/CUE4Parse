@@ -46,7 +46,7 @@ public class UTexture2D : UTexture
             var bHasLegacyMips =  Ar.Game >= GAME_UE4_0 ? GetOrDefault("bDisableDerivedDataCache_DEPRECATED", false) : true;
             if (bHasLegacyMips)
             {
-                legacyMips = Ar.ReadArray(() => new FTexture2DMipMap(Ar));
+                legacyMips = Ar.ReadArray(() => TextureFileCacheName.IsNone ? new FTexture2DMipMap(Ar) : new FTexture2DMipMap(Ar, TextureFileCacheName.Text));
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_FILECACHE_GUIDS)
@@ -75,7 +75,7 @@ public class UTexture2D : UTexture
 
             if (bHasLegacyMips && legacyMips.Length > 0)
             {
-                // TODO: Populate PlatformData.Mips[] with LegacyMips data.
+                PlatformData.Mips = legacyMips;
 
                 /*
                  * Todo: add the extra android stuff needed

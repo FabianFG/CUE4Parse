@@ -56,11 +56,26 @@ public partial class USkeletalMesh : UObject
 
         ImportedBounds = new FBoxSphereBounds(Ar);
 
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedPointer)
+        {
+            new FPackageIndex(Ar);
+        }
+
         SkeletalMaterials = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
         Materials = new ResolvedObject?[SkeletalMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
         {
             Materials[i] = SkeletalMaterials[i].Material;
+        }
+
+        if (Ar.Game < GAME_UE4_0)
+        {
+            Ar.Read<FVector>(); // MeshOrigin
+            Ar.Read<FRotator>(); // RotOrigin
+            if (Ar.Game == GAME_Dishonored && Ar.Ver >= EUnrealEngineObjectUE3Version.FIXCLAMP_NON_TONEMAP)
+            {
+                Ar.ReadArray<byte>();
+            }
         }
 
         if (Ar.Game is GAME_LordOfMysteries) CustomGameData = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
