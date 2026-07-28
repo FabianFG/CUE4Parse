@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.Lights;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
+using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
@@ -16,7 +17,7 @@ public class ComponentDto : LightObjectDto
 {
     public readonly ActorDto Owner;
 
-    public ComponentDto(string name, ActorDto owner) : base(name)
+    protected ComponentDto(string name, ActorDto owner) : base(name)
     {
         Owner = owner;
     }
@@ -121,6 +122,11 @@ public abstract class PrimitiveComponentDto : SceneComponentDto
             CastShadow = castShadow;
         }
     }
+
+    protected PrimitiveComponentDto(FTransform transform, string name, ActorDto owner) : base(transform, name, owner)
+    {
+
+    }
 }
 
 /// <summary>
@@ -139,10 +145,22 @@ public abstract class PrimitiveComponentDto : SceneComponentDto
 /// If the constructor threw on a missing mesh, <c>Spline1</c> and <c>Spline2</c> would never be visited.
 /// </para>
 /// </summary>
-public abstract class MeshComponentDto(FPackageIndex meshPtr, UMeshComponent component, ActorDto owner) : PrimitiveComponentDto(component, owner)
+public abstract class MeshComponentDto : PrimitiveComponentDto
 {
-    public readonly FPackageIndex MeshPtr = meshPtr;
-    public readonly FPackageIndex?[] OverrideMaterials = component.OverrideMaterials;
+    public readonly FPackageIndex MeshPtr;
+    public readonly FPackageIndex?[] OverrideMaterials;
+
+    protected MeshComponentDto(FPackageIndex meshPtr, UMeshComponent component, ActorDto owner) : base(component, owner)
+    {
+        MeshPtr = meshPtr;
+        OverrideMaterials = component.OverrideMaterials;
+    }
+
+    protected MeshComponentDto(FPackageIndex meshPtr, ActorDto owner) : base(FTransform.Identity, meshPtr.Name, owner)
+    {
+        MeshPtr = meshPtr;
+        OverrideMaterials = [];
+    }
 }
 
 /// <summary>
@@ -178,7 +196,18 @@ public class LandscapeMeshComponentDto : PrimitiveComponentDto
     }
 }
 
-public class StaticMeshComponentDto(FPackageIndex meshPtr, UStaticMeshComponent component, ActorDto owner) : MeshComponentDto(meshPtr, component, owner);
+public class StaticMeshComponentDto : MeshComponentDto
+{
+    public StaticMeshComponentDto(FPackageIndex meshPtr, UStaticMeshComponent component, ActorDto owner) : base(meshPtr, component, owner)
+    {
+
+    }
+
+    protected StaticMeshComponentDto(FPackageIndex meshPtr, ActorDto owner) : base(meshPtr, owner)
+    {
+
+    }
+}
 
 public class InstancedStaticMeshComponentDto : StaticMeshComponentDto
 {
@@ -193,11 +222,67 @@ public class InstancedStaticMeshComponentDto : StaticMeshComponentDto
             Transforms[i] = instances[i].TransformData;
         }
     }
+
+    public InstancedStaticMeshComponentDto(FPackageIndex meshPtr, FTransform[] transforms, ActorDto owner) : base(meshPtr, owner)
+    {
+        Transforms = transforms;
+    }
 }
 
 public class SplineMeshComponentDto(FPackageIndex meshPtr, USplineMeshComponent component, ActorDto owner) : StaticMeshComponentDto(meshPtr, component, owner)
 {
     internal readonly USplineMeshComponent _component = component;
+}
+
+public class GeometryCollectionComponentDto : PrimitiveComponentDto // technically this is a mesh component
+{
+    public GeometryCollectionComponentDto(UGeometryCollectionComponent component, ActorDto owner) : base(component, owner)
+    {
+        var r = component.RestCollection?.Load<UGeometryCollection>();
+        if (r is not { AutoInstanceMeshes: { Length: > 0 } meshes, GeometryCollection: { } collection }) return;
+
+        // TODO: we should use the vertices group to create this component actual mesh data
+        // stuff from other groups and especially AutoInstanceMeshes are just relation of this component but they don't define its geometry (at least for us)
+        // we need an asset with actual vertices as an example, could not find any yet
+
+        var group = new FName("Transform");
+
+        var meshIndices = collection.GetAttributeValue<int>("AutoInstanceMeshIndex", group);
+        if (meshIndices is not { Length: > 0 }) return;
+
+        var transforms = collection.GetAttributeValue<FTransform>("Transform", group);
+        if (transforms is not { Length: > 0 }) return;
+
+        const int rigid = 1;
+        var simulationTypes = collection.GetAttributeValue<int>("SimulationType", group);
+        var parents = collection.GetAttributeValue<int>("Parent", group);
+        var hides = collection.GetAttributeValue<bool>("Hide", group);
+
+        var placements = new List<FTransform>?[meshes.Length];
+        for (var i = 0; i < transforms.Length; i++)
+        {
+            if (GetIndex(simulationTypes, i, rigid) != rigid || GetIndex(hides, i, false)) continue;
+
+            var meshIndex = GetIndex(meshIndices, i, -1);
+            if (meshIndex < 0 || meshIndex >= meshes.Length) continue;
+
+            (placements[meshIndex] ??= new List<FTransform>(meshes[meshIndex].NumInstances)).Add(ResolveTransform(i));
+        }
+
+        for (var i = 0; i < meshes.Length; i++)
+        {
+            if (placements[i] is not { Count: > 0 } instances || meshes[i].Mesh is not { } meshPtr) continue;
+            Children.Add(new InstancedStaticMeshComponentDto(meshPtr, instances.ToArray(), owner));
+        }
+
+        FTransform ResolveTransform(int index)
+        {
+            var local = transforms[index];
+            var parent = GetIndex(parents, index, -1);
+            return parent >= 0 && parent < transforms.Length ? local * ResolveTransform(parent) : local;
+        }
+        T GetIndex<T>(T[]? data, int index, T fallback) => data is not null && index < data.Length ? data[index] : fallback;
+    }
 }
 
 public class LandscapeSplinesComponentDto : PrimitiveComponentDto
