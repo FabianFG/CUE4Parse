@@ -140,7 +140,7 @@ public static class MeshConverter
             };
 
             staticMeshLod.AllocateVerts(numVerts);
-            if (srcLod.ColorVertexBuffer!.NumVertices != 0)
+            if (srcLod?.ColorVertexBuffer != null && srcLod.ColorVertexBuffer.NumVertices != 0)
                 staticMeshLod.AllocateVertexColorBuffer();
 
             for (var j = 0; j < numVerts; j++)
@@ -167,7 +167,7 @@ public static class MeshConverter
                     staticMeshLod.ExtraUV.Value[k - 1][j].V = suv.UV[k].V;
                 }
 
-                if (srcLod.ColorVertexBuffer.NumVertices != 0)
+                if (srcLod?.ColorVertexBuffer != null && srcLod.ColorVertexBuffer.NumVertices != 0)
                     staticMeshLod.VertexColors![j] = srcLod.ColorVertexBuffer.Data[j];
             }
 
