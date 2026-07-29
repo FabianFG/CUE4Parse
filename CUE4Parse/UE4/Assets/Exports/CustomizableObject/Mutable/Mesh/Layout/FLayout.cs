@@ -15,7 +15,7 @@ public class FLayout
     public EPackStrategy Strategy;
     public EReductionMethod ReductionMethod;
     public FLayoutBlock[] Blocks;
-    public FImage[] Masks = [];
+    public FImage?[] Masks = [];
 
     public FLayout(FMutableArchive Ar)
     {

@@ -18,23 +18,23 @@ public class FMutableArchive : FArchive
     public override string ReadFString() => new string(_baseArchive.ReadArray<char>()).Replace("\0", string.Empty);
     public override string ReadString() => Encoding.UTF8.GetString(_baseArchive.ReadArray<byte>());
 
-    public T ReadPtr<T>() where T : unmanaged => _baseArchive.Read<int>() == -1 ? default : _baseArchive.Read<T>();
-    public T? ReadPtr<T>(Func<T> getter) where T : class => _baseArchive.Read<int>() == -1 ? null : getter();
-    public T[] ReadPtrArray<T>(Func<T> getter)
+    public T? ReadPtr<T>() where T : unmanaged => _baseArchive.Read<int>() == -1 ? null : _baseArchive.Read<T>();
+    public T? ReadPtr<T>(Func<T> func) where T : class => _baseArchive.Read<int>() == -1 ? null : func.Invoke();
+    public T?[] ReadPtrArray<T>(Func<T> func)
     {
         var length = _baseArchive.Read<int>();
         if (length == 0) return [];
 
-        var list = new List<T>(length);
+        var array = new T[length];
         for (var i = 0; i < length; i++)
         {
             var id = _baseArchive.Read<int>();
             if (id == -1) continue;
 
-            list.Add(getter());
+            array[i] = func.Invoke();
         }
 
-        return list.ToArray();
+        return array;
     }
 
     public override bool CanSeek => _baseArchive.CanSeek;
