@@ -11,6 +11,7 @@ namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 
 public class UGeometryCollection : UObject
 {
+    public FGeometryCollectionProxyMeshData? RootProxyData { get; private set; }
     public FGeometryCollectionAutoInstanceMesh[]? AutoInstanceMeshes { get; private set; }
     public FGeometryCollection? GeometryCollection;
     public FGeometryCollectionRenderData? RenderData;
@@ -18,6 +19,7 @@ public class UGeometryCollection : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        RootProxyData = GetOrDefault<FGeometryCollectionProxyMeshData?>(nameof(RootProxyData));
         AutoInstanceMeshes = GetOrDefault<FGeometryCollectionAutoInstanceMesh[]?>(nameof(AutoInstanceMeshes));
 
         var bIsCookedOrCooking = FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDC && Ar.ReadBoolean();
@@ -48,12 +50,12 @@ public class UGeometryCollection : UObject
             var stripFlags = new FStripDataFlags(Ar);
             if (!stripFlags.IsAudioVisualDataStripped())
             {
-                _ = Ar.ReadBoolean(); // bLZCompressed
+                Ar.Position += sizeof(int); // bLZCompressed
                 Ar.SkipArray<byte>(); // RootClusterPage
                 _ = new FByteBulkData(Ar); // StreamableClusterPages
 
                 Ar.SkipFixedArray(5 * sizeof(uint)); // PageStreamingState
-                Ar.SkipFixedArray(64 * (2 * Unsafe.SizeOf<FSphere>()) + 3 * sizeof(uint)); // HierarchyNodes
+                Ar.SkipFixedArray(64 * 2 * Unsafe.SizeOf<FSphere>() + 3 * sizeof(uint)); // HierarchyNodes
 
                 Ar.SkipArray<uint>(); // PageDependencies
                 Ar.SkipArray<ushort>(); // ImposterAtlas

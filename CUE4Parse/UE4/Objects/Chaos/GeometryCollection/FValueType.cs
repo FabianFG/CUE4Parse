@@ -21,6 +21,9 @@ public readonly struct FValueType
         var arrayTypeAsInt = Ar.Read<int>();
         ArrayType = (EManagedArrayType) arrayTypeAsInt;
 
+        if (Ar.Game == GAME_MarvelRivals && ArrayType == EManagedArrayType.FImplicitObjectRefCountedPtr)
+            ArrayType = EManagedArrayType.Transform3f;
+        
         if (serializationVersion < 4)
             Ar.Position += sizeof(int); // ArrayScopeAsInt
 
@@ -69,7 +72,10 @@ public readonly struct FValueType
             EManagedArrayType.Quat => new FManagedArray<FQuat>(Ar.Read<FQuat>),
             EManagedArrayType.BoneNode => new FManagedArray<FGeometryCollectionBoneNode>(() => new FGeometryCollectionBoneNode(Ar)),
             EManagedArrayType.MeshSection => new FManagedArray<FGeometryCollectionSection>(Ar.Read<FGeometryCollectionSection>),
+            
+            EManagedArrayType.Box when Ar.Game == GAME_MarvelRivals => new FManagedArray<FBox>(Ar.Read<FBox>),
             EManagedArrayType.Box => new FManagedArray<FBox>(() => new FBox(Ar)),
+            
             EManagedArrayType.IntArray => new FManagedArray<int[]>(Ar.ReadArray<int>), // This should be a TSet/HashSet
             EManagedArrayType.Guid => new FManagedArray<FGuid>(Ar.Read<FGuid>),
             EManagedArrayType.UInt8 => new FManagedArray<byte>(Ar.Read<byte>),
@@ -77,7 +83,7 @@ public readonly struct FValueType
             // EManagedArrayType.VectorArrayUniquePointer => expr,
             EManagedArrayType.FImplicitObject3Pointer => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
             // EManagedArrayType.FImplicitObject3UniquePointer => expr,
-            // EManagedArrayType.FImplicitObject3SerializablePtr => expr,
+            EManagedArrayType.FImplicitObject3SerializablePtr => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
             // EManagedArrayType.FBVHParticlesFloat3Pointer => expr,
             // EManagedArrayType.FBVHParticlesFloat3UniquePointer => expr,
             // EManagedArrayType.TPBDRigidParticleHandle3fPtr => expr,

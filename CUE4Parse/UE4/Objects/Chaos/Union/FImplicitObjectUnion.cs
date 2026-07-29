@@ -19,7 +19,7 @@ public class FImplicitObjectUnion : FImplicitObject
 
         MObjects = Ar.ReadPtrArray<FImplicitObject>();
         MLocalBoundingBox = TBox<float>.SerializeAsAABB(Ar, 3);
-
+        
         if (FExternalPhysicsCustomObjectVersion.Get(Ar) < FExternalPhysicsCustomObjectVersion.Type.UnionObjectsCanAvoidHierarchy)
         {
             throw new NotImplementedException();

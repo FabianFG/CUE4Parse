@@ -2,8 +2,5 @@
 
 public class FGeometryCollection : FTransformCollection
 {
-    public FGeometryCollection(FChaosArchive Ar) : base(Ar)
-    {
-        
-    }
+    public FGeometryCollection(FChaosArchive Ar) : base(Ar) { }
 }
