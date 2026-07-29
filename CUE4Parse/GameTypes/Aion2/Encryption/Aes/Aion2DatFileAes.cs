@@ -105,11 +105,7 @@ public sealed class Aion2DatFileAes
     private static string GetL10NLocale(string filePath)
     {
         var parts = filePath.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-        for (var i = 0; i + 1 < parts.Length; i++)
-        {
-            if (parts[i].Equals("L10N", StringComparison.OrdinalIgnoreCase))
-                return parts[i + 1];
-        }
+        if (parts.Length >= 2) return parts[^2];
         throw new ParserException($"Unable to derive AION2 L10N locale from '{filePath}'");
     }
 
