@@ -6,6 +6,7 @@ namespace CUE4Parse.UE4.Assets.Readers;
 public class FMutableArchive : FArchive
 {
     private readonly FArchive _baseArchive;
+    private readonly Dictionary<int, object?> _ptrs = [];
 
     public FMutableArchive(FArchive baseArchive)
     {
@@ -19,23 +20,24 @@ public class FMutableArchive : FArchive
     public override string ReadString() => Encoding.UTF8.GetString(_baseArchive.ReadArray<byte>());
 
     public T? ReadPtr<T>() where T : unmanaged => _baseArchive.Read<int>() == -1 ? null : _baseArchive.Read<T>();
-    public T? ReadPtr<T>(Func<T> func) where T : class => _baseArchive.Read<int>() == -1 ? null : func.Invoke();
-    public T?[] ReadPtrArray<T>(Func<T> func)
+    public T? ReadPtr<T>(Func<T> func) where T : class
     {
-        var length = _baseArchive.Read<int>();
-        if (length == 0) return [];
+        var id = _baseArchive.Read<int>();
+        if (id == -1) return null;
 
-        var array = new T[length];
-        for (var i = 0; i < length; i++)
+        if (!_ptrs.TryGetValue(id, out var ptr))
         {
-            var id = _baseArchive.Read<int>();
-            if (id == -1) continue;
-
-            array[i] = func.Invoke();
+            ptr = func.Invoke();
+            _ptrs[id] = ptr;
         }
 
-        return array;
+        if (ptr is T result) return result;
+
+        Log.Warning("Ptr type mismatch, expected {Expected}, got {Actual}", typeof(T), ptr?.GetType());
+        return null;
     }
+
+    public T?[] ReadPtrArray<T>(Func<T> getter) where T : class => ReadArray(() => ReadPtr(getter));
 
     public override bool CanSeek => _baseArchive.CanSeek;
     public override long Length => _baseArchive.Length;

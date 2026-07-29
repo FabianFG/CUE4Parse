@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Mesh.Layout;
 
@@ -39,7 +38,7 @@ public readonly struct FLayoutBlock
         Priority = Ar.Read<int>();
 
         if (version >= 6)
-            Packed = Ar.Game <= GAME_UE5_5 ? Ar.Read<ushort>() : Ar.Read<uint>();
+            Packed = Ar.Game < GAME_UE5_5 ? Ar.Read<ushort>() : Ar.Read<uint>();
         else if (version == 5)
             Packed = Ar.Read<byte>();
     }
