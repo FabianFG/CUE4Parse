@@ -1,4 +1,3 @@
-﻿using System;
 using CUE4Parse_Conversion.Writers.UEFormat.Enums;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -17,7 +16,8 @@ public class ExportOptions(
     bool exportMaterials = true,
     bool exportMorphTargets = true,
     ESocketFormat socketFormat = ESocketFormat.Bone,
-    EFileCompressionFormat compressionFormat = EFileCompressionFormat.None)
+    EFileCompressionFormat compressionFormat = EFileCompressionFormat.None,
+    bool exportAllTextureMips = false)
 {
     public readonly EMeshFormat MeshFormat = meshFormat;
     public readonly ENaniteMeshFormat NaniteMeshFormat = naniteMeshFormat;
@@ -35,4 +35,6 @@ public class ExportOptions(
     public readonly ESocketFormat SocketFormat = socketFormat;
 
     public readonly EFileCompressionFormat CompressionFormat = meshFormat == EMeshFormat.UEFormat ? compressionFormat : EFileCompressionFormat.None;
+
+    public readonly bool ExportAllTextureMips = exportAllTextureMips;
 }
