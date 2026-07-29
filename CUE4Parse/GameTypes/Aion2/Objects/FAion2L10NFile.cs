@@ -22,7 +22,7 @@ public class FAion2L10NFile
         {
             Aion2DatFileAes.Initialize(provider);
 
-            var decrypted = Aion2DatFileAes.DecryptL10N(data);
+            var decrypted = Aion2DatFileAes.DecryptL10N(data, file.Path);
             using var l10nAr = new FByteArchive("Aion2L10N", decrypted, null);
             if (l10nAr.Read<int>() != 1)
                 throw new ParserException("Invalid AION2 L10N table version");

@@ -16,10 +16,10 @@ public class FAion2DataTableFile : FAion2DataFile
 
         if (!file.Directory.EndsWith("Data/Table", StringComparison.OrdinalIgnoreCase)) return;
 
-        if (data.Length >= 8 && BitConverter.ToUInt32(data, 0) == 13 && BitConverter.ToUInt32(data, 4) is 2 or 3)
+        if (data.Length >= 8 && BitConverter.ToUInt32(data, 0) == 13)
         {
             Aion2DatFileAes.Initialize(provider);
-            data = Aion2DatFileAes.DecryptDataTable(data);
+            data = Aion2DatFileAes.DecryptDataTable(data, file.Path);
         }
 
         using var Ar = new FAion2DatFileArchive(data, provider.Versions);
