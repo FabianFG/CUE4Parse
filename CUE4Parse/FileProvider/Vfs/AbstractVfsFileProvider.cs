@@ -319,48 +319,86 @@ namespace CUE4Parse.FileProvider.Vfs
         public async Task<int> SubmitKeysAsync(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys)
         {
             var countNewMounts = 0;
-            var tasks = new LinkedList<Task<IAesVfsReader?>>();
+
             foreach (var (guid, key) in keys)
             {
-                foreach (var reader in _unloadedVfs.Keys.Where(it => it.EncryptionKeyGuid == guid))
+                // Copiamos os leitores para um array e os ordenamos para garantir
+                // uma execução previsível e evitar alterações na coleção durante o loop.
+                var readers = _unloadedVfs.Keys
+                    .Where(reader => reader.EncryptionKeyGuid == guid)
+                    .OrderBy(reader => reader.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                System.Console.WriteLine(
+                    $"[AES DEBUG] SubmitKey iniciado. GUID={guid}, leitores={readers.Length}");
+
+                foreach (var reader in readers)
                 {
-                    if (reader.Game == EGame.GAME_FragPunk && reader.Name.Contains("global")) reader.AesKey = key;
+                    if (reader.Game == EGame.GAME_FragPunk &&
+                        reader.Name.Contains("global", StringComparison.OrdinalIgnoreCase))
+                    {
+                        reader.AesKey = key;
+                    }
+
                     VerifyGlobalData(reader);
 
                     if (!reader.HasDirectoryIndex)
-                        continue;
-
-                    tasks.AddLast(Task.Run(() =>
                     {
-                        try
-                        {
-                            reader.MountTo(Files, PathComparer, key, VfsMounted);
-                            _unloadedVfs.TryRemove(reader, out _);
-                            _mountedVfs[reader] = null;
-                            Interlocked.Increment(ref countNewMounts);
-                            return reader;
-                        }
-                        catch (InvalidAesKeyException)
-                        {
-                            // Ignore this
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Warning(e, $"Uncaught exception while loading pak file {reader.Path.SubstringAfterLast('/')}");
-                        }
-                        return null;
-                    }));
+                        System.Console.WriteLine(
+                            $"[AES DEBUG] Ignorado sem DirectoryIndex: " +
+                            $"[{reader.GetType().Name}] {reader.Name}");
+
+                        continue;
+                    }
+
+                    try
+                    {
+                        System.Console.WriteLine(
+                            $"[AES DEBUG] Montando: " +
+                            $"[{reader.GetType().Name}] {reader.Name}");
+
+                        // A diferença principal está aqui:
+                        // montamos um leitor por vez, sem Task.Run.
+                        reader.MountTo(Files, PathComparer, key, VfsMounted);
+
+                        _unloadedVfs.TryRemove(reader, out _);
+                        _mountedVfs[reader] = null;
+                        countNewMounts++;
+
+                        _requiredKeys.TryRemove(reader.EncryptionKeyGuid, out _);
+                        _keys.TryAdd(reader.EncryptionKeyGuid, key);
+
+                        System.Console.WriteLine(
+                            $"[AES DEBUG] SUCESSO: " +
+                            $"[{reader.GetType().Name}] {reader.Name}");
+                    }
+                    catch (InvalidAesKeyException exception)
+                    {
+                        // O código original ignorava completamente esta exceção.
+                        // Agora exibiremos tudo para descobrir a causa verdadeira.
+                        System.Console.WriteLine(
+                            $"[AES DEBUG] InvalidAesKeyException em " +
+                            $"[{reader.GetType().Name}] {reader.Name}");
+
+                        System.Console.WriteLine(exception.ToString());
+                    }
+                    catch (Exception exception)
+                    {
+                        System.Console.WriteLine(
+                            $"[AES DEBUG] Exceção inesperada em " +
+                            $"[{reader.GetType().Name}] {reader.Name}");
+
+                        System.Console.WriteLine(exception.ToString());
+                    }
                 }
             }
 
-            var completed = await Task.WhenAll(tasks).ConfigureAwait(false);
-            foreach (var it in completed)
-            {
-                var key = it?.AesKey;
-                if (it == null || key == null) continue;
-                _requiredKeys.TryRemove(it.EncryptionKeyGuid, out _);
-                _keys.TryAdd(it.EncryptionKeyGuid, key);
-            }
+            // Mantemos o método assíncrono compatível com a interface existente,
+            // embora esta versão experimental execute as montagens sequencialmente.
+            await Task.CompletedTask.ConfigureAwait(false);
+
+            System.Console.WriteLine(
+                $"[AES DEBUG] SubmitKey finalizado. Novas montagens={countNewMounts}");
 
             return countNewMounts;
         }
