@@ -142,8 +142,9 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             var result = await exporter.ExportAsync(token).ConfigureAwait(false);
             results.Enqueue(result);
 
-            var stillQueued = Interlocked.Decrement(ref _totalQueued); // no prop changed event, use ExportProgress for the actual number
+            var stillQueued = Interlocked.Decrement(ref _totalQueued);
             var count = results.Count;
+            OnPropertyChanged(nameof(TotalQueued));
 
             progress?.Report(new ExportProgress(count, count + stillQueued, result));
 
