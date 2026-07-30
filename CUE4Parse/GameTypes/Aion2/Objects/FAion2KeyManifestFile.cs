@@ -1,6 +1,5 @@
 using Blake3;
 using CUE4Parse.Encryption.Aes;
-using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Exceptions;
 using GenericReader;
@@ -11,31 +10,30 @@ namespace CUE4Parse.GameTypes.Aion2.Objects;
 [JsonConverter(typeof(FAion2KeyManifestFileConverter))]
 public class FAion2KeyManifestFile
 {
-    private static readonly byte[] KeyManifestMaterial =
+    private static readonly byte[] _manifestHashKey =
     [
-        0x9c, 0x9e, 0x42, 0x21, 0x0f, 0x2f, 0x5f, 0xbf,
-        0x03, 0x0d, 0xa9, 0xab, 0xe9, 0xef, 0xa9, 0xab,
-        0x6e, 0x73, 0x26, 0x35, 0x48, 0x5d, 0x7a, 0x6f,
-        0x14, 0x09, 0xe4, 0x94, 0xcb, 0xfc, 0xbd, 0x4e
+        0xeb, 0x0b, 0xc0, 0x97, 0x28, 0x47, 0x5a, 0xb5,
+        0x19, 0x6a, 0xf8, 0xce, 0x78, 0x5d, 0x8a, 0x79,
+        0xdf, 0x18, 0xd2, 0x14, 0x8f, 0x51, 0xcb, 0xef,
+        0x8b, 0x39, 0xe4, 0x3b, 0x2a, 0x1d, 0x40, 0x56
     ];
 
     public Dictionary<ulong, FAesKey> AesKeys = [];
+    private const int PayloadOffset = 8;
 
-    public FAion2KeyManifestFile(GameFile file, IFileProvider provider)
+    public FAion2KeyManifestFile(GameFile file)
     {
-        var data = file.SafeRead();
-        if (data is null) throw new ParserException("Unable to read key_manifest.dat");
-        using var Ar = new GenericBufferReader(data);
-        var version = Ar.Read<int>();
-        var count = Ar.Read<int>();
-        var payloadSize = Ar.Read<int>();
-        if (version != 2 || payloadSize != count * 0x30 || 12 + payloadSize > Ar.Length)
+        var data = file.SafeRead() ?? throw new ParserException("Unable to read key_manifest.dat");
+
+        if (data.Length < 8 || (data.Length - 8) % 0x30 != 0)
             throw new ParserException("Invalid AION2 key_manifest.dat header");
 
+        var count = (data.Length - PayloadOffset) / 0x30;
+
         using var hasher = Hasher.New();
-        hasher.Update(KeyManifestMaterial);
+        hasher.Update(_manifestHashKey);
         var manifestKey = new FAesKey(hasher.Finalize().AsSpan().ToArray());
-        var decrypted = data.Decrypt(12, payloadSize, manifestKey);
+        var decrypted = data.Decrypt(PayloadOffset, count * 0x30, manifestKey);
         using var decryptedAr = new GenericBufferReader(decrypted);
         AesKeys = new Dictionary<ulong, FAesKey>(count);
         for (var i = 0; i < count; i++)
@@ -60,7 +58,7 @@ public class FAion2KeyManifestFileConverter : JsonConverter<FAion2KeyManifestFil
         writer.WriteStartObject();
 
         writer.WritePropertyName(nameof(value.AesKeys));
-        serializer.Serialize(writer, value.AesKeys);
+        serializer.Serialize(writer, value?.AesKeys);
 
         writer.WriteEndObject();
     }
