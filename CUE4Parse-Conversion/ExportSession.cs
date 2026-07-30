@@ -102,7 +102,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         _baseDirectory = new DirectoryInfo(baseDirectory);
         _options = options;
 
-        var allResults = new ConcurrentQueue<IReadOnlyList<ExportResult>>();
+        var results = new ConcurrentQueue<ExportResult>();
         try
         {
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
@@ -124,7 +124,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         finally // just in case cancellation is requested, we still need to clear things up
         {
             var stillQueued = TotalQueued;
-            var count = allResults.Count;
+            var count = results.Count;
 
             Clear();
             progress?.Report(new ExportProgress(count, count + stillQueued)); // this ensure the last progress reports the actual numbers
@@ -135,17 +135,17 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             OnPropertyChanged(nameof(IsRunning));
         }
 
-        return [.. allResults.SelectMany(x => x)];
+        return [.. results];
 
         async ValueTask Process(IExporter exporter, CancellationToken token)
         {
-            var results = await exporter.ExportAsync(token).ConfigureAwait(false);
-            allResults.Enqueue(results);
+            var result = await exporter.ExportAsync(token).ConfigureAwait(false);
+            results.Enqueue(result);
 
             var stillQueued = Interlocked.Decrement(ref _totalQueued); // no prop changed event, use ExportProgress for the actual number
-            var count = allResults.Count;
+            var count = results.Count;
 
-            progress?.Report(new ExportProgress(count, count + stillQueued, results));
+            progress?.Report(new ExportProgress(count, count + stillQueued, result));
 
         }
     }

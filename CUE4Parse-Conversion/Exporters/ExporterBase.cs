@@ -14,7 +14,7 @@ public interface IExporter
     public string ObjectPath { get; }
     public string ClassName { get; }
 
-    public Task<IReadOnlyList<ExportResult>> ExportAsync(CancellationToken ct = default);
+    public Task<ExportResult> ExportAsync(CancellationToken ct = default);
 }
 
 public abstract class ExporterBase : IExporter
@@ -64,7 +64,7 @@ public abstract class ExporterBase : IExporter
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default);
 
-    public async Task<IReadOnlyList<ExportResult>> ExportAsync(CancellationToken ct = default)
+    public async Task<ExportResult> ExportAsync(CancellationToken ct = default)
     {
         try
         {
@@ -75,23 +75,24 @@ public abstract class ExporterBase : IExporter
             }
 
             var tasks = files.Select(file => WriteExportFileAsync(file, ct));
-            return await Task.WhenAll(tasks).ConfigureAwait(false);
+            var paths = await Task.WhenAll(tasks).ConfigureAwait(false);
+            return new ExportResult(true, ObjectPath, paths);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             Log.Error(ex, "Failed to export");
-            return [ExportResult.Failure(ObjectPath, ex)];
+            return ExportResult.Failure(ObjectPath, ex);
         }
     }
 
-    private async Task<ExportResult> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
+    private async Task<string> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
     {
         var (fileName, path) = ResolveOutputPath(file); // fileName may not be the real file name, it's just for logging
         Log.ForContext("FilePath", path).Information("Writing {FileName} ({FileSize} bytes)", fileName, file.Data.Length);
 
         await File.WriteAllBytesAsync(path, file.Data, ct).ConfigureAwait(false);
 
-        return new ExportResult(true, ObjectPath, path);
+        return path;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
