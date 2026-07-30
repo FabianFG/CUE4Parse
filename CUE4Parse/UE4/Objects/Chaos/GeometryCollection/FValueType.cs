@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
@@ -15,7 +15,7 @@ public readonly struct FValueType
 
     public FValueType(FChaosArchive Ar)
     {
-        var serializationVersion = Ar.Read<int>();
+        var serializationVersion = Ar.Read<int>(); // 3 in 4.23
         if (serializationVersion > 4) throw new ParserException(Ar, $"FValueType Serialization Version ({serializationVersion}) > 4");
 
         var arrayTypeAsInt = Ar.Read<int>();
@@ -23,7 +23,7 @@ public readonly struct FValueType
 
         if (Ar.Game == GAME_MarvelRivals && ArrayType == EManagedArrayType.FImplicitObjectRefCountedPtr)
             ArrayType = EManagedArrayType.Transform3f;
-        
+
         if (serializationVersion < 4)
             Ar.Position += sizeof(int); // ArrayScopeAsInt
 
@@ -40,17 +40,17 @@ public readonly struct FValueType
         {
             ManagedArray.Serialize(Ar, ArrayType is
                 EManagedArrayType.Vector or
-                EManagedArrayType.Guid or
                 EManagedArrayType.IntVector or
                 EManagedArrayType.Vector2D or
-                EManagedArrayType.Float or
-                EManagedArrayType.Quat or
-                EManagedArrayType.Bool or
                 EManagedArrayType.Int32 or
+                EManagedArrayType.Bool or
+                EManagedArrayType.Float or
+                EManagedArrayType.Guid or
                 EManagedArrayType.UInt8 or
-                EManagedArrayType.UintVector2 or
+                EManagedArrayType.Double or
+                EManagedArrayType.IntVector4 or
                 EManagedArrayType.IntVector2 or
-                EManagedArrayType.IntVector4
+                EManagedArrayType.UintVector2
             );
         }
     }
@@ -59,7 +59,7 @@ public readonly struct FValueType
     {
         return ArrayType switch
         {
-            // EManagedArrayType.FNoneType => expr,
+            EManagedArrayType.None => new FManagedArray<object>(() => null!),
             EManagedArrayType.Vector => new FManagedArray<FVector>(Ar.Read<FVector>),
             EManagedArrayType.IntVector => new FManagedArray<FIntVector>(Ar.Read<FIntVector>),
             EManagedArrayType.Vector2D => new FManagedArray<FVector2D>(Ar.Read<FVector2D>),
@@ -69,32 +69,35 @@ public readonly struct FValueType
             EManagedArrayType.Transform => new FManagedArray<FTransform>(() => new FTransform(Ar)),
             EManagedArrayType.String => new FManagedArray<string>(Ar.ReadFString),
             EManagedArrayType.Float => new FManagedArray<float>(Ar.Read<float>),
-            EManagedArrayType.Quat => new FManagedArray<FQuat>(Ar.Read<FQuat>),
+            EManagedArrayType.Quat => new FManagedArray<FQuat>(() => new FQuat(Ar)),
             EManagedArrayType.BoneNode => new FManagedArray<FGeometryCollectionBoneNode>(() => new FGeometryCollectionBoneNode(Ar)),
+            // UE 4.22
             EManagedArrayType.MeshSection => new FManagedArray<FGeometryCollectionSection>(Ar.Read<FGeometryCollectionSection>),
-            
-            EManagedArrayType.Box when Ar.Game == GAME_MarvelRivals => new FManagedArray<FBox>(Ar.Read<FBox>),
             EManagedArrayType.Box => new FManagedArray<FBox>(() => new FBox(Ar)),
-            
             EManagedArrayType.IntArray => new FManagedArray<int[]>(Ar.ReadArray<int>), // This should be a TSet/HashSet
+            // UE 4.23
             EManagedArrayType.Guid => new FManagedArray<FGuid>(Ar.Read<FGuid>),
             EManagedArrayType.UInt8 => new FManagedArray<byte>(Ar.Read<byte>),
             // EManagedArrayType.VectorArrayPointer => expr,
             // EManagedArrayType.VectorArrayUniquePointer => expr,
             EManagedArrayType.FImplicitObject3Pointer => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
-            // EManagedArrayType.FImplicitObject3UniquePointer => expr,
+            EManagedArrayType.FImplicitObject3UniquePointer => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
             EManagedArrayType.FImplicitObject3SerializablePtr => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
-            // EManagedArrayType.FBVHParticlesFloat3Pointer => expr,
-            // EManagedArrayType.FBVHParticlesFloat3UniquePointer => expr,
+            EManagedArrayType.FBVHParticlesFloat3Pointer => new FManagedArray<FBVHParticles?>(Ar.ReadPtr<FBVHParticles>),
+            EManagedArrayType.FBVHParticlesFloat3UniquePointer => new FManagedArray<FBVHParticles?>(Ar.ReadPtr<FBVHParticles>),
+            // UE 4.24
             // EManagedArrayType.TPBDRigidParticleHandle3fPtr => expr,
             // EManagedArrayType.TPBDGeometryCollectionParticleHandle3fPtr => expr,
             // EManagedArrayType.TGeometryParticle3fUniquePtr => expr,
-            // EManagedArrayType.FImplicitObject3ThreadSafeSharedPointer => expr,
-            // EManagedArrayType.FImplicitObject3SharedPointer => expr,
+            // UE 4.25
+            EManagedArrayType.FImplicitObject3ThreadSafeSharedPointer => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
+            EManagedArrayType.FImplicitObject3SharedPointer => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
             // EManagedArrayType.TPBDRigidClusteredParticleHandle3fPtr => expr,
-            // EManagedArrayType.FConvexUniquePtr => expr,
+            // UE 5.0
+            EManagedArrayType.FConvexUniquePtr => new FManagedArray<FConvex?>(Ar.ReadPtr<FConvex>),//or implicitObject
             EManagedArrayType.Vector2DArray => new FManagedArray<FVector2D[]>(Ar.ReadArray<FVector2D>),
             EManagedArrayType.Double => new FManagedArray<double>(Ar.Read<double>),
+            // UE 5.1
             EManagedArrayType.IntVector4 => new FManagedArray<TIntVector4<int>>(Ar.Read<TIntVector4<int>>),
             EManagedArrayType.Vector3d => new FManagedArray<FVector>(() => new FVector(Ar)),
             EManagedArrayType.IntVector2 => new FManagedArray<FIntVector2>(Ar.Read<FIntVector2>),
@@ -103,82 +106,27 @@ public readonly struct FValueType
             EManagedArrayType.FloatArray => new FManagedArray<float[]>(Ar.ReadArray<float>),
             EManagedArrayType.Vector4f => new FManagedArray<FVector4>(Ar.Read<FVector4>),
             EManagedArrayType.FVectorArray => new FManagedArray<FVector[]>(Ar.ReadArray<FVector>),
+            // UE 5.2
             // EManagedArrayType.TPBDRigidParticle3fUniquePtr => expr,
+            // UE 5.4
             EManagedArrayType.FImplicitObjectRefCountedPtr => new FManagedArray<FImplicitObject?>(Ar.ReadPtr<FImplicitObject>),
             EManagedArrayType.FConvexRefCountedPtr => new FManagedArray<FConvex?>(Ar.ReadPtr<FConvex>),
             EManagedArrayType.Transform3f => new FManagedArray<FTransform>(Ar.Read<FTransform>),
             EManagedArrayType.IntVector3Array => new FManagedArray<TIntVector3<int>>(Ar.Read<TIntVector3<int>>),
             EManagedArrayType.Vector4fArray => new FManagedArray<FVector4[]>(Ar.ReadArray<FVector4>),
+            // UE 5.5
             EManagedArrayType.PMatrix33d => new FManagedArray<FMatrix>(() => new FMatrix(Ar)),
             EManagedArrayType.PMatrix33dArray => new FManagedArray<FMatrix[]>(() => Ar.ReadArray(() => new FMatrix(Ar))),
             EManagedArrayType.FVector3fNestedArray => new FManagedArray<FVector[][]>(() => Ar.ReadArray(Ar.ReadArray<FVector>)),
+            // UE 5.6
             EManagedArrayType.UintVector2 => new FManagedArray<TIntVector2<uint>>(Ar.Read<TIntVector2<uint>>),
             EManagedArrayType.UObjectArray => new FManagedArray<FPackageIndex>(() => new FPackageIndex(Ar)),
             // EManagedArrayType.LinearCurve => expr,
+            // UE 5.7
             EManagedArrayType.Name => new FManagedArray<FName>(Ar.ReadFName),
             EManagedArrayType.SoftObjectPath => new FManagedArray<FSoftObjectPath>(() => new FSoftObjectPath(Ar)),
             _ => throw new NotImplementedException($"EManagedArrayType Type: '{ArrayType}' currently does not have serialization implemented")
         };
     }
-
     public override string ToString() => $"{ArrayType}[{ManagedArray?.Data?.Length ?? 0}]";
-}
-
-public enum EManagedArrayType : byte
-{
-    FNoneType,
-    Vector,
-    IntVector,
-    Vector2D,
-    LinearColor,
-    Int32,
-    Bool,
-    Transform,
-    String,
-    Float,
-    Quat,
-    BoneNode,
-    MeshSection,
-    Box,
-    IntArray,
-    Guid,
-    UInt8,
-    VectorArrayPointer,
-    VectorArrayUniquePointer,
-    FImplicitObject3Pointer,
-    FImplicitObject3UniquePointer,
-    FImplicitObject3SerializablePtr,
-    FBVHParticlesFloat3Pointer,
-    FBVHParticlesFloat3UniquePointer,
-    TPBDRigidParticleHandle3fPtr,
-    TPBDGeometryCollectionParticleHandle3fPtr,
-    TGeometryParticle3fUniquePtr,
-    FImplicitObject3ThreadSafeSharedPointer,
-    FImplicitObject3SharedPointer,
-    TPBDRigidClusteredParticleHandle3fPtr,
-    FConvexUniquePtr,
-    Vector2DArray,
-    Double,
-    IntVector4,
-    Vector3d,
-    IntVector2,
-    IntVector2Array,
-    Int32Array,
-    FloatArray,
-    Vector4f,
-    FVectorArray,
-    TPBDRigidParticle3fUniquePtr,
-    FImplicitObjectRefCountedPtr,
-    FConvexRefCountedPtr,
-    Transform3f,
-    IntVector3Array,
-    Vector4fArray,
-    PMatrix33d,
-    PMatrix33dArray,
-    FVector3fNestedArray,
-    UintVector2,
-    UObjectArray,
-    LinearCurve,
-    Name,
-    SoftObjectPath
 }

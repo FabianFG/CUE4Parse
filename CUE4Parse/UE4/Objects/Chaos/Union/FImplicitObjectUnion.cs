@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Chaos.Union;
@@ -19,14 +19,18 @@ public class FImplicitObjectUnion : FImplicitObject
 
         MObjects = Ar.ReadPtrArray<FImplicitObject>();
         MLocalBoundingBox = TBox<float>.SerializeAsAABB(Ar, 3);
-        
+
         if (FExternalPhysicsCustomObjectVersion.Get(Ar) < FExternalPhysicsCustomObjectVersion.Type.UnionObjectsCanAvoidHierarchy)
         {
-            throw new NotImplementedException();
+            // LegacySerializeBVH(Ar);
+            // bHierarchyBuilt = Ar.ReadBoolean();
+            throw new NotImplementedException("Legacy BVH serialization is not implemented");
         }
         else if (FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.ChaosImplicitObjectUnionBVHRefactor)
         {
-            throw new NotImplementedException();
+            // bHierarchyBuilt = Ar.ReadBoolean();
+            // if (bHierarchyBuilt) LegacySerializeBVH(Ar);
+            throw new NotImplementedException("Legacy BVH serialization is not implemented");
         }
         else
         {
@@ -38,7 +42,10 @@ public class FImplicitObjectUnion : FImplicitObject
 
             NumLeafObjects = FFortniteSeasonBranchObjectVersion.Get(Ar) < FFortniteSeasonBranchObjectVersion.Type.ChaosImplicitObjectUnionLeafObjectsToInt32 ? Ar.Read<ushort>() : Ar.Read<int>();
 
-            if (bHasBVH) throw new NotImplementedException();
+            if (bHasBVH)
+            {
+                var bvh = new FImplicitBVH(Ar);
+            }
         }
     }
 }

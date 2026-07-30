@@ -25,7 +25,7 @@ public class FImplicitObject : IChaosClass
             bDoCollide = true;
         }
         
-        if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.CustomImplicitCollisionType)
+        if (FReleaseObjectVersion.Get(Ar) > FReleaseObjectVersion.Type.CustomImplicitCollisionType)
         {
             CollisionType = Ar.Read<EImplicitObjectType>();
         }
@@ -40,7 +40,9 @@ public class FImplicitObject : IChaosClass
             {
                 var innerType = GetInnerType(objectType);
                 return innerType switch
-                {
+                {    
+                    EImplicitObjectType.Convex => new TImplicitObjectScaled<FConvex>(),
+                    //EImplicitObjectType.TriangleMesh => new TImplicitObjectScaled<FTriangleMesh>();
                     _ => throw new ParserException($"InnerType can't be of {innerType} when ObjectType is scaled.")
                 };
             }
@@ -52,15 +54,21 @@ public class FImplicitObject : IChaosClass
             return innerType switch
             {
                 EImplicitObjectType.Convex => new TImplicitObjectInstanced<FConvex>(),
+                //EImplicitObjectType.TriangleMesh => new TImplicitObjectInstanced<FTriangleMeshImplicitObject>(),
                 _ => throw new ParserException($"InnerType can't be of {innerType} when ObjectType is instanced.")
             };
         }
 
         return objectType switch
         {
+            EImplicitObjectType.Sphere => new TSphere(),
             EImplicitObjectType.Box => new TBox<float>(),
+            //EImplicitObjectType.Plane,
             EImplicitObjectType.Transformed => new TImplicitObjectTransformed(),
+            EImplicitObjectType.Capsule => new FCapsule(),
             EImplicitObjectType.Union => new FImplicitObjectUnion(),
+            //EImplicitObjectType.LevelSet,
+            //EImplicitObjectType.Unknown,
             EImplicitObjectType.Convex => new FConvex(),
             _ => throw new NotImplementedException($"SerializationFactory for {objectType} is not implemented.")
         };

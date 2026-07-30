@@ -1,7 +1,9 @@
-﻿using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Objects.UObject;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
+[JsonConverter(typeof(FManagedArrayCollectionConverter))]
 public class FManagedArrayCollection
 {
     public int Version;
@@ -20,5 +22,32 @@ public class FManagedArrayCollection
     public T[]? GetAttributeValue<T>(FKeyType key)
     {
         return Map.TryGetValue(key, out var value) ? value.ManagedArray.Data as T[] : null;
+    }
+}
+
+public class FManagedArrayCollectionConverter : JsonConverter<FManagedArrayCollection>
+{
+    public override void WriteJson(JsonWriter writer, FManagedArrayCollection? value, JsonSerializer serializer)
+    {
+        if (value == null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
+        writer.WriteStartObject();
+        writer.WritePropertyName(nameof(FManagedArrayCollection.Version));
+        writer.WriteValue(value.Version);
+
+        writer.WritePropertyName(nameof(FManagedArrayCollection.GroupInfo));
+        serializer.Serialize(writer, value.GroupInfo);
+
+        writer.WritePropertyName(nameof(FManagedArrayCollection.Map));
+        serializer.Serialize(writer, value.Map);
+        writer.WriteEndObject();
+    }
+    public override FManagedArrayCollection? ReadJson(JsonReader reader, Type objectType, FManagedArrayCollection? existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
     }
 }

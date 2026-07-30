@@ -98,11 +98,7 @@ public readonly struct TVector<T> where T : struct
     // serializeReal vector.h
     public TVector(FArchive Ar, int dimension)
     {
-        _values = new T[dimension];
-        for (int i = 0; i < dimension; i++)
-        {
-            _values[i] = Ar.Read<T>();
-        }
+        _values = Ar.ReadArray<T>(dimension);
     }
 
     public TVector(params T[] values)

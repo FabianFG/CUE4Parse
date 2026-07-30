@@ -14,4 +14,10 @@ public readonly struct TAABB<T> where T : struct
         MMin = new TVector<T>(Ar, dimensions);
         MMax = new TVector<T>(Ar, dimensions);
     }
+
+    public TAABB(int dimension, T initialValue)
+    {
+        MMin = new TVector<T>(dimension, initialValue);
+        MMax = new TVector<T>(dimension, initialValue);
+    }
 }

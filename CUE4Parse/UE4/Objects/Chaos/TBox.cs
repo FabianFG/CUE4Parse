@@ -1,5 +1,4 @@
-﻿using CUE4Parse.MappingsProvider;
-using CUE4Parse.UE4.Objects.UObject;
+﻿using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Chaos;
@@ -30,4 +29,6 @@ public sealed class TBox<T> : FImplicitObject where T : struct
             return new TAABB<T>(Ar, dimensions);
         }
     }
+
+    public static Dictionary<int, TAABB<T>> SerializeAsAABBs(FChaosArchive Ar, int dimensions) => Ar.ReadMap(Ar.Read<int>, () => SerializeAsAABB(Ar, dimensions));
 }

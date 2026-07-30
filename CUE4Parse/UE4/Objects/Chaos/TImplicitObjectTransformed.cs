@@ -6,7 +6,7 @@ public class TImplicitObjectTransformed : FImplicitObject
 {
     public FImplicitObject? MObject { get; set; }
     public FTransform MTransform { get; set; }
-    public TAABB<float> AABB { get; set; }
+    public TAABB<float> MLocalBoundingBox { get; set; }
     
     public override void Serialize(FChaosArchive Ar)
     {
@@ -14,6 +14,6 @@ public class TImplicitObjectTransformed : FImplicitObject
 
         MObject = Ar.ReadPtr<FImplicitObject>();
         MTransform = Ar.Read<TTransform<double>>();
-        AABB = TBox<float>.SerializeAsAABB(Ar, 3);
+        MLocalBoundingBox = TBox<float>.SerializeAsAABB(Ar, 3);
     }
 }

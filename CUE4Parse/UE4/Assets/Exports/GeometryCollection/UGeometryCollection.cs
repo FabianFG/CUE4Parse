@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Chaos;
@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 
@@ -22,6 +23,9 @@ public class UGeometryCollection : UObject
         RootProxyData = GetOrDefault<FGeometryCollectionProxyMeshData?>(nameof(RootProxyData));
         AutoInstanceMeshes = GetOrDefault<FGeometryCollectionAutoInstanceMesh[]?>(nameof(AutoInstanceMeshes));
 
+#if DEBUG
+        Log.Warning(nameof(UGeometryCollection));
+#endif
         var bIsCookedOrCooking = FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDC && Ar.ReadBoolean();
         if (FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDCAndAsset)
         {
@@ -38,7 +42,7 @@ public class UGeometryCollection : UObject
         if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.GeometryCollectionNaniteTransient)
         {
             var bCooked = Ar.ReadBoolean();
-            if (bCooked) RenderData = new FGeometryCollectionRenderData(Ar);
+            if (bCooked) RenderData = new FGeometryCollectionRenderData(Ar, GetOrDefault<bool>("bStripRenderDataOnCook"), GetOrDefault<bool>("EnableNanite"));
         }
     }
 
@@ -61,5 +65,17 @@ public class UGeometryCollection : UObject
                 Ar.SkipArray<ushort>(); // ImposterAtlas
             }
         }
+    }
+
+
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        base.WriteJson(writer, serializer);
+
+        writer.WritePropertyName(nameof(GeometryCollection));
+        serializer.Serialize(writer, GeometryCollection);
+
+        //writer.WritePropertyName(nameof(RenderData));
+        //serializer.Serialize(writer, RenderData);
     }
 }

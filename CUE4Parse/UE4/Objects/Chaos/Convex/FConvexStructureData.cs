@@ -12,7 +12,7 @@ public class FConvexStructureData
         var bUseHalfEdgeStructureData = FPhysicsObjectVersion.Get(Ar) >= FPhysicsObjectVersion.Type.ChaosConvexUsesHalfEdges;
 
         if (!bUseHalfEdgeStructureData)
-            throw new NotImplementedException();
+            throw new NotImplementedException("Loading legacy convex structure data is not implemented");
         
         IndexType = Ar.Read<EIndexType>();
         Data = new FStructureData();
