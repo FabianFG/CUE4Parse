@@ -32,7 +32,10 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     internal ExportOptions Options => _options ?? throw new InvalidOperationException("Session is not currently running.");
 
     private int _totalQueued;
-    public int TotalQueued => _totalQueued;
+    public int TotalQueued => Volatile.Read(ref _totalQueued);
+
+    private int _running;
+    public bool IsRunning => Volatile.Read(ref _running) == 1;
 
     private readonly ConcurrentQueue<IExporter> _roots = new();
     private readonly ConcurrentDictionary<string, byte> _paths = new(StringComparer.OrdinalIgnoreCase);
@@ -74,7 +77,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     public bool Remove(string objectPath)
     {
         // the exporter stays in _roots but we won't process it, it's fine because nothing actually relies on _roots.Count
-        if (_baseDirectory != null || !_paths.TryRemove(objectPath, out _))
+        if (IsRunning || !_paths.TryRemove(objectPath, out _))
             return false;
 
         Interlocked.Decrement(ref _totalQueued);
@@ -92,12 +95,14 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
     public async Task<IReadOnlyList<ExportResult>> RunAsync(string baseDirectory, ExportOptions options, IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
     {
+        if (Interlocked.Exchange(ref _running, 1) == 1)
+            throw new InvalidOperationException("Session is already running.");
+
+        OnPropertyChanged(nameof(IsRunning));
         _baseDirectory = new DirectoryInfo(baseDirectory);
         _options = options;
 
-        var completed = 0;
-        var allResults = new ConcurrentBag<ExportResult>();
-
+        var allResults = new ConcurrentQueue<IReadOnlyList<ExportResult>>();
         try
         {
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
@@ -118,29 +123,30 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         }
         finally // just in case cancellation is requested, we still need to clear things up
         {
-            Clear();
-            progress?.Report(new ExportProgress(completed, completed + _totalQueued)); // this ensure the last progress reports the actual numbers
+            var stillQueued = TotalQueued;
+            var count = allResults.Count;
 
-            _baseDirectory = null;
+            Clear();
+            progress?.Report(new ExportProgress(count, count + stillQueued)); // this ensure the last progress reports the actual numbers
+
             _options = null;
+            _baseDirectory = null;
+            Interlocked.Exchange(ref _running, 0);
+            OnPropertyChanged(nameof(IsRunning));
         }
 
-        return [.. allResults];
+        return [.. allResults.SelectMany(x => x)];
 
         async ValueTask Process(IExporter exporter, CancellationToken token)
         {
             var results = await exporter.ExportAsync(token).ConfigureAwait(false);
+            allResults.Enqueue(results);
 
-            Interlocked.Decrement(ref _totalQueued);
-            OnPropertyChanged(nameof(TotalQueued));
+            var stillQueued = Interlocked.Decrement(ref _totalQueued); // no prop changed event, use ExportProgress for the actual number
+            var count = allResults.Count;
 
-            foreach (var result in results)
-            {
-                allResults.Add(result);
+            progress?.Report(new ExportProgress(count, count + stillQueued, results));
 
-                var c = Interlocked.Increment(ref completed);
-                progress?.Report(new ExportProgress(c, completed + _totalQueued, result));
-            }
         }
     }
 
