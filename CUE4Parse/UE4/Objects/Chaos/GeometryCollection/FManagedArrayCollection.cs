@@ -43,7 +43,14 @@ public class FManagedArrayCollectionConverter : JsonConverter<FManagedArrayColle
         serializer.Serialize(writer, value.GroupInfo);
 
         writer.WritePropertyName(nameof(FManagedArrayCollection.Map));
-        serializer.Serialize(writer, value.Map);
+        writer.WriteStartObject();
+        foreach (var kvp in value.Map)
+        {
+            writer.WritePropertyName(kvp.Key.ToString());
+            serializer.Serialize(writer, kvp.Value.ArrayType);
+        }
+        writer.WriteEndObject();
+
         writer.WriteEndObject();
     }
     public override FManagedArrayCollection? ReadJson(JsonReader reader, Type objectType, FManagedArrayCollection? existingValue, bool hasExistingValue, JsonSerializer serializer)
