@@ -44,13 +44,178 @@ public static class TextureEncoder
             }
             case ETextureFormat.Tga:
                 ext = "tga";
-                return EncodeTga(bitmap);
+                return EncodeUncompressedTga(bitmap);
+            case ETextureFormat.TgaRle:
+                ext = "tgac";
+                return EncodeCompressedTga(bitmap);
             default: throw new NotImplementedException("Unsupported texture format: " + format);
             //TODO: ETextureFormat.Dds
         }
     }
 
-    private static byte[] EncodeTga(CTexture bitmap)
+	private unsafe static MemoryStream	WriteTGAHeader(SKBitmap image, out bool has_alpha)
+	{
+		MemoryStream	tga = new();
+		byte[]			header = new byte[18];
+
+		has_alpha = false;
+		fixed (byte* ptr = header)
+		{
+			byte *type		= &ptr[2];
+			byte *bitdepth	= &ptr[16];
+			byte *metadata	= &ptr[17];
+
+			// TGA supports top-down pixel layout as long as you set the 5th metadata bit to 1.
+			// Since this makes the iterations easier, this is what we do.
+			*metadata = 0b00100000;
+
+			for (int y = 0; y < image.Height && (*metadata & 8) == 0; y++)
+				for (int x = 0; x < image.Width && (*metadata & 8) == 0; x++)
+					if (image.GetPixel(x, y).Alpha != 0x000000ff)
+						*metadata |= 8;
+
+			switch (image.ColorType)
+			{
+				case SKColorType.Bgra8888:
+				case SKColorType.Rgba8888:
+					if ((*metadata & 8) != 0)
+					{
+						*bitdepth = 32;
+						has_alpha = true;
+					}
+					else
+						*bitdepth = 24;
+					*type = 2; // Truecolor, aka RGB
+					break;
+				case SKColorType.Gray8:
+					*bitdepth = 8;
+					*type = 3; // Grayscale
+					break;
+			}
+			*type += 8; // Compression
+		}
+
+        header[12] = (byte)(image.Width & 0xFF);
+        header[13] = (byte)(image.Width >> 8);
+        header[14] = (byte)(image.Height & 0xFF);
+        header[15] = (byte)(image.Height >> 8);
+
+		tga.Write(header);
+
+		return tga;
+	}
+
+	private static unsafe int	GetRunLength(byte* ptr, int start_pixel, long length, int bpp)
+	{
+		int		count = 1;
+		bool	match = true;
+
+		if (start_pixel * bpp >= length)
+			return 0;
+
+		for (int i = start_pixel + count; i * bpp < length && count < 128; i++)
+		{
+			for (int bit = 0; bit < bpp; bit++)
+			{
+				if (ptr[(i * bpp) + bit] != ptr[(start_pixel * bpp) + bit])
+				{
+					match = false;
+					break;
+				}
+			}
+			if (!match)
+				break;
+			++count;
+		}
+		return count;
+	}
+
+	private static unsafe int	CopyBytes(ref byte* ptr, byte* batch, int pixel_pos, int target_bpp, SKBitmap sk)
+	{
+		int pos = 0;
+		switch (sk.ColorType)
+		{
+			case SKColorType.Bgra8888:
+			case SKColorType.Gray8:
+				for (int bit = 0; bit < target_bpp; bit++)
+					batch[pos++] = ptr[(pixel_pos * sk.BytesPerPixel) + bit];
+				break;
+			case SKColorType.Rgba8888:
+				for (int bit = 0; bit < target_bpp; bit++)
+					if (bit == 0 || bit == 2)
+						batch[pos++] = ptr[(pixel_pos * sk.BytesPerPixel) + bit + (bit == 0 ? 2 : -2)];
+					else
+						batch[pos++] = ptr[(pixel_pos * sk.BytesPerPixel) + bit];
+				break;
+		}
+		return pos;
+	}
+
+	private static unsafe byte[]	EncodeCompressedTga(CTexture bitmap)
+	{
+        using var	skBitmap = bitmap.ToSkBitmap();
+        byte*		ptr = (byte*)skBitmap.GetPixels(out nint end).ToPointer();
+		byte[]		batch;
+		long		length = end.ToInt64();
+		int			skbpp = skBitmap.BytesPerPixel;
+		int 		pixel_pos = 0, target_bpp = 0, raw_start, raw_count, batch_pos, consecutive;
+
+		using MemoryStream	output = WriteTGAHeader(skBitmap, out bool has_alpha);
+
+		if (skbpp == 4 && !has_alpha)
+			target_bpp = 3;
+		else
+			target_bpp = skbpp;
+
+		while (pixel_pos * skbpp < length)
+		{
+			consecutive = GetRunLength(ptr, pixel_pos, length, skbpp);
+			batch_pos = 0;
+
+			if (consecutive >= 2)
+			{
+				batch = new byte[1 + target_bpp];
+				fixed (byte* bptr = batch)
+				{
+					batch[batch_pos++] = (byte)(0x80 | (consecutive - 1));
+
+					CopyBytes(ref ptr, bptr + batch_pos, pixel_pos, target_bpp, skBitmap);
+
+					pixel_pos += consecutive;
+					output.Write(batch);
+				}
+			}
+			else
+			{
+				raw_start = pixel_pos;
+				raw_count = 0;
+				batch_pos = 0;
+
+				while (pixel_pos * skbpp < length && raw_count < 128)
+				{
+					consecutive = GetRunLength(ptr, pixel_pos, length, skbpp);
+					if (consecutive >= 2)
+						break;
+					++pixel_pos;
+					++raw_count;
+				}
+
+				batch = new byte[1 + (raw_count * target_bpp)];
+				fixed (byte* bptr = batch)
+				{
+					batch[batch_pos++] = (byte)(0x00 | raw_count - 1);
+
+					for (int pos = raw_start; pos < pixel_pos; pos++)
+						batch_pos += CopyBytes(ref ptr, bptr + batch_pos, pos, target_bpp, skBitmap);
+				}
+
+				output.Write(batch);
+			}
+		}
+		return output.ToArray();
+	}
+
+    private static byte[]	EncodeUncompressedTga(CTexture bitmap)
     {
         using var skBitmap = bitmap.ToSkBitmap();
         int width = skBitmap.Width;

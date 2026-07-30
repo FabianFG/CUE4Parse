@@ -10,6 +10,8 @@ public enum ETextureFormat
     Jpeg,
     [Description("TGA")]
     Tga,
+	[Description("TGA (RLE)")]
+	TgaRle,
     [Description("WebP")]
     Webp,
 }
