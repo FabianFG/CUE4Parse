@@ -322,15 +322,10 @@ namespace CUE4Parse.FileProvider.Vfs
 
             foreach (var (guid, key) in keys)
             {
-                // Copiamos os leitores para um array e os ordenamos para garantir
-                // uma execução previsível e evitar alterações na coleção durante o loop.
                 var readers = _unloadedVfs.Keys
                     .Where(reader => reader.EncryptionKeyGuid == guid)
                     .OrderBy(reader => reader.Name, StringComparer.OrdinalIgnoreCase)
                     .ToArray();
-
-                System.Console.WriteLine(
-                    $"[AES DEBUG] SubmitKey iniciado. GUID={guid}, leitores={readers.Length}");
 
                 foreach (var reader in readers)
                 {
@@ -343,22 +338,13 @@ namespace CUE4Parse.FileProvider.Vfs
                     VerifyGlobalData(reader);
 
                     if (!reader.HasDirectoryIndex)
-                    {
-                        System.Console.WriteLine(
-                            $"[AES DEBUG] Ignorado sem DirectoryIndex: " +
-                            $"[{reader.GetType().Name}] {reader.Name}");
-
                         continue;
-                    }
 
                     try
                     {
-                        System.Console.WriteLine(
-                            $"[AES DEBUG] Montando: " +
-                            $"[{reader.GetType().Name}] {reader.Name}");
-
-                        // A diferença principal está aqui:
-                        // montamos um leitor por vez, sem Task.Run.
+                        // Mount readers sequentially. Some games, including
+                        // Neverness to Everness, may fail intermittently when
+                        // multiple encrypted readers are mounted concurrently.
                         reader.MountTo(Files, PathComparer, key, VfsMounted);
 
                         _unloadedVfs.TryRemove(reader, out _);
@@ -367,39 +353,27 @@ namespace CUE4Parse.FileProvider.Vfs
 
                         _requiredKeys.TryRemove(reader.EncryptionKeyGuid, out _);
                         _keys.TryAdd(reader.EncryptionKeyGuid, key);
-
-                        System.Console.WriteLine(
-                            $"[AES DEBUG] SUCESSO: " +
-                            $"[{reader.GetType().Name}] {reader.Name}");
                     }
                     catch (InvalidAesKeyException exception)
                     {
-                        // O código original ignorava completamente esta exceção.
-                        // Agora exibiremos tudo para descobrir a causa verdadeira.
-                        System.Console.WriteLine(
-                            $"[AES DEBUG] InvalidAesKeyException em " +
-                            $"[{reader.GetType().Name}] {reader.Name}");
-
-                        System.Console.WriteLine(exception.ToString());
+                        Log.Warning(
+                            exception,
+                            $"Failed to mount encrypted archive " +
+                            $"{reader.Path.SubstringAfterLast('/')}"
+                        );
                     }
                     catch (Exception exception)
                     {
-                        System.Console.WriteLine(
-                            $"[AES DEBUG] Exceção inesperada em " +
-                            $"[{reader.GetType().Name}] {reader.Name}");
-
-                        System.Console.WriteLine(exception.ToString());
+                        Log.Warning(
+                            exception,
+                            $"Uncaught exception while loading pak file " +
+                            $"{reader.Path.SubstringAfterLast('/')}"
+                        );
                     }
                 }
             }
 
-            // Mantemos o método assíncrono compatível com a interface existente,
-            // embora esta versão experimental execute as montagens sequencialmente.
             await Task.CompletedTask.ConfigureAwait(false);
-
-            System.Console.WriteLine(
-                $"[AES DEBUG] SubmitKey finalizado. Novas montagens={countNewMounts}");
-
             return countNewMounts;
         }
 
