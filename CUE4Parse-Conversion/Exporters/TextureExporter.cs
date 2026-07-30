@@ -9,49 +9,61 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
     {
         Log.Debug("Decoding texture for platform {Platform} as {Format}", Session.Options.TexturePlatform, Session.Options.TextureFormat);
 
-        if (Session.Options.ExportAllTextureMips)
+        var files = new List<ExportFile>();
+        var all = Session.Options.ExportAllTextureMips;
+        if (all)
         {
-            var files = new List<ExportFile>();
             if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
             {
-                for (var mipIndex = TextureDecoder.GetMinLevel(vt); mipIndex < vt.NumMips; mipIndex++)
+                for (var i = TextureDecoder.GetMinLevel(vt); i < vt.NumMips; i++)
                 {
-                    AddMip(files, mipIndex, ct);
+                    AddMip(i);
                 }
             }
-            else
+            else for (var i = 0; i < texture.PlatformData.Mips.Length; i++)
             {
-                for (var mipIndex = 0; mipIndex < texture.PlatformData.Mips.Length; mipIndex++)
+                if (texture.PlatformData.Mips[i].EnsureValidBulkData(texture.MipDataProvider, i))
                 {
-                    AddMip(files, mipIndex, ct);
+                    AddMip(i);
+                }
+                else
+                {
+                    Log.Warning("Texture mip {Index} has no valid bulk data, skipping", i);
                 }
             }
-
-            return files;
+        }
+        else
+        {
+            AddMip(texture.GetFirstMipIndex());
         }
 
-        var decoded = texture.Decode(Session.Options.TexturePlatform)
-            ?? throw new Exception("Failed to decode texture");
+        return files;
 
-        if (texture is UTextureCube)
-            decoded = decoded.ToPanorama();
+        void AddMip(int index)
+        {
+            ct.ThrowIfCancellationRequested();
 
-        var data = decoded.Encode(Session.Options, out var ext);
-        return [new ExportFile(ext, data)];
-    }
+            var decoded = texture.DecodeMip(index, Session.Options.TexturePlatform);
+            if (decoded == null)
+            {
+                if (all)
+                {
+                    Log.Warning("Failed to decode texture mip {Index}, skipping", index);
+                }
+                else
+                {
+                    throw new Exception($"Failed to decode texture mip {index}");
+                }
+                return;
+            }
 
-    private void AddMip(List<ExportFile> files, int mipIndex, CancellationToken ct)
-    {
-        ct.ThrowIfCancellationRequested();
+            if (texture is UTextureCube)
+            {
+                decoded = decoded.ToPanorama();
+            }
 
-        var decoded = texture.DecodeMip(mipIndex, Session.Options.TexturePlatform);
-        if (decoded == null)
-            return;
-
-        if (texture is UTextureCube)
-            decoded = decoded.ToPanorama();
-
-        var data = decoded.Encode(Session.Options, out var ext);
-        files.Add(new ExportFile(ext, data, $"_{mipIndex}"));
+            var data = decoded.Encode(Session.Options, out var ext);
+            files.Add(new ExportFile(ext, data, all ? $"_MIP{index}" : null));
+        }
     }
 }

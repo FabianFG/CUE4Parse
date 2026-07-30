@@ -34,7 +34,6 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     private int _totalQueued;
     public int TotalQueued => _totalQueued;
 
-    private readonly Lock _queueLock = new();
     private readonly ConcurrentQueue<IExporter> _roots = new();
     private readonly ConcurrentDictionary<string, byte> _paths = new(StringComparer.OrdinalIgnoreCase);
 
@@ -60,16 +59,13 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
     public ExportSession Add(ExporterBase exporter)
     {
-        lock (_queueLock)
-        {
-            // TODO: this prevents 2 exporters messing with the same file from being enqueued in the same run (e.g. MeshExporter / RawDataExporter)
-            if (!_paths.TryAdd(exporter.ObjectPath, 0)) return this;
+        // TODO: this prevents 2 exporters messing with the same file from being enqueued in the same run (e.g. MeshExporter / RawDataExporter)
+        if (!_paths.TryAdd(exporter.ObjectPath, 0)) return this;
 
-            exporter._session = this;
-            _roots.Enqueue(exporter);
+        exporter._session = this;
+        _roots.Enqueue(exporter);
 
-            Interlocked.Increment(ref _totalQueued);
-        }
+        Interlocked.Increment(ref _totalQueued);
         OnPropertyChanged(nameof(TotalQueued));
         exporter.Log.Debug("Queued for export");
         return this;
@@ -77,53 +73,27 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
     public bool Remove(string objectPath)
     {
-        lock (_queueLock)
-        {
-            if (_baseDirectory != null || !_paths.ContainsKey(objectPath))
-                return false;
+        // the exporter stays in _roots but we won't process it, it's fine because nothing actually relies on _roots.Count
+        if (_baseDirectory != null || !_paths.TryRemove(objectPath, out _))
+            return false;
 
-            var count = _roots.Count;
-            var removed = false;
-            for (var i = 0; i < count && _roots.TryDequeue(out var exporter); i++)
-            {
-                if (!removed && exporter.ObjectPath.Equals(objectPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    removed = true;
-                    continue;
-                }
-
-                _roots.Enqueue(exporter);
-            }
-
-            if (!removed)
-                return false;
-
-            _paths.TryRemove(objectPath, out _);
-            Interlocked.Decrement(ref _totalQueued);
-        }
-
+        Interlocked.Decrement(ref _totalQueued);
         OnPropertyChanged(nameof(TotalQueued));
         return true;
     }
 
     public void Clear()
     {
-        lock (_queueLock)
-        {
-            _roots.Clear();
-            _paths.Clear();
-            Interlocked.Exchange(ref _totalQueued, 0);
-        }
+        _roots.Clear();
+        _paths.Clear();
+        Interlocked.Exchange(ref _totalQueued, 0);
         OnPropertyChanged(nameof(TotalQueued));
     }
 
     public async Task<IReadOnlyList<ExportResult>> RunAsync(string baseDirectory, ExportOptions options, IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
     {
-        lock (_queueLock)
-        {
-            _baseDirectory = new DirectoryInfo(baseDirectory);
-            _options = options;
-        }
+        _baseDirectory = new DirectoryInfo(baseDirectory);
+        _options = options;
 
         var completed = 0;
         var allResults = new ConcurrentBag<ExportResult>();
@@ -138,7 +108,8 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
                 while (_roots.TryDequeue(out var exporter))
                 {
                     ct.ThrowIfCancellationRequested();
-                    current.Add(exporter);
+                    if (_paths.ContainsKey(exporter.ObjectPath)) // false = exporter was added but then manually removed
+                        current.Add(exporter);
                 }
                 if (current.Count == 0) break;
 
