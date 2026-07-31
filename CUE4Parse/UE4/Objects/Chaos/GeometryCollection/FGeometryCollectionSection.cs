@@ -1,13 +1,23 @@
-﻿namespace CUE4Parse.UE4.Assets.Exports.Chaos.GeometryCollection;
+﻿using System.Runtime.InteropServices;
 
-public struct FGeometryCollectionSection: IUStruct
+namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
+
+/// <summary>
+/// A set of triangles which are rendered with the same material.
+/// </summary>
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct FGeometryCollectionSection
 {
-    /** The index of the material with which to render this section. */
-    public int MaterialID;
+    /// <summary>
+    /// The index of the material with which to render this section.
+    /// </summary>
+    public readonly int MaterialID;
 
-    /** Range of vertices and indices used when rendering this section. */
-    public int FirstIndex;
-    public int NumTriangles;
-    public int MinVertexIndex;
-    public int MaxVertexIndex;
+    /// <summary>
+    /// Range of vertices and indices used when rendering this section.
+    /// </summary>
+    public readonly int FirstIndex;
+    public readonly int NumTriangles;
+    public readonly int MinVertexIndex;
+    public readonly int MaxVertexIndex;
 }

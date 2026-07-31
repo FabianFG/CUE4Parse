@@ -31,14 +31,14 @@ public class FProgram
     public FRomDataCompile[] RomsCompileData = [];
     /** Constant image mip data is split in 2 sets: ConstantImageLODsPermanent constains data that is always loaded.
         * Index with FConstantResourceIndex::Index, when Streamable is 0. */
-    public FImage[] ConstantImageLODsPermanent;
+    public FImage?[] ConstantImageLODsPermanent;
     /** Constant image mip chain indices: ranges in this array are defined in FImageLODRange and the indices here refer to ConstantImageLODs. */
     public FConstantResourceIndex[] ConstantImageLODIndices;
     /** Constant image data. */
     public FImageLODRange[] ConstantImages;
     /** Constant mesh data is split in 2 sets: ConstantMeshesPermanent constains data that is always loaded.
         * Index with FConstantResourceIndex::Index, when Streamable is 0. */
-    public FMesh[] ConstantMeshesPermanent;
+    public FMesh?[] ConstantMeshesPermanent;
     /** Constant mesh content indices: ranges in this array are defined in FMeshContentRange and the indices here refer to ConstantMeshes. */
     public FConstantResourceIndex[] ConstantMeshContentIndices;
     /** Constant mesh data */
@@ -56,7 +56,7 @@ public class FProgram
     public float[][]? ConstantFloatLists;
     public bool[][]? ConstantBoolLists;
     /** Constant layout data */
-    public FLayout[] ConstantLayouts;
+    public FLayout?[] ConstantLayouts;
     /** Constant projectors */
     public FProjector[] ConstantProjectors;
     /** Constant matrices, usually used for transforms */
@@ -66,9 +66,9 @@ public class FProgram
     /** Constant curves */
     public FRichCurve[] ConstantCurves;
     /** Constant skeletons */
-    public FSkeleton[] ConstantSkeletons;
+    public FSkeleton?[] ConstantSkeletons;
     /** Constant Physics Bodies */
-    public FPhysicsBody[]? ConstantPhysicsBodies;
+    public FPhysicsBody?[]? ConstantPhysicsBodies;
     /** FParameters of the model. The value stored here is the default value. */
     public FParameterDesc[] Parameters;
     /** Ranges for iteration of the model operations. */
@@ -82,7 +82,7 @@ public class FProgram
     /** Given an instruction, parameters that are in the subtree. */
     public Dictionary<uint, int>? RelevantParameterList;
     /** Constant Material Data */
-    public FMaterial[]? ConstantMaterials;
+    public FMaterial?[]? ConstantMaterials;
     /** Constant FNames */
     public Dictionary<uint, FName>? ConstantNames;
     /** Constant Mesh Sockets */

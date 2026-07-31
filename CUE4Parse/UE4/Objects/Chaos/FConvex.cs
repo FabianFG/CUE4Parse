@@ -1,93 +1,47 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Chaos;
+using CUE4Parse.UE4.Objects.Chaos.Convex;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using FVec3 = CUE4Parse.UE4.Objects.Core.Math.TIntVector3<double>;
-using FRotation3 = CUE4Parse.UE4.Objects.Core.Math.TIntVector4<double>;
 
 namespace CUE4Parse.UE4.Objects.Chaos;
 
-public class TPlaneConcrete<T>
+public sealed class FConvex : FImplicitObject
 {
-    TIntVector3<T>  MX;
-    TIntVector3<T>  MNormal;
+    public TCorePlane<float>[] Planes { get; set; }
+    public FVector[] Vertices { get; set; }
+    public TAABB<float> LocalBoundingBox { get; set; }
+    public float Volume { get; set; }
+    public FVector CentreOfMass { get; set; }
+    public FConvexStructureData StructureData { get; set; }
+    public FVector UnitMassInertiaTensor { get; set; }
+    public FQuat RotationOfMass { get; set; }
 
-    public TPlaneConcrete(FArchive Ar)
-    {
-        MX = Ar.Read<TIntVector3<T>>();
-        MNormal = Ar.Read<TIntVector3<T>>();
-    }
-}
-
-
-public class TPlane<T>: FImplicitObject where T: struct
-{
-    public TPlaneConcrete<T> MPlaneConcrete;
-    public T Distance;
-
-    public TPlane(int dimension)
-    {
-        Distance = default;
-    }
-
-    public override ISerializationFactory Serialize(FChaosArchive Ar)
-    {
-        base.Serialize(Ar);
-        MPlaneConcrete = new TPlaneConcrete<T>(Ar);
-        return this;
-    }
-}
-
-// FRealType = FRealSingle = float
-public class FConvex: FImplicitObject
-{
-
-    // FRealType FRealSingle float
-    // TPlaneConcrete<FRealType, 3>
-    public TPlaneConcrete<float>[] Planes;
-    public TIntVector3<float>[] Vertices;
-    public TAABB<float> LocalBoundingBox;
-    public float Volume;
-    public TIntVector3<float> CenterOfMass;
-    public float Margin;
-    public FConvexStructureData StructureData;
-    public FVec3 UnitMassInertiaTensor;
-    FRotation3 RotationOfMass;
-
-    public FConvex()
-    {}
-
-    public override ISerializationFactory Serialize(FChaosArchive Ar)
+    public override void Serialize(FChaosArchive Ar)
     {
         base.Serialize(Ar);
 
         if (FExternalPhysicsCustomObjectVersion.Get(Ar) < FExternalPhysicsCustomObjectVersion.Type.ConvexUsesTPlaneConcrete)
         {
-            // not tested
-            var tempPlane = new TPlane<FReal>(3);
-            Ar.SerializePtr<TPlane<FReal>>(tempPlane);
-            // tempPlane.Serialize(Ar);
+            var tempPlane = Ar.ReadPtr<TPlane<float>>();
         }
         else
         {
-            Planes = Ar.ReadArray(() => new TPlaneConcrete<float>(Ar));
+            Planes = Ar.ReadArray(() => new TCorePlane<float>(Ar, 3));
         }
 
-        bool bConvexVerticesNewFormatUE4 = FPhysicsObjectVersion.Get(Ar) >= FPhysicsObjectVersion.Type.ConvexUsesVerticesArray;
-        bool bConvexVerticesNewFormatUE5 = FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.ConvexUsesVerticesArray;
-        bool bConvexVerticesNewFormatFn = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.ChaosConvexVariableStructureDataAndVerticesArray;
-        bool bConvexVerticesNewFormat = bConvexVerticesNewFormatUE4 || bConvexVerticesNewFormatUE5 || bConvexVerticesNewFormatFn;
-
+        var bConvexVerticesNewFormatUE4 = FPhysicsObjectVersion.Get(Ar) >= FPhysicsObjectVersion.Type.ConvexUsesVerticesArray;
+        var bConvexVerticesNewFormatUE5 = FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.ConvexUsesVerticesArray;
+        var bConvexVerticesNewFormatFN = FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.ChaosConvexVariableStructureDataAndVerticesArray;
+        var bConvexVerticesNewFormat = bConvexVerticesNewFormatUE4 || bConvexVerticesNewFormatUE5 || bConvexVerticesNewFormatFN;
 
         if (!bConvexVerticesNewFormat)
         {
-            // TODO
-            throw new NotImplementedException("Convex vertices old format is not implemented");
+            //var tmpSurfaceParticles = Ar.ReadPtr<FParticles>();
+            // https://github.com/EpicGames/UnrealEngine/blob/71fe36aac5a8df5ccd66c763ffc902b29b6a9c43/Engine/Source/Runtime/Experimental/Chaos/Public/Chaos/Convex.h#L953
         }
         else
         {
-            Vertices = Ar.ReadArray<TIntVector3<float>>();
+            Vertices = Ar.ReadArray<FVector>();
         }
 
         LocalBoundingBox = TBox<float>.SerializeAsAABB(Ar, 3);
@@ -95,30 +49,36 @@ public class FConvex: FImplicitObject
         if (FExternalPhysicsCustomObjectVersion.Get(Ar) >= FExternalPhysicsCustomObjectVersion.Type.AddConvexCenterOfMassAndVolume)
         {
             Volume = Ar.Read<float>();
-
-            CenterOfMass = Ar.Read<TIntVector3<float>>();
+            CentreOfMass = Ar.Read<FVector>();
+        }
+        else
+        {
+            // UE 4.24-
+            // https://github.com/EpicGames/UnrealEngine/blob/71fe36aac5a8df5ccd66c763ffc902b29b6a9c43/Engine/Source/Runtime/Experimental/Chaos/Public/Chaos/Convex.h#L985-L992
         }
 
         if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.MarginAddedToConvexAndBox)
-        {
-            Margin = Ar.Read<float>(); // FRealSingle
-        }
+            Margin = Ar.Read<float>();
 
         if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.StructureDataAddedToConvex)
         {
-
             StructureData = new FConvexStructureData(Ar);
+        }
+        else
+        {
+            // UE 4.25-
+            // https://github.com/EpicGames/UnrealEngine/blob/71fe36aac5a8df5ccd66c763ffc902b29b6a9c43/Engine/Source/Runtime/Experimental/Chaos/Public/Chaos/Convex.h#L1009
         }
 
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.AddedInertiaTensorAndRotationOfMassAddedToConvex)
         {
-
-            var temp = Ar.Read<TIntVector3<float>>(); // Ar.Read<FVec3>(); says it's double but serializer serialises as float /s
-            UnitMassInertiaTensor =  new FVec3(temp.X, temp.Y, temp.Z);
-
-            RotationOfMass = Ar.Read<FRotation3>();
+            UnitMassInertiaTensor = Ar.Read<FVector>();
+            RotationOfMass = new FQuat(Ar.Read<TIntVector4<double>>());
         }
-
-        return this;
+        else
+        {
+            // UE 5.0EA-
+            //ComputeUnitMassInertiaTensorAndRotationOfMass(Volume);
+        }
     }
 }
