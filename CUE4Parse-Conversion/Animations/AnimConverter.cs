@@ -211,8 +211,8 @@ namespace CUE4Parse_Conversion.Animations
                     }
 
                     // ACL drops the trailing sample of a looping clip, because it only duplicates the first one
-                    // see https://nfrechette.github.io/2022/04/03/anim_compression_looping/
-                    var wraps = numSamples > 0 && numSamples == animSequence.NumFrames - 1;
+                    // see https://github.com/nfrechette/acl/blob/develop/docs/handling_looping_playback.md
+                    var wraps = tracksHeader.GetIsWrapOptimized() && numSamples > 0;
                     var numKeys = wraps ? numSamples + 1 : numSamples;
 
                     // Now create CAnimTracks with the data from those big buffers
