@@ -31,7 +31,7 @@ namespace CUE4Parse_Conversion.Animations
                         break;
                     case EAnimFormat.UEFormat:
                         ext = "ueanim";
-                        new UEAnim(export.Name, animSet, sequenceIndex, Options).Save(Ar);
+                        Ar.Write(UEAnim.Export(export.Name, PackagePath, animSet, sequenceIndex, Options));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
@@ -47,24 +47,32 @@ namespace CUE4Parse_Conversion.Animations
         private AnimExporter(ExporterOptions options, USkeleton skeleton, UAnimSequence? animSequence = null)
             : this(options, animSequence != null ? animSequence : skeleton, skeleton.ConvertAnims(animSequence))
         {
-
         }
 
         private AnimExporter(ExporterOptions options, USkeleton skeleton, UAnimMontage? animMontage = null)
             : this(options, animMontage != null ? animMontage : skeleton, skeleton.ConvertAnims(animMontage))
         {
-
         }
 
         private AnimExporter(ExporterOptions options, USkeleton skeleton, UAnimComposite? animComposite = null)
             : this(options, animComposite != null ? animComposite : skeleton, skeleton.ConvertAnims(animComposite))
         {
-
         }
 
-        public AnimExporter(UAnimSequence animSequence, ExporterOptions options) : this(options, animSequence.Skeleton.Load<USkeleton>()!, animSequence) { }
-        public AnimExporter(UAnimMontage animMontage, ExporterOptions options) : this(options, animMontage.Skeleton.Load<USkeleton>()!, animMontage) { }
-        public AnimExporter(UAnimComposite animComposite, ExporterOptions options) : this(options, animComposite.Skeleton.Load<USkeleton>()!, animComposite) { }
+        public AnimExporter(UAnimSequence animSequence, ExporterOptions options) : this(options,
+            animSequence.Skeleton.Load<USkeleton>()!, animSequence)
+        {
+        }
+
+        public AnimExporter(UAnimMontage animMontage, ExporterOptions options) : this(options,
+            animMontage.Skeleton.Load<USkeleton>()!, animMontage)
+        {
+        }
+
+        public AnimExporter(UAnimComposite animComposite, ExporterOptions options) : this(options,
+            animComposite.Skeleton.Load<USkeleton>()!, animComposite)
+        {
+        }
 
 
         public override bool TryWriteToDir(DirectoryInfo baseDirectory, out string label, out string savedFilePath)

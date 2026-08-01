@@ -40,7 +40,7 @@ namespace CUE4Parse_Conversion.Meshes
                     break;
                 case EMeshFormat.UEFormat:
                     ext = "uemodel";
-                    new UEModel(originalSkeleton.Name, originalSkeleton, bones, originalSkeleton.Sockets, originalSkeleton.VirtualBones, Options).Save(Ar);
+                    Ar.Write(UEModel.Export(originalSkeleton.Name, PackagePath, originalSkeleton, bones, originalSkeleton.Sockets, originalSkeleton.VirtualBones, Options));
                     break;
                 case EMeshFormat.Gltf2:
                 case EMeshFormat.OBJ:
@@ -72,7 +72,7 @@ namespace CUE4Parse_Conversion.Meshes
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalMesh.Name, convertedMesh, originalMesh.BodySetup, Options).Save(ueModelArchive);
+                ueModelArchive.Write(UEModel.Export(originalMesh.Name, PackagePath, convertedMesh, originalMesh.BodySetup, Options));
                 MeshLods.Add(new Mesh($"{path}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
                 return;
             }
@@ -155,7 +155,15 @@ namespace CUE4Parse_Conversion.Meshes
             if (Options.MeshFormat == EMeshFormat.UEFormat)
             {
                 using var ueModelArchive = new FArchiveWriter();
-                new UEModel(originalMesh.Name, convertedMesh, Options.ExportMorphTargets ? originalMesh.MorphTargets : null, totalSockets.ToArray(), originalMesh.Skeleton, originalMesh.PhysicsAsset, Options).Save(ueModelArchive);
+                ueModelArchive.Write(UEModel.Export(
+                    originalMesh.Name,
+                    PackagePath,
+                    convertedMesh,
+                    Options.ExportMorphTargets ? originalMesh.MorphTargets : null,
+                    totalSockets.ToArray(),
+                    originalMesh.Skeleton,
+                    originalMesh.PhysicsAsset,
+                    Options));
                 MeshLods.Add(new Mesh($"{GetExportSavePath()}.uemodel", ueModelArchive.GetBuffer(), convertedMesh.LODs[0].GetMaterials(options)));
                 return;
             }

@@ -1,58 +1,65 @@
-using System;
-using System.Collections.Generic;
 using CUE4Parse_Conversion.PoseAsset.Conversion;
-using CUE4Parse_Conversion.UEFormat;
-using CUE4Parse_Conversion.UEFormat.Structs;
-using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse_Conversion.UEFormat.Natives;
 
 namespace CUE4Parse_Conversion.PoseAsset.UEFormat;
 
-public class UEPose : UEFormatExport
+public static class UEPose
 {
-    protected override string Identifier { get; set; } = "UEPOSE";
-    
-    public UEPose(string name, CPoseAsset poseAsset, ExporterOptions options) : base(name, options)
+    public static byte[] Export(string name, string objectPath, CPoseAsset poseAsset, ExporterOptions options)
     {
-        using (var posesChunk = new FDataChunk("POSES", poseAsset.Poses.Count))
+        using var pin = new NativePinScope();
+
+        var poses = new UEFormatPoseDataDesc[poseAsset.Poses.Count];
+        for (var i = 0; i < poseAsset.Poses.Count; i++)
         {
-            foreach (var pose in poseAsset.Poses)
+            var pose = poseAsset.Poses[i];
+            var keys = new UEFormatPoseKeyDesc[pose.Keys.Count];
+            for (var k = 0; k < pose.Keys.Count; k++)
             {
-                posesChunk.WriteFString(pose.PoseName);
-
-                posesChunk.WriteArray(pose.Keys, (writer, key) =>
+                var key = pose.Keys[k];
+                keys[k] = new UEFormatPoseKeyDesc
                 {
-                    writer.WriteFString(key.BoneName);
-                    key.Location.Serialize(writer);
-                    key.Rotation.Serialize(writer);
-                    key.Scale.Serialize(writer);
-                });
+                    BoneName = pin.AllocUtf8(key.BoneName),
+                    Location = UEFormatNativeSave.ToVector(key.Location),
+                    Rotation = UEFormatNativeSave.ToQuat(key.Rotation),
+                    Scale = UEFormatNativeSave.ToVector(key.Scale),
+                };
+            }
 
-                var curveToInfluence = new Dictionary<int, float>();
-                for (var curveIndex = 0; curveIndex < pose.CurveData.Length; curveIndex++)
+            var influences = new List<UEFormatPoseCurveInfluenceDesc>();
+            for (var curveIndex = 0; curveIndex < pose.CurveData.Length; curveIndex++)
+            {
+                var curveValue = pose.CurveData[curveIndex];
+                if (Math.Abs(curveValue) < 0.001f) continue;
+                influences.Add(new UEFormatPoseCurveInfluenceDesc
                 {
-                    var curveValue = pose.CurveData[curveIndex];
-                    if (Math.Abs(curveValue) < 0.001) continue;
-
-                    curveToInfluence[curveIndex] = curveValue;
-                }
-                
-                posesChunk.WriteArray(curveToInfluence, (writer, kvp) =>
-                {
-                    writer.Write(kvp.Key);
-                    writer.Write(kvp.Value);
+                    CurveIndex = curveIndex,
+                    Influence = curveValue,
                 });
             }
-            
-            posesChunk.Serialize(Ar);
+
+            var influenceArray = influences.ToArray();
+            poses[i] = new UEFormatPoseDataDesc
+            {
+                PoseName = pin.AllocUtf8(pose.PoseName),
+                Keys = pin.PinArray(keys),
+                KeyCount = keys.Length,
+                Curves = pin.PinArray(influenceArray),
+                CurveCount = influenceArray.Length,
+            };
         }
 
-        using (var curvesChunk = new FDataChunk("CURVES", poseAsset.CurveNames.Count))
+        var curveNamePtrs = new IntPtr[poseAsset.CurveNames.Count];
+        for (var i = 0; i < poseAsset.CurveNames.Count; i++)
+            curveNamePtrs[i] = pin.AllocUtf8(poseAsset.CurveNames[i]);
+
+        var desc = new UEFormatPoseDesc
         {
-            foreach (var curveName in poseAsset.CurveNames)
-            {
-                curvesChunk.WriteFString(curveName);
-            }
-            curvesChunk.Serialize(Ar);
-        }
+            Poses = pin.PinArray(poses),
+            PoseCount = poses.Length,
+            CurveNames = pin.PinArray(curveNamePtrs),
+            CurveNameCount = curveNamePtrs.Length,
+        };
+        return UEFormatNativeSave.SavePose(ref desc, name, objectPath, options, pin);
     }
 }

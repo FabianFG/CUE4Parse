@@ -32,16 +32,18 @@ public class LandscapeExporter : ExporterBase
 
     internal Mesh[]? _processedFiles;
 
-    public LandscapeExporter(ALandscapeProxy landscape, ULandscapeComponent[] components, ExporterOptions options, ELandscapeExportFlags flags = ELandscapeExportFlags.All) : base(landscape, options)
+    public LandscapeExporter(ALandscapeProxy landscape, ULandscapeComponent[] components, ExporterOptions options,
+        ELandscapeExportFlags flags = ELandscapeExportFlags.All) : base(landscape, options)
     {
         _flags = flags;
         LandscapeGuid = landscape.LandscapeGuid;
 
-        if(landscape.TryConvert(components, flags, out var lod, out var heightMaps,  out var weightMaps))
+        if (landscape.TryConvert(components, flags, out var lod, out var heightMaps, out var weightMaps))
             SetMeshData(lod, heightMaps, weightMaps);
     }
 
-    private void SetMeshData(CStaticMesh mesh, Dictionary<string, Image> heightMaps, Dictionary<string, SKBitmap> weightMaps)
+    private void SetMeshData(CStaticMesh mesh, Dictionary<string, Image> heightMaps,
+        Dictionary<string, SKBitmap> weightMaps)
     {
         var final = new List<Mesh>();
         var path = GetExportSavePath();
@@ -66,11 +68,10 @@ public class LandscapeExporter : ExporterBase
                     ext = "obj";
                     new Gltf(ExportName, mesh.LODs.First(), materialExports, Options).Save(Options.MeshFormat, Ar);
                     break;
-                case EMeshFormat.UEFormat: {
+                case EMeshFormat.UEFormat:
                     ext = "uemodel";
-                    new UEModel(ExportName, mesh, new FPackageIndex(), Options).Save(Ar);
+                    Ar.Write(UEModel.Export(ExportName, PackagePath, mesh, new FPackageIndex(), Options));
                     break;
-                }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(Options.MeshFormat), Options.MeshFormat, null);
             }
@@ -115,7 +116,8 @@ public class LandscapeExporter : ExporterBase
         label = string.Empty;
         savedFilePath = string.Empty;
         foreach (var pf in _processedFiles.Reverse())
-        { // hack to get the label from first one
+        {
+            // hack to get the label from first one
             b |= pf.TryWriteToDir(baseDirectory, out label, out savedFilePath);
         }
 

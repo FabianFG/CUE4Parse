@@ -1,321 +1,415 @@
 ﻿using CUE4Parse_Conversion.Meshes.PSK;
-using CUE4Parse_Conversion.Meshes.UEFormat.Collision;
-using CUE4Parse_Conversion.UEFormat;
-using CUE4Parse_Conversion.UEFormat.Structs;
+using CUE4Parse_Conversion.UEFormat.Natives;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Meshes.UEFormat;
 
-public class UEModel : UEFormatExport
+public static class UEModel
 {
-    protected override string Identifier { get; set; } = "UEMODEL";
-
-    public UEModel(string name, CStaticMesh mesh, FPackageIndex bodySetupLazy, ExporterOptions options) : base(name, options)
+    public static byte[] Export(string name, string objectPath, CStaticMesh mesh, FPackageIndex bodySetupLazy, ExporterOptions options)
     {
-        using (var lodChunk = new FDataChunk("LODS"))
+        using var pin = new NativePinScope();
+        var lods = BuildLods(mesh.LODs, options, pin, skeletal: false, morphTargets: null);
+        var collisions = BuildCollisions(bodySetupLazy, pin);
+
+        var desc = new UEFormatModelDesc
         {
-            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
-            {
-                var lod = mesh.LODs[lodIdx];
-                if (lod.SkipLod) continue;
-
-                using var subLodChunk = new FStaticDataChunk($"LOD{lodIdx}");
-                SerializeStaticMeshData(subLodChunk, lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value);
-                subLodChunk.Serialize(lodChunk);
-
-                lodChunk.Count++;
-
-                if (options.LodFormat == ELodFormat.FirstLod) break;
-            }
-
-            lodChunk.Serialize(Ar);
-        }
-
-        if (bodySetupLazy.TryLoad<UBodySetup>(out var bodySetup) && bodySetup.AggGeom?.ConvexElems is { } convexElems)
-        {
-            using var collisionChunk = new FDataChunk("COLLISION", convexElems.Length);
-            foreach (var convexElem in convexElems)
-            {
-                var collision = new FConvexMeshCollision(convexElem);
-                collision.Serialize(collisionChunk);
-            }
-            collisionChunk.Serialize(Ar);
-        }
-
+            Lods = pin.PinArray(lods),
+            LodCount = lods.Length,
+            Skeleton = IntPtr.Zero,
+            Collisions = pin.PinArray(collisions),
+            CollisionCount = collisions.Length,
+        };
+        return UEFormatNativeSave.SaveModel(ref desc, name, objectPath, options, pin);
     }
 
-    public UEModel(string name, CSkeletalMesh mesh, FPackageIndex[]? morphTargets, FPackageIndex[] sockets, FPackageIndex skeletonLazy, FPackageIndex physicsAssetLazy, ExporterOptions options) : base(name, options)
+    public static byte[] Export(
+        string name,
+        string objectPath,
+        CSkeletalMesh mesh,
+        FPackageIndex[]? morphTargets,
+        FPackageIndex[] sockets,
+        FPackageIndex skeletonLazy,
+        FPackageIndex physicsAssetLazy,
+        ExporterOptions options)
     {
-        using (var lodChunk = new FDataChunk("LODS"))
+        using var pin = new NativePinScope();
+        var lods = BuildLods(mesh.LODs, options, pin, skeletal: true, morphTargets);
+        var skeleton = BuildSkeleton(skeletonLazy.Load<USkeleton>(), mesh.RefSkeleton, sockets, [], pin);
+        var skeletonPtr = pin.PinStruct(ref skeleton);
+
+        var desc = new UEFormatModelDesc
         {
-            for (var lodIdx = 0; lodIdx < mesh.LODs.Count; lodIdx++)
+            Lods = pin.PinArray(lods),
+            LodCount = lods.Length,
+            Skeleton = skeletonPtr,
+            Collisions = IntPtr.Zero,
+            CollisionCount = 0,
+        };
+        return UEFormatNativeSave.SaveModel(ref desc, name, objectPath, options, pin);
+    }
+
+    public static byte[] Export(
+        string name,
+        string objectPath,
+        USkeleton skeleton,
+        List<CSkelMeshBone> bones,
+        FPackageIndex[] sockets,
+        FVirtualBone[] virtualBones,
+        ExporterOptions options)
+    {
+        using var pin = new NativePinScope();
+        var skeletonDesc = BuildSkeleton(skeleton, bones, sockets, virtualBones, pin);
+        var skeletonPtr = pin.PinStruct(ref skeletonDesc);
+
+        var desc = new UEFormatModelDesc
+        {
+            Lods = IntPtr.Zero,
+            LodCount = 0,
+            Skeleton = skeletonPtr,
+            Collisions = IntPtr.Zero,
+            CollisionCount = 0,
+        };
+        return UEFormatNativeSave.SaveModel(ref desc, name, objectPath, options, pin);
+    }
+
+    private static UEFormatModelLodDesc[] BuildLods<TLod>(
+        IReadOnlyList<TLod> sourceLods,
+        ExporterOptions options,
+        NativePinScope pin,
+        bool skeletal,
+        FPackageIndex[]? morphTargets)
+        where TLod : CBaseMeshLod
+    {
+        var lods = new List<UEFormatModelLodDesc>();
+        for (var lodIdx = 0; lodIdx < sourceLods.Count; lodIdx++)
+        {
+            var lod = sourceLods[lodIdx];
+            if (lod.SkipLod) continue;
+
+            IReadOnlyList<CMeshVertex> verts;
+            int morphLodIndex = 0;
+            CSkelMeshVertex[]? skelVerts = null;
+
+            if (lod is CSkelMeshLod skelLod)
             {
-                var lod = mesh.LODs[lodIdx];
-                if (lod.SkipLod) continue;
-
-                using var subLodChunk = new FStaticDataChunk($"LOD{lodIdx}");
-                SerializeStaticMeshData(subLodChunk, lod.Verts, lod.Indices.Value, lod.VertexColors, lod.ExtraVertexColors, lod.Sections.Value, lod.ExtraUV.Value);
-                SerializeSkeletalMeshData(subLodChunk, lod.Verts, morphTargets, lod.LODIndex);
-                subLodChunk.Serialize(lodChunk);
-
-                lodChunk.Count++;
-
-                if (options.LodFormat == ELodFormat.FirstLod) break;
+                verts = skelLod.Verts ?? [];
+                skelVerts = skelLod.Verts;
+                morphLodIndex = skelLod.LODIndex;
+            }
+            else if (lod is CStaticMeshLod staticLod)
+            {
+                verts = staticLod.Verts ?? [];
+            }
+            else
+            {
+                continue;
             }
 
-            lodChunk.Serialize(Ar);
+            lods.Add(BuildLodGeometry(
+                $"LOD{lodIdx}",
+                verts,
+                lod.Indices!.Value,
+                lod.VertexColors,
+                lod.ExtraVertexColors,
+                lod.Sections!.Value,
+                lod.ExtraUV!.Value,
+                skeletal ? skelVerts : null,
+                skeletal ? morphTargets : null,
+                morphLodIndex,
+                pin));
+
+            if (options.LodFormat == ELodFormat.FirstLod) break;
         }
 
-        using (var skeletonChunk = new FDataChunk("SKELETON", 1))
-        {
-            SerializeSkeletonData(skeletonChunk, skeletonLazy.Load<USkeleton>(), mesh.RefSkeleton, sockets, []);
-
-            skeletonChunk.Serialize(Ar);
-        }
-
-        /*if (physicsAssetLazy.TryLoad(out UPhysicsAsset physicsAsset))
-        {
-            using var physicsChunk = new FDataChunk("PHYSICS", 1);
-
-            SerializePhysicsData(physicsChunk, physicsAsset);
-
-            physicsChunk.Serialize(Ar);
-        }*/
+        return lods.ToArray();
     }
 
-    public UEModel(string name, USkeleton skeleton, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones, ExporterOptions options) : base(name, options)
+    private static UEFormatModelLodDesc BuildLodGeometry(
+        string name,
+        IReadOnlyList<CMeshVertex> verts,
+        uint[] indices,
+        FColor[]? vertexColors,
+        CVertexColor[]? extraVertexColors,
+        CMeshSection[] sections,
+        FMeshUVFloat[][] extraUVs,
+        CSkelMeshVertex[]? skelVerts,
+        FPackageIndex[]? morphTargets,
+        int morphLodIndex,
+        NativePinScope pin)
     {
-        using (var skeletonChunk = new FDataChunk("SKELETON", 1))
+        var vertices = new UEFormatVector[verts.Count];
+        var normals = new UEFormatNormal[verts.Count];
+        var tangents = new UEFormatVector[verts.Count];
+        var mainUvs = new UEFormatMeshUV[verts.Count];
+
+        for (var i = 0; i < verts.Count; i++)
         {
-            SerializeSkeletonData(skeletonChunk, skeleton, bones, sockets, virtualBones);
+            var vert = verts[i];
+            vertices[i] = UEFormatNativeSave.ToVector(vert.Position);
 
-            skeletonChunk.Serialize(Ar);
-        }
-    }
-
-    private void SerializeStaticMeshData(FArchiveWriter archive, IReadOnlyCollection<CMeshVertex> verts, uint[] indices, FColor[]? vertexColors, CVertexColor[]? extraVertexColors, CMeshSection[] sections, FMeshUVFloat[][] extraUVs)
-    {
-        using var vertexChunk = new FDataChunk("VERTICES", verts.Count);
-        using var normalsChunk = new FDataChunk("NORMALS", verts.Count);
-        using var tangentsChunk = new FDataChunk("TANGENTS", verts.Count);
-
-        var mainUVs = new List<FMeshUVFloat>();
-        foreach (var vert in verts)
-        {
-            var position = vert.Position;
-            position.Serialize(vertexChunk);
-
-            var normalSign = vert.Normal.W;
-            normalsChunk.Write(normalSign); // EUEFormatVersion.SerializeBinormalSign
-
-            var normal = (FVector) vert.Normal;
+            var normal = (FVector)vert.Normal;
             normal /= MathF.Sqrt(normal | normal);
-            normal.Serialize(normalsChunk);
+            normals[i] = new UEFormatNormal
+            {
+                BinormalSign = vert.Normal.W,
+                Normal = UEFormatNativeSave.ToVector(normal),
+            };
 
-            var tangent = (FVector) vert.Tangent;
+            var tangent = (FVector)vert.Tangent;
             tangent.Normalize();
-            tangent.Serialize(tangentsChunk);
-
-            var uv = vert.UV;
-            mainUVs.Add(uv);
+            tangents[i] = UEFormatNativeSave.ToVector(tangent);
+            mainUvs[i] = UEFormatNativeSave.ToUv(vert.UV);
         }
 
-        vertexChunk.Serialize(archive);
-        normalsChunk.Serialize(archive);
-        tangentsChunk.Serialize(archive);
-
-        using (var texCoordsChunk = new FDataChunk("TEXCOORDS"))
+        var texCoords = new List<UEFormatTexCoordEntryDesc>
         {
-            void SerializeUVSet(IEnumerable<FMeshUVFloat> uvSet)
+            new()
             {
-                texCoordsChunk.WriteArray(uvSet, uv =>
+                Name = pin.AllocUtf8("UV0"),
+                Uvs = pin.PinArray(mainUvs),
+                UvCount = mainUvs.Length,
+            }
+        };
+
+        for (var uvIdx = 0; uvIdx < extraUVs.Length; uvIdx++)
+        {
+            var uvSet = extraUVs[uvIdx];
+            var mapped = new UEFormatMeshUV[uvSet.Length];
+            for (var i = 0; i < uvSet.Length; i++)
+                mapped[i] = UEFormatNativeSave.ToUv(uvSet[i]);
+
+            texCoords.Add(new UEFormatTexCoordEntryDesc
+            {
+                Name = pin.AllocUtf8($"UV{uvIdx + 1}"),
+                Uvs = pin.PinArray(mapped),
+                UvCount = mapped.Length,
+            });
+        }
+
+        var texCoordArray = texCoords.ToArray();
+
+        var colorDescs = new List<UEFormatVertexColorDesc>();
+        if (vertexColors is { Length: > 0 })
+        {
+            var colors = new UEFormatColor[vertexColors.Length];
+            for (var i = 0; i < vertexColors.Length; i++)
+                colors[i] = UEFormatNativeSave.ToColor(vertexColors[i]);
+
+            colorDescs.Add(new UEFormatVertexColorDesc
+            {
+                Name = pin.AllocUtf8("COL0"),
+                Data = pin.PinArray(colors),
+                Count = colors.Length,
+            });
+        }
+
+        if (extraVertexColors is { Length: > 0 })
+        {
+            foreach (var extra in extraVertexColors)
+            {
+                if (extra.ColorData is null) continue;
+                var colors = new UEFormatColor[extra.ColorData.Length];
+                for (var i = 0; i < extra.ColorData.Length; i++)
+                    colors[i] = UEFormatNativeSave.ToColor(extra.ColorData[i]);
+
+                colorDescs.Add(new UEFormatVertexColorDesc
                 {
-                    uv.Serialize(texCoordsChunk);
+                    Name = pin.AllocUtf8(extra.Name),
+                    Data = pin.PinArray(colors),
+                    Count = colors.Length,
                 });
-
-                texCoordsChunk.Count++;
             }
-
-            SerializeUVSet(mainUVs);
-            foreach (var extraUVSet in extraUVs)
-            {
-                SerializeUVSet(extraUVSet);
-            }
-
-            texCoordsChunk.Serialize(archive);
         }
 
-        using (var indexChunk = new FDataChunk("INDICES", indices.Length))
-        {
-            for (var i = 0; i < indices.Length; i++)
-            {
-                indexChunk.Write(indices[i]);
-            }
+        var colorArray = colorDescs.ToArray();
 
-            indexChunk.Serialize(archive);
+        var materials = new UEFormatMaterialDesc[sections.Length];
+        for (var i = 0; i < sections.Length; i++)
+        {
+            var section = sections[i];
+            materials[i] = new UEFormatMaterialDesc
+            {
+                MaterialName = pin.AllocUtf8(section.Material?.Name.Text ?? section.MaterialName ?? string.Empty),
+                MaterialPath = pin.AllocUtf8(section.Material?.GetPathName() ?? string.Empty),
+                FirstIndex = section.FirstIndex,
+                NumFaces = section.NumFaces,
+            };
         }
 
-        if (vertexColors?.Length > 0 || extraVertexColors?.Length > 0)
+        UEFormatWeightDesc[]? weights = null;
+        if (skelVerts is not null)
         {
-            using var vertexColorChunk = new FDataChunk("VERTEXCOLORS");
-            if (vertexColors is not null)
+            var weightList = new List<UEFormatWeightDesc>();
+            for (var vertexIndex = 0; vertexIndex < skelVerts.Length; vertexIndex++)
             {
-                vertexColorChunk.WriteFString("COL0"); // todo fallback to default name w/ index for other extras, maybe just combine extra vtx col and main?
-                vertexColorChunk.WriteArray(vertexColors, (writer, color) => color.Serialize(writer));
-                vertexColorChunk.Count++;
-            }
-
-            if (extraVertexColors is not null)
-            {
-                foreach (var extraVertexColor in extraVertexColors)
+                foreach (var influence in skelVerts[vertexIndex].Influences)
                 {
-                    vertexColorChunk.WriteFString(extraVertexColor.Name);
-                    vertexColorChunk.WriteArray(extraVertexColor.ColorData, (writer, color) => color.Serialize(writer));
-                    vertexColorChunk.Count++;
+                    weightList.Add(new UEFormatWeightDesc
+                    {
+                        Bone = influence.Bone,
+                        VertexIndex = vertexIndex,
+                        Weight = influence.Weight,
+                    });
                 }
             }
 
-            vertexColorChunk.Serialize(archive);
+            weights = weightList.ToArray();
         }
 
-        using (var materialChunk = new FDataChunk("MATERIALS", sections.Length))
+        UEFormatMorphTargetDesc[]? morphDescs = null;
+        if (morphTargets is { Length: > 0 })
         {
-            foreach (var section in sections)
-            {
-                var materialName = section.Material?.Name.Text ?? section.MaterialName ?? string.Empty;
-                materialChunk.WriteFString(materialName);
-
-                var materialPath = section.Material?.GetPathName() ?? string.Empty;
-                materialChunk.WriteFString(materialPath);
-
-                materialChunk.Write(section.FirstIndex);
-                materialChunk.Write(section.NumFaces);
-            }
-
-            materialChunk.Serialize(archive);
-        }
-    }
-
-    private void SerializeSkeletalMeshData(FArchiveWriter archive, CSkelMeshVertex[] verts, FPackageIndex[]? morphTargets, int lodIndex)
-    {
-        using (var weightsChunk = new FDataChunk("WEIGHTS"))
-        {
-            for (var vertexIndex = 0; vertexIndex < verts.Length; vertexIndex++)
-            {
-                var vert = verts[vertexIndex];
-
-                foreach (var influence in vert.Influences)
-                {
-                    weightsChunk.Write(influence.Bone);
-                    weightsChunk.Write(vertexIndex);
-                    weightsChunk.Write(influence.Weight);
-                    weightsChunk.Count++;
-                }
-            }
-
-            weightsChunk.Serialize(archive);
-        }
-
-        if (morphTargets is {Length: > 0})
-        {
-            using var morphTargetsChunk = new FDataChunk("MORPHTARGETS");
+            var morphList = new List<UEFormatMorphTargetDesc>();
             foreach (var morphTarget in morphTargets)
             {
                 var morph = morphTarget.Load<UMorphTarget>();
-                if (morph?.MorphLODModels is null || lodIndex >= morph.MorphLODModels.Length || morph.MorphLODModels[lodIndex].Vertices.Length == 0) continue;
+                if (morph?.MorphLODModels is null ||
+                    morphLodIndex >= morph.MorphLODModels.Length ||
+                    morph.MorphLODModels[morphLodIndex].Vertices.Length == 0)
+                {
+                    continue;
+                }
 
-                var morphLod = morph.MorphLODModels[lodIndex];
+                var morphLod = morph.MorphLODModels[morphLodIndex];
+                var morphData = new UEFormatMorphDataDesc[morphLod.Vertices.Length];
+                for (var i = 0; i < morphLod.Vertices.Length; i++)
+                {
+                    var delta = morphLod.Vertices[i];
+                    morphData[i] = new UEFormatMorphDataDesc
+                    {
+                        PositionDelta = UEFormatNativeSave.ToVector(delta.PositionDelta),
+                        TangentZDelta = UEFormatNativeSave.ToVector(delta.TangentZDelta),
+                        VertexIndex = delta.SourceIdx,
+                    };
+                }
 
-                var morphData = new FMorphTarget(morph.Name, morphLod);
-                morphData.Serialize(morphTargetsChunk);
-                morphTargetsChunk.Count++;
+                morphList.Add(new UEFormatMorphTargetDesc
+                {
+                    MorphName = pin.AllocUtf8(morph.Name),
+                    MorphData = pin.PinArray(morphData),
+                    MorphDataCount = morphData.Length,
+                });
             }
-            morphTargetsChunk.Serialize(archive);
+
+            morphDescs = morphList.ToArray();
         }
+
+        return new UEFormatModelLodDesc
+        {
+            Name = pin.AllocUtf8(name),
+            Vertices = pin.PinArray(vertices),
+            VertexCount = vertices.Length,
+            Normals = pin.PinArray(normals),
+            NormalCount = normals.Length,
+            Tangents = pin.PinArray(tangents),
+            TangentCount = tangents.Length,
+            TextureCoordinates = pin.PinArray(texCoordArray),
+            TextureCoordinateCount = texCoordArray.Length,
+            Indices = pin.PinArray(indices),
+            IndexCount = indices.Length,
+            VertexColors = pin.PinArray(colorArray),
+            VertexColorCount = colorArray.Length,
+            Materials = pin.PinArray(materials),
+            MaterialCount = materials.Length,
+            Weights = pin.PinArray(weights),
+            WeightCount = weights?.Length ?? 0,
+            MorphTargets = pin.PinArray(morphDescs),
+            MorphTargetCount = morphDescs?.Length ?? 0,
+        };
     }
 
-    private void SerializeSkeletonData(FArchiveWriter archive, USkeleton? skeleton, List<CSkelMeshBone> bones, FPackageIndex[] sockets, FVirtualBone[] virtualBones)
+    private static UEFormatModelSkeletonDesc BuildSkeleton(
+        USkeleton? skeleton,
+        List<CSkelMeshBone> bones,
+        FPackageIndex[] sockets,
+        FVirtualBone[] virtualBones,
+        NativePinScope pin)
     {
-        using (var metaDataChunk = new FDataChunk("METADATA", 1))
+        var boneDescs = new UEFormatBoneDesc[bones.Count];
+        for (var i = 0; i < bones.Count; i++)
         {
-            metaDataChunk.WriteFString(skeleton?.GetPathName() ?? string.Empty);
-            metaDataChunk.Serialize(archive);
-        }
-
-        using (var boneChunk = new FDataChunk("BONES", bones.Count))
-        {
-            foreach (var bone in bones)
+            var bone = bones[i];
+            boneDescs[i] = new UEFormatBoneDesc
             {
-                var boneName = new FString(bone.Name.Text);
-                boneName.Serialize(boneChunk);
-
-                boneChunk.Write(bone.ParentIndex);
-
-                var bonePos = bone.Position;
-                bonePos.Serialize(boneChunk);
-
-                var boneRot = bone.Orientation;
-                boneRot.Serialize(boneChunk);
-            }
-            boneChunk.Serialize(archive);
+                BoneName = pin.AllocUtf8(bone.Name.Text),
+                ParentIndex = bone.ParentIndex,
+                Position = UEFormatNativeSave.ToVector(bone.Position),
+                Orientation = UEFormatNativeSave.ToQuat(bone.Orientation),
+            };
         }
 
-        using (var socketChunk = new FDataChunk("SOCKETS", sockets.Length))
+        var socketList = new List<UEFormatSocketDesc>();
+        foreach (var socketObject in sockets)
         {
-            foreach (var socketObject in sockets)
+            var socket = socketObject.Load<USkeletalMeshSocket>();
+            if (socket is null) continue;
+
+            socketList.Add(new UEFormatSocketDesc
             {
-                var socket = socketObject.Load<USkeletalMeshSocket>();
-                if (socket is null) continue;
-
-                socketChunk.WriteFString(socket.SocketName.Text);
-                socketChunk.WriteFString(socket.BoneName.Text);
-
-                var bonePos = socket.RelativeLocation;
-                bonePos.Serialize(socketChunk);
-
-                var boneRot = socket.RelativeRotation.Quaternion();
-                boneRot.Serialize(socketChunk);
-
-                var boneScale = socket.RelativeScale;
-                boneScale.Serialize(socketChunk);
-            }
-
-            socketChunk.Serialize(archive);
+                SocketName = pin.AllocUtf8(socket.SocketName.Text),
+                BoneName = pin.AllocUtf8(socket.BoneName.Text),
+                RelativeLocation = UEFormatNativeSave.ToVector(socket.RelativeLocation),
+                RelativeRotation = UEFormatNativeSave.ToQuat(socket.RelativeRotation.Quaternion()),
+                RelativeScale = UEFormatNativeSave.ToVector(socket.RelativeScale),
+            });
         }
 
-        using (var virtualBoneChunk = new FDataChunk("VIRTUALBONES", virtualBones.Length))
+        var socketArray = socketList.ToArray();
+
+        var virtualBoneDescs = new UEFormatVirtualBoneDesc[virtualBones.Length];
+        for (var i = 0; i < virtualBones.Length; i++)
         {
-            foreach (var virtualBone in virtualBones)
+            var vb = virtualBones[i];
+            virtualBoneDescs[i] = new UEFormatVirtualBoneDesc
             {
-                virtualBoneChunk.WriteFString(virtualBone.SourceBoneName.Text);
-                virtualBoneChunk.WriteFString(virtualBone.TargetBoneName.Text);
-                virtualBoneChunk.WriteFString(virtualBone.VirtualBoneName.Text);
-            }
-
-            virtualBoneChunk.Serialize(archive);
+                SourceBoneName = pin.AllocUtf8(vb.SourceBoneName.Text),
+                TargetBoneName = pin.AllocUtf8(vb.TargetBoneName.Text),
+                VirtualBoneName = pin.AllocUtf8(vb.VirtualBoneName.Text),
+            };
         }
+
+        return new UEFormatModelSkeletonDesc
+        {
+            MetadataPath = pin.AllocUtf8(skeleton?.GetPathName() ?? string.Empty),
+            Bones = pin.PinArray(boneDescs),
+            BoneCount = boneDescs.Length,
+            Sockets = pin.PinArray(socketArray),
+            SocketCount = socketArray.Length,
+            VirtualBones = pin.PinArray(virtualBoneDescs),
+            VirtualBoneCount = virtualBoneDescs.Length,
+        };
     }
 
-    private void SerializePhysicsData(FArchiveWriter archive, UPhysicsAsset physicsAsset)
+    private static UEFormatConvexCollisionDesc[] BuildCollisions(FPackageIndex bodySetupLazy, NativePinScope pin)
     {
-        using (var bodyChunk = new FDataChunk("BODIES", physicsAsset.SkeletalBodySetups.Length))
+        if (!bodySetupLazy.TryLoad<UBodySetup>(out var bodySetup) ||
+            bodySetup.AggGeom?.ConvexElems is not { } convexElems)
+            return [];
+
+        var collisions = new UEFormatConvexCollisionDesc[convexElems.Length];
+        for (var i = 0; i < convexElems.Length; i++)
         {
-            foreach (var bodySetupLazy in physicsAsset.SkeletalBodySetups)
+            var convex = convexElems[i];
+            var vertices = new UEFormatVector[convex.VertexData.Length];
+            for (var v = 0; v < convex.VertexData.Length; v++)
+                vertices[v] = UEFormatNativeSave.ToVector(convex.VertexData[v]);
+
+            collisions[i] = new UEFormatConvexCollisionDesc
             {
-                if (!bodySetupLazy.TryLoad<USkeletalBodySetup>(out var bodySetup)) continue;
-
-                var exportBodySetup = new FBodySetup(bodySetup);
-                exportBodySetup.Serialize(bodyChunk);
-            }
-
-            bodyChunk.Serialize(archive);
+                Name = pin.AllocUtf8(convex.Name.Text),
+                VertexData = pin.PinArray(vertices),
+                VertexCount = vertices.Length,
+                IndexData = pin.PinArray(convex.IndexData),
+                IndexCount = convex.IndexData.Length,
+            };
         }
-    }
 
+        return collisions;
+    }
 }
