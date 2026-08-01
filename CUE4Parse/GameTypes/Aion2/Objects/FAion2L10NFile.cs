@@ -52,9 +52,9 @@ public class FAion2L10NConverter : JsonConverter<FAion2L10NFile>
         writer.WriteStartObject();
 
         writer.WritePropertyName(nameof(value.Namespace));
-        writer.WriteValue(value.Namespace);
+        writer.WriteValue(value?.Namespace);
         writer.WritePropertyName(nameof(value.Entries));
-        serializer.Serialize(writer, value.Entries);
+        serializer.Serialize(writer, value?.Entries);
 
         writer.WriteEndObject();
     }

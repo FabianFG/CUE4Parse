@@ -59,21 +59,24 @@ public static class FAion2PropertyReader
 
         UScriptArray ReadArray(FAion2DatFileArchive Ar, TypeMappings mappings, FPropertyTagData? tagData, bool readtag = true)
         {
-            var pos = Ar.Position;
             var length = Ar.Read<int>();
             var properties = new List<FPropertyTagType>(length);
-            if (readtag && tagData?.InnerType is "StructProperty") SkipStructTag(Ar);
+            if (readtag && tagData?.InnerType is "StructProperty")
+                SkipStructTag(Ar);
+
+            var innerType = tagData?.InnerType;
+            var innerTypeData = tagData?.InnerTypeData;
+
             for (int i = 0; i < length; i++)
             {
-                properties.Add(ReadPropertyTagType(Ar, mappings, tagData?.InnerType, tagData?.InnerTypeData, readtag, ReadType.ARRAY));
+                properties.Add(ReadPropertyTagType(Ar, mappings, innerType, innerTypeData, readtag, ReadType.ARRAY)!);
             }
 
-            return new UScriptArray(properties, tagData?.InnerType, tagData?.InnerTypeData);
+            return new UScriptArray(properties, innerType!, innerTypeData);
         }
 
         UScriptMap ReadMap(FAion2DatFileArchive Ar, TypeMappings mappings, FPropertyTagData? tagData)
         {
-            var pos = Ar.Position;
             var length = Ar.Read<int>();
             for (int i = 0; i < length; i++)
             {
@@ -92,10 +95,10 @@ public static class FAion2PropertyReader
 
         FScriptStruct ReadStruct(FAion2DatFileArchive Ar, TypeMappings mappings, string? structName)
         {
+            if (structName == null)
+                throw new ParserException("Struct name is missing");
             if (!mappings.Types.TryGetValue(structName, out var propMappings))
-            {
                 throw new ParserException(Ar, $"No property mappings found for struct {structName}");
-            }
 
             var propCount = propMappings.CountProperties(true);
             var properties = new List<FPropertyTag>(propCount);

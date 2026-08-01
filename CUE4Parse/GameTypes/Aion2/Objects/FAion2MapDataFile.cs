@@ -25,21 +25,15 @@ public class FAion2MapDataFile : FAion2DataFile
             ?? throw new ParserException("Mapping is missing, cannot deserialize");
 
         var tagData = new FPropertyTagData(file.NameWithoutExtension is "MapData" ? "MapData" : "AionWorldMapExportInfo");
-        try
-        {
-            var tag = new FPropertyTag
-            {
-                Name = "Data",
-                PropertyType = "StructProperty",
-                Tag = FAion2PropertyReader.ReadPropertyTagType(Ar, mappings, "StructProperty", tagData, true),
-                TagData = tagData,
-            };
 
-            Properties.Add(tag);
-        }
-        catch (Exception e)
+        var tag = new FPropertyTag
         {
-            Log.Error(e, "Failed to parse FAion2MapDataFile {0}", file.Path);
-        }
+            Name = "Data",
+            PropertyType = "StructProperty",
+            Tag = FAion2PropertyReader.ReadPropertyTagType(Ar, mappings, "StructProperty", tagData, true),
+            TagData = tagData,
+        };
+
+        Properties.Add(tag);
     }
 }
