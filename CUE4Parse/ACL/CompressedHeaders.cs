@@ -24,5 +24,8 @@ namespace CUE4Parse.ACL
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetDefaultScale() => (int) (MiscPacked >> 1) & 1;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool GetIsWrapOptimized() => (MiscPacked & (1u << 30)) != 0;
     }
 }

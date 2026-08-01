@@ -213,6 +213,11 @@ namespace CUE4Parse_Conversion.Animations
                         scaleKeys[i] = atomKeys[i].Scale3D;
                     }
 
+                    // ACL drops the trailing sample of a looping clip, because it only duplicates the first one
+                    // see https://github.com/nfrechette/acl/blob/develop/docs/handling_looping_playback.md
+                    var wraps = tracksHeader.GetIsWrapOptimized() && numSamples > 0;
+                    var numKeys = wraps ? numSamples + 1 : numSamples;
+
                     // Now create CAnimTracks with the data from those big buffers
                     for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
                     {
@@ -222,12 +227,19 @@ namespace CUE4Parse_Conversion.Animations
                         if (trackIndex >= 0)
                         {
                             var offset = trackIndex * numSamples;
-                            track.KeyPos = new FVector[numSamples];
-                            track.KeyQuat = new FQuat[numSamples];
-                            track.KeyScale = new FVector[numSamples];
+                            track.KeyPos = new FVector[numKeys];
+                            track.KeyQuat = new FQuat[numKeys];
+                            track.KeyScale = new FVector[numKeys];
                             Array.Copy(posKeys, offset, track.KeyPos, 0, numSamples);
                             Array.Copy(rotKeys, offset, track.KeyQuat, 0, numSamples);
                             Array.Copy(scaleKeys, offset, track.KeyScale, 0, numSamples);
+
+                            if (wraps)
+                            {
+                                track.KeyPos[numSamples] = track.KeyPos[0];
+                                track.KeyQuat[numSamples] = track.KeyQuat[0];
+                                track.KeyScale[numSamples] = track.KeyScale[0];
+                            }
                         }
                     }
 

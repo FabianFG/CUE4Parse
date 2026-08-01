@@ -1,7 +1,7 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.StructUtils;
@@ -15,9 +15,27 @@ public class FInstancedOverridablePropertyBag : FInstancedPropertyBag
     {
         if (FOverridablePropertyBagCustomVersion.Get(Ar) < FOverridablePropertyBagCustomVersion.Type.FixSerializer)
         {
-            // need to force TaggedSerialization
-            if (Ar.HasUnversionedProperties) throw new ParserException(Ar, "FInstancedOverridablePropertyBag with unversioned properties is not supported in this version");
-            Defaults = new FStructFallback(Ar, "InstancedOverridablePropertyBag");
+            if (Ar is { HasUnversionedProperties: true, Owner: not null })
+            {
+                try
+                {
+                    Ar.Owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
+                    Defaults = new FStructFallback(Ar, "InstancedOverridablePropertyBag");
+                }
+                catch (Exception e)
+                {
+                    Log.Warning(e, "Failed to serialize FInstancedOverridablePropertyBag before FixSerializer version");
+                    throw;
+                }
+                finally
+                {
+                    Ar.Owner.Summary.PackageFlags |= EPackageFlags.PKG_UnversionedProperties;
+                }
+            }
+            else
+            {
+                Defaults = new FStructFallback(Ar, "InstancedOverridablePropertyBag");
+            }
             return;
         }
 

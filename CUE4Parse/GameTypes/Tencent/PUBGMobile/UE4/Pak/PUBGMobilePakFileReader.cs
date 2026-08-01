@@ -117,10 +117,12 @@ public partial class PakFileReader
         var endBlockOffset = Math.Min(pakEntry.UncompressedSize, (long) (lastBlockIndex + 1) * compressionBlockSize);
         var uncompressed = new byte[checked((int) (endBlockOffset - firstBlockOffset))];
 
+        var isDynamicallyEncrypted = pakEntry.EncryptionMethod == EPUBGMobileEncryptionMethod.SM4 && (pakEntry.EncryptionKeyId & 0xFF000000) == 0x01000000;
+
         for (var blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
         {
             // Salt encrypted PUBG Mobile entries store compressed blocks in a shuffled order to make life harder
-            var serializedBlockIndex = pakEntry.EncryptionMethod is EPUBGMobileEncryptionMethod.LiteSaltSM4 or
+            var serializedBlockIndex = isDynamicallyEncrypted || pakEntry.EncryptionMethod is EPUBGMobileEncryptionMethod.LiteSaltSM4 or
                     >= EPUBGMobileEncryptionMethod.SaltSM4Min and <= EPUBGMobileEncryptionMethod.SaltSM4Max
                 ? PUBGUnshuffleBlockIndex(blockIndex, pakEntry.CompressionBlocks.Length)
                 : blockIndex;

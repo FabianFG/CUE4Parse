@@ -20,12 +20,13 @@ public class FAion2L10NFile
 
         if (data.Length >= 0x18 && BitConverter.ToUInt32(data, 0) == 2)
         {
-            Aion2DatFileAes.Initialize(provider);
+            Aion2DatFileEncryption.Initialize(provider);
 
-            var decrypted = Aion2DatFileAes.DecryptL10N(data);
+            var decrypted = Aion2DatFileEncryption.DecryptL10N(data, file.Path);
             using var l10nAr = new FByteArchive("Aion2L10N", decrypted, null);
             if (l10nAr.Read<int>() != 1)
                 throw new ParserException("Invalid AION2 L10N table version");
+
             Namespace = l10nAr.ReadFString();
             Entries = l10nAr.ReadMap(l10nAr.ReadFString, l10nAr.ReadFString);
 

@@ -9,7 +9,7 @@ namespace CUE4Parse.GameTypes.Aion2.Objects;
 [JsonConverter(typeof(FAion2MapHierarchyFileConverter))]
 public class FAion2MapHierarchyFile : FAion2DataFile
 {
-    public FAion2World[] Worlds;
+    public FAion2World[] Worlds = [];
 
     public FAion2MapHierarchyFile(GameFile file)
     {
@@ -132,9 +132,9 @@ public class FAion2MapHierarchyFileConverter : JsonConverter<FAion2MapHierarchyF
     {
         writer.WriteStartObject();
         writer.WritePropertyName(nameof(value.Version));
-        serializer.Serialize(writer, value.Version);
+        serializer.Serialize(writer, value?.Version);
         writer.WritePropertyName(nameof(value.Worlds));
-        serializer.Serialize(writer, value.Worlds);
+        serializer.Serialize(writer, value?.Worlds);
         writer.WriteEndObject();
     }
 }

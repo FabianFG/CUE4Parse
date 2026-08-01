@@ -26,9 +26,11 @@ public static class TensorUtils
     }
 
     public static void Xor<T>(Span<T> data, T xorKey) where T : unmanaged, IBitwiseOperators<T, T, T>
-    {
-        TensorPrimitives.Xor(data, xorKey, data);
-    }
+        => TensorPrimitives.Xor(data, xorKey, data);
+
+    public static void Xor(ReadOnlySpan<byte> left, ReadOnlySpan<byte> right, Span<byte> destination)
+        => TensorPrimitives.Xor(left, right, destination);
+
 
     public static void Xor(Span<byte> data, ReadOnlySpan<byte> xorKey)
     {

@@ -1,66 +1,35 @@
-﻿using System.Diagnostics;
-using CUE4Parse.UE4.Assets.Exports.Chaos;
-using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
-
-[DebuggerDisplay("Size: {Size}")]
-public struct FGroupInfo
-{
-    public int Size;
-
-    public FGroupInfo(FArchive Ar)
-    {
-        // var int version 4
-        var version = Ar.Read<int>();
-        Size = Ar.Read<int>();
-    }
-}
-
 [JsonConverter(typeof(FManagedArrayCollectionConverter))]
 public class FManagedArrayCollection
 {
-    public readonly int Version;
-    public readonly Dictionary<FName, FGroupInfo> GroupInfo;       // FGroupInfo
-    public readonly Dictionary<FKeyType, FValueType> Map;
+    public int Version;
+    public Dictionary<FName, FGroupInfo> GroupInfo;
+    public Dictionary<FKeyType, FValueType> Map;
 
     public FManagedArrayCollection(FChaosArchive Ar)
     {
         Version = Ar.Read<int>();
-
-        var mapLength = Ar.Read<int>();
-        GroupInfo = new Dictionary<FName, FGroupInfo>(mapLength);
-        for (int i = 0; i < mapLength; i++)
-        {
-            GroupInfo[Ar.ReadFName()] = new FGroupInfo(Ar);
-        }
-
-        mapLength = Ar.Read<int>();
-        Map = new Dictionary<FKeyType, FValueType>(mapLength);
-        for (int i = 0; i < mapLength; i++)
-        {
-            var key = new FKeyType(Ar);
-            Map[key] = new FValueType(Ar, Version);
-        }
+        GroupInfo = Ar.ReadMap(Ar.ReadFName, () => new FGroupInfo(Ar));
+        Map = Ar.ReadMap(() => new FKeyType(Ar), () => new FValueType(Ar));
     }
 
     public T[]? GetAttributeValue<T>(string attribute, string group) => GetAttributeValue<T>(attribute, new FName(group));
     public T[]? GetAttributeValue<T>(string attribute, FName group) => GetAttributeValue<T>(new FKeyType(attribute, group));
     public T[]? GetAttributeValue<T>(FKeyType key)
     {
-        return Map.TryGetValue(key, out var value) ? value.Value?.GetData<T>() : null;
+        return Map.TryGetValue(key, out var value) ? value.ManagedArray.Data as T[] : null;
     }
 }
 
 public class FManagedArrayCollectionConverter : JsonConverter<FManagedArrayCollection>
 {
-
     public override void WriteJson(JsonWriter writer, FManagedArrayCollection? value, JsonSerializer serializer)
-    {        if (value == null)
+    {
+        if (value == null)
         {
             writer.WriteNull();
             return;
@@ -74,18 +43,13 @@ public class FManagedArrayCollectionConverter : JsonConverter<FManagedArrayColle
         serializer.Serialize(writer, value.GroupInfo);
 
         writer.WritePropertyName(nameof(FManagedArrayCollection.Map));
-        writer.WriteStartArray();
-        // Key: {}, Value: {}
+        writer.WriteStartObject();
         foreach (var kvp in value.Map)
         {
-            writer.WriteStartObject();
-            writer.WritePropertyName("Key");
-            serializer.Serialize(writer, kvp.Key);
-            writer.WritePropertyName("Value");
-            serializer.Serialize(writer, kvp.Value);
-            writer.WriteEndObject();
+            writer.WritePropertyName(kvp.Key.ToString());
+            serializer.Serialize(writer, kvp.Value.ArrayType);
         }
-        writer.WriteEndArray();
+        writer.WriteEndObject();
 
         writer.WriteEndObject();
     }
