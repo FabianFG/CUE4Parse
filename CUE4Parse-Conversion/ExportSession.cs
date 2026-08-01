@@ -1,8 +1,6 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using CUE4Parse_Conversion.Exporters;
-using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
@@ -15,6 +13,8 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse_Conversion.Exporters;
+using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion;
 
@@ -33,6 +33,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
     private int _totalQueued;
     public int TotalQueued => Volatile.Read(ref _totalQueued);
+    public bool HasQueuedItems => TotalQueued > 0;
 
     private int _running;
     public bool IsRunning => Volatile.Read(ref _running) == 1;
@@ -70,6 +71,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
         Interlocked.Increment(ref _totalQueued);
         OnPropertyChanged(nameof(TotalQueued));
+        OnPropertyChanged(nameof(HasQueuedItems));
         exporter.Log.Debug("Queued for export");
         return this;
     }
@@ -82,6 +84,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
         Interlocked.Decrement(ref _totalQueued);
         OnPropertyChanged(nameof(TotalQueued));
+        OnPropertyChanged(nameof(HasQueuedItems));
         return true;
     }
 
@@ -91,6 +94,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         _paths.Clear();
         Interlocked.Exchange(ref _totalQueued, 0);
         OnPropertyChanged(nameof(TotalQueued));
+        OnPropertyChanged(nameof(HasQueuedItems));
     }
 
     public async Task<IReadOnlyList<ExportResult>> RunAsync(string baseDirectory, ExportOptions options, IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
@@ -145,6 +149,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             var stillQueued = Interlocked.Decrement(ref _totalQueued);
             var count = results.Count;
             OnPropertyChanged(nameof(TotalQueued));
+            OnPropertyChanged(nameof(HasQueuedItems));
 
             progress?.Report(new ExportProgress(count, count + stillQueued, result));
 
