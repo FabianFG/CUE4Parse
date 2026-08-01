@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Objects.Chaos;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -14,6 +15,7 @@ public class UGeometryCollection : UObject
 {
     public FGeometryCollectionProxyMeshData? RootProxyData { get; private set; }
     public FGeometryCollectionAutoInstanceMesh[]? AutoInstanceMeshes { get; private set; }
+    public FPackageIndex[] Materials = [];
     public FGeometryCollection? GeometryCollection;
     public FGeometryCollectionRenderData? RenderData;
 
@@ -22,6 +24,7 @@ public class UGeometryCollection : UObject
         base.Deserialize(Ar, validPos);
         RootProxyData = GetOrDefault<FGeometryCollectionProxyMeshData?>(nameof(RootProxyData));
         AutoInstanceMeshes = GetOrDefault<FGeometryCollectionAutoInstanceMesh[]?>(nameof(AutoInstanceMeshes));
+        Materials = GetOrDefault<FPackageIndex[]>(nameof(Materials), []);
 
 #if DEBUG
         Log.Warning(nameof(UGeometryCollection));
