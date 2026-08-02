@@ -165,6 +165,9 @@ public class UTexture : UUnrealMaterial, IAssetUserData
         writer.WritePropertyName(nameof(PlatformData.SizeY));
         writer.WriteValue(PlatformData.SizeY);
 
+        writer.WritePropertyName(nameof(PlatformData.SizeZ));
+        writer.WriteValue(PlatformData.SizeZ);
+
         writer.WritePropertyName(nameof(PlatformData.PackedData));
         writer.WriteValue(PlatformData.PackedData);
 
