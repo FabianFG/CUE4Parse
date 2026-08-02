@@ -217,7 +217,7 @@ public enum EGame : uint
         GAME_Splitgate2 = GAME_UE5_5 + 2,
         GAME_DeadzoneRogue = GAME_UE5_5 + 3,
         GAME_Directive8020 = GAME_UE5_5 + 4,
-        GAME_Wildgate = GAME_UE5_5 + 5,
+        GAME_Placeholder = GAME_UE5_5 + 5,
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
         GAME_NevernessToEverness_CBT2 = GAME_UE5_5 + 7, // keep for now, will be removed later
         GAME_FateTrigger = GAME_UE5_5 + 8,
@@ -244,6 +244,7 @@ public enum EGame : uint
         GAME_Squad = GAME_UE5_7 + 2,
         GAME_Empulse = GAME_UE5_7 + 3,
         GAME_LordOfMysteries = GAME_UE5_7 + 4,
+        GAME_Wildgate = GAME_UE5_7 + 5,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 
