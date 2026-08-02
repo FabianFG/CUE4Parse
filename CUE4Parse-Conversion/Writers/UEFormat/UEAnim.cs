@@ -36,7 +36,7 @@ public sealed class UEAnim : UEFormatExport
             metaDataChunk.Write(animStreamable.NumFrames);
             metaDataChunk.Write(framesPerSecond);
 
-            metaDataChunk.WriteFString(animStreamable.RetargetSource.PlainText);
+            metaDataChunk.WriteFString(animStreamable.RetargetSource?.PlainText ?? "RetargetSource_NONE");
 
             metaDataChunk.Write((byte) EAdditiveAnimationType.AAT_None);
             metaDataChunk.Write((byte) EAdditiveBasePoseType.ABPT_None);
@@ -45,8 +45,7 @@ public sealed class UEAnim : UEFormatExport
             metaDataChunk.Serialize(Ar);
         }
 
-        var floatCurves = animStreamable.RawCurveData?.GetOrDefault<FFloatCurve[]>("FloatCurves", []) ?? [];
-        if (floatCurves.Length > 0)
+        if (animStreamable.RawCurveData?.FloatCurves is { Length: > 0 } floatCurves)
         {
             SerializeCurves(floatCurves, framesPerSecond);
         }
