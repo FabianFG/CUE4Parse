@@ -15,7 +15,7 @@ public struct FSharedImage
 {
     public readonly int SizeX;
     public readonly int SizeY;
-    public int SizeZ = 1;
+    public readonly int SizeZ;
     public readonly EPixelFormat Format;
     public readonly byte GammaSpace;
     public readonly FTexture2DMipMap Mip;
@@ -43,6 +43,7 @@ public class FTexturePlatformData
 
     public readonly int SizeX;
     public int SizeY;
+    public int SizeZ = 1; // How many slices got folded into SizeY: 1 for a simple texture, 6 for a cubemap, the depth for a volume
     public readonly uint PackedData; // NumSlices: 1 for simple texture, 6 for cubemap - 6 textures are joined into one
     public readonly string PixelFormat;
     public readonly FOptTexturePlatformData OptData;
