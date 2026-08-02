@@ -9,12 +9,12 @@ namespace CUE4Parse.UE4.Objects.Core.Math
     /// A linear, 32-bit/component floating point RGBA color.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct FLinearColor : IUStruct
+    public struct FLinearColor : IUStruct
     {
-        public readonly float R;
-        public readonly float G;
-        public readonly float B;
-        public readonly float A;
+        public float R;
+        public float G;
+        public float B;
+        public float A;
 
         public static readonly FLinearColor Gray = new(0.6f, 0.6f, 0.6f, 1f);
 
