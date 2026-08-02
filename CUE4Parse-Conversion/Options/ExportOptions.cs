@@ -12,12 +12,12 @@ public class ExportOptions(
     ETextureFormat textureFormat = ETextureFormat.Png,
     int textureQuality = 100,
     bool exportHdrTexturesAsHdr = true,
+    bool exportAllTextureMips = false,
     EMaterialDepth materialDepth = EMaterialDepth.TopLayerOnly,
     bool exportMaterials = true,
     bool exportMorphTargets = true,
     ESocketFormat socketFormat = ESocketFormat.Bone,
-    EFileCompressionFormat compressionFormat = EFileCompressionFormat.None,
-    bool exportAllTextureMips = false)
+    EFileCompressionFormat compressionFormat = EFileCompressionFormat.None)
 {
     public readonly EMeshFormat MeshFormat = meshFormat;
     public readonly ENaniteMeshFormat NaniteMeshFormat = naniteMeshFormat;
@@ -27,6 +27,7 @@ public class ExportOptions(
     public readonly ETextureFormat TextureFormat = meshFormat == EMeshFormat.USD ? ETextureFormat.Png : textureFormat; // USD pipeline requires PNG textures
     public readonly int TextureQuality = Math.Clamp(textureQuality, 1, 100);
     public readonly bool ExportHdrTexturesAsHdr = exportHdrTexturesAsHdr;
+    public readonly bool ExportAllTextureMips = exportAllTextureMips;
 
     public readonly EMaterialDepth MaterialDepth = materialDepth;
     public readonly bool ExportMaterials = exportMaterials; // not to be confused, when we export a mesh we will look (or not) for its materials and export them (or not)
@@ -35,6 +36,4 @@ public class ExportOptions(
     public readonly ESocketFormat SocketFormat = socketFormat;
 
     public readonly EFileCompressionFormat CompressionFormat = meshFormat == EMeshFormat.UEFormat ? compressionFormat : EFileCompressionFormat.None;
-
-    public readonly bool ExportAllTextureMips = exportAllTextureMips;
 }

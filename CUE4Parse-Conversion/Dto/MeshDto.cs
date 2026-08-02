@@ -157,28 +157,6 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         }
     }
 
-    internal T WithLods<T>(Func<MeshLodDto<TVertex>, bool> predicate, Func<T> action)
-    {
-        var original = LODs.ToList();
-        foreach (var lod in original.Where(lod => !predicate(lod)))
-        {
-            LODs.Remove(lod);
-        }
-
-        try
-        {
-            return action();
-        }
-        finally
-        {
-            LODs.Clear();
-            foreach (var lod in original)
-            {
-                LODs.Add(lod);
-            }
-        }
-    }
-
     public override void Dispose()
     {
         LODs.Clear();

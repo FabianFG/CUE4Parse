@@ -18,12 +18,13 @@ public sealed class UEModel : UEFormatExport
 {
     protected override string Identifier => "UEMODEL";
 
-    public UEModel(string name, StaticMeshDto mesh, ExportOptions options) : base(name, options)
+    public UEModel(string name, StaticMeshDto mesh, ExportOptions options, Func<MeshLodDto<MeshVertex>, bool>? predicate = null) : base(name, options)
     {
         using (var lodChunk = new FDataChunk("LODS"))
         {
             foreach (var lod in mesh.LODs)
             {
+                if (predicate is not null && !predicate(lod)) continue;
                 using var subLodChunk = new FStaticDataChunk($"LOD{lod.SourceLodIndex}");
                 SerializeCommonMeshData(subLodChunk, lod);
                 subLodChunk.Serialize(lodChunk);
@@ -56,7 +57,7 @@ public sealed class UEModel : UEFormatExport
         }
     }
 
-    public UEModel(string name, SkeletalMeshDto mesh, ExportOptions options) : base(name, options)
+    public UEModel(string name, SkeletalMeshDto mesh, ExportOptions options, Func<MeshLodDto<SkinnedMeshVertex>, bool>? predicate = null) : base(name, options)
     {
         if (mesh.LODs.Count > 0)
         {
@@ -64,6 +65,7 @@ public sealed class UEModel : UEFormatExport
 
             foreach (var lod in mesh.LODs)
             {
+                if (predicate is not null && !predicate(lod)) continue;
                 using var subLodChunk = new FStaticDataChunk($"LOD{lod.SourceLodIndex}");
                 SerializeCommonMeshData(subLodChunk, lod);
                 SerializeSkeletalMeshData(subLodChunk, lod, options.ExportMorphTargets ? mesh.MorphTargets : null);
