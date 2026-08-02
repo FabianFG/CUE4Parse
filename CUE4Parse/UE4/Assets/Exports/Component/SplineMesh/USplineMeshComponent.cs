@@ -1,10 +1,14 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
@@ -20,12 +24,7 @@ public enum ESplineMeshAxis : int
 public class USplineMeshComponent : UStaticMeshComponent
 {
     private FSplineMeshParams? _splineParams;
-    public FSplineMeshParams SplineParams {
-        get {
-            if (_splineParams != null) return _splineParams;
-            return _splineParams = GetOrDefault<FSplineMeshParams>("SplineParams", new FSplineMeshParams(new FStructFallback()));
-        }
-    }
+    public FSplineMeshParams SplineParams => _splineParams ??= GetOrDefault(nameof(SplineParams), new FSplineMeshParams(new FStructFallback()));
 
     private ESplineMeshAxis? _forwardAxis;
     public ESplineMeshAxis ForwardAxis {
@@ -35,7 +34,6 @@ public class USplineMeshComponent : UStaticMeshComponent
             return _forwardAxis.Value;
         }
     }
-
 
     private FVector? _splineUpDir;
     public FVector SplineUpDir {
@@ -76,9 +74,10 @@ public class USplineMeshComponent : UStaticMeshComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Ver < EUnrealEngineObjectUE4Version.SPLINE_MESH_ORIENTATION) {
+
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.SPLINE_MESH_ORIENTATION && SplineParams is { } splineParams)
+        {
             PropertyUtil.Set(this, "ForwardAxis", new EnumProperty("Z"));
-            var splineParams = SplineParams;
             splineParams.StartRoll -= MathF.PI / 2;
             splineParams.EndRoll -= MathF.PI / 2;
 

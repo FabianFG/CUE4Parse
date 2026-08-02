@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Houdini;
 
@@ -21,7 +22,7 @@ public class UHoudiniStaticMesh : UObject
     public uint NumUVLayers;
     public bool bHasPerFaceMaterials;
     public FStaticMaterial[]? StaticMaterials;
-    public ResolvedObject?[] Materials;
+    public FPackageIndex?[] Materials;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -43,7 +44,7 @@ public class UHoudiniStaticMesh : UObject
         VertexInstanceUVs = Ar.ReadBulkArray<FVector2D>();
         MaterialIDsPerTriangle = Ar.ReadBulkArray<int>();
 
-        Materials = new ResolvedObject[StaticMaterials.Length];
+        Materials = new FPackageIndex[StaticMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
         {
             Materials[i] = StaticMaterials[i].MaterialInterface;

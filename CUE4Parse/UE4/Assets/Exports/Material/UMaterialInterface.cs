@@ -76,7 +76,7 @@ public class UMaterialInterface : UUnrealMaterial
         parameters.MobileSpecularMask = MobileSpecularMask;
     }
 
-    public override void GetParams(CMaterialParams2 parameters, EMaterialFormat format)
+    public override void GetParams(CMaterialParams2 parameters, EMaterialDepth depth)
     {
         if (FlattenedTexture?.TryLoad<UTexture>(out var flattenedTexture) == true)
             parameters.VerifyTexture("Diffuse", flattenedTexture, false);
