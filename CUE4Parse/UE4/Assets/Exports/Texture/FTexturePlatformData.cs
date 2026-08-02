@@ -16,7 +16,6 @@ public struct FSharedImage
     public readonly int SizeX;
     public readonly int SizeY;
     public int SizeZ = 1;
-    public readonly int SizeZ;
     public readonly EPixelFormat Format;
     public readonly byte GammaSpace;
     public readonly FTexture2DMipMap Mip;
