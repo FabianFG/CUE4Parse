@@ -23,7 +23,32 @@ public sealed class UEAnim : UEFormatExport
 
         if (originalSequence.CompressedCurveData?.FloatCurves is { Length: > 0 } floatCurves)
         {
-            SerializeCurves(sequence, floatCurves);
+            SerializeCurves(floatCurves, sequence.FramesPerSecond);
+        }
+    }
+
+    public UEAnim(string name, UAnimStreamable animStreamable, ExportOptions options) : base(name, options)
+    {
+        var framesPerSecond = animStreamable.NumFrames / animStreamable.SequenceLength;
+
+        using (var metaDataChunk = new FDataChunk("METADATA", 1))
+        {
+            metaDataChunk.Write(animStreamable.NumFrames);
+            metaDataChunk.Write(framesPerSecond);
+
+            metaDataChunk.WriteFString(animStreamable.RetargetSource.PlainText);
+
+            metaDataChunk.Write((byte) EAdditiveAnimationType.AAT_None);
+            metaDataChunk.Write((byte) EAdditiveBasePoseType.ABPT_None);
+            metaDataChunk.Write(0); // ref frame idnex
+
+            metaDataChunk.Serialize(Ar);
+        }
+
+        var floatCurves = animStreamable.RawCurveData?.GetOrDefault<FFloatCurve[]>("FloatCurves", []) ?? [];
+        if (floatCurves.Length > 0)
+        {
+            SerializeCurves(floatCurves, framesPerSecond);
         }
     }
 
@@ -137,7 +162,7 @@ public sealed class UEAnim : UEFormatExport
         trackChunk.Serialize(Ar);
     }
 
-    private void SerializeCurves(CAnimSequence sequence, FFloatCurve[] floatCurves)
+    private void SerializeCurves(FFloatCurve[] floatCurves, float framesPerSecond)
     {
         using var curveChunk = new FDataChunk("CURVES", floatCurves.Length);
 
@@ -148,7 +173,7 @@ public sealed class UEAnim : UEFormatExport
             curveChunk.Write(floatCurve.FloatCurve.Keys.Length);
             foreach (var floatCurveKey in floatCurve.FloatCurve.Keys)
             {
-                var key = new FFloatKey((int) (floatCurveKey.Time * sequence.FramesPerSecond), floatCurveKey.Value);
+                var key = new FFloatKey((int) (floatCurveKey.Time * framesPerSecond), floatCurveKey.Value);
                 key.Serialize(curveChunk);
             }
         }
