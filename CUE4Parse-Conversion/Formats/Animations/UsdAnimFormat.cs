@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers.ActorX.Structs.Animations;
 using CUE4Parse_Conversion.Writers.USD;
-using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Formats.Animations;
@@ -14,7 +12,7 @@ public class UsdAnimFormat : IAnimExportFormat
 {
     public string DisplayName => "USD Animation (.usda)";
 
-    public IReadOnlyList<ExportFile> BuildAnimation(string objectName, ExportOptions options, CAnimSet animSet)
+    public IReadOnlyList<ExportFile> Build(string objectName, ExportOptions options, CAnimSet animSet)
     {
         var dto = new SkeletonDto(animSet.Skeleton);
         var root = dto.ToSkelRoot();
@@ -93,7 +91,4 @@ public class UsdAnimFormat : IAnimExportFormat
         stage.AddMetadata("endTimeCode", (double) (totalFrames - 1));
         return [new ExportFile("usda", stage.SerializeToBinary())];
     }
-
-    public IReadOnlyList<ExportFile> BuildAnimStreamable(string objectName, ExportOptions options, UAnimStreamable animStreamable)
-        => throw new NotSupportedException($"{DisplayName} does not support UAnimStreamable export");
 }

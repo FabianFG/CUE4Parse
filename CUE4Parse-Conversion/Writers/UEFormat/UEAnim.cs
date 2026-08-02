@@ -40,7 +40,7 @@ public sealed class UEAnim : UEFormatExport
 
             metaDataChunk.Write((byte) EAdditiveAnimationType.AAT_None);
             metaDataChunk.Write((byte) EAdditiveBasePoseType.ABPT_None);
-            metaDataChunk.Write(0); // ref frame idnex
+            metaDataChunk.Write(0); // ref frame index
 
             metaDataChunk.Serialize(Ar);
         }
