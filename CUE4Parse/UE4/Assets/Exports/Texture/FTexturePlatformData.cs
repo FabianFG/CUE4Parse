@@ -15,6 +15,7 @@ public struct FSharedImage
 {
     public readonly int SizeX;
     public readonly int SizeY;
+    public int SizeZ = 1;
     public readonly int SizeZ;
     public readonly EPixelFormat Format;
     public readonly byte GammaSpace;
@@ -142,6 +143,10 @@ public class FTexturePlatformData
             {
                 var slices = GetNumSlices();
                 if (Ar.Game == GAME_Borderlands4) slices = slices != 1 ? slices >> 1 : 1;
+                
+                if (Owner is UVolumeTexture && Mips[i].SizeZ > 1) slices = Mips[i].SizeZ;
+                if (i == 0) SizeZ = slices;
+                
                 Mips[i].SizeY *= slices;
                 Mips[i].SizeZ = Mips[i].SizeZ == slices ? 1 : Mips[i].SizeZ;
             }
