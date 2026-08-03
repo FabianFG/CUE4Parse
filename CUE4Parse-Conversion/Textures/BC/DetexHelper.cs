@@ -61,7 +61,7 @@ public static class DetexHelper
         {
             if (!Instance.DecodeDetexLinear(inp, dst, width, height, inputFormat, outputPixelFormat))
             {
-                throw new ParserException("Detex failed to decode the texture");
+                Log.Warning("Detex failed to decode the texture: {Format} {Width}x{Height}", outputPixelFormat, width, height);
             }
         }
         return dst;
