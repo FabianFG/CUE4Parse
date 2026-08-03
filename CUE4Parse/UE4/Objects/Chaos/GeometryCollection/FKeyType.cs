@@ -1,28 +1,21 @@
-﻿using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Readers;
+﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
-public readonly struct FKeyType : IUStruct, IEquatable<FKeyType>
+public readonly struct FKeyType(FName name, FName group) : IEquatable<FKeyType>
 {
-    public readonly FName AttributeName;
-    public readonly FName GroupName;
+    public readonly FName Name = name;
+    public readonly FName Group = group;
 
-    public FKeyType(FArchive Ar)
+    public FKeyType(FAssetArchive Ar) : this(Ar.ReadFName(), Ar.ReadFName())
     {
-        AttributeName = Ar.ReadFName();
-        GroupName = Ar.ReadFName();
-    }
 
-    public FKeyType(FName attributeName, FName groupName)
-    {
-        AttributeName = attributeName;
-        GroupName = groupName;
     }
 
     public bool Equals(FKeyType other)
     {
-        return AttributeName.Equals(other.AttributeName) && GroupName.Equals(other.GroupName);
+        return Name.Equals(other.Name) && Group.Equals(other.Group);
     }
 
     public override bool Equals(object? obj)
@@ -30,10 +23,7 @@ public readonly struct FKeyType : IUStruct, IEquatable<FKeyType>
         return obj is FKeyType other && Equals(other);
     }
 
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(AttributeName, GroupName);
-    }
+    public override int GetHashCode() => HashCode.Combine(Name, Group);
 
-    public override string ToString() => $"{GroupName} -> {AttributeName}";
+    public override string ToString() => $"{Group} -> {Name}";
 }

@@ -9,7 +9,7 @@ public class FSoftVertex : FSkelMeshVertexBase
 {
     private int MAX_SKELETAL_UV_SETS = 1;
 
-    public FMeshUVFloat[] UV;
+    public sealed override FMeshUVFloat[] UVs { get; }
     public FColor Color;
 
     public FSoftVertex(FArchive Ar, bool isRigid = false)
@@ -17,9 +17,9 @@ public class FSoftVertex : FSkelMeshVertexBase
         SerializeForEditor(Ar);
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MULTIPLE_UVS_TO_SKELETAL_MESH) MAX_SKELETAL_UV_SETS = 4;
-        UV = new FMeshUVFloat[MAX_SKELETAL_UV_SETS];
-        for (var i = 0; i < UV.Length; i++)
-            UV[i] = Ar.Read<FMeshUVFloat>();
+        UVs = new FMeshUVFloat[MAX_SKELETAL_UV_SETS];
+        for (var i = 0; i < UVs.Length; i++)
+            UVs[i] = Ar.Read<FMeshUVFloat>();
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SKELETAL_MESH_VERTEX_COLORS)
         {

@@ -205,7 +205,7 @@ public static class TextureDecoder
                         var tileOffset = ((i + tileBorderSize) * tilePixelSize + tileBorderSize) * bytesPerPixel;
                         var offset = tileX * bytesPerPixel + (tileY + i) * rowBytes;
                         var srcSpan = data.AsSpan(tileOffset, tileRowBytes);
-                        var destSpan = result.Slice(offset);
+                        var destSpan = result[offset..];
                         srcSpan.CopyTo(destSpan);
                     }
                 }
@@ -223,9 +223,9 @@ public static class TextureDecoder
         }
     }
 
-    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, FTexture2DMipMap? mip = null, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
-        var mip = texture.GetFirstMip();
+        mip ??= texture.GetFirstMip();
 
         if (mip is null)
             return null;
@@ -243,7 +243,8 @@ public static class TextureDecoder
         DecodeTexture(texture, mip, sizeX, sizeY, sizeZ, platform, out var data, out var colorType);
 
         var bitmaps = new CTexture[sizeZ];
-        var offset = sizeX * sizeY * 4;
+        var bytesPerPixel = GetBytesPerPixel(colorType);
+        var offset = sizeX * sizeY * bytesPerPixel;
 
         fixed (byte* dataPtr = data)
         {
@@ -251,7 +252,7 @@ public static class TextureDecoder
             {
                 if (offset * (i + 1) > data.Length)
                     break;
-                bitmaps[i] = new CTexture(sizeX, sizeY, colorType, GetSliceData(dataPtr, sizeX, sizeY, 4, i).ToArray());
+                bitmaps[i] = new CTexture(sizeX, sizeY, colorType, GetSliceData(dataPtr, sizeX, sizeY, bytesPerPixel, i).ToArray());
             }
         }
         return bitmaps;
@@ -380,18 +381,23 @@ public static class TextureDecoder
                 break;
             case EPixelFormat.PF_BC4:
                 if (UseAssetRipperTextureDecoder)
-                    Bc4.Decompress<ColorBGRA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    Bc4.Decompress<ColorBGRA<byte>, byte>(bytes, sizeX, sizeY * sizeZ, out data);
                 else
                     data = BCDecoder.BC4(bytes, sizeX, sizeY, sizeZ);
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_BC5:
                 if (UseAssetRipperTextureDecoder)
-                    Bc5.Decompress<ColorBGRA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                {
+                    Bc5.Decompress<ColorBGRA<byte>, byte>(bytes, sizeX, sizeY * sizeZ, out data);
+                    for (var i = 0; i < sizeX * sizeY * sizeZ; i++)
+                        data[i * 4] = BCDecoder.GetZNormal(data[i * 4 + 2], data[i * 4 + 1]);
+                }
                 else
+                {
+                    // Blue channel is already restored in BCDecoder.BC5
                     data = BCDecoder.BC5(bytes, sizeX, sizeY, sizeZ);
-                for (var i = 0; i < sizeX * sizeY; i++)
-                    data[i * 4] = BCDecoder.GetZNormal(data[i * 4 + 2], data[i * 4 + 1]);
+                }
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_BC6H:
@@ -472,5 +478,12 @@ public static class TextureDecoder
             default:
                 throw new NotImplementedException($"Unknown pixel format: {formatInfo.UnrealFormat}");
         }
+    }
+    
+    private static int GetBytesPerPixel(EPixelFormat pixelFormat)
+    {
+        var formatKvp = PixelFormatUtils.PixelFormats.ElementAtOrDefault((int) pixelFormat)!;
+        var formatInfo = formatKvp.Value;
+        return formatInfo.BlockBytes / (formatInfo.BlockSizeX * formatInfo.BlockSizeY * formatInfo.BlockSizeZ);
     }
 }

@@ -29,6 +29,13 @@ public class FAnimLinkableElement
         LinkValue = fallback.GetOrDefault<float>(nameof(LinkValue));
         LinkedSequence = fallback.GetOrDefault<FPackageIndex?>(nameof(LinkedSequence));
     }
+
+    public float GetTime() => LinkMethod switch
+    {
+        EAnimLinkMethod.Relative => SegmentBeginTime + LinkValue,
+        EAnimLinkMethod.Proportional => SegmentBeginTime + LinkValue * SegmentLength,
+        _ => LinkValue
+    };
 }
 
 public enum EAnimLinkMethod

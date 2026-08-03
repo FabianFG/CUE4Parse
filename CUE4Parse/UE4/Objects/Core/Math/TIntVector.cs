@@ -71,7 +71,7 @@ public readonly struct TIntVector4<T> : IUStruct
 }
 
 [DebuggerDisplay("{DebuggerDisplay,nq}")]
-public class TVector<T> where T : struct
+public readonly struct TVector<T> where T : struct
 {
     private readonly T[] _values;
 
@@ -98,11 +98,7 @@ public class TVector<T> where T : struct
     // serializeReal vector.h
     public TVector(FArchive Ar, int dimension)
     {
-        _values = new T[dimension];
-        for (int i = 0; i < dimension; i++)
-        {
-            _values[i] = Ar.Read<T>();
-        }
+        _values = Ar.ReadArray<T>(dimension);
     }
 
     public TVector(params T[] values)

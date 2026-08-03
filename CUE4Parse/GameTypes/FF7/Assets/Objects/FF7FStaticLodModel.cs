@@ -107,13 +107,7 @@ public static class FF7FStaticLodModel
             VertexBufferGPUSkin.VertsFloat = new FGPUVertFloat[NumVertices];
             for (var i = 0; i < VertexBufferGPUSkin.VertsFloat.Length; i++)
             {
-                VertexBufferGPUSkin.VertsFloat[i] = new FGPUVertFloat
-                {
-                    Pos = verts[i],
-                    Infs = weights[i],
-                    Normal = normals[i],
-                    UV = uvs[i]
-                };
+                VertexBufferGPUSkin.VertsFloat[i] = new FGPUVertFloat(verts[i], normals[i], weights[i], uvs[i]);
             }
         }
     }

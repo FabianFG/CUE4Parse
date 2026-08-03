@@ -187,7 +187,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
                 FileVersionUE.FileVersionUE4 = Ar.Read<int>();
                 if (Ar.Game == GAME_DaysGone) FileVersionUE.FileVersionUE4 = 498;
-
+                if (Ar.Game is GAME_TheFirstBerserkerKhazan) FileVersionUE.FileVersionUE4 = (int)EUnrealEngineObjectUE4Version.AUTOMATIC_VERSION;
                 if (legacyFileVersion <= -8)
                 {
                     FileVersionUE.FileVersionUE5 = Ar.Read<int>();

@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Exports.BuildData;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -22,6 +23,9 @@ public class ULandscapeComponent : UPrimitiveComponent
     public FWeightmapLayerAllocationInfo[] WeightmapLayerAllocations;
     public FBox CachedLocalBox;
     public FGuid MapBuildDataId;
+
+    public FPackageIndex? OverrideMaterial;
+    public FPackageIndex? OverrideHoleMaterial;
 
     public Lazy<UTexture2D[]> WeightmapTextures;
 
@@ -48,6 +52,9 @@ public class ULandscapeComponent : UPrimitiveComponent
         MapBuildDataId = GetOrDefault<FGuid>(nameof(MapBuildDataId));
         WeightmapTextures = new Lazy<UTexture2D[]>(() => GetOrDefault<UTexture2D[]>("WeightmapTextures", []));
         NamedGrassTypes = GetOrDefault<Dictionary<FName, FPackageIndex>>(nameof(NamedGrassTypes), []);
+
+        OverrideMaterial = GetOrDefault<FPackageIndex?>(nameof(OverrideMaterial));
+        OverrideHoleMaterial = GetOrDefault<FPackageIndex?>(nameof(OverrideHoleMaterial));
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {

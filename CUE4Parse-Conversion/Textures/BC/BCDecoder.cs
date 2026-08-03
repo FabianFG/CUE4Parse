@@ -1,168 +1,178 @@
 ﻿using System.Runtime.CompilerServices;
+using CommunityToolkit.HighPerformance;
 
-namespace CUE4Parse_Conversion.Textures.BC
+namespace CUE4Parse_Conversion.Textures.BC;
+
+public static class BCDecoder
 {
-    public static class BCDecoder
+    public static byte[] BC4(byte[] input, int sizeX, int sizeY, int sizeZ)
     {
-        public static byte[] BC4(byte[] inp, int sizeX, int sizeY, int sizeZ)
-        {
-            byte[] ret = new byte[sizeX * sizeY * sizeZ * 4]; // BGRA32 (4 bytes per pixel)
+        var expectedSize = sizeX * sizeY * sizeZ / 2;
+        if (input.Length < expectedSize)
+            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {expectedSize}");
+        var output = new byte[expectedSize * 8];
+        BC4(input, sizeX, sizeY, sizeZ, output);
+        return output;
+    }
 
-            unsafe
+    public static void BC4(ReadOnlySpan<byte> input, int sizeX, int sizeY, int sizeZ, Span<byte> output)
+    {
+        var expectedSize = sizeX * sizeY * sizeZ / 2;
+        var outputSize = expectedSize * 8;
+        if (input.Length < expectedSize)
+            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {expectedSize}");
+        if (output.Length < outputSize)
+            throw new ArgumentException($"Output length {output.Length} is smaller than expected size {outputSize}");
+
+        var inputSpan = input[..expectedSize].Cast<byte, ulong>();
+        var outputSpan = output[..outputSize].Cast<byte, uint>();
+        Span<byte> bytes = stackalloc byte[16];
+
+        var index = 0;
+        var zPixelLoc = 0;
+
+        for (int z = 0; z < sizeZ; z++)
+        {
+            var yPixelLoc = zPixelLoc;
+            for (int y = 0; y < sizeY / 4; y++)
             {
-                fixed (byte* bytePtr = inp)
+                var xPixelLoc = yPixelLoc;
+                for (int x = 0; x < sizeX / 4; x++)
                 {
-                    int index = 0;
-                    byte* temp = bytePtr;
-                    for (var z = 0; z < sizeZ; z++)
+                    DecodeBCBlock(inputSpan[index++], bytes);
+
+                    for (int i = 0; i < 16; i++)
                     {
-                        for (int y = 0; y < sizeY / 4; y++)
-                        {
-                            for (int x = 0; x < sizeX / 4; x++)
-                            {
-                                var r_bytes = DecodeBCBlock(temp, ref index);
-                                for (int i = 0; i < 16; i++)
-                                {
-                                    int pixelLoc = GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 0);
+                        byte gray = bytes[i];
+                        int pixelLoc = xPixelLoc + (i >> 2) * sizeX + (i & 3);
 
-                                    byte gray = r_bytes[i]; // Grayscale value from BC4
-
-                                    ret[pixelLoc] = gray;     // Blue
-                                    ret[pixelLoc + 1] = gray; // Green
-                                    ret[pixelLoc + 2] = gray; // Red
-                                    ret[pixelLoc + 3] = 0xFF; // Alpha (fully opaque)
-                                }
-                            }
-                        }
+                        outputSpan[pixelLoc] = (uint)(gray | gray << 8 | gray << 16 | 0xFFu << 24);
                     }
+                    xPixelLoc += 4;
                 }
+                yPixelLoc += 4 * sizeX;
             }
-
-            return ret;
+            zPixelLoc += sizeX * sizeY;
         }
+    }
 
+    public static byte[] BC5(byte[] input, int sizeX, int sizeY, int sizeZ)
+    {
+        var expectedSize = sizeX * sizeY * sizeZ;
+        if (input.Length < expectedSize)
+            throw new ArgumentException($"Input length {input.Length} does not match expected size {expectedSize}");
+        var output = new byte[expectedSize * 4];
+        BC5(input, sizeX, sizeY, sizeZ, output);
+        return output;
+    }
 
-        public static byte[] BC5(byte[] inp, int sizeX, int sizeY, int sizeZ)
+    public static void BC5(ReadOnlySpan<byte> input, int sizeX, int sizeY, int sizeZ, Span<byte> output)
+    {
+        var expectedSize = sizeX * sizeY * sizeZ;
+        var outputSize = expectedSize * 4;
+        if (input.Length < expectedSize)
+            throw new ArgumentException($"Input length {input.Length} does not match expected size {expectedSize}");
+        if (output.Length < outputSize)
+            throw new ArgumentException($"Output length {output.Length} is smaller than expected size {outputSize}");
+
+        var inputSpan = input[..expectedSize].Cast<byte, ulong>();
+        var outputSpan = output[..outputSize].Cast<byte, uint>();
+        Span<byte> r_bytes = stackalloc byte[16];
+        Span<byte> g_bytes = stackalloc byte[16];
+
+        var index = 0;
+        var zPixelLoc = 0;
+
+        for (var z = 0; z < sizeZ; z++)
         {
-            byte[] ret = new byte[sizeX * sizeY * sizeZ * 4]; // BGRA32 (4 bytes per pixel)
-
-            unsafe
+            var yPixelLoc = zPixelLoc;
+            for (int y = 0; y < sizeY / 4; y++)
             {
-                fixed (byte* bytePtr = inp)
+                var xPixelLoc = yPixelLoc;
+                for (int x = 0; x < sizeX / 4; x++)
                 {
-                    int index = 0;
-                    byte* temp = bytePtr;
-                    for (var z = 0; z < sizeZ; z++)
+                    DecodeBCBlock(inputSpan[index++], r_bytes);
+                    DecodeBCBlock(inputSpan[index++], g_bytes);
+
+                    for (int i = 0; i < 16; i++)
                     {
-                        for (int y = 0; y < sizeY / 4; y++)
-                        {
-                            for (int x = 0; x < sizeX / 4; x++)
-                            {
-                                // Decode the Red and Green channels
-                                var r_bytes = DecodeBCBlock(temp, ref index);
-                                var g_bytes = DecodeBCBlock(temp, ref index);
-
-                                for (int i = 0; i < 16; i++)
-                                {
-                                    int pixelLoc = GetPixelLoc(sizeX, sizeY, x * 4 + (i % 4), y * 4 + (i / 4), z, 4, 0);
-
-                                    byte red = r_bytes[i];
-                                    byte green = g_bytes[i];
-
-                                    ret[pixelLoc] = 0xFF; // Blue channel (calculated later on using red and green channels)
-                                    ret[pixelLoc + 1] = green; // Green channel
-                                    ret[pixelLoc + 2] = red; // Red channel
-                                    ret[pixelLoc + 3] = 0xFF; // Alpha (fully opaque)
-                                }
-                            }
-                        }
+                        int pixelLoc = xPixelLoc + (i >> 2) * sizeX + (i & 3);
+                        outputSpan[pixelLoc] = (uint)(GetZNormal(r_bytes[i], g_bytes[i]) | g_bytes[i] << 8 | r_bytes[i] << 16 | 0xFF << 24); 
                     }
+                    xPixelLoc += 4;
                 }
+                yPixelLoc += 4 * sizeX;
             }
-
-            return ret;
+            zPixelLoc += sizeX * sizeY;
         }
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte GetZNormal(byte x, byte y)
+    {
+        const float scale = 2.0f / 255.0f;
+        var xf = x * scale - 1;
+        var yf = y * scale - 1;
+        var zval = 1 - xf * xf - yf * yf;
+        var zval_ = (float)MathF.Sqrt(zval > 0 ? zval : 0);
+        zval = zval_ < 1.0f ? zval_ : 1.0f;
+        return (byte)((zval * 127) + 128);
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int GetPixelLoc(int width, int height, int x, int y, int z, int bpp, int off) => (z * width * height * bpp) + (y * width * bpp) + (x * bpp) + off;
+    private static void DecodeBCBlock(ulong data, Span<byte> block)
+    {
+        Span<byte> cl = stackalloc byte[8];
+        cl[0] = (byte) data;
+        cl[1] = (byte)(data >> 8);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte GetZNormal(byte x, byte y)
+        if (cl[0] > cl[1])
         {
-            var xf = (x / 127.5f) - 1;
-            var yf = (y / 127.5f) - 1;
-            var zval = 1 - xf * xf - yf * yf;
-            var zval_ = (float)Math.Sqrt(zval > 0 ? zval : 0);
-            zval = zval_ < 1 ? zval_ : 1;
-            return (byte)((zval * 127) + 128);
+            var diff = cl[0] - cl[1];
+            var temp = 6 * cl[0] + cl[1];
+            cl[2] = (byte)(temp / 7);
+            temp -= diff;
+            cl[3] = (byte)(temp / 7);
+            temp -= diff;
+            cl[4] = (byte)(temp / 7);
+            temp -= diff;
+            cl[5] = (byte)(temp / 7);
+            temp -= diff;
+            cl[6] = (byte)(temp / 7);
+            temp -= diff;
+            cl[7] = (byte)(temp / 7);
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe void Read(byte* destPtr, byte* srcPtr, ref int index, int length)
+        else
         {
-            Unsafe.CopyBlockUnaligned(ref destPtr[0], ref srcPtr[index], (uint)length);
-            index += length;
+            var diff = cl[1] - cl[0];
+            var temp = 4 * cl[0] + cl[1];
+            cl[2] = (byte)(temp / 5);
+            temp += diff;
+            cl[3] = (byte)(temp / 5);
+            temp += diff;
+            cl[4] = (byte)(temp / 5);
+            temp += diff;
+            cl[5] = (byte)(temp / 5);
+            cl[6] = 0;
+            cl[7] = 255;
         }
 
-        private static unsafe byte[] DecodeBCBlock(byte* data, ref int index)
-        {
-            byte* arr = stackalloc byte[3];
-            float ref0 = data[index++];
-            float ref1 = data[index++];
-
-            float[] ref_sl = new float[8];
-            ref_sl[0] = ref0;
-            ref_sl[1] = ref1;
-
-            if (ref0 > ref1)
-            {
-                ref_sl[2] = (6 * ref0 + 1 * ref1) / 7;
-                ref_sl[3] = (5 * ref0 + 2 * ref1) / 7;
-                ref_sl[4] = (4 * ref0 + 3 * ref1) / 7;
-                ref_sl[5] = (3 * ref0 + 4 * ref1) / 7;
-                ref_sl[6] = (2 * ref0 + 5 * ref1) / 7;
-                ref_sl[7] = (1 * ref0 + 6 * ref1) / 7;
-            }
-            else
-            {
-                ref_sl[2] = (4 * ref0 + 1 * ref1) / 5;
-                ref_sl[3] = (3 * ref0 + 2 * ref1) / 5;
-                ref_sl[4] = (2 * ref0 + 3 * ref1) / 5;
-                ref_sl[5] = (1 * ref0 + 4 * ref1) / 5;
-                ref_sl[6] = 0;
-                ref_sl[7] = 255;
-            }
-
-            Read(arr, data, ref index, 3);
-            byte[] index_block1 = GetBCIndices(arr);
-
-            Read(arr, data, ref index, 3);
-            byte[] index_block2 = GetBCIndices(arr);
-
-            byte[] bytes = new byte[16];
-            for (int i = 0; i < 8; i++)
-            {
-                bytes[7 - i] = (byte)ref_sl[index_block1[i]];
-            }
-            for (int i = 0; i < 8; i++)
-            {
-                bytes[15 - i] = (byte)ref_sl[index_block2[i]];
-            }
-
-            return bytes;
-        }
-
-        private static unsafe byte[] GetBCIndices(byte* data) =>
-            new byte[] {
-                (byte)((data[2] & 0b1110_0000) >> 5),
-                (byte)((data[2] & 0b0001_1100) >> 2),
-                (byte)(((data[2] & 0b0000_0011) << 1) | ((data[1] & 0b1 << 7) >> 7)),
-                (byte)((data[1] & 0b0111_0000) >> 4),
-                (byte)((data[1] & 0b0000_1110) >> 1),
-                (byte)(((data[1] & 0b0000_0001) << 2) | ((data[0] & 0b11 << 6) >> 6)),
-                (byte)((data[0] & 0b0011_1000) >> 3),
-                (byte)(data[0] & 0b0000_0111)
-            };
+        var bits = (uint)(data >> 16);
+        block[0] = cl[(int)((bits >>  0) & 7)];
+        block[1] = cl[(int)((bits >>  3) & 7)];
+        block[2] = cl[(int)((bits >>  6) & 7)];
+        block[3] = cl[(int)((bits >>  9) & 7)];
+        block[4] = cl[(int)((bits >> 12) & 7)];
+        block[5] = cl[(int)((bits >> 15) & 7)];
+        block[6] = cl[(int)((bits >> 18) & 7)];
+        block[7] = cl[(int)((bits >> 21) & 7)];
+        bits = (uint)(data >> 40);
+        block[8]  = cl[(int)((bits >>  0) & 7)];
+        block[9]  = cl[(int)((bits >>  3) & 7)];
+        block[10] = cl[(int)((bits >>  6) & 7)];
+        block[11] = cl[(int)((bits >>  9) & 7)];
+        block[12] = cl[(int)((bits >> 12) & 7)];
+        block[13] = cl[(int)((bits >> 15) & 7)];
+        block[14] = cl[(int)((bits >> 18) & 7)];
+        block[15] = cl[(int)((bits >> 21) & 7)];
     }
 }

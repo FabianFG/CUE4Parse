@@ -1,6 +1,7 @@
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Exceptions;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
 
@@ -20,22 +21,19 @@ public class FAion2MapDataFile : FAion2DataFile
         Version = 0;
         Ids = Ar.ReadFString().Split(",");
 
-        var tagData = new FPropertyTagData(file.NameWithoutExtension is "MapData" ? "MapData" : "AionWorldMapExportInfo");
-        try
-        {
-            var tag = new FPropertyTag
-            {
-                Name = "Data",
-                PropertyType = "StructProperty",
-                Tag = FAion2PropertyReader.ReadPropertyTagType(Ar, provider.MappingsContainer.MappingsForGame, "StructProperty", tagData, true),
-                TagData = tagData,
-            };
+        var mappings = (provider.MappingsContainer?.MappingsForGame)
+            ?? throw new ParserException("Mapping is missing, cannot deserialize");
 
-            Properties.Add(tag);
-        }
-        catch (Exception e)
+        var tagData = new FPropertyTagData(file.NameWithoutExtension is "MapData" ? "MapData" : "AionWorldMapExportInfo");
+
+        var tag = new FPropertyTag
         {
-            Log.Error(e, "Failed to parse FAion2MapDataFile {0}", file.Path);
-        }
+            Name = "Data",
+            PropertyType = "StructProperty",
+            Tag = FAion2PropertyReader.ReadPropertyTagType(Ar, mappings, "StructProperty", tagData, true),
+            TagData = tagData,
+        };
+
+        Properties.Add(tag);
     }
 }

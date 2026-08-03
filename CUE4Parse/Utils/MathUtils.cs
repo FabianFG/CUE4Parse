@@ -38,6 +38,12 @@ namespace CUE4Parse.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsPowerOfTwo(int value)
+        {
+            return (value & (value - 1)) == 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int DivideAndRoundUp(this int dividend, int divisor) => (dividend + divisor - 1) / divisor;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -23,12 +23,12 @@ public class FAion2DataFileConverter : JsonConverter<FAion2DataFile>
         writer.WriteStartObject();
 
         writer.WritePropertyName(nameof(value.Version));
-        serializer.Serialize(writer, value.Version);
+        serializer.Serialize(writer, value?.Version);
 
         writer.WritePropertyName(nameof(value.Ids));
-        serializer.Serialize(writer, value.Ids);
+        serializer.Serialize(writer, value?.Ids);
 
-        if (value.Properties.Count > 0)
+        if (value?.Properties.Count > 0)
         {
             writer.WritePropertyName(nameof(value.Properties));
             writer.WriteStartObject();

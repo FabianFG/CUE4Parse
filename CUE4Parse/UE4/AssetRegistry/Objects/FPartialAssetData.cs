@@ -9,6 +9,8 @@ public class FPartialAssetData
     public readonly FName PackageName;
     public readonly FName AssetName;
     public readonly FName AssetClass;
+    
+    public string ObjectPath => $"{PackageName}.{AssetName}";
 
     public FPartialAssetData(FAssetRegistryArchive Ar)
     {

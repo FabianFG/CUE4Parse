@@ -16,7 +16,7 @@ public class FTexture2DMipMap
     public int SizeZ;
 
     public FTexture2DMipMap() { }
-    
+
     public FTexture2DMipMap(int sizeX, int sizeY, int sizeZ)
     {
         SizeX = sizeX;
@@ -76,8 +76,7 @@ public class FTexture2DMipMap
 
     public bool EnsureValidBulkData(UTextureAllMipDataProviderFactory? provider, int mipLevel)
     {
-        var bulkData = BulkData?.Data;
-        if (bulkData != null && bulkData.Length > 0)
+        if (BulkData?.Data is { Length: > 0 })
             return true;
 
         switch (provider)

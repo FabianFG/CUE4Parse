@@ -1,13 +1,18 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Texture;
+﻿using System.Diagnostics;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.Utils;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 
 public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProviderFactory
 {
+    public int BoundaryOffset { get; private set; }
+    public int BoundaryCountX { get; private set; }
+    public int BoundaryCountY { get; private set; }
     public int NumNonOptionalMips { get; private set; }
     public int NumNonStreamingMips { get; private set; }
     public FVector LandscapeGridScale { get; private set; }
@@ -17,6 +22,10 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        BoundaryOffset = GetOrDefault<int>(nameof(BoundaryOffset));
+        BoundaryCountX = GetOrDefault<int>(nameof(BoundaryCountX));
+        BoundaryCountY = GetOrDefault<int>(nameof(BoundaryCountY));
 
         NumNonOptionalMips = Ar.Read<int>();
         NumNonStreamingMips = Ar.Read<int>();
@@ -83,153 +92,232 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
             return;
         }
 
-        int width = mip.SizeX;
-        int height = mip.SizeY;
-        int totalPixels = width * height;
-        int borderPixels = (width + height) * 2 - 4;
+        var destWidth = mip.SizeX;
+        var destHeight = mip.SizeY;
 
-        if (sourceDataBytes != (totalPixels + borderPixels) * 2)
-            throw new InvalidOperationException("Invalid source data size");
-        if (destDataBytes != totalPixels * 4)
-            throw new InvalidOperationException("Invalid destination data size");
+        // If the texture is shared, or there are subsections, need to add back a duplicate row/column at every BoundaryOffset
+        var mipBoundaryOffset = BoundaryOffset >> mipIndex;
+        // High index mips drop the row/column duplication at low resolutions. Offset is only relevant when duplication occurs at least after every other pixel (Offset >= 2)
+        var bHasDuplicateData = (BoundaryCountX > 0 || BoundaryCountY > 0) && mipBoundaryOffset > 1;
+        var mipBoundaryCountX = bHasDuplicateData ? BoundaryCountX : 0;
+        var mipBoundaryCountY = bHasDuplicateData ? BoundaryCountY : 0;
+        Debug.Assert(!bHasDuplicateData || MathUtils.IsPowerOfTwo(mipBoundaryOffset));
+
+        var srcWidth = destWidth - mipBoundaryCountX;
+        var srcHeight = destHeight - mipBoundaryCountY;
+        Debug.Assert(srcHeight >= 0 && srcWidth >= 0);
+
+        int numSrcPixels = srcWidth * srcHeight;
+        Debug.Assert(sourceDataBytes == (numSrcPixels + (destWidth + destHeight) * 2 - 4) * 2); // 2 bytes (height) for each pixel, plus 2 bytes (normal x/y) for each border pixel
+        Debug.Assert(destDataBytes == destWidth * destHeight * 4);
 
         // Save some multiplying by premultiplying the grid scales, mip scale and ZScale
-        FVector2D premultU16 = CalculatePremultU16(mipIndex, LandscapeGridScale);
+        var premultU16 = CalculatePremultU16(mipIndex, LandscapeGridScale);
 
         // Current center pixel height
         // (also used to delta decode the heights - initial value must match the initial value used during encoding)
-        ushort CC = 32768;
+        ushort cc = 32768;
 
         // Partial normal results recorded for the previous line
-        FVector[] prevLinePartialNormals = new FVector[width];
-        for (int i = 0; i < width; i++)
-            prevLinePartialNormals[i] = new FVector(0, 0, 0);
+        var prevLinePartialNormals = new FVector[destWidth];
+        // FVector is a struct, the array is already initialized to 0
+        // for (int i = 0; i < prevLinePartialNormals.Length; i++)
+        // {
+        //     prevLinePartialNormals[i] = new FVector(0, 0, 0);
+        // }
 
         fixed (byte* srcPtr = sourceData)
         fixed (byte* dstPtr = destData)
         {
+            var duplicateRowsSkipped = 0;
+            var previousRowOffset = 1;
+
             // Iterate each line
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < destHeight; y++)
             {
-                int lineOffsetInPixels = y * width;
-                byte* src = srcPtr + (lineOffsetInPixels * 2);
-                FColor* dstColorPtr = (FColor*)(dstPtr + lineOffsetInPixels * 4);
+                // Offset the src since the data has removed all of the duplicate rows
+                var srcLineOffsetInPixels = (y - duplicateRowsSkipped) * srcWidth;
+                var destLineOffsetInPixels = y * destWidth;
+                byte* src = &srcPtr[srcLineOffsetInPixels * 2];
+                FColor* dst = (FColor*)&dstPtr[destLineOffsetInPixels * 4];
 
                 if (y == 0)
                 {
                     // Just decode heights for the first line (normals don't matter they will be stomped below)
-                    for (int x = 0; x < width; x++)
+                    for (int x = 0; x < destWidth; x++)
                     {
+                        // Skip the duplicate column. Duplicate columns will be copied once at the end of function
+                        if (bHasDuplicateData && IsDuplicateCoord(x, mipBoundaryOffset))
+                        {
+                            dst++;
+                            continue;
+                        }
+
                         ushort deltaHeight = (ushort)(src[0] * 256 + src[1]);
-                        CC += deltaHeight;
-                        *dstColorPtr = new FColor((byte)(CC >> 8), (byte)(CC & 0xff), 128, 128);
+                        cc += deltaHeight;
+                        *dst = new FColor((byte)(cc >> 8), (byte)(cc & 0xff), 128, 128);
                         src += 2;
-                        dstColorPtr++;
+                        dst++;
                     }
                 }
                 else
                 {
-                    // Compute initial values (first pixel)
-                    FVector P1 = new FVector(0, 0, 0);  // previous quad N1 normal
-                    FVector P01 = new FVector(0, 0, 0); // previous quad (N0+N1) normals
-                    ushort TT;                              // previous quad TT height
+                    // Duplicate rows will be copied once at the end of function
+                    if (bHasDuplicateData && IsDuplicateCoord(y, mipBoundaryOffset))
                     {
-                        ushort deltaHeight = (ushort)(src[0] * 256 + src[1]);
-                        CC += deltaHeight;
-                        *dstColorPtr = new FColor((byte)(CC >> 8), (byte)(CC & 0xff), 128, 128);
-
-                        // Load TT for first pixel (becomes TL for second pixel)
-                        TT = DecodeHeightU16(dstColorPtr + 0 - width);
-
-                        src += 2;
-                        dstColorPtr++;
+                        duplicateRowsSkipped++;
+                        previousRowOffset = 2;
+                        continue;
                     }
 
-                    // Rest of the pixels in the line
-                    for (int x = 1; x < width; x++)
+                    // Duplicate rows are not considered in the normal calculation
+                    // The top pixel is two rows above after skipping a duplicate row
+                    var ttOffset = destWidth * previousRowOffset;
+
+                    // compute initial values (first pixel)
+                    // previous quad N1 and (N0+N1) normals
+                    var p1 = FVector.ZeroVector;
+                    var p01 = FVector.ZeroVector;
+                    ushort tt;												// previous quad TT height
                     {
+                        ushort deltaHeight = (ushort)(src[0] * 256 + src[1]);
+                        cc += deltaHeight;
+                        *dst = new FColor((byte)(cc >> 8), (byte)(cc & 0xff), 128, 128);
+
+                        // load TT for first pixel (becomes TL for second pixel)
+                        tt = DecodeHeightU16(dst - ttOffset);
+
+                        src += 2;
+                        dst++;
+                    }
+
+                    var prevColumnOffset = -1;
+                    // Rest of the pixels in the line
+                    for (int x = 1; x < destWidth; x++)
+                    {
+                        // Duplicate column data is copied once at the end of function
+                        if (bHasDuplicateData && IsDuplicateCoord(x, mipBoundaryOffset))
+                        {
+                            dst++;
+                            prevColumnOffset = -2;
+                            continue;
+                        }
+
                         // Re-use previous pixel TT and CC as this pixel TL and LL
-                        ushort TL = TT;
-                        ushort LL = CC;
+                        ushort tl = tt;
+                        ushort ll = cc;
 
                         // 1) Decode Height at CC
                         ushort deltaHeight = (ushort)(src[0] * 256 + src[1]);
-                        CC += deltaHeight;
+                        cc += deltaHeight;
 
                         // Load TT
-                        TT = DecodeHeightU16(dstColorPtr + 0 - width);
+                        tt = DecodeHeightU16(dst - ttOffset);
 
                         // 2) Write Height at CC (normals get written during processing of the next line)
-                        *dstColorPtr = new FColor((byte)(CC >> 8), (byte)(CC & 0xff), 128, 128);
+                        *dst = new FColor((byte)(cc >> 8), (byte)(cc & 0xff), 128, 128);
 
                         // 3) Compute local normals N0/N1 for the current quad (CC/TT/TL/LL)
-                        FVector N0 = ComputeGridNormalFromDeltaHeightsPremultU16(CC - LL, LL - TL, premultU16);
-                        FVector N1 = ComputeGridNormalFromDeltaHeightsPremultU16(TT - TL, CC - TT, premultU16);
-                        FVector N01 = N0 + N1;
-
+                        var n0 = ComputeGridNormalFromDeltaHeightsPremultU16(cc - ll, ll - tl, premultU16);
+                        var n1 = ComputeGridNormalFromDeltaHeightsPremultU16(tt - tl, cc - tt, premultU16);
+                        var n01 = n0 + n1;
 
                         // 4) Complete Normal calculation for TL - this takes the partial result from the previous line and fills in the rest
-                        FVector TL_Normal = prevLinePartialNormals[x - 1] + P1 + N01;
-                        FastNormalize(ref TL_Normal);
+                        var tlNormal = prevLinePartialNormals[x + prevColumnOffset] + p1 + n01;
+                        FastNormalize(ref tlNormal);
 
                         // 5) Write Normal for TL
-                        FColor* topLeftPixel = dstColorPtr - width - 1;
-                        topLeftPixel->B = (byte)Math.Clamp((TL_Normal.X * 127.5f + 127.5f), 0.0f, 255.0f);
-                        topLeftPixel->A = (byte)Math.Clamp((TL_Normal.Y * 127.5f + 127.5f), 0.0f, 255.0f);
+                        dst[-ttOffset + prevColumnOffset].B = (byte)Math.Clamp(tlNormal.X * 127.5f + 127.5f, 0.0f, 255.0f);
+                        dst[-ttOffset + prevColumnOffset].A = (byte)Math.Clamp(tlNormal.Y * 127.5f + 127.5f, 0.0f, 255.0f);
 
                         // 6) Store Partial Normal for LL in PrevLinePartialNormals (P0 + P1 + N0) - the rest will be filled in when processing the next line
-                        FVector LL_PartialNormal = P01 + N0;
-                        prevLinePartialNormals[x - 1] = LL_PartialNormal;
+                        var llPartialNormal = p01 + n0;
+                        prevLinePartialNormals[x + prevColumnOffset] = llPartialNormal;
 
-                        // Pass normals to next pixel
-                        P1 = N1;
-                        P01 = N01;
+                        // pass normals to next pixel
+                        p1 = n1;
+                        p01 = n01;
 
                         src += 2;
-                        dstColorPtr++;
+                        dst++;
+                        prevColumnOffset = -1;
                     }
                 }
             }
 
             // Write out normals along the edge (delta encoded clockwise starting from top left)
             {
-                byte* src = srcPtr + (totalPixels * 2);
+                byte* src = &srcPtr[numSrcPixels * 2];
                 byte lastNormalX = 128;
                 byte lastNormalY = 128;
 
+                void DecodeNormal(int x, int y, byte* dst)
                 {
-                    void DecodeNormal(int x, int y, byte* dst)
+                    var destOffset = (y * destWidth + x) * 4;
+                    lastNormalX += src[0];
+                    lastNormalY += src[1];
+                    dst[destOffset + 0] = lastNormalX;
+                    dst[destOffset + 3] = lastNormalY;
+                    src += 2;
+                }
+
+                for (var x = 0; x < destWidth; x++)		// [0 ... Width-1], 0
+                {
+                    DecodeNormal(x, 0, dstPtr);
+                }
+
+                for (var y = 1; y < destHeight; y++)		// Width-1, [1 ... Height-1]
+                {
+                    DecodeNormal(destWidth - 1, y, dstPtr);
+                }
+
+                for (var x = destWidth - 2; x >= 0; x--)	// [Width-2 ... 0], Height-1
+                {
+                    DecodeNormal(x, destHeight - 1, dstPtr);
+                }
+
+                for (var y = destHeight - 2; y >= 1; y--)	// 0, [Height-2 ... 1]
+                {
+                    DecodeNormal(0, y, dstPtr);
+                }
+                Debug.Assert(src == &srcPtr[sourceDataBytes]);
+
+                // Copy all duplicate row/column data once all height/normal data is set
+                if (bHasDuplicateData)
+                {
+                    // For each duplicate row, copy the pixels above
+                    for (var y = mipBoundaryOffset; y < destHeight; y += mipBoundaryOffset)
                     {
-                        int destOffset = (y * width + x) * 4;
-                        lastNormalX += src[0];
-                        lastNormalY += src[1];
-                        dst[destOffset + 0] = lastNormalX;
-                        dst[destOffset + 3] = lastNormalY;
-                        src += 2;
+                        Debug.Assert(IsDuplicateCoord(y, mipBoundaryOffset));
+                        FColor* dst = (FColor*)&dstPtr[y * destWidth * 4];
+
+                        for (var x = 0; x < destWidth; x++)
+                        {
+                            *dst = dst[-destWidth];
+                            dst++;
+                        }
                     }
 
-                    for (int x = 0; x < width; x++)      // [0 ... Width-1], 0
+                    // For each duplicate column, copy the pixels to the left
+                    for (var x = mipBoundaryOffset; x < destWidth; x += mipBoundaryOffset)
                     {
-                        DecodeNormal(x, 0, dstPtr);
-                    }
-
-                    for (int y = 1; y < height; y++)      // Width-1, [1 ... Height-1]
-                    {
-                        DecodeNormal(width - 1, y, dstPtr);
-                    }
-
-                    for (int x = width - 2; x >= 0; x--)  // [Width-2 ... 0], Height-1
-                    {
-                        DecodeNormal(x, height - 1, dstPtr);
-                    }
-
-                    for (int y = height - 2; y >= 1; y--)  // 0, [Height-2 ... 1]
-                    {
-                        DecodeNormal(0, y, dstPtr);
+                        Debug.Assert(IsDuplicateCoord(x, mipBoundaryOffset));
+                        FColor* dst = (FColor*)&dstPtr[x * 4];
+                        for (var y = 0; y < destHeight; y++)
+                        {
+                            *dst = dst[-1];
+                            dst += destWidth;
+                        }
                     }
                 }
             }
         }
+    }
+
+    private bool IsDuplicateCoord(int xy, int mipBoundaryOffset)
+    {
+        Debug.Assert(MathUtils.IsPowerOfTwo(mipBoundaryOffset));
+        return xy != 0 && (xy & (mipBoundaryOffset - 1)) == 0;
     }
 
     private FVector ComputeGridNormalFromDeltaHeightsPremultU16(int dhdx, int dhdy, FVector2D premultU16)

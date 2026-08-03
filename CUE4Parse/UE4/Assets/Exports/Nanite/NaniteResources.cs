@@ -120,6 +120,14 @@ public class FNaniteResources
         }
     }
 
+    public void UnloadAllPages()
+    {
+        for (int i = 0; i < LoadedPages.Length; i++)
+        {
+            LoadedPages[i] = null;
+        }
+    }
+
     public FNaniteStreamableData? GetPage(uint pageIndex)
     {
         if (pageIndex >= PageStreamingStates.Length) return null;
@@ -161,14 +169,7 @@ public class FNaniteResources
         byte[] buffer = ArrayPool<byte>.Shared.Rent((int)page.BulkSize);
         try
         {
-            if (pageIndex < NumRootPages)
-            {
-                Buffer.BlockCopy(RootData, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
-            }
-            else
-            {
-                Buffer.BlockCopy(StreamablePages.Data, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
-            }
+            Buffer.BlockCopy(pageIndex < NumRootPages ? RootData : StreamablePages.Data, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
 
             using var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, versionContainer);
             outPage = new FNaniteStreamableData(pageArchive, this, pageIndex);

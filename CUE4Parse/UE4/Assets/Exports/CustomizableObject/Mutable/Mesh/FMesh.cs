@@ -17,7 +17,7 @@ public class FMesh
     public FMeshBufferSet IndexBuffers;
     public FMeshBufferSet VertexBuffers;
     public KeyValuePair<EMeshBufferType, FMeshBufferSet>[] AdditionalBuffers;
-    public FLayout[] Layouts;
+    public FLayout?[] Layouts;
     public uint[] SkeletonIDs = [];
     public FSkeleton? Skeleton;
     public FPhysicsBody? PhysicsBody;

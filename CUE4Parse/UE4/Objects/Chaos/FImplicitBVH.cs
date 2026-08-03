@@ -1,4 +1,3 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Chaos;
 using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse.UE4.Objects.Chaos;
@@ -8,15 +7,14 @@ using FVec3f = TIntVector3<float>;
 
 public class FImplicitBVHObject
 {
-    private FImplicitObject Geometry;
+    private FImplicitObject? Geometry;
     private FVec3f X;
     private TIntVector4<float> R;
     private int RootObjectIndex;
     
     public FImplicitBVHObject(FChaosArchive Ar)
     {
-        Geometry = Ar.SerializePtr(new FImplicitObject());
-
+        Geometry = Ar.ReadPtr<FImplicitObject>();
         X = Ar.Read<FVec3f>();
         R = Ar.Read<TIntVector4<float>>();
         RootObjectIndex = Ar.Read<int>();
@@ -36,8 +34,8 @@ public class TBVHNode<T> where T: struct
         LeafIndex = Ar.Read<int>();
         MAxis = Ar.Read<int>();
         MChildren = Ar.ReadArray<int>();
-        var aMMax = new TVector<float>(Ar, d);
-        var aMMin = new TVector<float>(Ar, d);
+        MMax = new TVector<T>(Ar, d);
+        MMin = new TVector<T>(Ar, d);
     }
 }
 
@@ -73,6 +71,6 @@ public class FImplicitBVH
     public FImplicitBVH(FChaosArchive Ar)
     {
         Objects = Ar.ReadArray(() => new FImplicitBVHObject(Ar));
-        var BVH = new TBoundingVolumeHierarchy<int[], int, FReal>(Ar, 3);
+        var BVH = new TBoundingVolumeHierarchy<int[], int, float>(Ar, 3);
     }
 }
