@@ -19,7 +19,6 @@ namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureDecoder
 {
-
     public static bool UseAssetRipperTextureDecoder { get; set; } = false;
     internal static readonly bool IsWindows = OperatingSystem.IsWindows(); 
 
@@ -416,6 +415,10 @@ public static class TextureDecoder
                     colorType = EPixelFormat.PF_FloatRGBA; //TODO idk
                 }
                 break;
+            case EPixelFormat.PF_BC6H_Signed:
+                Bc6h.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, true, out data);
+                colorType = EPixelFormat.PF_R8G8B8A8;
+                break;
             case EPixelFormat.PF_BC7:
                 if (UseAssetRipperTextureDecoder || !IsWindows)
                     Bc7.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
@@ -461,10 +464,21 @@ public static class TextureDecoder
                 break;
             case EPixelFormat.PF_ETC2_R11:
             case EPixelFormat.PF_ETC2_R11_EAC:
-                data = EacDecoder.DecodeR11(bytes, sizeX, sizeY);
-                colorType = EPixelFormat.PF_B8G8R8A8;
+                if (UseAssetRipperTextureDecoder)
+                {
+                    EtcDecoder.DecompressEACRUnsigned<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    colorType = EPixelFormat.PF_R8G8B8A8;
+                }
+                else
+                {
+                    data = EacDecoder.DecodeR11(bytes, sizeX, sizeY);
+                    colorType = EPixelFormat.PF_B8G8R8A8;
+                }
                 break;
-
+            case EPixelFormat.PF_ETC2_RG11_EAC:
+                EtcDecoder.DecompressEACRGUnsigned<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                colorType = EPixelFormat.PF_R8G8B8A8;
+                break;
             // Uses AssetRipper since depth data doesn't exist
             // If this format is used in any UE4/UE5, then switch to the different decoder
             case EPixelFormat.PF_PVRTC2:

@@ -111,7 +111,6 @@ public class UTexture : UUnrealMaterial, IAssetUserData
             bSerializeMipData = data.X > 0 && data.Y == 0 && data.Z > 0 || Ar.ReadBoolean();
         }
         var pixelFormatName = Ar.ReadFName();
-        if (pixelFormatName.Text == "PF_BC6H_Signed") pixelFormatName = "PF_BC6H";
         while (!pixelFormatName.IsNone)
         {
             if (!Enum.TryParse(pixelFormatName.Text, ignoreCase: true, out EPixelFormat pixelFormat))
@@ -129,7 +128,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
             {
                 //?? check whether we can support this pixel format
 #if DEBUG
-                //Log.Debug("Loading data for format {Format}", pixelFormatName);
+                Log.Debug("Loading data for format {Format}", pixelFormatName);
 #endif
                 PlatformData = new FTexturePlatformData(Ar, this, bSerializeMipData);
 
