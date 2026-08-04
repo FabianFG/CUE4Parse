@@ -20,15 +20,8 @@ namespace CUE4Parse_Conversion.Textures;
 public static class TextureDecoder
 {
 
-    /// <summary>
-    /// Route BC6H/BC7/ETC decoding through the managed AssetRipper decoders instead of Detex.
-    /// <para>
-    /// Detex ships as an embedded Windows PE (<see cref="BC.DetexHelper.DLL_NAME"/>), so on any
-    /// non-Windows host it can never initialize and those formats would throw
-    /// "Detex decompression failed: not initialized". Default to the managed path there.
-    /// </para>
-    /// </summary>
-    public static bool UseAssetRipperTextureDecoder { get; set; } = !OperatingSystem.IsWindows();
+    public static bool UseAssetRipperTextureDecoder { get; set; } = false;
+    internal static readonly bool IsWindows = OperatingSystem.IsWindows(); 
 
     public static CTexture? Decode(this UTexture texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetMipIndexByMaxSize(maxMipSize), platform);
     public static CTexture? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetFirstMipIndex(), platform);
@@ -410,7 +403,7 @@ public static class TextureDecoder
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_BC6H:
-                if (UseAssetRipperTextureDecoder)
+                if (UseAssetRipperTextureDecoder || !IsWindows)
                 {
                     Bc6h.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, false, out data);
                     colorType = EPixelFormat.PF_R8G8B8A8;
@@ -424,14 +417,14 @@ public static class TextureDecoder
                 }
                 break;
             case EPixelFormat.PF_BC7:
-                if (UseAssetRipperTextureDecoder)
+                if (UseAssetRipperTextureDecoder || !IsWindows)
                     Bc7.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
                 else
                     data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY * sizeZ, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_ETC1:
-                if (UseAssetRipperTextureDecoder)
+                if (UseAssetRipperTextureDecoder || !IsWindows)
                 {
                     EtcDecoder.DecompressETC<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
                     colorType = EPixelFormat.PF_R8G8B8A8;
@@ -443,7 +436,7 @@ public static class TextureDecoder
                 }
                 break;
             case EPixelFormat.PF_ETC2_RGB:
-                if (UseAssetRipperTextureDecoder)
+                if (UseAssetRipperTextureDecoder || !IsWindows)
                 {
                     EtcDecoder.DecompressETC2<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
                     colorType = EPixelFormat.PF_R8G8B8A8;
@@ -455,7 +448,7 @@ public static class TextureDecoder
                 }
                 break;
             case EPixelFormat.PF_ETC2_RGBA:
-                if (UseAssetRipperTextureDecoder)
+                if (UseAssetRipperTextureDecoder || !IsWindows)
                 {
                     EtcDecoder.DecompressETC2A8<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
                     colorType = EPixelFormat.PF_R8G8B8A8;
