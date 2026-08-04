@@ -7,7 +7,6 @@ using AssetRipper.TextureDecoder.Pvrtc;
 using AssetRipper.TextureDecoder.Rgb.Formats;
 using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
-using CUE4Parse_Conversion.Textures.DXT;
 using CUE4Parse_Conversion.Textures.ETC;
 using CUE4Parse_Conversion.Textures.Crunch;
 using CUE4Parse.Compression;
@@ -316,7 +315,7 @@ public static class TextureDecoder
                 }
                 else
                 {
-                    data = DXTDecoder.DXT1(bytes, sizeX, sizeY, sizeZ);
+                    data = BCDecoder.BC1(bytes, sizeX, sizeY, sizeZ);
                 }
                 colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
@@ -329,8 +328,8 @@ public static class TextureDecoder
                 }
                 else
                 {
-                    data = DXTDecoder.DXT3(bytes, sizeX, sizeY, sizeZ);
-                }
+                    data = BCDecoder.BC2(bytes, sizeX, sizeY, sizeZ);
+                    }
                 colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
             }
@@ -341,7 +340,7 @@ public static class TextureDecoder
                 }
                 else
                 {
-                    data = DXTDecoder.DXT5(bytes, sizeX, sizeY, sizeZ);
+                    data = BCDecoder.BC3(bytes, sizeX, sizeY, sizeZ);
                 }
                 colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
