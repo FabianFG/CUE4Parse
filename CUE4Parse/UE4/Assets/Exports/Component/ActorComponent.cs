@@ -322,7 +322,6 @@ public class UShapeComponent : UPrimitiveComponent;
 public class USingleAnimSkeletalComponent : USkeletalMeshComponent;
 public class USkeletalMeshReplicatedComponent : USkeletalMeshComponent;
 public class UFPSSkeletalMeshComponent : USkeletalMeshComponent;
-public class USkinnedMeshComponent : UMeshComponent;
 public class USpeedTreeComponent : UPrimitiveComponent
 {
     public override void Deserialize(FAssetArchive Ar, long validPos)
