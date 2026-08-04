@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Runtime.InteropServices;
 using AssetRipper.TextureDecoder.Astc;
 using AssetRipper.TextureDecoder.Bc;
+using AssetRipper.TextureDecoder.Etc;
 using AssetRipper.TextureDecoder.Pvrtc;
 using AssetRipper.TextureDecoder.Rgb.Formats;
 using CUE4Parse_Conversion.Textures.ASTC;
@@ -19,7 +20,15 @@ namespace CUE4Parse_Conversion.Textures;
 public static class TextureDecoder
 {
 
-    public static bool UseAssetRipperTextureDecoder { get; set; } = false;
+    /// <summary>
+    /// Route BC6H/BC7/ETC decoding through the managed AssetRipper decoders instead of Detex.
+    /// <para>
+    /// Detex ships as an embedded Windows PE (<see cref="BC.DetexHelper.DLL_NAME"/>), so on any
+    /// non-Windows host it can never initialize and those formats would throw
+    /// "Detex decompression failed: not initialized". Default to the managed path there.
+    /// </para>
+    /// </summary>
+    public static bool UseAssetRipperTextureDecoder { get; set; } = !OperatingSystem.IsWindows();
 
     public static CTexture? Decode(this UTexture texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetMipIndexByMaxSize(maxMipSize), platform);
     public static CTexture? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetFirstMipIndex(), platform);
@@ -422,16 +431,40 @@ public static class TextureDecoder
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_ETC1:
-                data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC1, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
-                colorType = EPixelFormat.PF_B8G8R8A8;
+                if (UseAssetRipperTextureDecoder)
+                {
+                    EtcDecoder.DecompressETC<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    colorType = EPixelFormat.PF_R8G8B8A8;
+                }
+                else
+                {
+                    data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC1, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
+                    colorType = EPixelFormat.PF_B8G8R8A8;
+                }
                 break;
             case EPixelFormat.PF_ETC2_RGB:
-                data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
-                colorType = EPixelFormat.PF_B8G8R8A8;
+                if (UseAssetRipperTextureDecoder)
+                {
+                    EtcDecoder.DecompressETC2<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    colorType = EPixelFormat.PF_R8G8B8A8;
+                }
+                else
+                {
+                    data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
+                    colorType = EPixelFormat.PF_B8G8R8A8;
+                }
                 break;
             case EPixelFormat.PF_ETC2_RGBA:
-                data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
-                colorType = EPixelFormat.PF_B8G8R8A8;
+                if (UseAssetRipperTextureDecoder)
+                {
+                    EtcDecoder.DecompressETC2A8<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    colorType = EPixelFormat.PF_R8G8B8A8;
+                }
+                else
+                {
+                    data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_ETC2_EAC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
+                    colorType = EPixelFormat.PF_B8G8R8A8;
+                }
                 break;
             case EPixelFormat.PF_ETC2_R11:
             case EPixelFormat.PF_ETC2_R11_EAC:
