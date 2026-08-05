@@ -185,7 +185,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
     /// </summary>
     public StaticMeshDto(UObject owner, MeshMaterialDto[] materials, FNaniteResources nanite, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NaniteOnly) : base(owner, materials)
     {
-        Bounds = default;
+        Bounds = new FBox(FVector.ZeroVector, FVector.OneVector);
 
         if (nanite.PageStreamingStates.Length > 0)
         {
