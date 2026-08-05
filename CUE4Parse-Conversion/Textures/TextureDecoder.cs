@@ -420,10 +420,19 @@ public static class TextureDecoder
                 break;
             case EPixelFormat.PF_BC7:
                 if (UseAssetRipperTextureDecoder || !IsWindows)
+                {
+                    // This branch emits ColorRGBA, so the result has to be reported as RGBA.
+                    // Reporting BGRA swapped red and blue in every BC7 texture decoded here,
+                    // which is every platform other than Windows. The ETC branches below
+                    // already set the colour type per branch; BC7 was the sole outlier.
                     Bc7.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    colorType = EPixelFormat.PF_R8G8B8A8;
+                }
                 else
+                {
                     data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY * sizeZ, false, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC, DetexPixelFormat.DETEX_PIXEL_FORMAT_BGRA8);
-                colorType = EPixelFormat.PF_B8G8R8A8;
+                    colorType = EPixelFormat.PF_B8G8R8A8;
+                }
                 break;
             case EPixelFormat.PF_ETC1:
                 if (UseAssetRipperTextureDecoder || !IsWindows)
