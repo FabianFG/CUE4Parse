@@ -12,6 +12,7 @@ using CUE4Parse_Conversion.Textures.Crunch;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse_Conversion.Textures;
@@ -28,20 +29,9 @@ public static class TextureDecoder
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
             return DecodeVT(texture, vt);
 
-        if (mip == null)
-            return null;
+        if (mip is null) return null; // TODO: we should let it throw the exception
 
-        var sizeX = mip.SizeX;
-        var sizeY = mip.SizeY;
-        var sizeZ = mip.SizeZ;
-
-        if (texture.Format == EPixelFormat.PF_BC7)
-        {
-            sizeX = sizeX.Align(4);
-            sizeY = sizeY.Align(4);
-        }
-
-        DecodeTexture(texture, mip, sizeX, sizeY, sizeZ, platform, out var data, out var colorType);
+        DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
         return new CTexture(sizeX, sizeY, colorType, data);
     }
 
@@ -51,20 +41,9 @@ public static class TextureDecoder
             return DecodeVT(texture, vt, mipIndex);
 
         var mip = texture.GetMip(mipIndex);
-        if (mip == null)
-            return null;
+        if (mip is null) return null; // TODO: we should let it throw the exception
 
-        var sizeX = mip.SizeX;
-        var sizeY = mip.SizeY;
-        var sizeZ = mip.SizeZ;
-
-        if (texture.Format == EPixelFormat.PF_BC7)
-        {
-            sizeX = sizeX.Align(4);
-            sizeY = sizeY.Align(4);
-        }
-
-        DecodeTexture(texture, mip, sizeX, sizeY, sizeZ, platform, out var data, out var colorType);
+        DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
         return new CTexture(sizeX, sizeY, colorType, data);
     }
 
@@ -226,21 +205,9 @@ public static class TextureDecoder
     public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, FTexture2DMipMap? mip = null, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
         mip ??= texture.GetFirstMip();
+        if (mip is null) return null; // TODO: we should let it throw the exception
 
-        if (mip is null)
-            return null;
-
-        var sizeX = mip.SizeX;
-        var sizeY = mip.SizeY;
-        var sizeZ = mip.SizeZ;
-
-        if (texture.Format == EPixelFormat.PF_BC7)
-        {
-            sizeX = sizeX.Align(4);
-            sizeY = sizeY.Align(4);
-        }
-
-        DecodeTexture(texture, mip, sizeX, sizeY, sizeZ, platform, out var data, out var colorType);
+        DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
 
         var bitmaps = new CTexture[sizeZ];
         var bytesPerPixel = GetBytesPerPixel(colorType);
@@ -258,7 +225,7 @@ public static class TextureDecoder
         return bitmaps;
     }
 
-    private static void DecodeTexture(UTexture texture, FTexture2DMipMap? mip, int sizeX, int sizeY, int sizeZ, ETexturePlatform platform, out byte[] data, out EPixelFormat colorType)
+    private static void DecodeTexture(UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform, out byte[] data, out EPixelFormat colorType, out int sizeX, out int sizeY, out int sizeZ)
     {
         var format = texture.Format;
         if (mip?.BulkData?.Data is not { Length: > 0 })
@@ -267,6 +234,35 @@ public static class TextureDecoder
             throw new NotImplementedException($"The supplied pixel format {format} is not supported!");
 
         var bytes = mip.BulkData.Data;
+        sizeX = mip.SizeX;
+        sizeY = mip.SizeY;
+        sizeZ = mip.SizeZ;
+
+        if (texture is UVolumeTexture or UTextureCube)
+        {
+            var slices = texture.PlatformData.GetNumSlices();
+            if (texture.Owner?.Provider?.Versions.Game == EGame.GAME_Borderlands4)
+            {
+                slices = slices != 1 ? slices >> 1 : 1;
+            }
+            
+            // A volume's depth shrinks with every mip and is written on the mip itself, while
+            // PackedData only describes mip 0 and doesn't always work with it. Mips below 4.20
+            // have no depth at all, so we fall back to the slice count when there's nothing usable
+            if (texture is UVolumeTexture && sizeZ > 1)
+            {
+                slices = sizeZ;
+            }
+
+            sizeY *= slices;
+            if (sizeZ == slices) sizeZ = 1;
+        }
+
+        if (format == EPixelFormat.PF_BC7)
+        {
+            sizeX = sizeX.Align(4);
+            sizeY = sizeY.Align(4);
+        }
 
         // TODO: Only known game to use this is PUBG Mobile, not sure if this is right place to decompress, probably not and should be refactored
         if (texture.PlatformData.PixelFormat.EndsWith("_crunched", StringComparison.OrdinalIgnoreCase))
