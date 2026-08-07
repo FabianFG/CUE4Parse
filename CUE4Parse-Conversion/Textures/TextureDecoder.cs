@@ -242,6 +242,12 @@ public static class TextureDecoder
         {
             var slices = texture.PlatformData.GetNumSlices();
             if (texture.Owner?.Provider?.Versions.Game == EGame.GAME_Borderlands4) slices = slices != 1 ? slices >> 1 : 1;
+            
+            // A volume's depth shrinks with every mip and is written on the mip itself, while
+            // PackedData only describes mip 0 and doesn't always work with it. Mips below 4.20
+            // have no depth at all, so we fall back to the slice count when there's nothing usable
+            if (texture is UVolumeTexture && sizeZ > 1) slices = sizeZ;
+
             sizeY *= slices;
             if (sizeZ == slices) sizeZ = 1;
         }
