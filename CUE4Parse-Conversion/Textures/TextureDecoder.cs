@@ -397,18 +397,11 @@ public static class TextureDecoder
                 colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
             case EPixelFormat.PF_BC6H:
-                if (UseAssetRipperTextureDecoder || !IsWindows)
-                {
+                if (UseAssetRipperTextureDecoder)
                     Bc6h.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, false, out data);
-                    colorType = EPixelFormat.PF_R8G8B8A8;
-                }
                 else
-                {
-                    // BC6H doesn't work no matter the pixel format, the closest we can get is either
-                    // Rgb565 DETEX_PIXEL_FORMAT_FLOAT_RGBX16 or Rgb565 DETEX_PIXEL_FORMAT_FLOAT_BGRX16
-                    data = DetexHelper.DecodeDetexLinear(bytes, sizeX, sizeY, true, DetexTextureFormat.DETEX_TEXTURE_FORMAT_BPTC_FLOAT, DetexPixelFormat.DETEX_PIXEL_FORMAT_FLOAT_RGBX16);
-                    colorType = EPixelFormat.PF_FloatRGBA; //TODO idk
-                }
+                    data = BCDecoder.BC6H(bytes, sizeX, sizeY, sizeZ);
+                colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
             case EPixelFormat.PF_BC6H_Signed:
                 Bc6h.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, true, out data);

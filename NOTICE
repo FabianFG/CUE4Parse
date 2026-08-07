@@ -24,6 +24,7 @@ This library includes material developed by the following third-party libraries:
 - SubstreamSharp (https://github.com/connorhaigh/SubstreamSharp/blob/master/Licence.txt) - Copyright (c) 2021 Connor Haigh. Licensed under the MIT License.
 - crunch (https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/ThirdParty/Crunch/src/license.txt) - Copyright (c) 2010-2016 Richard Geldreich, Jr. and Binomial LLC. Licensed under the ZLIB license.
 - SwiftShader (https://swiftshader.googlesource.com/SwiftShader/+/HEAD/src/Device/ETC_Decoder.cpp) - Copyright 2016 The SwiftShader Authors. Licensed under the Apache License 2.0. Portions of the ETC decoder were translated to C# and modified.
+- AssetRipper.TextureDecoder (https://github.com/AssetRipper/AssetRipper.TextureDecoder/blob/master/LICENSE) - Copyright (c) 2022 ds5678. Licensed under the MIT License.
 
 ---------------------------------------------------------------------------
 
