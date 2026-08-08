@@ -111,17 +111,15 @@ public abstract class TBulkData<T> where T: struct
         using var dataAr = new FByteArchive("", bulkData, Header.SizeOnDisk, _savedAr.Versions);
         if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
         {
-            var size = GetDataSize();
             data = new T[Header.ElementCount];
             var dest = MemoryMarshal.AsBytes(data.AsSpan());
-            dataAr.SerializeCompressedNew(dest, size, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            dataAr.SerializeCompressedNew(dest, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_CompressedLZO))
         {
-            var size = GetDataSize();
             data = new T[Header.ElementCount];
             var dest = MemoryMarshal.AsBytes(data.AsSpan());
-            dataAr.SerializeCompressedNew(dest, size, "LZO", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            dataAr.SerializeCompressedNew(dest, GetDataSize(), "LZO", ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }
         else
         {

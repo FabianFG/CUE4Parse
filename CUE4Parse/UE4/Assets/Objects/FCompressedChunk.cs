@@ -15,6 +15,11 @@ namespace CUE4Parse.UE4.Assets.Objects
             UncompressedSize = Ar.Read<int>();
             CompressedOffset = Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22 ? (int)Ar.Read<long>() : Ar.Read<int>();
             CompressedSize = Ar.Read<int>();
+
+            if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer >= 33)
+            {
+                Ar.Position += 12;
+            }
         }
     }
 }

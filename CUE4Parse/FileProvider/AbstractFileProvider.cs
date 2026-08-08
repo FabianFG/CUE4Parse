@@ -708,7 +708,7 @@ namespace CUE4Parse.FileProvider
                 {
                     using var upkAr = file.CreateReader();
                     var data = SaveAsset(file);
-                    RocketLeagueAes.Decrypt(data, 0, false, out byte[] decryptedData);
+                    RocketLeagueAes.Decrypt(data, 0, 0, false, out byte[] decryptedData);
                     var dictdecrypted = new Dictionary<string, byte[]> { { file.Path, decryptedData } };
                     return dictdecrypted;
                 }

@@ -54,6 +54,7 @@ public static class RocketLeagueAes
         byte[] inputData,
         byte[] key,
         int checkSumDataOffset,
+        int checkSumDataSize,
         bool upk,
         bool coalesced,
         out byte[]? outputData)
@@ -76,7 +77,7 @@ public static class RocketLeagueAes
                     return true;
                 }
 
-                if (!ValidateChecksum(decrypted, checkSumDataOffset))
+                if (!ValidateChecksum(decrypted, checkSumDataOffset, checkSumDataSize - 16))
                     return false;
 
                 outputData = decrypted;
@@ -98,18 +99,19 @@ public static class RocketLeagueAes
         }
     }
 
-    private static bool ValidateChecksum(byte[] data, int offset)
+    private static bool ValidateChecksum(byte[] data, int offset, int length)
     {
         var ar = new FByteArchive("Rocket League - Checksum", data);
         ar.Position = offset;
 
         byte prev = ar.Read<byte>();
+        long end = Math.Min(offset + length, ar.Length);
 
-        for (long i = offset + 1; i < ar.Length; i++)
+        for (long i = offset + 1; i < end; i++)
         {
             byte curr = ar.Read<byte>();
 
-            if (curr != (byte)((prev + 1) % 255))
+            if (curr != (byte) ((prev + 1) % 255))
                 return false;
 
             prev = curr;
@@ -120,14 +122,14 @@ public static class RocketLeagueAes
 
     public static void DecryptCoalesced(byte[] inputData, out byte[] outputData)
     {
-        TryDecryptWithKey(inputData, CoalescedKey, 0, true, true, out outputData);
+        TryDecryptWithKey(inputData, CoalescedKey, 0, 0, true, true, out outputData);
     }
 
-    public static bool Decrypt(byte[] inputData, int checkSumDataOffset, bool upk, out byte[] outputData)
+    public static bool Decrypt(byte[] inputData, int checkSumDataOffset, int checkSumDataSize, bool upk, out byte[] outputData)
     {
         foreach (var key in KeyList)
         {
-            if (!TryDecryptWithKey(inputData, key, checkSumDataOffset, upk, false, out var result))
+            if (!TryDecryptWithKey(inputData, key, checkSumDataOffset, checkSumDataSize, upk, false, out var result))
                 continue;
 
             outputData = result!;

@@ -255,9 +255,10 @@ namespace CUE4Parse.UE4.Assets
                     var before = uassetAr.ReadBytes(Summary.NameOffset);
 
                     var encryptedSize = (int) (Summary.TotalHeaderSize - lastBlockSize - headerEnd);
+                    if (uassetAr.Game == GAME_RocketLeague && (int)uassetAr.LicenseeVer >= 33) encryptedSize -= encryptedSize % 16;
                     var encryptedData = uassetAr.ReadBytes(encryptedSize);
 
-                    RocketLeagueAes.Decrypt(encryptedData, checkSumDataOffset, true, out var decryptedData);
+                    RocketLeagueAes.Decrypt(encryptedData, checkSumDataOffset, lastBlockSize, true, out var decryptedData);
 
                     var after = uassetAr.ReadBytes((int) (uassetAr.Length - uassetAr.Position));
 

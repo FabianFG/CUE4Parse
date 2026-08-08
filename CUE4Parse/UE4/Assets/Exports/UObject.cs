@@ -214,7 +214,12 @@ public class UObject : AbstractPropertyHolder
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
             {
-                Ar.Read<int>(); // NetIndex
+                var NetIndex = Ar.Read<int>();
+
+                if (Ar.Game == GAME_Paladins && NetIndex == -1)
+                {
+                    Ar.Position += 8; // Unknown, should be an index to bulkdata payload
+                }
             }
 
             DeserializePropertiesTagged(Properties = [], Ar, false);

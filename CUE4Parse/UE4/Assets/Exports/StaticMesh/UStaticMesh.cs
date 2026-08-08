@@ -191,7 +191,7 @@ public class UStaticMesh : UObject
             Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
         }
 
-        if (!Ar.IsFilterEditorOnly)
+        if (!Ar.IsFilterEditorOnly || Ar.Game < GAME_UE4_0)
         {
             Ar.Position = validPos;
             return; // so it doesn't throw
