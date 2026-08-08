@@ -79,7 +79,7 @@ public static class ABIDecryption
             0x03000339 => (_uassetDecryptKey39, SM4Mode.D, SboxMode.Mode39),
             0x04000338 => (_uassetDecryptMobileKey38, SM4Mode.C, SboxMode.Mode38Mobile),
             0x04000339 => (_uassetDecryptMobileKey39, SM4Mode.C, SboxMode.Mode39Mobile),
-            0x0400033A => (_uassetDecryptMobileKey3A, SM4Mode.D, SboxMode.Mode3AMobile),
+            0x0400033A => (_uassetDecryptMobileKey3A, SM4Mode.MobileD, SboxMode.Mode3AMobile),
             _ => throw new ParserException($"FilePackageSummary magic is different 0x{magic:X} (encryption is not supported)")
         };
 
