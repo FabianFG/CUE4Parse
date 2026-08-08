@@ -17,7 +17,7 @@ public partial class USkeletalMesh : UObject
     public FBoxSphereBounds ImportedBounds { get; private set; }
     public FSkeletalMaterial[] SkeletalMaterials { get; private set; }
     public FReferenceSkeleton ReferenceSkeleton { get; private set; }
-    public FSkeletalMeshLODGroupSettings[] LODInfo { get; private set; }
+    public FSkeletalMeshLODGroupSettings[]? LODInfo { get; private set; }
     public FStaticLODModel[]? LODModels { get; private set; }
     public bool bHasVertexColors { get; private set; }
     public byte NumVertexColorChannels { get; private set; }
@@ -46,7 +46,20 @@ public partial class USkeletalMesh : UObject
         AssetUserData = GetOrDefault(nameof(AssetUserData), Array.Empty<FPackageIndex>());
 
         var stripDataFlags = new FStripDataFlags(Ar);
+
+        if (Ar.Game == GAME_Dishonored && Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SCALES2)
+        {
+            Ar.ReadFName(); // m_BoneName
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.OPTIMIZED_ANIMSEQ) Ar.Read<FVector>(); // m_Offset
+            Ar.Read<float>(); // m_fRadius
+        }
+
         ImportedBounds = new FBoxSphereBounds(Ar);
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedPointer)
+        {
+            new FPackageIndex(Ar);
+        }
 
         SkeletalMaterials = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
         Materials = new FPackageIndex?[SkeletalMaterials.Length];
@@ -55,9 +68,23 @@ public partial class USkeletalMesh : UObject
             Materials[i] = SkeletalMaterials[i].Material;
         }
 
+        if (Ar.Game < GAME_UE4_0)
+        {
+            Ar.Read<FVector>(); // MeshOrigin
+            Ar.Read<FRotator>(); // RotOrigin
+            if (Ar.Game == GAME_Dishonored && Ar.Ver >= EUnrealEngineObjectUE3Version.FIXCLAMP_NON_TONEMAP)
+            {
+                Ar.ReadArray<byte>();
+            }
+        }
+
         if (Ar.Game is GAME_LordOfMysteries) CustomGameData = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
 
         ReferenceSkeleton = new FReferenceSkeleton(Ar);
+        if (Ar.Game < GAME_UE4_0)
+        {
+            Ar.Read<int>(); // SkeletalDepth
+        }
 
         if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
         {
@@ -151,12 +178,42 @@ public partial class USkeletalMesh : UObject
             Ar.Position += 12 * length; // TMap<FName, int32> DummyNameIndexMap
         }
 
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELMESH_BONE_KDOP && Ar.Game < GAME_UE4_0)
+        {
+            // this is not an array of ints, it's a complex FPerPolyBoneCollisionData struct
+            Ar.ReadArray<int>(); // PerPolyBoneKDOPs
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_MAPPING && Ar.Game < GAME_UE4_0)
+        {
+            Ar.ReadArray(Ar.ReadFString); // BoneBreakNames
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_CUSTOM_MAPPING)
+            {
+                Ar.ReadArray(Ar.Read<int>); // BoneBreakOptions
+            }
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.APEX_CLOTHING && Ar.Game < GAME_UE4_0)
+        {
+            var ApexClothingAssets = Ar.Read<int>();
+            for (var i = 0; i < ApexClothingAssets; i++)
+            {
+                var bAssetValid = Ar.ReadBoolean();
+
+                if (bAssetValid)
+                {
+                    Ar.ReadArray<byte>(); // NameBuffer
+                    Ar.ReadArray<byte>(); // Buffer
+                }
+            }
+        }
+
         switch (Ar.Game)
         {
             case GAME_Back4Blood:
                 Ar.Position += 8;
                 break;
-            case >= EGame.GAME_UE4_0:
+            case >= GAME_UE4_0:
                 _ = Ar.ReadArray(() => new FPackageIndex(Ar)); // dummyObjs
                 break;
         }
@@ -178,7 +235,7 @@ public partial class USkeletalMesh : UObject
             }
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELETAL_MESH_SIMPLIFICATION && Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELETAL_MESH_SIMPLIFICATION && Ar.Game < GAME_UE4_0)
         {
             var bHaveSourceData = Ar.ReadBoolean();
             if (bHaveSourceData)

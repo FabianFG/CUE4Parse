@@ -8,7 +8,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public abstract class UAnimationAsset : UObject
     {
-        public FPackageIndex Skeleton; // USkeleton
+        public FPackageIndex? Skeleton; // USkeleton
         public FGuid SkeletonGuid;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)

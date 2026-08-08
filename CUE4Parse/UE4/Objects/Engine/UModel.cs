@@ -28,6 +28,17 @@ namespace CUE4Parse.UE4.Objects.Engine
 
         /** The vertex's shadow map coordinate for the backface of the node. */
         public readonly FVector2D BackfaceShadowTexCoord;
+
+        public FVert(FAssetArchive Ar)
+        {
+            pVertex = Ar.Read<int>();
+            iSide = Ar.Read<int>();
+            ShadowTexCoord = new FVector2D(Ar);
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.BACKFACESHADOWTEXCOORD)
+            {
+                BackfaceShadowTexCoord = new FVector2D(Ar); // why do some builds have this removed in UE3
+            }
+        }
     }
 
     /** Flags associated with a Bsp node. */
@@ -151,11 +162,33 @@ namespace CUE4Parse.UE4.Objects.Engine
             vNormal = Ar.Read<int>();
             vTextureU = Ar.Read<int>();
             vTextureV = Ar.Read<int>();
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.LightMapIndexRemovedFromPoly)
+            {
+                new FPackageIndex(Ar); // iLightMap
+            }
             iBrushPoly = Ar.Read<int>();
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.PanUVRemovedFromPoly)
+            {
+                Ar.Read<short>(); // PanU
+                Ar.Read<short>(); // PanV
+            }
             Actor = new FPackageIndex(Ar);
-            Plane = Ar.Read<FPlane>();
-            LightMapScale = Ar.Read<float>();
-            iLightmassIndex = Ar.Read<int>();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.PlaneAddedToPoly)
+            {
+                Plane = Ar.Read<FPlane>();
+            }
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.LightMapScaleAddedToPoly)
+            {
+                LightMapScale = Ar.Read<float>();
+            }
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.BSP_LIGHTING_CHANNEL_SUPPORT && Ar.Game < GAME_UE4_0)
+            {
+                Ar.Read<int>(); // LightingChannels
+            }
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.INTEGRATED_LIGHTMASS)
+            {
+                iLightmassIndex = Ar.Read<int>();
+            }
         }
     }
 
@@ -300,8 +333,11 @@ namespace CUE4Parse.UE4.Objects.Engine
                 VertexBuffer = new FModelVertexBuffer(Ar);
             }
 
-            LightingGuid = Ar.Read<FGuid>();
-            LightmassSettings = Ar.ReadArray(() => new FLightmassPrimitiveSettings(Ar));
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.INTEGRATED_LIGHTMASS)
+            {
+                LightingGuid = Ar.Read<FGuid>();
+                LightmassSettings = Ar.ReadArray(() => new FLightmassPrimitiveSettings(Ar));
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

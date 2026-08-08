@@ -396,9 +396,9 @@ public class ActorXMesh
             default: return [];
         }
     }
-    public void ExportStaticSockets(FPackageIndex[] sockets, List<MeshBoneDto> bones)
+    public void ExportStaticSockets(FPackageIndex[]? sockets, List<MeshBoneDto> bones)
     {
-        if (sockets.Length == 0) return;
+        if (sockets == null || sockets.Length == 0) return;
         switch (Options.SocketFormat)
         {
             case ESocketFormat.Socket:

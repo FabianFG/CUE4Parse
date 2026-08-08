@@ -368,7 +368,12 @@ public class ASpotLight : ALight;
 public class ASpotLightMovable : ASpotLight;
 public class ASpotLightStatic : ASpotLight;
 public class ASpotLightStationary : ASpotLight;
+public class AStaticMeshActorBase : AActor;
 public class AStaticMeshActor : AActor;
+
+public class AStaticMeshCollectionActor : AStaticMeshActorBase;
+public class AStaticLightCollectionActor : ALight;
+
 public class ASwitchActor : AActor;
 public class ATagCollectionModifierSharedActor : AActorModifierCoreSharedActor;
 public class ATargetPoint : AActor;

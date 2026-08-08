@@ -243,7 +243,7 @@ public class FVolumeLightingSample
         {
             DirectionalLightShadowing = Ar.Read<float>();
         }
-        if (Ar.Game is EGame.GAME_RocoKingdomWorld) Ar.Position += 116;
+        if (Ar.Game is GAME_RocoKingdomWorld) Ar.Position += 116;
     }
 }
 

@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -23,6 +24,7 @@ public abstract class TBulkData<T> where T: struct
     protected Lazy<T[]?>? _data { get; init; }
 
     protected FAssetArchive? _savedAr { get; init; }
+    protected string? _savedTfc { get; init; }
     protected long _dataPosition { get; init; }
 
     protected TBulkData() { }
@@ -35,6 +37,13 @@ public abstract class TBulkData<T> where T: struct
     protected TBulkData(Lazy<T[]?> data)
     {
         _data = data;
+    }
+
+    protected TBulkData(FAssetArchive ar, string? tfc = null)
+        : this(ar)
+    {
+        _savedAr = ar;
+        _savedTfc = tfc;
     }
 
     protected TBulkData(FAssetArchive Ar)
@@ -103,22 +112,16 @@ public abstract class TBulkData<T> where T: struct
         if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
         {
             var size = GetDataSize();
-            var uncompressedData = new byte[size];
             data = new T[Header.ElementCount];
-            dataAr.SerializeCompressedNew(uncompressedData, size, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref data[0]), ref uncompressedData[0], (uint) size);
-
-            // To-Do rewrite once SerializeCompressedNew/Decompress works with span
-            // var dest = MemoryMarshal.AsBytes(data.AsSpan());
-            // dataAr.SerializeCompressedNew(dest, size, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            var dest = MemoryMarshal.AsBytes(data.AsSpan());
+            dataAr.SerializeCompressedNew(dest, size, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_CompressedLZO))
         {
             var size = GetDataSize();
-            var uncompressedData = new byte[size];
             data = new T[Header.ElementCount];
-            dataAr.SerializeCompressedNew(uncompressedData, size, "LZO", ECompressionFlags.COMPRESS_NoFlags, false, out _);
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref data[0]), ref uncompressedData[0], (uint) size);
+            var dest = MemoryMarshal.AsBytes(data.AsSpan());
+            dataAr.SerializeCompressedNew(dest, size, "LZO", ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }
         else
         {

@@ -174,6 +174,17 @@ public class FPositionVertexBuffer
         }
         if (Ar.Game == GAME_Gollum) Ar.Position += 25;
 
+        if (Ar.Game == GAME_LifeIsStrange && (int)Ar.LicenseeVer >= 18)
+        {
+            Ar.Read<int>();
+            Ar.ReadBoolean();
+        }
+        if (Ar.Game == GAME_LifeIsStrange && (int)Ar.LicenseeVer >= 20)
+        {
+            Ar.Read<FVector>();
+            Ar.Read<FVector>();
+        }
+
         Verts = Ar.ReadBulkArray<FVector>();
     }
 }

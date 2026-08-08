@@ -15,7 +15,7 @@ public class UStaticMesh : UObject
     public FPackageIndex BodySetup { get; private set; }
     public FPackageIndex NavCollision { get; private set; }
     public FGuid LightingGuid { get; private set; }
-    public FPackageIndex[] Sockets { get; private set; } // UStaticMeshSocket[]
+    public FPackageIndex[]? Sockets { get; private set; } // UStaticMeshSocket[]
     public FStaticMeshRenderData? RenderData { get; private set; }
     public FPackageIndex?[] Materials { get; private set; } = []; // UMaterialInterface[]
     public FStaticMaterial[] StaticMaterials { get; private set; } = [];
@@ -23,7 +23,7 @@ public class UStaticMesh : UObject
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        if(Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
+        if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
         LODForCollision = GetOrDefault(nameof(LODForCollision), 0);
 
@@ -31,13 +31,106 @@ public class UStaticMesh : UObject
         bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR && Ar.ReadBoolean();
         HasTangents = Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE;
 
+        var Bounds = new FBoxSphereBounds();
+        if (!stripDataFlags.IsEditorDataStripped() && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
+        {
+            Bounds = new FBoxSphereBounds(Ar);
+        }
+
         if (Ar.Game == GAME_WutheringWaves && GetOrDefault<bool>("bUseStandaloneBodySetup"))
             BodySetup = GetOrDefault<FPackageIndex>("StandaloneBodySetup");
         else
             BodySetup = new FPackageIndex(Ar);
 
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVE_STATICMESH_COLLISIONMODEL)
+        {
+            new FPackageIndex(Ar); // CollisionModel;
+        }
+
         if (Ar.Versions["StaticMesh.HasNavCollision"])
             NavCollision = new FPackageIndex(Ar);
+
+        if (Ar.Game < GAME_UE4_0)
+        {
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.COMPACTKDOPSTATICMESH || Ar.Game == GAME_Dishonored)
+            {
+                // hacky way to skip without defining struct, can't use skipbulkarray because of EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING
+                Ar.ReadBulkArray(() =>
+                {
+                    Ar.Position += 24 + 4;
+                    if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedShortProperties || Ar.Ver > EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE)
+                        Ar.Position += 4;
+                    else
+                        Ar.Position += 8;
+                    return (byte) 0;
+                });
+            }
+            else
+            {
+                Ar.Position += 24;
+                Ar.ReadBulkArray(() => Ar.ReadBytes(6)); // bound
+            }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedShortProperties || Ar.Ver > EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE)
+            {
+                Ar.ReadBulkArray(() => Ar.ReadBytes(8)); // Collision Triangle
+            }
+            else
+            {
+                Ar.ReadBulkArray(() => Ar.ReadBytes(16)); // Collision Triangle
+            }
+
+            var InternalVersion = Ar.Read<int>();
+            var STATICMESH_VERSION_CONTENT_TAGS = 17; // Content tags were introduced in SM version 17
+
+            if (InternalVersion >= STATICMESH_VERSION_CONTENT_TAGS && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_LEGACY_CONTENT_TAGS)
+            {
+                Ar.ReadArray(Ar.ReadFName); // ContentTags
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATIC_MESH_SOURCE_DATA_COPY)
+            {
+                var bHaveSourceData = Ar.ReadBoolean();
+                if (bHaveSourceData)
+                {
+                    RenderData = new FStaticMeshRenderData { LODs = [new FStaticMeshLODResources(Ar)] };
+                }
+
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.STORE_MESH_OPTIMIZATION_SETTINGS)
+                {
+                    Ar.SkipArray<int>(); // OptimizationSettings
+                }
+                else
+                {
+                    if (Ar.Ver < EUnrealEngineObjectUE3Version.ADDED_EXTRA_MESH_OPTIMIZATION_SETTINGS)
+                    {
+                        Ar.SkipFixedArray(7);
+                    }
+                    else
+                    {
+                        Ar.SkipFixedArray(24);
+                    }
+                }
+
+                Ar.ReadBoolean(); // bHasBeenSimplified
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.TAG_MESH_PROXIES)
+            {
+                Ar.ReadBoolean(); // bIsMeshProxy
+            }
+
+            RenderData = new FStaticMeshRenderData(Ar);
+            RenderData.Bounds = Bounds;
+
+            Materials = new FPackageIndex[RenderData.LODs[0].Sections.Length];
+            for (var i = 0; i < RenderData.LODs[0].Sections.Length; i++)
+            {
+                Materials[i] = RenderData.LODs[0].Sections[i].Material!;
+            }
+
+            Ar.Read<int>(); // LODInfo
+        }
 
         if (!stripDataFlags.IsEditorDataStripped())
         {
@@ -50,7 +143,7 @@ public class UStaticMesh : UObject
                  }
             }
 
-            if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERSION_18 && FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh && Ar.Game is not GAME_APBReloaded)
             {
                 var Deprecated_HighResSourceMeshName = Ar.ReadFString();
                 var Deprecated_HighResSourceMeshCRC = Ar.Read<uint>();
@@ -66,6 +159,33 @@ public class UStaticMesh : UObject
             LightingGuid = FGuid.Random();
         }
 
+        if (Ar.Game == GAME_Dishonored)
+        {
+            Ar.Position = validPos;
+            return; // some weird changes so just ignore
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRESERVE_SMC_VERT_COLORS && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
+        {
+            Ar.Read<int>(); // VertexPositionVersionNumber
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.DYNAMICTEXTUREINSTANCES && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_CACHED_STATIC_MESH_STREAMING_FACTORS)
+        {
+            Ar.ReadArray<float>(); // CachedStreamingTextureFactors
+        }
+
+        if (!stripDataFlags.IsEditorDataStripped() && Ar.Ver >= EUnrealEngineObjectUE3Version.KEEP_STATIC_MESH_DEGENERATES && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
+        {
+            Ar.ReadBoolean(); // bRemoveDegenerates
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.INSTANCED_STATIC_MESH_PER_LOD_STATIC_LIGHTING && Ar.Game < GAME_UE4_0)
+        {
+            Ar.ReadBoolean(); // bPerLODStaticLightingForInstancing
+            Ar.Read<int>(); // ConsolePreallocateInstanceCount
+        }
+
         if (Ar.Ver > EUnrealEngineObjectUE4Version.STATIC_MESH_SOCKETS)
         {
             Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
@@ -73,6 +193,7 @@ public class UStaticMesh : UObject
 
         if (!Ar.IsFilterEditorOnly)
         {
+            Ar.Position = validPos;
             return; // so it doesn't throw
         }
 

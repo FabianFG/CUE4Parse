@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.MappingsProvider;
+using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
@@ -136,6 +137,86 @@ public class UObject : AbstractPropertyHolder
         }
         else
         {
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release40)
+            {
+                Ar.Read<int>(); // TempNum
+                Ar.Read<int>(); // TempMax
+            }
+
+            if (Class?.Name.Text == null && Ar.Game < GAME_UE4_0)
+            {
+                Ar.Position = validPos;
+                return; // there some missing data after this
+            }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release47)
+            {
+                var Node = new FPackageIndex();
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release51)
+                {
+                    Node = new FPackageIndex(Ar);
+                    new FPackageIndex(Ar); // StateNode
+                }
+                else
+                {
+                    var OldClass = new FPackageIndex(Ar); // OldClass
+                    if (!OldClass.IsNull)
+                    {
+                        Ar.Read<int>(); // iOldNode
+                    }
+                }
+
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.Release52)
+                {
+                    new FPackageIndex(Ar); // Tmp
+                }
+
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.REDUCED_PROBEMASK_REMOVED_IGNOREMASK)
+                {
+                    Ar.Read<long>(); // ProbeMask
+                }
+                else
+                {
+                    Ar.Read<int>(); // ProbeMask
+                }
+
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.REDUCED_STATEFRAME_LATENTACTION_SIZE)
+                {
+                    Ar.Read<short>(); // LatentAction
+                }
+                else if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release55)
+                {
+                    Ar.Read<int>(); // LatentAction
+                }
+
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedStateStackToUStateFrame)
+                {
+                    Ar.ReadArray(() => Ar.ReadBytes(9)); // StateStack
+                }
+
+                if (!Node.IsNull)
+                {
+                    Ar.Read<int>();
+                }
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.REMOVE_SIZE_VJOINTPOS && Ar.Game < GAME_UE4_0)
+            {
+                if (this is UComponent)
+                {
+                    new FPackageIndex(Ar);
+                    if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_COMPONENT_TEMPLATES)
+                    {
+                        Ar.ReadFName();
+                    }
+                }
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
+            {
+                Ar.Read<int>(); // NetIndex
+            }
+
             DeserializePropertiesTagged(Properties = [], Ar, false);
         }
 
@@ -150,6 +231,16 @@ public class UObject : AbstractPropertyHolder
 
                 ObjectGuid = Ar.Read<FGuid>();
             }
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release57)
+        {
+            Ar.ReadFName(); // TempState
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release58)
+        {
+            Ar.ReadFName(); // TempGroup
         }
 
         if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SparseClassDataStructSerialization || !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))

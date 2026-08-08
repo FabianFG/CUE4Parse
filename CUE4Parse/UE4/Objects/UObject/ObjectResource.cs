@@ -247,12 +247,28 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 new FPackageIndex(Ar); // Archetype
             }
-            ObjectFlags = Ar.Read<uint>();
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag && Ar.Game < GAME_UE4_0)
+            {
+                Ar.Read<ulong>(); // ObjectFlagsLegacy
+            }
+            else
+            {
+                ObjectFlags = Ar.Read<uint>();
+            }
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.e64BIT_EXPORTMAP_SERIALSIZES)
             {
                 SerialSize = Ar.Read<int>();
-                SerialOffset = Ar.Read<int>();
+
+                if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22)
+                {
+                    SerialOffset = Ar.Read<long>();
+                }
+                else if (SerialSize > 0 || Ar.Ver >= EUnrealEngineObjectUE3Version.MOVED_EXPORTIMPORTMAPS_ADDED_TOTALHEADERSIZE)
+                {
+                    SerialOffset = Ar.Read<int>();
+                }
             }
             else
             {
@@ -267,8 +283,6 @@ namespace CUE4Parse.UE4.Objects.UObject
                 NotForServer = Ar.ReadBoolean();
             }
 
-            PackageGuid = Ar.Ver < EUnrealEngineObjectUE5Version.REMOVE_OBJECT_EXPORT_PACKAGE_GUID ? Ar.Read<FGuid>() : default;
-            IsInheritedInstance = Ar.Ver >= EUnrealEngineObjectUE5Version.TRACK_OBJECT_EXPORT_IS_INHERITED && Ar.ReadBoolean();
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentMapToExports && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_MAP)
             {
                 Ar.ReadMap(() => Ar.ReadFName(), () => new FPackageIndex(Ar)); // LegacyComponentMap
@@ -285,6 +299,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 {
                     Ar.ReadArray<int>(); // NetObjectCount
                 }
+
+                PackageGuid = Ar.Ver < EUnrealEngineObjectUE5Version.REMOVE_OBJECT_EXPORT_PACKAGE_GUID ? Ar.Read<FGuid>() : default;
+                IsInheritedInstance = Ar.Ver >= EUnrealEngineObjectUE5Version.TRACK_OBJECT_EXPORT_IS_INHERITED && Ar.ReadBoolean();
 
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedPackageFlags)
                 {

@@ -20,6 +20,8 @@ public class USoundCue : USoundBase
         VolumeMultiplier = GetOrDefault(nameof(VolumeMultiplier), 0.75f);
         PitchMultiplier = GetOrDefault(nameof(PitchMultiplier), 1f);
 
+        if (Ar.Game == GAME_ScourgeOutbreak) return; // Editor Data Removed
+
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.CHANGED_COMPRESSION_CHUNK_SIZE_TO_128 && Ar.Ver < EUnrealEngineObjectUE4Version.SOUND_NODE_INHERIT_FROM_ED_GRAPH_NODE)
         {
             EditorData = Ar.ReadMap(() => new FPackageIndex(Ar), () => Ar.Read<FSoundEditorData>());

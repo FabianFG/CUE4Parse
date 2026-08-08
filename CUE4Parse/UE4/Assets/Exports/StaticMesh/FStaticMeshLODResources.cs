@@ -17,6 +17,7 @@ public class FStaticMeshLODResources
     public FBoxSphereBounds? SourceMeshBounds;
     public FCardRepresentationData? CardRepresentationData { get; set; }
     public float MaxDeviation { get; }
+    public int NumVertices { get; set; }
     public FPositionVertexBuffer? PositionVertexBuffer { get; set; }
     public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
     public FColorVertexBuffer? ColorVertexBuffer { get; set; }
@@ -43,6 +44,17 @@ public class FStaticMeshLODResources
     {
         var stripDataFlags = new FStripDataFlags(Ar);
 
+        if (Ar.Game == GAME_APBReloaded)
+        {
+            Ar.Position += 8;
+            goto SkipRawTriangles;
+        }
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedRawTriangles && Ar.Game < GAME_UE4_0)
+        {
+            new FByteBulkData((FAssetArchive)Ar); // RawTriangles
+        }
+
+        SkipRawTriangles:
         if (Ar.Game == GAME_TheDivisionResurgence) Ar.Position += 4;
 
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
@@ -181,30 +193,59 @@ public class FStaticMeshLODResources
     // Pre-UE4.23 code
     public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
     {
-        if (Ar.Game is GAME_Abzu) Ar.Position += 4;
 
-        PositionVertexBuffer = new FPositionVertexBuffer(Ar);
-        VertexBuffer = new FStaticMeshVertexBuffer(Ar);
-
-        if (Ar.Game == GAME_Borderlands3)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE)
         {
-            var numColorStreams = Ar.Read<int>();
-            if (numColorStreams != 0)
+            if (Ar.Game is GAME_Abzu) Ar.Position += 4;
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS)
             {
-                ColorVertexBuffer = new FColorVertexBuffer(Ar);
-                for (var i = 0; i < numColorStreams - 1; i++)
+                PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+            }
+            VertexBuffer = new FStaticMeshVertexBuffer(Ar);
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS || Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS && Ar.Ver < EUnrealEngineObjectUE3Version.MovedColorFromUVItem) goto skipStreams;
+
+            if (Ar.Game == GAME_Borderlands3)
+            {
+                var numColorStreams = Ar.Read<int>();
+                if (numColorStreams != 0)
                 {
-                    _ = new FColorVertexBuffer(Ar);
+                    ColorVertexBuffer = new FColorVertexBuffer(Ar);
+                    for (var i = 0; i < numColorStreams - 1; i++)
+                    {
+                        _ = new FColorVertexBuffer(Ar);
+                    }
+                }
+                else
+                {
+                    ColorVertexBuffer = new FColorVertexBuffer();
                 }
             }
-            else
+            else if (Ar.Ver >= EUnrealEngineObjectUE3Version.MESH_PAINT_SYSTEM)
             {
-                ColorVertexBuffer = new FColorVertexBuffer();
+                ColorVertexBuffer = new FColorVertexBuffer(Ar);
             }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
+            {
+                new FStaticMeshShadowVolumeStream(Ar); // ShadowExtrusionVertexBuffer (FColorVertexBuffer but uses floats)
+            }
+
+            skipStreams:
+            if (Ar.Game < GAME_UE4_0) NumVertices = Ar.Read<int>();
         }
         else
         {
-            ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.USE_UMA_RESOURCE_ARRAY_MESH_DATA)
+            {
+                Ar.ReadArray<FQuat>();
+                Ar.ReadArray<int>();
+                Ar.ReadArray(() => Ar.ReadArray(() => Ar.ReadBytes(8)));
+            }
+            else
+            {
+                Ar.ReadArray<FQuat>();
+                Ar.ReadArray(() => Ar.ReadArray(() => Ar.ReadBytes(8)));
+            }
         }
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
@@ -225,7 +266,7 @@ public class FStaticMeshLODResources
                 DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
                 ReversedDepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
             }
-            else if (Ar.Game >= EGame.GAME_UE4_0)
+            else if (Ar.Game >= GAME_UE4_0)
             {
                 // UE4.8 or older, or when has CDSF_ReversedIndexBuffer
                 DepthOnlyIndexBuffer = new FRawStaticIndexBuffer(Ar);
@@ -242,10 +283,21 @@ public class FStaticMeshLODResources
                 _ = new FDistanceFieldVolumeData(Ar); // distanceFieldData
             }
 
-            if (!stripDataFlags.IsEditorDataStripped())
-                WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            if (Ar.Game == GAME_APBReloaded)
+            {
+                Ar.Position += 8; // bulkdata
+            }
 
-            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+            if (!stripDataFlags.IsEditorDataStripped() && Ar.Game != GAME_APBReloaded)
+                WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
+            
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
+            {
+                Ar.ReadBulkArray(() => Ar.ReadBytes(16)); // LegacyEdges
+                Ar.ReadArray<byte>(); // LegacyShadowTriangleDoubleSided
+            }
+
+            if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData) && Ar.Ver > EUnrealEngineObjectUE3Version.CRACK_FREE_DISPLACEMENT_SUPPORT)
                 AdjacencyIndexBuffer = new FRawStaticIndexBuffer(Ar);
         }
 

@@ -8,12 +8,17 @@ public class FMultisizeIndexContainer() : FRawIndexBuffer
 {
     public FMultisizeIndexContainer(FArchive Ar) : this()
     {
-        if (Ar.Ver < EUnrealEngineObjectUE4Version.KEEP_SKEL_MESH_INDEX_DATA)
+        var dataSize = 0x02;
+        if (Ar.Ver > EUnrealEngineObjectUE3Version.DWORD_SKELETAL_MESH_INDICES)
         {
-            Ar.ReadBoolean(); // bOldNeedsCPUAccess
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.KEEP_SKEL_MESH_INDEX_DATA)
+            {
+                Ar.ReadBoolean(); // bOldNeedsCPUAccess
+            }
+
+            dataSize = Ar.Read<byte>();
         }
 
-        var dataSize = Ar.Read<byte>();
         if (Ar.Game == GAME_OutlastTrials) Ar.Position += 4;
 
         if (dataSize == 0x02)
