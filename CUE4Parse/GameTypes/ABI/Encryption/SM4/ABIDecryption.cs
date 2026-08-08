@@ -109,8 +109,9 @@ public static class ABIDecryption
         (byte[] key, SM4Mode mode) = encryptionVersion switch
         {
             0x45 when game is GAME_ArenaBreakoutMobile => (_iniDecryptMobileKey45, SM4Mode.None),
-            0x46 when game is GAME_ArenaBreakoutMobile => (_iniDecryptMobileKey46, (SM4Mode) encryptionVersion),
-            _ => (_iniDecryptKey, (SM4Mode) encryptionVersion)
+            0x46 when game is GAME_ArenaBreakoutMobile => (_iniDecryptMobileKey46, SM4Mode.F),
+            >= 0x41 and <= 0x46 => (_iniDecryptKey, (SM4Mode) (encryptionVersion - 0x40)), // For PC
+            _ => throw new ParserException($"Unknown ABI SM4 mode: 0x{encryptionVersion:X2}")
         };
 
         var iniLength = BitConverter.ToInt32(bytes, 4);

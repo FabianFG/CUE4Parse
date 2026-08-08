@@ -11,9 +11,9 @@ public enum SM4Mode : byte
     B, // 0x42
     C, // 0x43
     D, // 0x44
-    MobileD, // 0x44
     E, // 0x45
     F, // 0x46
+    MobileD, // 0x44
 }
 
 public enum SboxMode
