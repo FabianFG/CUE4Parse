@@ -58,7 +58,7 @@ public abstract class TBulkData<T> where T: struct
         _dataPosition = Ar.Position;
         _savedAr = Ar;
 
-        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None)
+        if ((BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None && Ar.Game >= GAME_UE4_0))//
         {
             Ar.Position += Header.SizeOnDisk;
         }
@@ -139,6 +139,7 @@ public abstract class TBulkData<T> where T: struct
 
         if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload))
         {
+            if (_savedAr.Game < GAME_UE4_0) position = Header.OffsetInFile;
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_OptionalPayload))
         {
@@ -179,6 +180,28 @@ public abstract class TBulkData<T> where T: struct
 
             archive = ubulkAr;
             position = ubulkAr.Length == Header.SizeOnDisk ? 0 : Header.OffsetInFile;
+        }
+        else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile) && archive.Game < GAME_UE4_0)
+        {
+            if (_savedTfc is null)
+            {
+                // what does this mean and how is ths possible?
+                throw new ParserException(archive, "TFC: something wrong");
+            }
+
+            if (!_savedAr.Owner.Provider.TextureCachePaths.TryGetValue(_savedTfc, out var tfcPath))
+            {
+                // there is a single mip that's in the upk could add fallback
+                throw new ParserException(archive, $"Missing TFC: {_savedTfc}");
+            }
+
+            // TFC files are huge so jump to the payload offset and create an archive of the payload.
+            var bytes = new byte[Header.SizeOnDisk];
+            using var fs = File.OpenRead(tfcPath);
+            fs.Seek(Header.OffsetInFile, SeekOrigin.Begin);
+            fs.ReadExactly(bytes);
+            archive = new FAssetArchive(new FByteArchive("TFC Payload", bytes, _savedAr.Versions), _savedAr.Owner);
+            position = 0;
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
         {
