@@ -27,7 +27,7 @@ public static class TextureDecoder
     public static CTexture? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile, int zLayer = 0)
     {
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
-            return DecodeVT(texture, vt);
+            return DecodeVirtualTexture(texture, vt);
 
         if (mip is null) return null; // TODO: we should let it throw the exception
 
@@ -38,7 +38,7 @@ public static class TextureDecoder
     public static CTexture? DecodeMip(this UTexture texture, int mipIndex, ETexturePlatform platform = ETexturePlatform.DesktopMobile, int zLayer = 0)
     {
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
-            return DecodeVT(texture, vt, mipIndex);
+            return DecodeVirtualTexture(texture, vt, mipIndex);
 
         var mip = texture.GetMip(mipIndex);
         if (mip is null) return null; // TODO: we should let it throw the exception
@@ -66,7 +66,39 @@ public static class TextureDecoder
         return 0;
     }
 
-    private static CTexture DecodeVT(UTexture texture, FVirtualTextureBuiltData vt, int mip = -1)
+    /// <summary>
+    /// Decode a virtual texture, returning <b>one image per layer</b>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A virtual texture's layers are independent images, not channels of one image:
+    /// a UE lightmap is three directional-coefficient layers plus a sky-occlusion layer,
+    /// and those layers routinely use different pixel formats (DXT5 + B8G8R8A8).
+    /// </para>
+    /// <para>
+    /// This used to decode every layer into a single shared buffer, which broke two ways:
+    /// layers whose formats differed threw "multiple pixelformats/colortypes in a single
+    /// virtual image is not supported", and layers whose formats matched silently
+    /// overwrote one another so only the last layer survived. Decoding per layer fixes both.
+    /// </para>
+    /// </remarks>
+    public static CTexture[] DecodeVirtualTextureLayers(UTexture texture, FVirtualTextureBuiltData vt, int mip = -1)
+    {
+        var layers = new CTexture[vt.NumLayers];
+        for (uint layer = 0; layer < vt.NumLayers; layer++)
+            layers[layer] = DecodeVTLayer(texture, vt, layer, mip);
+
+        return layers;
+    }
+
+    /// <summary>
+    /// Decode a virtual texture down to a single image. Multi-layer textures yield layer 0;
+    /// use <see cref="DecodeVirtualTextureLayers"/> to get all of them.
+    /// </summary>
+    public static CTexture DecodeVirtualTexture(UTexture texture, FVirtualTextureBuiltData vt, int mip = -1)
+        => DecodeVTLayer(texture, vt, 0, mip);
+
+    private static CTexture DecodeVTLayer(UTexture texture, FVirtualTextureBuiltData vt, uint layer, int mip = -1)
     {
         unsafe
         {
@@ -99,7 +131,6 @@ public static class TextureDecoder
             var tileRowBytes = 0;
             var result = Span<byte>.Empty;
 
-            for (uint layer = 0; layer < vt.NumLayers; layer++)
             {
                 var layerFormat = vt.LayerTypes[layer];
                 if (!PixelFormatUtils.PixelFormats.TryGetValue(layerFormat, out var formatInfo) || !formatInfo.Supported || formatInfo.BlockBytes == 0)
@@ -177,7 +208,10 @@ public static class TextureDecoder
                         result = new Span<byte>(pixelDataPtr, imageBytes);
                     }
                     else if (colorType != tileColorType)
-                        throw new NotSupportedException("multiple pixelformats/colortypes in a single virtual image is not supported");
+                        // Every tile in a layer decodes through the same format info, so this is an
+                        // invariant check rather than a real limitation. (Layers with differing
+                        // formats are fine now: each one is decoded into its own image.)
+                        throw new NotSupportedException($"tiles of layer {layer} decoded to different color types ({colorType} and {tileColorType})");
 
                     for (int i = 0; i < tileSize; i++)
                     {
@@ -195,10 +229,21 @@ public static class TextureDecoder
 
                 ArrayPool<byte>.Shared.Return(layerData);
             }
-            var managedData = GetSliceData((byte*)pixelDataPtr, bitmapWidth, bitmapHeight, bytesPerPixel).ToArray();
-            NativeMemory.Free(pixelDataPtr);
 
-            return new CTexture(bitmapWidth, bitmapHeight, colorType, managedData);
+            if (pixelDataPtr is null)
+                // No tile in this mip carried data, so nothing was ever allocated. Reading from the
+                // null pointer below would be an access violation rather than a diagnosable error.
+                throw new ParserException($"Virtual texture layer {layer} has no tile data at level {level}");
+
+            try
+            {
+                var managedData = GetSliceData((byte*) pixelDataPtr, bitmapWidth, bitmapHeight, bytesPerPixel).ToArray();
+                return new CTexture(bitmapWidth, bitmapHeight, colorType, managedData);
+            }
+            finally
+            {
+                NativeMemory.Free(pixelDataPtr);
+            }
         }
     }
 

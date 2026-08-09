@@ -43,6 +43,21 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
         {
             ct.ThrowIfCancellationRequested();
 
+            // A multi-layer virtual texture is several independent images (a lightmap is three
+            // directional-coefficient layers plus sky occlusion), so write one file per layer.
+            // Decoding it down to a single image would silently drop everything but layer 0.
+            if (texture.PlatformData is { VTData: { NumLayers: > 1 } vtData } && vtData.IsInitialized())
+            {
+                var layers = TextureDecoder.DecodeVirtualTextureLayers(texture, vtData, index);
+                for (var layer = 0; layer < layers.Length; layer++)
+                {
+                    var layerData = layers[layer].Encode(Session.Options, out var layerExt);
+                    files.Add(new ExportFile(layerExt, layerData,
+                        (all ? $"_MIP{index}" : "") + $"_LAYER{layer}"));
+                }
+                return;
+            }
+
             var decoded = texture.DecodeMip(index, Session.Options.TexturePlatform);
             if (decoded == null)
             {
