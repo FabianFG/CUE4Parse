@@ -16,6 +16,10 @@ They explicitly use CUE4Parse Conversion's public
 `TextureDecoder.UseAssetRipperTextureDecoder` path. BC4 is validated as a
 single red scalar channel, BC5 against its reconstructed normal Z channel, and
 BC6H against the 8-bit clamped bitmap produced by the current Skia conversion.
+Generated cube, array, and volume textures are checked against their procedural
+per-slice pixel pattern. `SourceAudio` contains deterministic mono PCM inputs;
+tests decode both cooked SoundWaves, parse their RIFF chunks, and validate audio
+metadata and signal characteristics without requiring byte-for-byte equality.
 
 ## Mappings
 
@@ -30,21 +34,23 @@ The dump intentionally contains no properties flagged `CPF_EditorOnly`. These
 fixtures exercise cooked runtime schemas and values; editor-only mappings and
 the absence of editor-only properties are outside the test scope.
 
-The source cooks omit editor content. Their twelve test packages were repacked
+The source cooks omit editor content. Their 32 test packages were repacked
 without recooking into dedicated Oodle and uncompressed minimal IoStore
 containers. Compression is a packaging choice, so both modes use the exact same
-cooked package bytes and schema. Native reflected types and package schemas did
-not change, so the existing manually generated mappings remain the matching
-schema.
+cooked package bytes and schema. The mappings cover the expanded runtime schema,
+including optional properties, fixed arrays, delegates, and `FInstancedStruct`.
 
 ## IoStore
 
 `IoStore/Tagged` and `IoStore/Unversioned` each contain `Oodle` and
 `Uncompressed` subdirectories. Their named minimal `.utoc/.ucas` pairs contain
-the same map, DataAsset, DataTable, and nine textures. Every package entry in an
-Oodle pair must use Oodle; every entry in an uncompressed pair must use `None`.
-Each serialization directory stores one shared `global.utoc/global.ucas` pair
-required for script-object data, avoiding a duplicate 1.46 MiB global payload.
+the same map, expanded DataAsset, DataTables, curve assets, StringTable,
+textures, StaticMesh, materials, and audio assets. The 32 package entries and
+three required bulk-data sidecars are exactly the files exercised by tests.
+Every package entry in an Oodle pair must use Oodle; every entry in an
+uncompressed pair must use `None`. Each serialization directory stores one
+shared `global.utoc/global.ucas` pair required for script-object data, avoiding
+a duplicate global payload.
 
 The large staged runtime PAK files and native Shipping binaries are
 intentionally excluded. Engine assets and shader libraries are also excluded

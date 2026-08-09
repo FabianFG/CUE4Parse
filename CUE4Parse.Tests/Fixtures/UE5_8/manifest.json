@@ -16,83 +16,93 @@
   "files": [
     {
       "path": "IoStore/Tagged/global.ucas",
-      "size": 1534832,
-      "sha256": "bf632212d1a77b068691ac0de4f75b17aad14eff3008b677486c545cc503b048"
+      "size": 1535392,
+      "sha256": "1f57a53f572649d59377f5bcac6519dff288aec9c17ed75a01cb43681a40c691"
     },
     {
       "path": "IoStore/Tagged/global.utoc",
       "size": 482,
-      "sha256": "e1ca43432f1a788bcf1adf479710eb783b3fe75671ec9fbbf7a5aa7de448688f"
+      "sha256": "f6a2ecb51b2f375975eb0a796ddb706fe3d1d838342fe352b6678734c8e7c0db"
     },
     {
       "path": "IoStore/Tagged/Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.ucas",
-      "size": 24480,
-      "sha256": "cab070e20d6f4a918e14d6f44d047a1ae3e596d7d4c7daa8c6c7df422cf487be"
+      "size": 296352,
+      "sha256": "4171a77c5e9661882bde5b67c60b866ad9e25fb2fc60fdc73b255e45c9ccd5ed"
     },
     {
       "path": "IoStore/Tagged/Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.utoc",
-      "size": 1522,
-      "sha256": "863eb3247798c029d0554ea672193f14c39081bfae0a1faf261a03ff790fc8ae"
+      "size": 3906,
+      "sha256": "e5c72b3ff7677ad7da1f6c54269013f450d6f2d695fd3ccc3b3f927a03c581a5"
     },
     {
       "path": "IoStore/Tagged/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.ucas",
-      "size": 75152,
-      "sha256": "5265f0325e9dfa777700d9f53f5af501ce5081827da88a480e9cfed1d1d0f1d4"
+      "size": 637872,
+      "sha256": "2a77d4f88f1d9701d13e231a13f404552b0838bf353850ef8791645389794940"
     },
     {
       "path": "IoStore/Tagged/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.utoc",
-      "size": 1490,
-      "sha256": "ff92650d8bb86742dd19ae6814b17553d9882d818eb06f38e07bf7d8be5399be"
+      "size": 3874,
+      "sha256": "163c29bf1cbec5d7a1f0349c17c6c7b7a257403d4772fb0a41d491b5ccc75255"
     },
     {
       "path": "IoStore/Unversioned/global.ucas",
-      "size": 1534832,
-      "sha256": "bf632212d1a77b068691ac0de4f75b17aad14eff3008b677486c545cc503b048"
+      "size": 1535392,
+      "sha256": "1f57a53f572649d59377f5bcac6519dff288aec9c17ed75a01cb43681a40c691"
     },
     {
       "path": "IoStore/Unversioned/global.utoc",
       "size": 482,
-      "sha256": "e1ca43432f1a788bcf1adf479710eb783b3fe75671ec9fbbf7a5aa7de448688f"
+      "sha256": "f6a2ecb51b2f375975eb0a796ddb706fe3d1d838342fe352b6678734c8e7c0db"
     },
     {
       "path": "IoStore/Unversioned/Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.ucas",
-      "size": 16752,
-      "sha256": "4305725dde1c062eac2fce39818837ae6ddf6baa7ddd549288911969bedf215d"
+      "size": 273824,
+      "sha256": "7ba1e8a84676a9c2e9778cdb3f6c849cdcbff7a4984af256f4c85335df8d4afe"
     },
     {
       "path": "IoStore/Unversioned/Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.utoc",
-      "size": 1522,
-      "sha256": "72d26e67b6923d67c22398520cc7e4754b0583e22f3a536925248bbc4e0a0cef"
+      "size": 3906,
+      "sha256": "ef51582f7f08ed69692687891551d804039eb96d8dfb63af9c3161f40a3e1173"
     },
     {
       "path": "IoStore/Unversioned/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.ucas",
-      "size": 62304,
-      "sha256": "ccb333528784901561156de4e7e66ad0b168c57045477242744b9c99f431de6b"
+      "size": 594864,
+      "sha256": "2e49a019218c50a0e4ad4efd090b5152a88d93bf240bb518d8f251f9f56cad06"
     },
     {
       "path": "IoStore/Unversioned/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.utoc",
-      "size": 1490,
-      "sha256": "bf500a4e386fe8d32f689895f10c7dd0681a1205cce0fbccdfbb6789d86f95f7"
-    },
-    {
-      "path": "Pak/Oodle/CUE4ParseFixtures-Minimal-Oodle.pak",
-      "size": 13741,
-      "sha256": "4c275931a3e6740b40d431cd29a78cfd666cf59abd44dcf1fe93e421969c791b"
-    },
-    {
-      "path": "Pak/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed.pak",
-      "size": 65173,
-      "sha256": "5677e68b65e2aefbabf996c1eb71b224072b38ef6fc28af85875562e68ccb117"
+      "size": 3874,
+      "sha256": "8b387a321db28939e990793a6794cf45c2345de4ad9daacc26ed4475c5c804cb"
     },
     {
       "path": "Mappings/CUE4ParseFixtures-Oodle.usmap",
-      "size": 233931,
-      "sha256": "f5d352e27511c3cac2add087700dab7229d93edd305376de91f8d3d4188a45d6"
+      "size": 234259,
+      "sha256": "d76134be0706922ae48d88370357e39c9250729522b30209e919af230a7837bb"
     },
     {
       "path": "Mappings/CUE4ParseFixtures-Uncompressed.usmap",
-      "size": 815774,
-      "sha256": "37f79928c9f7edd42115831183eb8968c7d4815883f43447ab259971b3bb8368"
+      "size": 816622,
+      "sha256": "ae4a722fbe656cbe82f77bc4a426bb5bf7913e56136edc0535e5dff17dd3da12"
+    },
+    {
+      "path": "Pak/Oodle/CUE4ParseFixtures-Minimal-Oodle.pak",
+      "size": 15066,
+      "sha256": "721416b33230709606d379cd6857e4c04e40973036fa4fe74ef5d73c6d74450d"
+    },
+    {
+      "path": "Pak/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed.pak",
+      "size": 69733,
+      "sha256": "c1b546958f4b44646d9ed1e53c571e304782eb129d45acb44246f6d984e6f1e1"
+    },
+    {
+      "path": "SourceAudio/inline.wav",
+      "size": 44144,
+      "sha256": "d326a11f576e8fe639a18b7075cbedd1f00262ed42ee9d3416d2426990d87e1f"
+    },
+    {
+      "path": "SourceAudio/streaming.wav",
+      "size": 264644,
+      "sha256": "9df11b6218c37ed77310fc2977e9c534ddef04022144955923a0575768290529"
     },
     {
       "path": "SourceTextures/grayscale.png",
@@ -123,6 +133,11 @@
       "path": "SourceTextures/rgba.png",
       "size": 821,
       "sha256": "5c8c7a76ebd2b8d63483569a01e13611dd5c21f44ac2087a040fa2b60c5991ea"
+    },
+    {
+      "path": "SourceTextures/streaming.png",
+      "size": 7274,
+      "sha256": "c4a90748e959a4fa90a3774c718bdf3dd28729a65808b55345854ecb244de6e6"
     }
   ]
 }

@@ -52,6 +52,22 @@ public class FixtureMappingsTests
             "FixtureTableRow",
             "TableRowBase",
             "Number", "LargeNumber", "Message", "Kind", "Nested", "Values");
+        AssertSchema(mappings, "FixtureInstancedBase", null, "BaseMarker");
+        AssertSchema(
+            mappings,
+            "FixtureInstancedScalar",
+            "FixtureInstancedBase",
+            "Value", "Label");
+        AssertSchema(
+            mappings,
+            "FixtureInstancedComposite",
+            "FixtureInstancedBase",
+            "Nested", "Values", "Text");
+        AssertSchema(
+            mappings,
+            "FixtureInlineObject",
+            "Object",
+            "Marker", "Label", "Nested");
         AssertSchema(
             mappings,
             "ParserFixtureBaseData",
@@ -61,18 +77,31 @@ public class FixtureMappingsTests
             mappings,
             "ParserFixtureData",
             "ParserFixtureBaseData",
-            "bBoolean", "Byte", "Integer", "Integer64", "Float", "Double", "String", "Name", "Text",
-            "Vector", "Rotator", "Quat", "Transform", "Guid", "Enum", "Nested", "IntegerArray", "StructArray",
-            "NameSet", "IntegerMap", "StructMap", "HardObjectReference", "SoftObjectReference", "ClassReference",
-            "SoftClassReference", "HardTextureReference", "SoftTextureReference");
+            "bBoolean", "Byte", "Integer", "Integer64", "Integer8", "Integer16", "UnsignedInteger16",
+            "UnsignedInteger32", "UnsignedInteger64", "Float", "Double", "String", "Name", "Text", "Vector",
+            "Vector2D", "Vector4", "IntPoint", "IntVector", "Color", "LinearColor", "Box", "DateTime",
+            "Timespan", "Rotator", "Quat", "Transform", "Guid", "FixedIntegerArray", "PresentOptional",
+            "EmptyOptional", "Enum", "Nested", "IntegerArray", "StructArray", "NameSet", "IntegerMap",
+            "StructMap", "EmptyInstancedStruct", "ScalarInstancedStruct", "CompositeInstancedStruct",
+            "InstancedStructArray", "InstancedStructMap", "TypedInstancedStruct", "HardObjectReference",
+            "SoftObjectReference", "ClassReference", "SoftClassReference", "HardTextureReference",
+            "SoftTextureReference", "WeakObjectReference", "InlineObject", "DynamicDelegate",
+            "DynamicMulticastDelegate", "TextHistories");
 
         var fixtureData = mappings.Types["ParserFixtureData"];
+        // FixedIntegerArray occupies three consecutive schema indices.
+        Assert.Equal(57, fixtureData.PropertyCount);
         AssertProperty(fixtureData, "Integer", "IntProperty");
+        AssertProperty(fixtureData, "PresentOptional", "OptionalProperty", innerType: "IntProperty");
         AssertProperty(fixtureData, "IntegerArray", "ArrayProperty", innerType: "IntProperty");
         AssertProperty(fixtureData, "Nested", "StructProperty", structType: "FixtureNestedStruct");
         AssertProperty(fixtureData, "NameSet", "SetProperty", innerType: "NameProperty");
         AssertProperty(fixtureData, "IntegerMap", "MapProperty", innerType: "NameProperty", valueType: "IntProperty");
         AssertProperty(fixtureData, "StructMap", "MapProperty", innerType: "NameProperty", valueType: "StructProperty");
+        AssertProperty(fixtureData, "ScalarInstancedStruct", "StructProperty", structType: "InstancedStruct");
+        AssertProperty(fixtureData, "InstancedStructArray", "ArrayProperty", innerType: "StructProperty");
+        AssertProperty(fixtureData, "InstancedStructMap", "MapProperty", innerType: "NameProperty", valueType: "StructProperty");
+        AssertProperty(fixtureData, "TypedInstancedStruct", "StructProperty", structType: "InstancedStruct");
     }
 
     private static UsmapParser Parse(string fileName)
@@ -90,7 +119,6 @@ public class FixtureMappingsTests
     {
         Assert.True(mappings.Types.TryGetValue(name, out var schema), $"Mapping does not contain {name}");
         Assert.Equal(superType, schema.SuperType);
-        Assert.Equal(properties.Length, schema.PropertyCount);
         // Shipping FNames are case-insensitive when WITH_CASE_PRESERVING_NAME=0.
         // For example, the native member `Float` is emitted as `float` because
         // the primitive type name entered the name pool first.

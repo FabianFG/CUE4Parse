@@ -20,6 +20,7 @@ public class FixtureTextureDecodeTests
         foreach (var expectation in TextureExpectations)
         {
             var texture = LoadTexture(provider, expectation.Asset);
+            AssertCookedPlatformData(texture, expectation);
             var decoded = texture.Decode();
             Assert.NotNull(decoded);
             using var actual = decoded.ToSkBitmap();
@@ -27,8 +28,8 @@ public class FixtureTextureDecodeTests
 
             Assert.Equal(expectation.DecodedFormat, decoded.PixelFormat);
             Assert.Equal(expectation.SkiaColorType, actual.ColorType);
-            Assert.Equal(64, actual.Width);
-            Assert.Equal(64, actual.Height);
+            Assert.Equal(expectation.Width, actual.Width);
+            Assert.Equal(expectation.Height, actual.Height);
             Assert.Equal(actual.Width, expected.Width);
             Assert.Equal(actual.Height, expected.Height);
             var metrics = Measure(actual, expected);
@@ -45,8 +46,65 @@ public class FixtureTextureDecodeTests
                     $"{channelMetrics.Maximum} exceeds {expectation.MaximumPixelError}. {metrics}");
             }
 
-            if (expectation.Asset == "T_Mips")
-                AssertEveryMipDecodes(texture);
+            if (expectation.MipCount > 1)
+                AssertEveryMipDecodes(texture, expectation.Width, expectation.MipCount);
+        }
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void SlicedTextureFixturesDecodeEveryGeneratedPixel(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+
+        var cube = LoadExport<UTextureCube>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Textures/T_Cube.uasset",
+            "T_Cube");
+        Assert.Equal(EPixelFormat.PF_B8G8R8A8, cube.Format);
+        Assert.Equal(6, cube.PlatformData.GetNumSlices());
+        var decodedCube = cube.Decode();
+        Assert.NotNull(decodedCube);
+        using (var bitmap = decodedCube.ToSkBitmap())
+        {
+            Assert.Equal((16, 96), (bitmap.Width, bitmap.Height));
+            for (var slice = 0; slice < 6; slice++)
+                AssertGeneratedSlice(bitmap, 16, 16, slice, slice * 16);
+        }
+
+        var array = LoadExport<UTexture2DArray>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Textures/T_Array.uasset",
+            "T_Array");
+        Assert.Equal(EPixelFormat.PF_B8G8R8A8, array.Format);
+        Assert.Equal(4, array.PlatformData.GetNumSlices());
+        var slices = array.DecodeTextureArray();
+        Assert.NotNull(slices);
+        Assert.Equal(4, slices.Length);
+        for (var slice = 0; slice < slices.Length; slice++)
+        {
+            using var bitmap = slices[slice].ToSkBitmap();
+            Assert.Equal((16, 16), (bitmap.Width, bitmap.Height));
+            AssertGeneratedSlice(bitmap, 16, 16, slice);
+        }
+
+        var volume = LoadExport<UVolumeTexture>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Textures/T_Volume.uasset",
+            "T_Volume");
+        Assert.Equal(EPixelFormat.PF_B8G8R8A8, volume.Format);
+        Assert.Equal(4, volume.PlatformData.GetNumSlices());
+        var firstVolumeMip = volume.GetFirstMip();
+        Assert.NotNull(firstVolumeMip);
+        Assert.Equal(4, firstVolumeMip.SizeZ);
+        var decodedVolume = volume.Decode();
+        Assert.NotNull(decodedVolume);
+        using (var bitmap = decodedVolume.ToSkBitmap())
+        {
+            Assert.Equal((8, 32), (bitmap.Width, bitmap.Height));
+            for (var slice = 0; slice < 4; slice++)
+                AssertGeneratedSlice(bitmap, 8, 8, slice, slice * 8);
         }
     }
 
@@ -103,6 +161,19 @@ public class FixtureTextureDecodeTests
         return (byte) (MathF.Min(normalZ, 1.0f) * 127.0f + 128.0f);
     }
 
+    private static void AssertGeneratedSlice(SKBitmap bitmap, int width, int height, int slice, int yOffset = 0)
+    {
+        for (var y = 0; y < height; y++)
+            for (var x = 0; x < width; x++)
+                Assert.Equal(MakeFixtureColor(x, y, slice), bitmap.GetPixel(x, y + yOffset));
+    }
+
+    private static SKColor MakeFixtureColor(int x, int y, int slice) => new(
+        (byte) ((x * 17 + slice * 41) & 0xff),
+        (byte) ((y * 29 + slice * 67) & 0xff),
+        (byte) (((x + y) * 11 + slice * 97) & 0xff),
+        (byte) (255 - ((x * 3 + y * 5 + slice * 7) & 0x7f)));
+
     private static PixelMetrics Measure(SKBitmap actual, SKBitmap expected)
     {
         Span<long> sums = stackalloc long[ChannelCount];
@@ -134,23 +205,43 @@ public class FixtureTextureDecodeTests
             new ChannelMetrics(sums[3] / (double) pixels, maxima[3]));
     }
 
-    private static void AssertEveryMipDecodes(UTexture2D texture)
+    private static void AssertEveryMipDecodes(UTexture2D texture, int baseSize, int mipCount)
     {
-        var expectedDimensions = ExpectedMipDimensions;
-        for (var mipIndex = 0; mipIndex < expectedDimensions.Length; mipIndex++)
+        for (var mipIndex = 0; mipIndex < mipCount; mipIndex++)
         {
+            var expectedDimension = Math.Max(1, baseSize >> mipIndex);
             var decoded = texture.DecodeMip(mipIndex);
             Assert.NotNull(decoded);
-            Assert.Equal(expectedDimensions[mipIndex], decoded.Width);
-            Assert.Equal(expectedDimensions[mipIndex], decoded.Height);
+            Assert.Equal(expectedDimension, decoded.Width);
+            Assert.Equal(expectedDimension, decoded.Height);
             Assert.Equal(decoded.Width * decoded.Height * 4, decoded.Data.Length);
 
             using var bitmap = decoded.ToSkBitmap();
-            Assert.Equal(expectedDimensions[mipIndex], bitmap.Width);
-            Assert.Equal(expectedDimensions[mipIndex], bitmap.Height);
+            Assert.Equal(expectedDimension, bitmap.Width);
+            Assert.Equal(expectedDimension, bitmap.Height);
             for (var y = 0; y < bitmap.Height; y++)
                 for (var x = 0; x < bitmap.Width; x++)
                     Assert.Equal(255, bitmap.GetPixel(x, y).Alpha);
+        }
+    }
+
+    private static void AssertCookedPlatformData(UTexture2D texture, TextureExpectation expectation)
+    {
+        Assert.Equal(expectation.CookedFormat, texture.Format);
+        Assert.Equal(expectation.Width, texture.PlatformData.SizeX);
+        Assert.Equal(expectation.Height, texture.PlatformData.SizeY);
+        Assert.Equal(expectation.MipCount, texture.PlatformData.Mips.Length);
+
+        for (var mipIndex = 0; mipIndex < expectation.MipCount; mipIndex++)
+        {
+            var expectedWidth = Math.Max(1, expectation.Width >> mipIndex);
+            var expectedHeight = Math.Max(1, expectation.Height >> mipIndex);
+            var mip = texture.GetMip(mipIndex);
+            Assert.NotNull(mip);
+            Assert.Equal(expectedWidth, mip.SizeX);
+            Assert.Equal(expectedHeight, mip.SizeY);
+            Assert.Equal(1, mip.SizeZ);
+            Assert.NotEmpty(Assert.IsType<byte[]>(mip.BulkData?.Data));
         }
     }
 
