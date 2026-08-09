@@ -6,8 +6,10 @@ namespace CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
 /// Reversed by FabianFG
 ///
 /// Based on reference implementation: http://www.efgh.com/software/rijndael.htm
+///
+/// Used in: Marvel Rivals; Tamas: Shadowveil;
 /// </summary>
-public static class MarvelAes
+public static class NetEaseAes
 {
     private const int AES_KEYBITS = 256;
     private const int AES_BLOCKBYTES = 16;
@@ -722,7 +724,7 @@ public static class MarvelAes
         PUTU32(plaintext[12..], s3);
     }
 
-    public static byte[] MarvelDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] NetEaseDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

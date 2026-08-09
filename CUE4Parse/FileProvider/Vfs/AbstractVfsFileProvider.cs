@@ -79,7 +79,7 @@ namespace CUE4Parse.FileProvider.Vfs
             {
                 GAME_ApexLegendsMobile => ApexLegendsMobileAes.DecryptApexMobile,
                 GAME_Snowbreak => SnowbreakAes.SnowbreakDecrypt,
-                GAME_MarvelRivals => MarvelAes.MarvelDecrypt,
+                GAME_MarvelRivals or GAME_TamasShadowveil => NetEaseAes.NetEaseDecrypt,
                 GAME_Undawn => ToaaAes.ToaaDecrypt,
                 GAME_DeadByDaylight or GAME_DeadByDaylight_Old => DBDAes.DbDDecrypt,
                 GAME_PaxDei => PaxDeiAes.PaxDeiDecrypt,

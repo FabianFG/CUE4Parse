@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Pak;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
@@ -151,7 +152,8 @@ public partial class IoStoreReader : AbstractAesVfsReader
             offsetInFile = bulk.OffsetInFile;
         }
 
-        return Read(offset, size, offsetInFile);
+        var encryptedBytesCount = Game is GAME_TamasShadowveil ? PakFileReader.CalculateEncryptedBytesCountForNetEase(ioEntry.ChunkId) : 0;
+        return Read(offset, size, offsetInFile, encryptedBytesCount);
     }
 
     // If anyone really comes to read this here are some of my thoughts on designing loading of chunk ids
@@ -233,18 +235,19 @@ public partial class IoStoreReader : AbstractAesVfsReader
     {
         if (TryResolve(chunkId, out var offsetLength))
         {
-            return Read((long) offsetLength.Offset, (long) offsetLength.Length);
+            var encryptedBytesCount = Game is GAME_TamasShadowveil ? PakFileReader.CalculateEncryptedBytesCountForNetEase(chunkId) : 0;
+            return Read((long) offsetLength.Offset, (long) offsetLength.Length, encryptedBytesCount: encryptedBytesCount);
         }
 
         throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStore {Name}");
     }
 
-    private byte[] Read(long offset, long length, long offsetInFile = 0L)
+    private byte[] Read(long offset, long length, long offsetInFile = 0L, int encryptedBytesCount = 0)
     {
         switch (Game)
         {
-            case GAME_MindsEye:
-                return ReadPartiallyEncrypted(offset, length, offsetInFile);
+            case GAME_MindsEye or GAME_TamasShadowveil:
+                return ReadPartiallyEncrypted(offset, length, offsetInFile, encryptedBytesCount);
         }
 
         offset += offsetInFile;
@@ -323,11 +326,12 @@ public partial class IoStoreReader : AbstractAesVfsReader
         return dst;
     }
 
-    private byte[] ReadPartiallyEncrypted(long offset, long length, long offsetInFile)
+    private byte[] ReadPartiallyEncrypted(long offset, long length, long offsetInFile, int encryptedBytesCount)
     {
         var limit = Game switch
         {
             GAME_MindsEye => 0x1000,
+            GAME_TamasShadowveil => encryptedBytesCount,
             _ => throw new ArgumentOutOfRangeException(nameof(Game), "Unsupported game for partial encrypted io store extraction")
         };
 
@@ -336,7 +340,20 @@ public partial class IoStoreReader : AbstractAesVfsReader
         var newFirstBlockIndex = (int) ((offset + offsetInFile) / compressionBlockSize);
         if (newFirstBlockIndex != firstBlockIndex)
         {
-            limit = 0;
+            // TODO: Check if other games using partial encryption might have the same problem as Tamas?
+            // It skips encryption bytes belonging to earlier blocks to find how much of the requested block still needs decryption
+            if (Game is GAME_TamasShadowveil)
+            {
+                for (var blockIndex = firstBlockIndex; blockIndex < newFirstBlockIndex && limit > 0; blockIndex++)
+                {
+                    var skippedRawSize = (int) TocResource.CompressionBlocks[blockIndex].CompressedSize.Align(Aes.ALIGN);
+                    limit = Math.Max(0, limit - skippedRawSize);
+                }
+            }
+            else
+            {
+                limit = 0;
+            }
             offset += offsetInFile;
             offsetInFile = 0;
             firstBlockIndex = (int) (offset / compressionBlockSize);

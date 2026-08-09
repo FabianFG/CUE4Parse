@@ -1,5 +1,5 @@
 using CUE4Parse.UE4.VirtualFileSystem;
-using static CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes.MarvelAes;
+using static CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes.NetEaseAes;
 
 namespace CUE4Parse.GameTypes.THPS.Encryption.Aes;
 

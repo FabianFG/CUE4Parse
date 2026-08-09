@@ -108,7 +108,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         {
             switch (Game)
             {
-                case GAME_MarvelRivals or GAME_OperationApocalypse or GAME_WutheringWaves or GAME_MindsEye:
+                case GAME_MarvelRivals or GAME_OperationApocalypse or GAME_WutheringWaves or GAME_MindsEye or GAME_TamasShadowveil:
                     return PartialEncryptCompressedExtract(reader, pakEntry, header);
                 case GAME_GameForPeace:
                     return GameForPeaceExtract(reader, pakEntry);
@@ -200,7 +200,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         switch (Game)
         {
-            case GAME_MarvelRivals or GAME_OperationApocalypse or GAME_WutheringWaves or GAME_MindsEye:
+            case GAME_MarvelRivals or GAME_OperationApocalypse or GAME_WutheringWaves or GAME_MindsEye or GAME_TamasShadowveil:
                 return PartialEncryptExtract(reader, pakEntry, header);
             case GAME_Rennsport:
                 return RennsportExtract(reader, pakEntry);
