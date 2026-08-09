@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 3,
+  "generator": {
+    "project": "CUE4ParseFixtures",
+    "engineVersion": "5.8.1",
+    "engineGitSha": "71fe36aac5a8df5ccd66c763ffc902b29b6a9c43"
+  },
+  "scope": {
+    "platform": "Win64",
+    "configuration": "Shipping",
+    "ioStoreCompression": [
+      "Oodle",
+      "Uncompressed"
+    ]
+  },
+  "files": [
+    {
+      "path": "IoStore/Tagged/global.ucas",
+      "size": 1534832,
+      "sha256": "bf632212d1a77b068691ac0de4f75b17aad14eff3008b677486c545cc503b048"
+    },
+    {
+      "path": "IoStore/Tagged/global.utoc",
+      "size": 482,
+      "sha256": "e1ca43432f1a788bcf1adf479710eb783b3fe75671ec9fbbf7a5aa7de448688f"
+    },
+    {
+      "path": "IoStore/Tagged/Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.ucas",
+      "size": 24480,
+      "sha256": "cab070e20d6f4a918e14d6f44d047a1ae3e596d7d4c7daa8c6c7df422cf487be"
+    },
+    {
+      "path": "IoStore/Tagged/Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.utoc",
+      "size": 1522,
+      "sha256": "863eb3247798c029d0554ea672193f14c39081bfae0a1faf261a03ff790fc8ae"
+    },
+    {
+      "path": "IoStore/Tagged/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.ucas",
+      "size": 75152,
+      "sha256": "5265f0325e9dfa777700d9f53f5af501ce5081827da88a480e9cfed1d1d0f1d4"
+    },
+    {
+      "path": "IoStore/Tagged/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.utoc",
+      "size": 1490,
+      "sha256": "ff92650d8bb86742dd19ae6814b17553d9882d818eb06f38e07bf7d8be5399be"
+    },
+    {
+      "path": "IoStore/Unversioned/global.ucas",
+      "size": 1534832,
+      "sha256": "bf632212d1a77b068691ac0de4f75b17aad14eff3008b677486c545cc503b048"
+    },
+    {
+      "path": "IoStore/Unversioned/global.utoc",
+      "size": 482,
+      "sha256": "e1ca43432f1a788bcf1adf479710eb783b3fe75671ec9fbbf7a5aa7de448688f"
+    },
+    {
+      "path": "IoStore/Unversioned/Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.ucas",
+      "size": 16752,
+      "sha256": "4305725dde1c062eac2fce39818837ae6ddf6baa7ddd549288911969bedf215d"
+    },
+    {
+      "path": "IoStore/Unversioned/Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.utoc",
+      "size": 1522,
+      "sha256": "72d26e67b6923d67c22398520cc7e4754b0583e22f3a536925248bbc4e0a0cef"
+    },
+    {
+      "path": "IoStore/Unversioned/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.ucas",
+      "size": 62304,
+      "sha256": "ccb333528784901561156de4e7e66ad0b168c57045477242744b9c99f431de6b"
+    },
+    {
+      "path": "IoStore/Unversioned/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.utoc",
+      "size": 1490,
+      "sha256": "bf500a4e386fe8d32f689895f10c7dd0681a1205cce0fbccdfbb6789d86f95f7"
+    },
+    {
+      "path": "Pak/Oodle/CUE4ParseFixtures-Minimal-Oodle.pak",
+      "size": 13741,
+      "sha256": "4c275931a3e6740b40d431cd29a78cfd666cf59abd44dcf1fe93e421969c791b"
+    },
+    {
+      "path": "Pak/Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed.pak",
+      "size": 65173,
+      "sha256": "5677e68b65e2aefbabf996c1eb71b224072b38ef6fc28af85875562e68ccb117"
+    },
+    {
+      "path": "Mappings/CUE4ParseFixtures-Oodle.usmap",
+      "size": 233931,
+      "sha256": "f5d352e27511c3cac2add087700dab7229d93edd305376de91f8d3d4188a45d6"
+    },
+    {
+      "path": "Mappings/CUE4ParseFixtures-Uncompressed.usmap",
+      "size": 815774,
+      "sha256": "37f79928c9f7edd42115831183eb8968c7d4815883f43447ab259971b3bb8368"
+    },
+    {
+      "path": "SourceTextures/grayscale.png",
+      "size": 1128,
+      "sha256": "97cdf3de49fa83e46693c3e06cf45eb07d6b37a5990fbdcae37fd233b99123eb"
+    },
+    {
+      "path": "SourceTextures/hdr-range.txt",
+      "size": 28,
+      "sha256": "a34fe607d1dc4aaabd3f3b143a689bc8204acba0da62990f92f5e1994f6c5d6e"
+    },
+    {
+      "path": "SourceTextures/hdr.exr",
+      "size": 25913,
+      "sha256": "a69be8aac743464879c2338329cff15c22dd857cfe741c1e6ad148a52d9f6ecf"
+    },
+    {
+      "path": "SourceTextures/normal.png",
+      "size": 451,
+      "sha256": "ae85896f7e973059f63648fd6834114aec717d4323c58f86d5bc732b8134eb8c"
+    },
+    {
+      "path": "SourceTextures/rgb.png",
+      "size": 545,
+      "sha256": "e17ab71f5885fa72239eec265b69ed2936760176413709b73f3d3cfb84c30b54"
+    },
+    {
+      "path": "SourceTextures/rgba.png",
+      "size": 821,
+      "sha256": "5c8c7a76ebd2b8d63483569a01e13611dd5c21f44ac2087a040fa2b60c5991ea"
+    }
+  ]
+}
