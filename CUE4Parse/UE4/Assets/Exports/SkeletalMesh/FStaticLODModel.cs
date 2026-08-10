@@ -327,6 +327,7 @@ public class FStaticLODModel
         var bInlined = Ar.ReadBoolean();
 
         RequiredBones = Ar.ReadArray<short>();
+        if (Ar.Game is GAME_GearsofWarEDay) Ar.SkipArray<short>();// another bones array
         if (Ar.Game is GAME_NeedForSpeedMobile) Ar.Position += 4;
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
@@ -483,6 +484,7 @@ public class FStaticLODModel
         var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
 
         if (Ar.Game == GAME_EvilWest) Ar.Position += 22;
+        if (Ar.Game is GAME_GearsofWarEDay && Ar.Peek<int>() == 0) bHasVertexColors = false;
 
         if (bHasVertexColors)
         {

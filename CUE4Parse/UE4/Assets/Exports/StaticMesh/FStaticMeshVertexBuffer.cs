@@ -36,6 +36,7 @@ public class FStaticMeshVertexBuffer
         int customData = 0;
         if (Ar.Game is GAME_DeltaForce or GAME_SuicideSquad) Ar.Position += 4;
         if (Ar.Game is GAME_FateTrigger) customData = Ar.Read<int>();
+        if (Ar.Game is GAME_GearsofWarEDay && NumVertices == 0) return;
 
         if (!stripDataFlags.IsAudioVisualDataStripped())
         {

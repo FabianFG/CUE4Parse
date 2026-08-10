@@ -18,7 +18,7 @@ public class FMaterialResource : FMaterial;
 
 public class FMaterial
 {
-    
+
     public FMaterialShaderMap? LoadedShaderMap;
 
     public void DeserializeInlineShaderMap(FMaterialResourceProxyReader Ar)
@@ -375,6 +375,7 @@ public class FShaderParameterMapInfo
         }
         if (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_HonorofKingsWorld) Ar.Position += 16;
         LooseParameterBuffers = Ar.ReadArray(() => new FShaderLooseParameterBufferInfo(Ar));
+        if (Ar.Game is GAME_GearsofWarEDay) Ar.Position += 8;
         Hash = Ar.Game >= GAME_UE4_26 ? Ar.Read<ulong>() : 0;
         if (Ar.Game is GAME_ArenaBreakoutInfinite) Ar.Position += 8;
     }
@@ -713,7 +714,7 @@ public class FUniformExpressionSet
         UniformTextureParameters = new FMaterialTextureParameterInfo[materialTextureParameterTypeCount][];
         if (Ar.Game >= GAME_UE5_0)
         {
-            if (Ar.Game >= GAME_UE5_6) UniformParameterEvaluations = Ar.ReadArray<FMaterialUniformParameterEvaluation>();
+            if (Ar.Game >= GAME_UE5_6 && Ar.Game != GAME_GearsofWarEDay) UniformParameterEvaluations = Ar.ReadArray<FMaterialUniformParameterEvaluation>();
 
             if (Ar.Game is GAME_Aion2) _ = Ar.ReadArray(() => new FMaterialNumericParameterInfo(Ar)); // additional parameters
             UniformPreshaders = Ar.ReadArray(Ar.ReadMaterialUniformPreshaderHeader);
@@ -1097,7 +1098,7 @@ public class FMaterialPreshaderData
             Names = Ar.ReadArray(Ar.ReadFName);
         }
 
-        if (Ar.Game >= GAME_UE5_8)
+        if (Ar.Game >= GAME_UE5_8 || Ar.Game is GAME_GearsofWarEDay)
         { }
         else if (Ar.Game >= GAME_UE5_1)
         {

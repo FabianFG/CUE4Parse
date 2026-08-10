@@ -175,6 +175,7 @@ public class FPositionVertexBuffer
             NumVertices >>= 9;
         }
         if (Ar.Game == GAME_Gollum) Ar.Position += 25;
+        if (Ar.Game is GAME_GearsofWarEDay && NumVertices == 0) return;
 
         Verts = Ar.ReadBulkArray<FVector>();
     }

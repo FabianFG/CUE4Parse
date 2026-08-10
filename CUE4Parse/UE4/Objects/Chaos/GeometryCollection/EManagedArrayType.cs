@@ -4,7 +4,7 @@ using Newtonsoft.Json.Converters;
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
 [JsonConverter(typeof(StringEnumConverter))]
-public enum EManagedArrayType : byte
+public enum EManagedArrayType : uint
 {
     None,
     Vector,
@@ -60,5 +60,9 @@ public enum EManagedArrayType : byte
     UObjectArray,
     LinearCurve,
     Name,
-    SoftObjectPath
+    SoftObjectPath,
+
+
+    // Custom
+    GroupBoneIndex = 1000
 }

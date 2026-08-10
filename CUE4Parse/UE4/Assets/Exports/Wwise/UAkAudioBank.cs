@@ -31,6 +31,12 @@ public class UAkAudioBank : UAkAudioType
                 Properties.AddRange(idk.Properties);
                 return;
             }
+            case GAME_GearsofWarEDay:
+            {
+                var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(0, -1)], ERawHeaderFlags.RawProperties  | ERawHeaderFlags.Reverse));
+                Properties.AddRange(idk.Properties);
+                return;
+            }
             default:
                 SoundBankCookedData = new FWwiseLocalizedSoundBankCookedData(new FStructFallback(Ar, "WwiseLocalizedSoundBankCookedData"));
                 break;
