@@ -43,27 +43,34 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
         {
             ct.ThrowIfCancellationRequested();
 
-            var decoded = texture.DecodeMip(index, Session.Options.TexturePlatform);
-            if (decoded == null)
+            var platform = Session.Options.TexturePlatform;
+            CTexture?[]? decoded = texture switch
             {
-                if (all)
-                {
-                    Log.Warning("Failed to decode texture mip {Index}, skipping", index);
-                }
-                else
+                UTexture2DArray array => array.DecodeTextureArray(index, platform),
+                UTextureCube => texture.DecodeMip(index, platform)?.ToPanorama() is { } panorama ? [panorama] : null,
+                _ => texture.DecodeMip(index, platform) is { } single ? [single] : null
+            };
+
+            if (decoded is not { Length: > 0 })
+            {
+                if (!all)
                 {
                     throw new Exception($"Failed to decode texture mip {index}");
                 }
+
+                Log.Warning("Failed to decode texture mip {Index}, skipping", index);
                 return;
             }
 
-            if (texture is UTextureCube)
+            var mipSuffix = all ? $"_MIP{index}" : null;
+            var layered = texture is UTexture2DArray;
+            for (var i = 0; i < decoded.Length; i++)
             {
-                decoded = decoded.ToPanorama();
-            }
+                if (decoded[i] is not { } slice) continue;
 
-            var data = decoded.Encode(Session.Options, out var ext);
-            files.Add(new ExportFile(ext, data, all ? $"_MIP{index}" : null));
+                var data = slice.Encode(Session.Options, out var ext);
+                files.Add(new ExportFile(ext, data, layered ? $"{mipSuffix}_LAYER{i}" : mipSuffix));
+            }
         }
     }
 }

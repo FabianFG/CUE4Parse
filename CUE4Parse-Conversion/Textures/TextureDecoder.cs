@@ -20,7 +20,7 @@ namespace CUE4Parse_Conversion.Textures;
 public static class TextureDecoder
 {
     public static bool UseAssetRipperTextureDecoder { get; set; } = false;
-    internal static readonly bool IsWindows = OperatingSystem.IsWindows(); 
+    internal static readonly bool IsWindows = OperatingSystem.IsWindows();
 
     public static CTexture? Decode(this UTexture texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetMipIndexByMaxSize(maxMipSize), platform);
     public static CTexture? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetFirstMipIndex(), platform);
@@ -202,9 +202,10 @@ public static class TextureDecoder
         }
     }
 
-    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, FTexture2DMipMap? mip = null, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeTextureArray(texture.GetFirstMipIndex(), platform);
+    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, int mipIndex, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeTextureArray(texture.GetMip(mipIndex), platform);
+    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
-        mip ??= texture.GetFirstMip();
         if (mip is null) return null; // TODO: we should let it throw the exception
 
         DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
@@ -245,7 +246,7 @@ public static class TextureDecoder
             {
                 slices = slices != 1 ? slices >> 1 : 1;
             }
-            
+
             // A volume's depth shrinks with every mip and is written on the mip itself, while
             // PackedData only describes mip 0 and doesn't always work with it. Mips below 4.20
             // have no depth at all, so we fall back to the slice count when there's nothing usable
@@ -512,7 +513,7 @@ public static class TextureDecoder
                 throw new NotImplementedException($"Unknown pixel format: {formatInfo.UnrealFormat}");
         }
     }
-    
+
     private static int GetBytesPerPixel(EPixelFormat pixelFormat)
     {
         var formatKvp = PixelFormatUtils.PixelFormats.ElementAtOrDefault((int) pixelFormat)!;

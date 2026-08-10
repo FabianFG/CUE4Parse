@@ -29,7 +29,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     internal DirectoryInfo BaseDirectory => _baseDirectory ?? throw new InvalidOperationException("Session is not currently running.");
 
     private ExportOptions? _options;
-    public ExportOptions Options => _options ?? throw new InvalidOperationException("Session is not currently running.");
+    internal ExportOptions Options => _options ?? throw new InvalidOperationException("Session is not currently running.");
 
     private int _totalQueued;
     public int TotalQueued => Volatile.Read(ref _totalQueued);
