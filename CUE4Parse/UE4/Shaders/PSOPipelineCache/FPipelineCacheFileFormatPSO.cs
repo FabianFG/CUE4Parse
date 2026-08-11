@@ -20,6 +20,7 @@ public sealed class FPipelineCacheFileFormatPSO
     public FPipelineCacheFileFormatPSO(FArchive Ar, EPipelineCacheFileFormatVersions version)
     {
         Type = Ar.Read<DescriptorType>();
+        if (Ar.Game is EGame.GAME_GearsofWarEDay) Ar.Position += 4;
         switch (Type)
         {
             case DescriptorType.Compute:

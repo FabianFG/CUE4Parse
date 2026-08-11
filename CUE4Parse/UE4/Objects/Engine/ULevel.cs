@@ -152,6 +152,7 @@ public class ULevel : Assets.Exports.UObject
         }
         if (Ar.Game is GAME_LordOfMysteries) Ar.Position += 8;
         if (Ar.Game is GAME_ValorantSource) Ar.Position += 28;
+        if (Ar.Game is GAME_TamasShadowveil) return;
         PrecomputedVisibilityHandler = new FPrecomputedVisibilityHandler(Ar);
         if (Ar.Game is GAME_AssaultFireFuture && Ar.Read<int>() != 0) return;
         PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);

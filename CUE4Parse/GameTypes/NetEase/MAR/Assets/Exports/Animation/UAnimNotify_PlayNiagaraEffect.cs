@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -7,7 +7,7 @@ namespace CUE4Parse.GameTypes.NetEase.MAR.Assets.Exports.Animation;
 
 public class UAnimNotify_PlayNiagaraEffect : UAnimNotify
 {
-    public FSoftObjectPath? Template;
+    public FPackageIndex? Template;
     public bool bUseCombineEffect;
     public FSoftObjectPath? TemplateCombineEffect;
     public FVector LocationOffset;
@@ -33,7 +33,7 @@ public class UAnimNotify_PlayNiagaraEffect : UAnimNotify
     {
         base.Deserialize(Ar, validPos);
 
-        Template = GetOrDefault<FSoftObjectPath?>(nameof(Template));
+        Template = GetOrDefault<FPackageIndex?>(nameof(Template));
         bUseCombineEffect = GetOrDefault<bool>(nameof(bUseCombineEffect));
         TemplateCombineEffect = GetOrDefault<FSoftObjectPath?>(nameof(TemplateCombineEffect));
         LocationOffset = GetOrDefault<FVector>(nameof(LocationOffset));
