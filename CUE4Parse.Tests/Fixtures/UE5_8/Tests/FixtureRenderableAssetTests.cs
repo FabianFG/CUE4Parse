@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse_Conversion.Dto;
+using CUE4Parse_Conversion.Options;
 using static CUE4Parse.Tests.Fixtures.UE5_8.FixtureTestUtilities;
 
 namespace CUE4Parse.Tests.Fixtures.UE5_8;
@@ -152,6 +153,14 @@ public class FixtureRenderableAssetTests
         {
             resources.UnloadAllPages();
         }
+
+        using var converted = new StaticMeshDto(mesh, naniteFormat: ENaniteMeshFormat.NaniteOnly);
+        var lod = Assert.Single(converted.LODs);
+        Assert.True(lod.IsNanite);
+        Assert.NotEmpty(lod.Vertices);
+        Assert.NotEmpty(lod.Indices);
+        Assert.Equal(0, lod.Indices.Length % 3);
+        Assert.NotEmpty(lod.Sections);
     }
 
     [Theory]

@@ -84,6 +84,39 @@ public class FixtureEngineAssetTests
     [Theory]
     [InlineData(FixtureSerialization.Tagged)]
     [InlineData(FixtureSerialization.Unversioned)]
+    public void NestedLevelSequencePreservesSubSequenceTiming(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var sequence = LoadExport<ULevelSequence>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Sequences/LS_Nested.uasset",
+            "LS_Nested");
+
+        var movieScene = Assert.IsAssignableFrom<UObject>(sequence.MovieScene.Load<UObject>());
+        AssertFrameRate(movieScene.Get<FStructFallback>("TickResolution"), 24_000, 1);
+        AssertFrameRate(movieScene.Get<FStructFallback>("DisplayRate"), 24, 1);
+        var playbackRange = movieScene.Get<FMovieSceneFrameRange>("PlaybackRange").Value;
+        Assert.Equal(0, playbackRange.LowerBound.Value.Value);
+        Assert.Equal(48_001, playbackRange.UpperBound.Value.Value);
+
+        var track = Assert.IsAssignableFrom<UObject>(
+            Assert.Single(movieScene.Get<FPackageIndex[]>("Tracks")).Load<UObject>());
+        Assert.Equal("MovieSceneSubTrack", track.ExportType);
+        var sections = track.Get<FPackageIndex[]>("Sections")
+            .Select(index => Assert.IsAssignableFrom<UObject>(index.Load<UObject>()))
+            .OrderBy(section => section.Get<FMovieSceneFrameRange>("SectionRange").Value.LowerBound.Value.Value)
+            .ToArray();
+        Assert.Equal(2, sections.Length);
+
+        AssertSubSection(sections[0], 6_000, 30_001, 0.5f, 1_200, 100);
+        AssertSubSection(sections[1], 30_001, 42_001, 1.5f, 0, 37);
+        Assert.All(sections, section =>
+            Assert.Equal("LS_Fixture", section.Get<FPackageIndex>("SubSequence").Load<ULevelSequence>()?.Name));
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
     public void BlueprintPreservesGeneratedClassAndDefaultObject(FixtureSerialization serialization)
     {
         using var provider = CreateMountedIoStoreProvider(serialization);
@@ -150,6 +183,24 @@ public class FixtureEngineAssetTests
     {
         Assert.Equal(numerator, GetProperty<int>(rate, "Numerator"));
         Assert.Equal(denominator, rate.GetOrDefault("Denominator", 1, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static void AssertSubSection(
+        UObject section,
+        int lower,
+        int upper,
+        float timeScale,
+        int startFrameOffset,
+        int hierarchicalBias)
+    {
+        var range = section.Get<FMovieSceneFrameRange>("SectionRange").Value;
+        Assert.Equal((lower, upper), (range.LowerBound.Value.Value, range.UpperBound.Value.Value));
+        var parameters = section.Get<FStructFallback>("Parameters");
+        var timeWarp = parameters.Get<FMovieSceneTimeWarpVariant>("TimeScale");
+        Assert.Equal(EMovieSceneTimeWarpType.FixedPlayRate, timeWarp.Type);
+        Assert.Equal(timeScale, timeWarp.PlayRate);
+        Assert.Equal(startFrameOffset, parameters.GetOrDefault<FFrameNumber>("StartFrameOffset").Value);
+        Assert.Equal(hierarchicalBias, parameters.GetOrDefault("HierarchicalBias", 100));
     }
 
     private static void AssertChannel(FMovieSceneChannel<float> channel, int[] expectedTimes, float[] expectedValues)

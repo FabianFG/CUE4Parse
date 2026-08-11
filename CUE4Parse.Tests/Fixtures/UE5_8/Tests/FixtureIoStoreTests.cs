@@ -29,12 +29,15 @@ public class FixtureIoStoreTests
         "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_RADAudio.ubulk",
         "CUE4ParseFixtures/Content/Fixtures/Meshes/SM_Nanite.ubulk",
         "CUE4ParseFixtures/Content/Fixtures/Textures/T_Streaming.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Textures/T_UDIM.ubulk",
         "CUE4ParseFixtures/Content/Fixtures/Textures/T_Virtual.ubulk"
     ];
     private static readonly string[] ExpectedContainerPaths = ExpectedCookedPackageNames
         .Select(static packageName =>
         {
-            var extension = packageName == "/Game/Fixtures/Maps/Empty" ? "umap" : "uasset";
+            var extension = packageName.StartsWith("/Game/Fixtures/Maps/", StringComparison.Ordinal)
+                ? "umap"
+                : "uasset";
             return $"CUE4ParseFixtures/Content/{packageName["/Game/".Length..]}.{extension}";
         })
         .Concat(ExpectedBulkPaths)

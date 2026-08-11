@@ -58,6 +58,39 @@ public class FixtureTextureDecodeTests
     [Theory]
     [InlineData(FixtureSerialization.Tagged)]
     [InlineData(FixtureSerialization.Unversioned)]
+    public void UdimVirtualTexturePreservesBlocksAndDecodesComposite(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var texture = LoadTexture(provider, "T_UDIM");
+        var virtualData = Assert.IsType<FVirtualTextureBuiltData>(texture.PlatformData.VTData);
+
+        Assert.True(virtualData.IsInitialized());
+        Assert.Equal((uint) 1, virtualData.NumLayers);
+        Assert.Equal((uint) 2, virtualData.WidthInBlocks);
+        Assert.Equal((uint) 2, virtualData.HeightInBlocks);
+        Assert.Equal((uint) 256, virtualData.Width);
+        Assert.Equal((uint) 256, virtualData.Height);
+        Assert.Equal([EPixelFormat.PF_DXT1], virtualData.LayerTypes);
+        Assert.NotEmpty(virtualData.Chunks);
+
+        var decoded = texture.Decode();
+        Assert.NotNull(decoded);
+        using var actual = decoded.ToSkBitmap();
+        using var expected = CreateExpectedUdimBitmap();
+        Assert.Equal((256, 256), (actual.Width, actual.Height));
+        var metrics = Measure(actual, expected);
+        for (var channel = 0; channel < ChannelCount; channel++)
+        {
+            Assert.True(metrics[channel].Mean <= 2.0,
+                $"T_UDIM channel {ChannelName(channel)} mean error is {metrics[channel].Mean:F3}. {metrics}");
+            Assert.True(metrics[channel].Maximum <= 70,
+                $"T_UDIM channel {ChannelName(channel)} maximum error is {metrics[channel].Maximum}. {metrics}");
+        }
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
     public void SlicedTextureFixturesDecodeEveryGeneratedPixel(FixtureSerialization serialization)
     {
         using var provider = CreateMountedIoStoreProvider(serialization);
@@ -152,6 +185,24 @@ public class FixtureTextureDecodeTests
         }
 
         return reference;
+    }
+
+    private static SKBitmap CreateExpectedUdimBitmap()
+    {
+        var result = new SKBitmap(256, 256, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        using var canvas = new SKCanvas(result);
+        Draw("udim.1001.png", 0, 0);
+        Draw("udim.1002.png", 128, 0);
+        Draw("udim.1011.png", 0, 128);
+        Draw("udim.1012.png", 128, 128);
+        return result;
+
+        void Draw(string source, int x, int y)
+        {
+            using var tile = SKBitmap.Decode(FixturePath("SourceTextures", source));
+            Assert.NotNull(tile);
+            canvas.DrawBitmap(tile, x, y);
+        }
     }
 
     private static void AssertDecodedBitmap(UTexture2D texture, TextureExpectation expectation)

@@ -70,9 +70,19 @@ internal static class FixtureTestUtilities
             "/Game/Fixtures/DataTables/DT_AllProperties",
             "/Game/Fixtures/DataTables/DT_Composite",
             "/Game/Fixtures/DataTables/DT_Overrides",
+            "/Game/Fixtures/Effects/MS_Patch",
+            "/Game/Fixtures/Effects/MS_Source",
+            "/Game/Fixtures/Effects/NS_Fixture",
             "/Game/Fixtures/Fonts/Font_Fixture",
+            "/Game/Fixtures/Geometry/DM_Fixture",
             "/Game/Fixtures/Geometry/GC_Fixture",
+            "/Game/Fixtures/Landscape/LI_Fixture",
+            "/Game/Fixtures/Landscape/M_Landscape",
             "/Game/Fixtures/Maps/Empty",
+            "/Game/Fixtures/Maps/Landscape",
+            "/Game/Fixtures/Maps/Navigation",
+            "/Game/Fixtures/Maps/WorldPartition",
+            "/Game/Fixtures/Maps/WorldPartition/_Generated_/1WD4NAK7SVY0JF8AXYPOSA7U8",
             "/Game/Fixtures/Materials/MI_Fixture",
             "/Game/Fixtures/Materials/M_Fixture",
             "/Game/Fixtures/Materials/MPC_Fixture",
@@ -81,11 +91,14 @@ internal static class FixtureTestUtilities
             "/Game/Fixtures/Meshes/SM_Nanite",
             "/Game/Fixtures/Properties/DA_AllProperties",
             "/Game/Fixtures/Sequences/LS_Fixture",
+            "/Game/Fixtures/Sequences/LS_Nested",
             "/Game/Fixtures/StringTables/ST_Fixed",
             "/Game/Fixtures/Textures/T_Array",
             "/Game/Fixtures/Textures/T_Cube",
+            "/Game/Fixtures/Textures/T_UDIM",
             "/Game/Fixtures/Textures/T_Virtual",
-            "/Game/Fixtures/Textures/T_Volume"
+            "/Game/Fixtures/Textures/T_Volume",
+            "/Game/Fixtures/WorldPartition/DLA_Runtime"
         }
         .Concat(TextureExpectations.Select(static expectation => $"/Game/Fixtures/Textures/{expectation.Asset}"))
         .Order(StringComparer.Ordinal)
