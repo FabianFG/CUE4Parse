@@ -23,7 +23,9 @@ public class FixturePakTests
     private const string CityGreetingKey = "CityGreeting";
     private static readonly string[] ExpectedCultures = ["en", "de"];
     private static readonly string[] ExpectedPakPaths =
-        [AssetRegistryPath, IniPath, GermanLocresPath, EnglishLocresPath];
+        new[] { AssetRegistryPath, IniPath, GermanLocresPath, EnglishLocresPath }
+        .Order(StringComparer.Ordinal)
+        .ToArray();
     private static readonly string EnglishCompressionPayload = string.Concat(Enumerable.Repeat(
         "Deterministic localization payload for compression coverage. ",
         96)).TrimEnd();

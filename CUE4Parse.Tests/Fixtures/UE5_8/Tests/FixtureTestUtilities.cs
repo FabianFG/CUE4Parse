@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider.Usmap;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -46,6 +47,19 @@ internal static class FixtureTestUtilities
             "/Game/Fixtures/Audio/SC_Fixture",
             "/Game/Fixtures/Audio/SW_Inline",
             "/Game/Fixtures/Audio/SW_Streaming",
+            "/Game/Fixtures/Audio/SW_Format_ADPCM",
+            "/Game/Fixtures/Audio/SW_Format_BinkAudio",
+            "/Game/Fixtures/Audio/SW_Format_Opus",
+            "/Game/Fixtures/Audio/SW_Format_PCM",
+            "/Game/Fixtures/Audio/SW_Format_PlatformSpecific",
+            "/Game/Fixtures/Audio/SW_Format_ProjectDefined",
+            "/Game/Fixtures/Audio/SW_Format_RADAudio",
+            "/Game/Fixtures/Animations/AM_Fixture",
+            "/Game/Fixtures/Animations/AS_Fixture",
+            "/Game/Fixtures/Animations/BS_Fixture",
+            "/Game/Fixtures/Animations/PA_Fixture",
+            "/Game/Fixtures/Animations/SKEL_Fixture",
+            "/Game/Fixtures/Blueprints/BP_Fixture",
             "/Game/Fixtures/Curves/CT_Composite",
             "/Game/Fixtures/Curves/CT_Rich",
             "/Game/Fixtures/Curves/CT_Simple",
@@ -56,14 +70,21 @@ internal static class FixtureTestUtilities
             "/Game/Fixtures/DataTables/DT_AllProperties",
             "/Game/Fixtures/DataTables/DT_Composite",
             "/Game/Fixtures/DataTables/DT_Overrides",
+            "/Game/Fixtures/Fonts/Font_Fixture",
+            "/Game/Fixtures/Geometry/GC_Fixture",
             "/Game/Fixtures/Maps/Empty",
             "/Game/Fixtures/Materials/MI_Fixture",
             "/Game/Fixtures/Materials/M_Fixture",
+            "/Game/Fixtures/Materials/MPC_Fixture",
+            "/Game/Fixtures/Meshes/SK_Fixture",
             "/Game/Fixtures/Meshes/SM_Fixture",
+            "/Game/Fixtures/Meshes/SM_Nanite",
             "/Game/Fixtures/Properties/DA_AllProperties",
+            "/Game/Fixtures/Sequences/LS_Fixture",
             "/Game/Fixtures/StringTables/ST_Fixed",
             "/Game/Fixtures/Textures/T_Array",
             "/Game/Fixtures/Textures/T_Cube",
+            "/Game/Fixtures/Textures/T_Virtual",
             "/Game/Fixtures/Textures/T_Volume"
         }
         .Concat(TextureExpectations.Select(static expectation => $"/Game/Fixtures/Textures/{expectation.Asset}"))
@@ -119,11 +140,16 @@ internal static class FixtureTestUtilities
     public static T LoadExport<T>(DefaultFileProvider provider, string packageSuffix, string exportName)
         where T : UObject
     {
+        var exports = LoadPackageExports(provider, packageSuffix);
+        return Assert.IsAssignableFrom<T>(Assert.Single(exports, export => export.Name == exportName));
+    }
+
+    public static UObject[] LoadPackageExports(DefaultFileProvider provider, string packageSuffix)
+    {
         var packagePath = Assert.Single(
             provider.Files.Keys,
             path => path.EndsWith(packageSuffix, StringComparison.OrdinalIgnoreCase));
-        var package = provider.LoadPackage(packagePath);
-        return Assert.IsAssignableFrom<T>(Assert.Single(package.GetExports(), export => export.Name == exportName));
+        return provider.LoadPackage(packagePath).GetExports().ToArray();
     }
 
     public static T GetProperty<T>(IPropertyHolder holder, string name)
@@ -158,6 +184,15 @@ internal static class FixtureTestUtilities
         Assert.Equal(x, actual.X);
         Assert.Equal(y, actual.Y);
         Assert.Equal(z, actual.Z);
+    }
+
+    public static void AssertReferenceSkeleton(FReferenceSkeleton skeleton)
+    {
+        Assert.Equal(["Root", "Joint_1", "Joint_2"],
+            skeleton.FinalRefBoneInfo.Select(bone => bone.Name.Text).ToArray());
+        Assert.Equal([-1, 0, 1],
+            skeleton.FinalRefBoneInfo.Select(bone => bone.ParentIndex).ToArray());
+        Assert.Equal(3, skeleton.FinalRefBonePose.Length);
     }
 
     internal readonly record struct TextureExpectation(

@@ -17,9 +17,15 @@ They explicitly use CUE4Parse Conversion's public
 single red scalar channel, BC5 against its reconstructed normal Z channel, and
 BC6H against the 8-bit clamped bitmap produced by the current Skia conversion.
 Generated cube, array, and volume textures are checked against their procedural
-per-slice pixel pattern. `SourceAudio` contains deterministic mono PCM inputs;
-tests decode both cooked SoundWaves, parse their RIFF chunks, and validate audio
-metadata and signal characteristics without requiring byte-for-byte equality.
+per-slice pixel pattern. The virtual-texture fixture validates parsed tile/chunk
+metadata and compares its fully decoded bitmap with the same deterministic
+512x512 reference. `SourceAudio` retains the inline and streaming mono PCM
+references; the shared compression-matrix source is omitted because no test
+reads it. Tests decode the inline, streaming, and compression-matrix PCM
+SoundWaves through CUE4Parse, parse their RIFF chunks, and validate metadata and
+signal characteristics without requiring byte-for-byte equality. All seven UE 5.8
+`ESoundAssetCompressionType` choices remain cooked in the containers, but the
+tests intentionally do not invoke external codec decoders.
 
 ## Mappings
 
@@ -34,7 +40,7 @@ The dump intentionally contains no properties flagged `CPF_EditorOnly`. These
 fixtures exercise cooked runtime schemas and values; editor-only mappings and
 the absence of editor-only properties are outside the test scope.
 
-The source cooks omit editor content. Their 32 test packages were repacked
+The source cooks omit editor content. Their 52 test packages were repacked
 without recooking into dedicated Oodle and uncompressed minimal IoStore
 containers. Compression is a packaging choice, so both modes use the exact same
 cooked package bytes and schema. The mappings cover the expanded runtime schema,
@@ -45,8 +51,11 @@ including optional properties, fixed arrays, delegates, and `FInstancedStruct`.
 `IoStore/Tagged` and `IoStore/Unversioned` each contain `Oodle` and
 `Uncompressed` subdirectories. Their named minimal `.utoc/.ucas` pairs contain
 the same map, expanded DataAsset, DataTables, curve assets, StringTable,
-textures, StaticMesh, materials, and audio assets. The 32 package entries and
-three required bulk-data sidecars are exactly the files exercised by tests.
+textures, static and skeletal meshes, animation assets, materials, a material
+parameter collection and Level Sequence, a Blueprint generated class, an
+offline font, a Geometry Collection, and audio assets. The 52 package entries
+and twelve required bulk-data sidecars are exactly the files exercised by
+tests; Nanite resources and virtual-texture tiles each have their own sidecar.
 Every package entry in an Oodle pair must use Oodle; every entry in an
 uncompressed pair must use `None`. Each serialization directory stores one
 shared `global.utoc/global.ucas` pair required for script-object data, avoiding

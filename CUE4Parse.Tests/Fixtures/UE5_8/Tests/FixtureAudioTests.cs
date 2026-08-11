@@ -22,6 +22,53 @@ public class FixtureAudioTests
     [Theory]
     [InlineData(FixtureSerialization.Tagged)]
     [InlineData(FixtureSerialization.Unversioned)]
+    public void PcmCompressionAssetDecodesThroughCUE4Parse(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var sound = LoadSoundWave(provider, "SW_Format_PCM");
+
+        sound.Decode(shouldDecompress: true, out var format, out var decoded);
+
+        Assert.Equal("WAV", format);
+        AssertFormatMatrixWave(ParsePcmWave(Assert.IsType<byte[]>(decoded)));
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged, "SW_Format_ADPCM", "ADPCM")]
+    [InlineData(FixtureSerialization.Tagged, "SW_Format_BinkAudio", "BINKA")]
+    [InlineData(FixtureSerialization.Tagged, "SW_Format_Opus", "OPUS")]
+    [InlineData(FixtureSerialization.Tagged, "SW_Format_PlatformSpecific", "OGG")]
+    [InlineData(FixtureSerialization.Tagged, "SW_Format_ProjectDefined", "OGG")]
+    [InlineData(FixtureSerialization.Tagged, "SW_Format_RADAudio", "RADA")]
+    [InlineData(FixtureSerialization.Unversioned, "SW_Format_ADPCM", "ADPCM")]
+    [InlineData(FixtureSerialization.Unversioned, "SW_Format_BinkAudio", "BINKA")]
+    [InlineData(FixtureSerialization.Unversioned, "SW_Format_Opus", "OPUS")]
+    [InlineData(FixtureSerialization.Unversioned, "SW_Format_PlatformSpecific", "OGG")]
+    [InlineData(FixtureSerialization.Unversioned, "SW_Format_ProjectDefined", "OGG")]
+    [InlineData(FixtureSerialization.Unversioned, "SW_Format_RADAudio", "RADA")]
+    public void CompressedAudioPayloadCanBeExtracted(
+        FixtureSerialization serialization,
+        string assetName,
+        string expectedFormat)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var sound = LoadSoundWave(provider, assetName);
+        var platformData = Assert.IsType<FStreamedAudioPlatformData>(sound.RunningPlatformData);
+
+        Assert.Equal(expectedFormat, platformData.AudioFormat.Text);
+        Assert.Equal(platformData.NumChunks, platformData.Chunks.Length);
+        Assert.NotEmpty(platformData.Chunks);
+        Assert.All(platformData.Chunks, chunk =>
+        {
+            Assert.True(chunk.AudioDataSize > 0);
+            var data = Assert.IsType<byte[]>(chunk.BulkData.Data);
+            Assert.True(data.Length >= chunk.AudioDataSize);
+        });
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
     public void SoundCuePreservesMixerGraphAndWaveReferences(FixtureSerialization serialization)
     {
         using var provider = CreateMountedIoStoreProvider(serialization);
@@ -50,10 +97,7 @@ public class FixtureAudioTests
         bool expectedLooping,
         int expectedSeconds)
     {
-        var sound = LoadExport<USoundWave>(
-            provider,
-            $"CUE4ParseFixtures/Content/Fixtures/Audio/{name}.uasset",
-            name);
+        var sound = LoadSoundWave(provider, name);
         // UE 5.8 stream caching serializes both loading-behavior variants as streamed platform data.
         Assert.True(sound.bStreaming);
         Assert.NotNull(sound.RunningPlatformData);
@@ -72,6 +116,12 @@ public class FixtureAudioTests
         Assert.Contains(samples, sample => sample < -20_000);
         Assert.InRange(CountRisingZeroCrossings(samples[..(wave.SampleRate / 2)]), 215, 225);
     }
+
+    private static USoundWave LoadSoundWave(DefaultFileProvider provider, string name) =>
+        LoadExport<USoundWave>(
+            provider,
+            $"CUE4ParseFixtures/Content/Fixtures/Audio/{name}.uasset",
+            name);
 
     private static PcmWave ParsePcmWave(byte[] data)
     {
@@ -100,14 +150,25 @@ public class FixtureAudioTests
         var channels = BinaryPrimitives.ReadInt16LittleEndian(formatChunk.Slice(2, 2));
         var sampleRate = BinaryPrimitives.ReadInt32LittleEndian(formatChunk.Slice(4, 4));
         var bitsPerSample = BinaryPrimitives.ReadInt16LittleEndian(formatChunk.Slice(14, 2));
-        var dataLength = sampleData.Length;
-        Assert.Equal(0, dataLength % sizeof(short));
+        Assert.Equal(0, sampleData.Length % sizeof(short));
 
-        var samples = new short[dataLength / sizeof(short)];
+        var samples = new short[sampleData.Length / sizeof(short)];
         for (var index = 0; index < samples.Length; index++)
             samples[index] = BinaryPrimitives.ReadInt16LittleEndian(sampleData.Slice(index * sizeof(short), sizeof(short)));
 
         return new PcmWave(channels, sampleRate, bitsPerSample, samples);
+    }
+
+    private static void AssertFormatMatrixWave(PcmWave wave)
+    {
+        Assert.Equal(48_000, wave.SampleRate);
+        Assert.Equal(1, wave.Channels);
+        Assert.Equal(16, wave.BitsPerSample);
+        Assert.Equal(96_000, wave.SampleCount);
+        Assert.Contains(wave.Samples, sample => sample > 1_000);
+        Assert.Contains(wave.Samples, sample => sample < -1_000);
+        Assert.InRange(CountRisingZeroCrossings(wave.Samples[..wave.SampleRate]), 420, 460);
+        Assert.InRange(CountRisingZeroCrossings(wave.Samples[^wave.SampleRate..]), 630, 690);
     }
 
     private static int CountRisingZeroCrossings(ReadOnlySpan<short> samples)

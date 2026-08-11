@@ -30,7 +30,8 @@ public class FixtureManifestTests
         var actualPaths = Directory.EnumerateFiles(fixtureRoot, "*", SearchOption.AllDirectories)
             .Select(path => Path.GetRelativePath(fixtureRoot, path))
             .Where(path => !path.Equals("manifest.json", StringComparison.OrdinalIgnoreCase) &&
-                           !path.Equals("README.md", StringComparison.OrdinalIgnoreCase))
+                           !path.Equals("README.md", StringComparison.OrdinalIgnoreCase) &&
+                           !path.StartsWith($"Tests{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
             .Order(StringComparer.Ordinal)
             .ToArray();
         Assert.Equal(actualPaths, declaredPaths.Order(StringComparer.Ordinal).ToArray());

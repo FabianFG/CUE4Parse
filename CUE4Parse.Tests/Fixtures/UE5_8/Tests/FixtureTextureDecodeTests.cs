@@ -21,34 +21,38 @@ public class FixtureTextureDecodeTests
         {
             var texture = LoadTexture(provider, expectation.Asset);
             AssertCookedPlatformData(texture, expectation);
-            var decoded = texture.Decode();
-            Assert.NotNull(decoded);
-            using var actual = decoded.ToSkBitmap();
-            using var expected = CreateExpectedBitmap(expectation);
-
-            Assert.Equal(expectation.DecodedFormat, decoded.PixelFormat);
-            Assert.Equal(expectation.SkiaColorType, actual.ColorType);
-            Assert.Equal(expectation.Width, actual.Width);
-            Assert.Equal(expectation.Height, actual.Height);
-            Assert.Equal(actual.Width, expected.Width);
-            Assert.Equal(actual.Height, expected.Height);
-            var metrics = Measure(actual, expected);
-            for (var channel = 0; channel < ChannelCount; channel++)
-            {
-                var channelMetrics = metrics[channel];
-                Assert.True(
-                    channelMetrics.Mean <= expectation.MaximumMeanError,
-                    $"{expectation.Asset} channel {ChannelName(channel)} mean error " +
-                    $"{channelMetrics.Mean:F3} exceeds {expectation.MaximumMeanError:F3}. {metrics}");
-                Assert.True(
-                    channelMetrics.Maximum <= expectation.MaximumPixelError,
-                    $"{expectation.Asset} channel {ChannelName(channel)} maximum error " +
-                    $"{channelMetrics.Maximum} exceeds {expectation.MaximumPixelError}. {metrics}");
-            }
+            AssertDecodedBitmap(texture, expectation);
 
             if (expectation.MipCount > 1)
                 AssertEveryMipDecodes(texture, expectation.Width, expectation.MipCount);
         }
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void VirtualTextureFixtureParsesAndDecodesTiles(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var texture = LoadTexture(provider, "T_Virtual");
+        var virtualData = Assert.IsType<FVirtualTextureBuiltData>(texture.PlatformData.VTData);
+
+        Assert.True(virtualData.IsInitialized());
+        Assert.Equal((uint) 1, virtualData.NumLayers);
+        Assert.Equal((uint) 512, virtualData.Width);
+        Assert.Equal((uint) 512, virtualData.Height);
+        Assert.True(virtualData.NumMips > 1);
+        Assert.True(virtualData.TileSize > 0);
+        Assert.Equal([EPixelFormat.PF_DXT1], virtualData.LayerTypes);
+        Assert.NotEmpty(virtualData.Chunks);
+        Assert.All(virtualData.Chunks, chunk =>
+            Assert.NotEmpty(Assert.IsType<byte[]>(chunk.BulkData.Data)));
+
+        var expectation = new TextureExpectation(
+            "T_Virtual", "streaming.png", 512, 512,
+            EPixelFormat.PF_DXT1, EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888,
+            (int) virtualData.NumMips, 1.5, 40);
+        AssertDecodedBitmap(texture, expectation);
     }
 
     [Theory]
@@ -148,6 +152,34 @@ public class FixtureTextureDecodeTests
         }
 
         return reference;
+    }
+
+    private static void AssertDecodedBitmap(UTexture2D texture, TextureExpectation expectation)
+    {
+        var decoded = texture.Decode();
+        Assert.NotNull(decoded);
+        using var actual = decoded.ToSkBitmap();
+        using var expected = CreateExpectedBitmap(expectation);
+
+        Assert.Equal(expectation.DecodedFormat, decoded.PixelFormat);
+        Assert.Equal(expectation.SkiaColorType, actual.ColorType);
+        Assert.Equal(expectation.Width, actual.Width);
+        Assert.Equal(expectation.Height, actual.Height);
+        Assert.Equal(actual.Width, expected.Width);
+        Assert.Equal(actual.Height, expected.Height);
+        var metrics = Measure(actual, expected);
+        for (var channel = 0; channel < ChannelCount; channel++)
+        {
+            var channelMetrics = metrics[channel];
+            Assert.True(
+                channelMetrics.Mean <= expectation.MaximumMeanError,
+                $"{expectation.Asset} channel {ChannelName(channel)} mean error " +
+                $"{channelMetrics.Mean:F3} exceeds {expectation.MaximumMeanError:F3}. {metrics}");
+            Assert.True(
+                channelMetrics.Maximum <= expectation.MaximumPixelError,
+                $"{expectation.Asset} channel {ChannelName(channel)} maximum error " +
+                $"{channelMetrics.Maximum} exceeds {expectation.MaximumPixelError}. {metrics}");
+        }
     }
 
     private static byte ToByte(float value) => (byte) Math.Clamp(value * 255.0f, 0, 255);

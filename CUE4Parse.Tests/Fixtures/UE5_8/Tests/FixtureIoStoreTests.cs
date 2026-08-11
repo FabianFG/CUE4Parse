@@ -16,17 +16,28 @@ public class FixtureIoStoreTests
 {
     private const string PropertyFixtureSuffix = "CUE4ParseFixtures/Content/Fixtures/Properties/DA_AllProperties.uasset";
     private const string MapFixtureSuffix = "CUE4ParseFixtures/Content/Fixtures/Maps/Empty.umap";
+    private static readonly string[] ExpectedBulkPaths =
+    [
+        "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Inline.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Streaming.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ADPCM.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_BinkAudio.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_Opus.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_PCM.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_PlatformSpecific.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ProjectDefined.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_RADAudio.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Meshes/SM_Nanite.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Textures/T_Streaming.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Textures/T_Virtual.ubulk"
+    ];
     private static readonly string[] ExpectedContainerPaths = ExpectedCookedPackageNames
         .Select(static packageName =>
         {
             var extension = packageName == "/Game/Fixtures/Maps/Empty" ? "umap" : "uasset";
             return $"CUE4ParseFixtures/Content/{packageName["/Game/".Length..]}.{extension}";
         })
-        .Concat([
-            "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Inline.ubulk",
-            "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Streaming.ubulk",
-            "CUE4ParseFixtures/Content/Fixtures/Textures/T_Streaming.ubulk"
-        ])
+        .Concat(ExpectedBulkPaths)
         .Order(StringComparer.Ordinal)
         .ToArray();
 
@@ -84,10 +95,14 @@ public class FixtureIoStoreTests
         }
 
         var mainChunks = main.TocResource.ChunkIds;
-        Assert.Equal(32, mainChunks.Count(chunk => chunk.ChunkType == (byte) EIoChunkType5.ExportBundleData));
-        Assert.Equal(3, mainChunks.Count(chunk => chunk.ChunkType == (byte) EIoChunkType5.BulkData));
+        Assert.Equal(
+            ExpectedCookedPackageNames.Length,
+            mainChunks.Count(chunk => chunk.ChunkType == (byte) EIoChunkType5.ExportBundleData));
+        Assert.Equal(
+            ExpectedBulkPaths.Length,
+            mainChunks.Count(chunk => chunk.ChunkType == (byte) EIoChunkType5.BulkData));
         Assert.Equal(1, mainChunks.Count(chunk => chunk.ChunkType == (byte) EIoChunkType5.ContainerHeader));
-        Assert.Equal(36, mainChunks.Length);
+        Assert.Equal(ExpectedContainerPaths.Length + 1, mainChunks.Length);
         Assert.All(
             mainChunks,
             chunk => Assert.True(
@@ -100,7 +115,7 @@ public class FixtureIoStoreTests
         Assert.Equal((byte) EIoChunkType5.ScriptObjects, globalChunk.ChunkType);
 
         Assert.Equal(1, provider.Mount());
-        Assert.Equal(35, provider.Files.Count);
+        Assert.Equal(ExpectedContainerPaths.Length, provider.Files.Count);
         Assert.All(provider.Files.Values, file => Assert.Equal(expectedCompression, file.CompressionMethod));
     }
 

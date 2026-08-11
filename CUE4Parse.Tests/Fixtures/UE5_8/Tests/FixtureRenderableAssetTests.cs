@@ -1,6 +1,12 @@
+using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.Nanite;
+using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
+using CUE4Parse_Conversion.Dto;
 using static CUE4Parse.Tests.Fixtures.UE5_8.FixtureTestUtilities;
 
 namespace CUE4Parse.Tests.Fixtures.UE5_8;
@@ -74,6 +80,151 @@ public class FixtureRenderableAssetTests
         Assert.Equal("UseAlternateColor", staticSwitch.Name);
         Assert.True(staticSwitch.bOverride);
         Assert.True(staticSwitch.Value);
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void BaseMaterialPreservesCachedParametersAndShaderResources(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        provider.ReadShaderMaps = true;
+        var material = LoadExport<UMaterial>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Materials/M_Fixture.uasset",
+            "M_Fixture");
+
+        var parameters = new CMaterialParams2();
+        material.GetParams(parameters, EMaterialDepth.TopLayerOnly);
+
+        Assert.Equal(0.375f, parameters.Scalars["FixtureRoughness"]);
+        Assert.Equal((0.1f, 0.2f, 0.8f, 1.0f),
+            (parameters.Colors["PrimaryColor"].R, parameters.Colors["PrimaryColor"].G,
+                parameters.Colors["PrimaryColor"].B, parameters.Colors["PrimaryColor"].A));
+        Assert.Equal((0.9f, 0.15f, 0.05f, 1.0f),
+            (parameters.Colors["AlternateColor"].R, parameters.Colors["AlternateColor"].G,
+                parameters.Colors["AlternateColor"].B, parameters.Colors["AlternateColor"].A));
+        Assert.Equal("T_BC3", Assert.IsType<UTexture2D>(parameters.Textures["FixtureTexture"]).Name);
+
+        Assert.NotEmpty(material.LoadedMaterialResources);
+        Assert.All(material.LoadedMaterialResources, resource =>
+        {
+            var shaderMap = Assert.IsType<FMaterialShaderMap>(resource.LoadedShaderMap);
+            Assert.NotEmpty(shaderMap.FrozenArchive.FrozenObject);
+            Assert.True(shaderMap.ResourceHash is not null || shaderMap.Code is not null);
+        });
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void NaniteStaticMeshPreservesResourcesAndDecodablePages(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        provider.ReadNaniteData = true;
+        var mesh = LoadExport<UStaticMesh>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Meshes/SM_Nanite.uasset",
+            "SM_Nanite");
+
+        Assert.True(mesh.bCooked);
+        Assert.Equal("NaniteSurface", Assert.Single(mesh.StaticMaterials).MaterialSlotName.Text);
+        var resources = Assert.IsType<FNaniteResources>(mesh.RenderData?.NaniteResources);
+        Assert.Equal(2_048u, resources.NumInputTriangles);
+        Assert.Equal(1_089u, resources.NumInputVertices);
+        Assert.NotEqual(0u, resources.NumClusters);
+        Assert.NotEmpty(resources.PageStreamingStates);
+
+        resources.LoadAllPages();
+        try
+        {
+            var pages = resources.LoadedPages
+                .OfType<FNaniteStreamableData>()
+                .ToArray();
+            Assert.NotEmpty(pages);
+            Assert.All(pages, page =>
+            {
+                Assert.Equal(page.NumClusters, page.Clusters.Length);
+                Assert.NotEmpty(page.Clusters);
+            });
+        }
+        finally
+        {
+            resources.UnloadAllPages();
+        }
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void SkeletalMeshPreservesBonesLodsSkinWeightsAndMorphTarget(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var mesh = LoadExport<USkeletalMesh>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Meshes/SK_Fixture.uasset",
+            "SK_Fixture");
+
+        AssertReferenceSkeleton(mesh.ReferenceSkeleton);
+        Assert.True(mesh.bHasVertexColors);
+        Assert.True(mesh.Skeleton.TryLoad<USkeleton>(out var skeleton));
+        Assert.Equal("SKEL_Fixture", skeleton.Name);
+
+        var lods = Assert.IsType<FStaticLODModel[]>(mesh.LODModels);
+        Assert.Equal([6, 3], lods.Select(lod => lod.NumVertices).ToArray());
+        Assert.All(lods, lod =>
+        {
+            Assert.False(lod.SkipLod);
+            Assert.NotEmpty(lod.Sections);
+            Assert.NotEmpty(lod.Indices!.Buffer!);
+            Assert.Equal(lod.NumVertices, lod.VertexBufferGPUSkin.VertsFloat.Length);
+        });
+
+        var morph = Assert.IsType<UMorphTarget>(Assert.Single(mesh.MorphTargets).Load<UMorphTarget>());
+        Assert.Equal("Morph_Fixture", morph.Name);
+        var morphLod = Assert.Single(morph.MorphLODModels);
+        Assert.Equal(2, morphLod.NumBaseMeshVerts);
+        Assert.Equal([0], morphLod.SectionIndices);
+        Assert.False(morphLod.bGeneratedByEngine);
+        // Win64 uses the cooked GPU morph buffers, so UE strips the raw CPU delta array.
+        Assert.Empty(morphLod.Vertices);
+
+        using var converted = new SkeletalMeshDto(mesh);
+        Assert.Equal(3, converted.Bones.Length);
+        Assert.Equal(2, converted.LODs.Count);
+        Assert.All(converted.LODs, lod =>
+        {
+            Assert.NotEmpty(lod.Vertices);
+            Assert.NotEmpty(lod.Indices);
+            Assert.Equal(0, lod.Indices.Length % 3);
+        });
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void GeometryCollectionPreservesManagedArraysAndFallbackRenderData(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var asset = LoadExport<UGeometryCollection>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Geometry/GC_Fixture.uasset",
+            "GC_Fixture");
+
+        Assert.Equal(2, asset.Materials.Length);
+        var collection = Assert.IsType<FGeometryCollection>(asset.GeometryCollection);
+        Assert.Equal(1, collection.GroupInfo.Single(group => group.Key.Text == "Transform").Value.Size);
+        Assert.Equal(6, collection.GroupInfo.Single(group => group.Key.Text == "Vertices").Value.Size);
+        Assert.Equal(2, collection.GroupInfo.Single(group => group.Key.Text == "Faces").Value.Size);
+        Assert.Equal(1, collection.GroupInfo.Single(group => group.Key.Text == "Geometry").Value.Size);
+        Assert.NotEmpty(collection.Map);
+
+        var renderData = Assert.IsType<FGeometryCollectionRenderData>(asset.RenderData);
+        Assert.True(renderData.bHasMeshData);
+        Assert.False(renderData.bHasNaniteData);
+        Assert.NotNull(renderData.MeshResources);
+        Assert.NotNull(renderData.MeshDescription);
+        Assert.NotNull(renderData.PreSkinnedBounds);
     }
 
     private static void AssertLod(
