@@ -6,13 +6,18 @@ namespace CUE4Parse.Tests.Fixtures.UE5_8;
 
 public class FixtureMappingsTests
 {
-    [Fact]
-    public void CompressedAndUncompressedMappingsAreEquivalent()
+    [Theory]
+    [InlineData("CUE4ParseFixtures-Oodle.usmap", EUsmapCompressionMethod.Oodle)]
+    [InlineData("CUE4ParseFixtures-Brotli.usmap", EUsmapCompressionMethod.Brotli)]
+    [InlineData("CUE4ParseFixtures-Zstandard.usmap", EUsmapCompressionMethod.ZStandard)]
+    public void CompressedAndUncompressedMappingsAreEquivalent(
+        string compressedFileName,
+        EUsmapCompressionMethod expectedCompression)
     {
-        var compressed = Parse("CUE4ParseFixtures-Oodle.usmap");
+        var compressed = Parse(compressedFileName);
         var uncompressed = Parse("CUE4ParseFixtures-Uncompressed.usmap");
 
-        Assert.Equal(EUsmapCompressionMethod.Oodle, compressed.CompressionMethod);
+        Assert.Equal(expectedCompression, compressed.CompressionMethod);
         Assert.Equal(EUsmapCompressionMethod.None, uncompressed.CompressionMethod);
 
         var compressedMappings = Assert.IsType<TypeMappings>(compressed.Mappings);
@@ -78,20 +83,27 @@ public class FixtureMappingsTests
             "ParserFixtureData",
             "ParserFixtureBaseData",
             "bBoolean", "Byte", "Integer", "Integer64", "Integer8", "Integer16", "UnsignedInteger16",
-            "UnsignedInteger32", "UnsignedInteger64", "Float", "Double", "String", "Name", "Text", "Vector",
+            "UnsignedInteger32", "UnsignedInteger64", "Float", "Double", "String", "AnsiString", "Utf8String",
+            "Name", "RegistryMarker", "Text", "Vector",
             "Vector2D", "Vector4", "IntPoint", "IntVector", "Color", "LinearColor", "Box", "DateTime",
             "Timespan", "Rotator", "Quat", "Transform", "Guid", "FixedIntegerArray", "PresentOptional",
             "EmptyOptional", "Enum", "Nested", "IntegerArray", "StructArray", "NameSet", "IntegerMap",
             "StructMap", "EmptyInstancedStruct", "ScalarInstancedStruct", "CompositeInstancedStruct",
             "InstancedStructArray", "InstancedStructMap", "TypedInstancedStruct", "HardObjectReference",
             "SoftObjectReference", "ClassReference", "SoftClassReference", "HardTextureReference",
-            "SoftTextureReference", "WeakObjectReference", "InlineObject", "DynamicDelegate",
+            "SoftTextureReference", "WeakObjectReference", "LazyObjectReference", "InterfaceReference",
+            "FieldPathReference", "InlineObject", "DynamicDelegate",
             "DynamicMulticastDelegate", "TextHistories");
 
         var fixtureData = mappings.Types["ParserFixtureData"];
         // FixedIntegerArray occupies three consecutive schema indices.
-        Assert.Equal(57, fixtureData.PropertyCount);
+        Assert.Equal(63, fixtureData.PropertyCount);
         AssertProperty(fixtureData, "Integer", "IntProperty");
+        AssertProperty(fixtureData, "AnsiString", "AnsiStrProperty");
+        AssertProperty(fixtureData, "Utf8String", "Utf8StrProperty");
+        AssertProperty(fixtureData, "LazyObjectReference", "LazyObjectProperty");
+        AssertProperty(fixtureData, "InterfaceReference", "InterfaceProperty");
+        AssertProperty(fixtureData, "FieldPathReference", "FieldPathProperty");
         AssertProperty(fixtureData, "PresentOptional", "OptionalProperty", innerType: "IntProperty");
         AssertProperty(fixtureData, "IntegerArray", "ArrayProperty", innerType: "IntProperty");
         AssertProperty(fixtureData, "Nested", "StructProperty", structType: "FixtureNestedStruct");

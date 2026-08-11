@@ -125,29 +125,45 @@ public class FixturePropertyAssetTests
         Assert.Equal("DA_AllProperties", invocation.Object.Name);
 
         var texts = fixture.Get<FText[]>("TextHistories");
-        Assert.Equal(8, texts.Length);
+        Assert.Equal(12, texts.Length);
         Assert.Equal([
+            ETextHistoryType.None,
             ETextHistoryType.NamedFormat,
             ETextHistoryType.OrderedFormat,
+            ETextHistoryType.ArgumentFormat,
             ETextHistoryType.AsNumber,
             ETextHistoryType.AsPercent,
+            ETextHistoryType.AsCurrency,
             ETextHistoryType.AsDate,
             ETextHistoryType.AsTime,
+            ETextHistoryType.AsDateTime,
             ETextHistoryType.Transform,
             ETextHistoryType.StringTableEntry
         ], texts.Select(text => text.HistoryType).ToArray());
 
-        var named = Assert.IsType<FTextHistory.NamedFormat>(texts[0].TextHistory);
+        var none = Assert.IsType<FTextHistory.None>(texts[0].TextHistory);
+        Assert.Equal(string.Empty, none.Text);
+        var named = Assert.IsType<FTextHistory.NamedFormat>(texts[1].TextHistory);
         Assert.Equal("Named {Count}", named.SourceFmt.Text);
         Assert.Equal(7L, named.Arguments["Count"].Value);
-        var ordered = Assert.IsType<FTextHistory.OrderedFormat>(texts[1].TextHistory);
+        var ordered = Assert.IsType<FTextHistory.OrderedFormat>(texts[2].TextHistory);
         Assert.Equal("{0} {1}", ordered.SourceFmt.Text);
         Assert.Equal(42L, ordered.Arguments[0].Value);
         Assert.Equal("ordered", Assert.IsType<FText>(ordered.Arguments[1].Value).Text);
-        var transform = Assert.IsType<FTextHistory.Transform>(texts[6].TextHistory);
+        var argument = Assert.IsType<FTextHistory.ArgumentFormat>(texts[3].TextHistory);
+        Assert.Equal("{Label}: {Count}", argument.SourceFmt.Text);
+        Assert.Equal(["Count", "Label"], argument.Arguments.Select(static value => value.ArgumentName));
+        Assert.Equal(31415L, argument.Arguments[0].ArgumentValue.Value);
+        Assert.Equal("argument data", Assert.IsType<FText>(argument.Arguments[1].ArgumentValue.Value).Text);
+        var currency = Assert.IsType<FTextHistory.FormatNumber>(texts[6].TextHistory);
+        Assert.Equal("EUR", currency.CurrencyCode);
+        var dateTime = Assert.IsType<FTextHistory.AsDateTime>(texts[9].TextHistory);
+        Assert.Equal(EDateTimeStyle.Full, dateTime.DateStyle);
+        Assert.Equal(EDateTimeStyle.Long, dateTime.TimeStyle);
+        var transform = Assert.IsType<FTextHistory.Transform>(texts[10].TextHistory);
         Assert.Equal(ETransformType.ToUpper, transform.TransformType);
         Assert.Equal("Mixed Case", transform.SourceText.Text);
-        Assert.Equal("Hello from Frankfurt", texts[7].Text);
+        Assert.Equal("Hello from Frankfurt", texts[11].Text);
     }
 
     private static void AssertRuntimeValues(UObject fixture)
@@ -161,7 +177,10 @@ public class FixturePropertyAssetTests
         Assert.Equal(1234.25f, GetProperty<float>(fixture, "Float"));
         Assert.Equal(-987654.125, fixture.Get<double>("Double"));
         Assert.Equal("CUE4Parse_日本語_äöü", fixture.Get<string>("String"));
+        Assert.Equal("Fixture_ANSI_123", fixture.Get<string>("AnsiString"));
+        Assert.Equal("Fixture_UTF8_日本語_Ω", fixture.Get<string>("Utf8String"));
         Assert.Equal("Fixture_Name_0xC0FFEE", fixture.Get<FName>("Name").Text);
+        Assert.Equal("Registry_0xC0FFEE", fixture.Get<FName>("RegistryMarker").Text);
         Assert.Equal("Localized-ish fixture text Ω", fixture.Get<FText>("Text").Text);
 
         AssertVector(fixture.Get<FVector>("Vector"), 1.25f, -2.5f, 3.75f);
@@ -224,6 +243,12 @@ public class FixturePropertyAssetTests
         Assert.Equal(
             "/Script/Engine.Texture2D",
             fixture.Get<FSoftObjectPath>("SoftClassReference").ToString());
+
+        var lazyReference = fixture.Get<FUniqueObjectGuid>("LazyObjectReference");
+        Assert.NotEqual(default, lazyReference.Guid);
+        Assert.Equal("DA_AllProperties", fixture.Get<FScriptInterface>("InterfaceReference").Object?.Name);
+        var fieldPath = fixture.Get<FFieldPath>("FieldPathReference");
+        Assert.Equal("Integer", Assert.Single(fieldPath.Path).Text, ignoreCase: true);
     }
 
     private static void AssertReferencesResolve(UObject fixture, DefaultFileProvider provider)

@@ -2,6 +2,7 @@ using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.GeometryFramework;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.NavigationSystem;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.WorldPartition;
@@ -41,6 +42,8 @@ public class FixtureWorldAssetTests
             "CUE4ParseFixtures/Content/Fixtures/Maps/Landscape.umap");
         var landscape = Assert.Single(exports.OfType<ALandscape>());
 
+        var material = Assert.IsType<UMaterial>(landscape.LandscapeMaterial.Load<UMaterial>());
+        Assert.Equal("M_Landscape", material.Name);
         Assert.Equal((63, 63, 1),
             (landscape.ComponentSizeQuads, landscape.SubsectionSizeQuads, landscape.NumSubsections));
         var component = Assert.IsType<ULandscapeComponent>(
@@ -124,7 +127,7 @@ public class FixtureWorldAssetTests
     [Theory]
     [InlineData(FixtureSerialization.Tagged)]
     [InlineData(FixtureSerialization.Unversioned)]
-    public void DynamicMeshConsumesItsCookedPayload(FixtureSerialization serialization)
+    public void DynamicMeshPackageDeserializesWithoutExposingTopology(FixtureSerialization serialization)
     {
         using var provider = CreateMountedIoStoreProvider(serialization);
         var mesh = LoadExport<UDynamicMesh>(

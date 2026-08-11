@@ -27,6 +27,7 @@ public class FixtureIoStoreTests
         "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_PlatformSpecific.ubulk",
         "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ProjectDefined.ubulk",
         "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_RADAudio.ubulk",
+        "CUE4ParseFixtures/Content/Fixtures/Geometry/GeoCache_Fixture.ubulk",
         "CUE4ParseFixtures/Content/Fixtures/Meshes/SM_Nanite.ubulk",
         "CUE4ParseFixtures/Content/Fixtures/Textures/T_Streaming.ubulk",
         "CUE4ParseFixtures/Content/Fixtures/Textures/T_UDIM.ubulk",
@@ -58,9 +59,13 @@ public class FixtureIoStoreTests
 
     [Theory]
     [InlineData(FixtureSerialization.Tagged, FixtureCompression.Oodle)]
+    [InlineData(FixtureSerialization.Tagged, FixtureCompression.Zlib)]
     [InlineData(FixtureSerialization.Tagged, FixtureCompression.Uncompressed)]
+    [InlineData(FixtureSerialization.Tagged, FixtureCompression.OodlePartitioned)]
     [InlineData(FixtureSerialization.Unversioned, FixtureCompression.Oodle)]
+    [InlineData(FixtureSerialization.Unversioned, FixtureCompression.Zlib)]
     [InlineData(FixtureSerialization.Unversioned, FixtureCompression.Uncompressed)]
+    [InlineData(FixtureSerialization.Unversioned, FixtureCompression.OodlePartitioned)]
     public void IoStoreContainsOnlyExpectedChunkTypesAndCompression(
         FixtureSerialization serialization,
         FixtureCompression compression)
@@ -80,16 +85,22 @@ public class FixtureIoStoreTests
             readers,
             reader => Path.GetFileName(reader.Name).Equals("global.utoc", StringComparison.OrdinalIgnoreCase));
 
-        var expectedCompression = compression == FixtureCompression.Oodle
-            ? CompressionMethod.Oodle
-            : CompressionMethod.None;
+        var expectedCompression = compression switch
+        {
+            FixtureCompression.Oodle or FixtureCompression.OodlePartitioned => CompressionMethod.Oodle,
+            FixtureCompression.Zlib => CompressionMethod.Zlib,
+            _ => CompressionMethod.None
+        };
         Assert.Equal(
-            expectedCompression == CompressionMethod.Oodle,
+            expectedCompression != CompressionMethod.None,
             main.TocResource.Header.ContainerFlags.HasFlag(EIoContainerFlags.Compressed));
         Assert.True(main.TocResource.Header.ContainerFlags.HasFlag(EIoContainerFlags.Indexed));
-        if (expectedCompression == CompressionMethod.Oodle)
+        Assert.Equal(
+            compression == FixtureCompression.OodlePartitioned,
+            main.TocResource.Header.PartitionCount > 1);
+        if (expectedCompression != CompressionMethod.None)
         {
-            Assert.Contains(CompressionMethod.Oodle, main.TocResource.CompressionMethods);
+            Assert.Contains(expectedCompression, main.TocResource.CompressionMethods);
             Assert.Contains(main.TocResource.CompressionBlocks, block => block.CompressionMethodIndex != 0);
         }
         else
@@ -120,6 +131,29 @@ public class FixtureIoStoreTests
         Assert.Equal(1, provider.Mount());
         Assert.Equal(ExpectedContainerPaths.Length, provider.Files.Count);
         Assert.All(provider.Files.Values, file => Assert.Equal(expectedCompression, file.CompressionMethod));
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void PartitionedIoStoreReadsAChunkFromANonZeroPartition(FixtureSerialization serialization)
+    {
+        using var provider = CreateIoStoreProvider(
+            serialization, compression: FixtureCompression.OodlePartitioned);
+        var reader = Assert.Single(provider.UnloadedVfs.OfType<IoStoreReader>(),
+            static candidate => !Path.GetFileName(candidate.Name)
+                .Equals("global.utoc", StringComparison.OrdinalIgnoreCase));
+        Assert.True(reader.TocResource.Header.PartitionCount > 1);
+
+        var chunk = reader.TocResource.ChunkIds
+            .Select((id, index) => (Id: id, Offset: reader.TocResource.ChunkOffsetLengths[index].Offset))
+            .First(candidate =>
+            {
+                var blockIndex = (int) (candidate.Offset / reader.TocResource.Header.CompressionBlockSize);
+                return (ulong) reader.TocResource.CompressionBlocks[blockIndex].Offset >=
+                       reader.TocResource.Header.PartitionSize;
+            });
+        Assert.NotEmpty(reader.Read(chunk.Id));
     }
 
     [Theory]
@@ -160,9 +194,13 @@ public class FixtureIoStoreTests
 
     [Theory]
     [InlineData(FixtureSerialization.Tagged, FixtureCompression.Oodle)]
+    [InlineData(FixtureSerialization.Tagged, FixtureCompression.Zlib)]
     [InlineData(FixtureSerialization.Tagged, FixtureCompression.Uncompressed)]
+    [InlineData(FixtureSerialization.Tagged, FixtureCompression.OodlePartitioned)]
     [InlineData(FixtureSerialization.Unversioned, FixtureCompression.Oodle)]
+    [InlineData(FixtureSerialization.Unversioned, FixtureCompression.Zlib)]
     [InlineData(FixtureSerialization.Unversioned, FixtureCompression.Uncompressed)]
+    [InlineData(FixtureSerialization.Unversioned, FixtureCompression.OodlePartitioned)]
     public void IoStoreMountsAndLoadsPackageAcrossCompressionVariants(
         FixtureSerialization serialization,
         FixtureCompression compression)
@@ -181,6 +219,25 @@ public class FixtureIoStoreTests
         var fixture = Assert.Single(package.GetExports(), export => export.Name == "DA_AllProperties");
 
         Assert.Equal("ParserFixtureData", fixture.ExportType);
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void EncryptedIoStoreRejectsWrongKeyAndLoadsWithFixtureKey(FixtureSerialization serialization)
+    {
+        using var provider = CreateIoStoreProvider(
+            serialization, compression: FixtureCompression.OodleEncrypted);
+        var main = Assert.Single(provider.UnloadedVfs, reader => reader is IoStoreReader { IsEncrypted: true });
+        Assert.True(((IoStoreReader) main).TocResource.Header.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted));
+
+        Assert.Equal(0, provider.SubmitKey(default, new CUE4Parse.Encryption.Aes.FAesKey(new byte[32])));
+        Assert.Empty(provider.Files);
+
+        Assert.Equal(1, provider.SubmitKey(default, CreateFixtureAesKey()));
+        Assert.NotNull(provider.GlobalData);
+        var fixture = LoadExport<UObject>(provider, PropertyFixtureSuffix, "DA_AllProperties");
+        Assert.Equal(0x12345678, fixture.Get<int>("Integer"));
     }
 
     [Theory]

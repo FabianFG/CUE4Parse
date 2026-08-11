@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using System.Text;
+using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider.Usmap;
 using CUE4Parse.UE4.Assets.Exports;
@@ -21,12 +23,16 @@ public enum FixtureSerialization
 public enum FixtureCompression
 {
     Oodle,
-    Uncompressed
+    Zlib,
+    Uncompressed,
+    OodlePartitioned,
+    OodleEncrypted
 }
 
 internal static class FixtureTestUtilities
 {
     private const string FixtureRoot = "Fixtures/UE5_8";
+    private const string FixtureAesKeyText = "CUE4ParseFixtureAESKey0123456789";
     public static readonly TextureExpectation[] TextureExpectations =
     [
         new("T_BC1", "rgb.png", 64, 64, EPixelFormat.PF_DXT1, EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 1.5, 8),
@@ -56,10 +62,19 @@ internal static class FixtureTestUtilities
             "/Game/Fixtures/Audio/SW_Format_RADAudio",
             "/Game/Fixtures/Animations/AM_Fixture",
             "/Game/Fixtures/Animations/AS_Fixture",
+            "/Game/Fixtures/Animations/AS_Additive",
             "/Game/Fixtures/Animations/BS_Fixture",
+            "/Game/Fixtures/Animations/AC_Fixture",
             "/Game/Fixtures/Animations/PA_Fixture",
             "/Game/Fixtures/Animations/SKEL_Fixture",
             "/Game/Fixtures/Blueprints/BP_Fixture",
+            "/Game/Fixtures/Blueprints/BP_Components",
+            "/Game/Fixtures/Blueprints/BP_ComponentsChild",
+            "/Game/Fixtures/Blueprints/E_Fixture",
+            "/Game/Fixtures/Blueprints/S_Fixture",
+            "/Game/Fixtures/BuildData/BuildData_Fixture",
+            "/Game/Fixtures/Compute/CG_Fixture",
+            "/Game/Fixtures/ControlRig/CR_Fixture",
             "/Game/Fixtures/Curves/CT_Composite",
             "/Game/Fixtures/Curves/CT_Rich",
             "/Game/Fixtures/Curves/CT_Simple",
@@ -73,14 +88,20 @@ internal static class FixtureTestUtilities
             "/Game/Fixtures/Effects/MS_Patch",
             "/Game/Fixtures/Effects/MS_Source",
             "/Game/Fixtures/Effects/NS_Fixture",
+            "/Game/Fixtures/Effects/VF_Static",
+            "/Game/Fixtures/Foliage/FT_Fixture",
             "/Game/Fixtures/Fonts/Font_Fixture",
             "/Game/Fixtures/Geometry/DM_Fixture",
             "/Game/Fixtures/Geometry/GC_Fixture",
+            "/Game/Fixtures/Geometry/GeoCache_Fixture",
             "/Game/Fixtures/Landscape/LI_Fixture",
             "/Game/Fixtures/Landscape/M_Landscape",
             "/Game/Fixtures/Maps/Empty",
             "/Game/Fixtures/Maps/Landscape",
             "/Game/Fixtures/Maps/Navigation",
+            "/Game/Fixtures/Maps/Instancing",
+            "/Game/Fixtures/Maps/Streaming",
+            "/Game/Fixtures/Maps/Streaming_Sublevel",
             "/Game/Fixtures/Maps/WorldPartition",
             "/Game/Fixtures/Maps/WorldPartition/_Generated_/1WD4NAK7SVY0JF8AXYPOSA7U8",
             "/Game/Fixtures/Materials/MI_Fixture",
@@ -90,11 +111,28 @@ internal static class FixtureTestUtilities
             "/Game/Fixtures/Meshes/SM_Fixture",
             "/Game/Fixtures/Meshes/SM_Nanite",
             "/Game/Fixtures/Properties/DA_AllProperties",
+            "/Game/Fixtures/Properties/DA_PrimaryAsset",
+            "/Game/Fixtures/PoseSearch/PS_Schema",
+            "/Game/Fixtures/PoseSearch/PSD_Fixture",
+            "/Game/Fixtures/PCG/PCG_Fixture",
+            "/Game/Fixtures/PCG/PCG_Parameters",
+            "/Game/Fixtures/NNE/NNE_Identity",
+            "/Game/Fixtures/AudioAnalysis/Loudness_Fixture",
+            "/Game/Fixtures/AudioAnalysis/ConstantQ_Fixture",
+            "/Game/Fixtures/Midi/MIDI_Fixture",
+            "/Game/Fixtures/Paper2D/Sprite_Fixture",
+            "/Game/Fixtures/Physics/PHYS_Fixture",
             "/Game/Fixtures/Sequences/LS_Fixture",
             "/Game/Fixtures/Sequences/LS_Nested",
             "/Game/Fixtures/StringTables/ST_Fixed",
             "/Game/Fixtures/Textures/T_Array",
             "/Game/Fixtures/Textures/T_Cube",
+            "/Game/Fixtures/Textures/T_CubeArray",
+            "/Game/Fixtures/Textures/T_CurveAtlas",
+            "/Game/Fixtures/Textures/T_FloatRGBA",
+            "/Game/Fixtures/Textures/T_G16",
+            "/Game/Fixtures/Textures/T_IES",
+            "/Game/Fixtures/Textures/T_R16F",
             "/Game/Fixtures/Textures/T_UDIM",
             "/Game/Fixtures/Textures/T_Virtual",
             "/Game/Fixtures/Textures/T_Volume",
@@ -117,7 +155,8 @@ internal static class FixtureTestUtilities
     public static DefaultFileProvider CreateIoStoreProvider(
         FixtureSerialization serialization,
         string mappingFileName = "CUE4ParseFixtures-Oodle.usmap",
-        FixtureCompression compression = FixtureCompression.Oodle)
+        FixtureCompression compression = FixtureCompression.Oodle,
+        bool submitEncryptionKey = false)
     {
         var variantDirectory = FixturePath("IoStore", serialization.ToString());
         var containerDirectory = Path.Combine(variantDirectory, compression.ToString());
@@ -137,16 +176,25 @@ internal static class FixtureTestUtilities
 
         provider.Initialize();
         provider.RegisterVfs(globalToc);
+        if (compression == FixtureCompression.OodleEncrypted && submitEncryptionKey)
+        {
+            provider.SubmitKey(default, CreateFixtureAesKey());
+        }
         return provider;
     }
+
+    public static FAesKey CreateFixtureAesKey() =>
+        new(Encoding.ASCII.GetBytes(FixtureAesKeyText));
 
     public static DefaultFileProvider CreateMountedIoStoreProvider(
         FixtureSerialization serialization,
         string mappingFileName = "CUE4ParseFixtures-Oodle.usmap",
         FixtureCompression compression = FixtureCompression.Oodle)
     {
-        var provider = CreateIoStoreProvider(serialization, mappingFileName, compression);
-        Assert.Equal(1, provider.Mount());
+        var encrypted = compression == FixtureCompression.OodleEncrypted;
+        var provider = CreateIoStoreProvider(serialization, mappingFileName, compression, encrypted);
+        if (!encrypted)
+            Assert.Equal(1, provider.Mount());
         return provider;
     }
 

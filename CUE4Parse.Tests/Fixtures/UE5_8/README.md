@@ -33,6 +33,8 @@ tests intentionally do not invoke external codec decoders.
 
 - `CUE4ParseFixtures-Oodle.usmap` is the Oodle-compressed mapping dump.
 - `CUE4ParseFixtures-Uncompressed.usmap` is the same dump without compression.
+- `CUE4ParseFixtures-Brotli.usmap` recompresses the same mapping with Brotli.
+- `CUE4ParseFixtures-Zstandard.usmap` recompresses it with Zstandard.
 
 The mapping dump is treated as fixture data, not as an unquestionable oracle.
 When a schema assertion fails, validate the expected test value and compare the
@@ -42,28 +44,35 @@ The dump intentionally contains no properties flagged `CPF_EditorOnly`. These
 fixtures exercise cooked runtime schemas and values; editor-only mappings and
 the absence of editor-only properties are outside the test scope.
 
-The source cooks omit editor content. Their 65 test packages were repacked
-without recooking into dedicated Oodle and uncompressed minimal IoStore
-containers. Compression is a packaging choice, so both modes use the exact same
-cooked package bytes and schema. The mappings cover the expanded runtime schema,
-including optional properties, fixed arrays, delegates, and `FInstancedStruct`.
+The source cooks omit editor content. Their 97 test packages were repacked
+without recooking into dedicated Oodle, Zlib, uncompressed, partitioned Oodle,
+and AES-encrypted Oodle minimal IoStore containers. Compression, partitioning,
+and encryption are packaging choices, so all variants of one serialization mode
+use the exact same cooked package bytes and schema. The mappings cover the
+expanded runtime schema, including optional properties, fixed arrays, delegates,
+and `FInstancedStruct`.
 
 ## IoStore
 
-`IoStore/Tagged` and `IoStore/Unversioned` each contain `Oodle` and
-`Uncompressed` subdirectories. Their named minimal `.utoc/.ucas` pairs contain
-the same map, expanded DataAsset, DataTables, curve assets, StringTable,
-textures, static and skeletal meshes, animation assets, materials, a material
-parameter collection, nested Level Sequences, Niagara and MetaSound assets,
-Landscape and World Partition maps, Dynamic Mesh and Recast Navigation data,
-a Blueprint generated class, an offline font, a Geometry Collection, and audio
-assets. The 65 package entries and thirteen required bulk-data sidecars are
+`IoStore/Tagged` and `IoStore/Unversioned` each contain `Oodle`, `Zlib`,
+`Uncompressed`, `OodlePartitioned`, and `OodleEncrypted` subdirectories. Their
+named minimal `.utoc/.ucas` pairs contain
+the same maps, expanded DataAsset, DataTables, curve assets, StringTable,
+textures including numeric/HDR formats, cube arrays, a light profile and curve
+atlas, static and skeletal meshes, regular and additive animation assets,
+materials, a material parameter collection, nested Level Sequences, Niagara and
+MetaSound assets, Landscape and World Partition maps, Dynamic Mesh and Recast
+Navigation data, Blueprint generated classes, construction scripts and inherited
+component overrides, an offline font, a Geometry Collection, cooked foliage,
+PCG metadata domain headers, NNE model data, a static vector field, and audio assets. The
+97 package entries and fourteen required bulk-data sidecars are
 exactly the files exercised by tests; Nanite resources and virtual-texture tiles
-each have their own sidecar.
-Every package entry in an Oodle pair must use Oodle; every entry in an
-uncompressed pair must use `None`. Each serialization directory stores one
-shared `global.utoc/global.ucas` pair required for script-object data, avoiding
-a duplicate global payload.
+each have their own sidecar, as does the streamable Geometry Cache sample.
+Every package entry must use the compression method named by its variant. The
+partitioned variant deliberately spans multiple UCAS files, while encrypted
+containers require the fixture AES key. Each serialization directory stores one
+shared `global.utoc/global.ucas` pair required for script-object data, avoiding a
+duplicate global payload.
 
 The large staged runtime PAK files and native Shipping binaries are
 intentionally excluded. Engine assets and shader libraries are also excluded
@@ -81,3 +90,13 @@ and `CityGreeting` key, and ensure the AssetRegistry lists every package kept in
 the minimal IoStore containers. The focused files replace the roughly 10 MB
 staged runtime Pak, which mostly contains unrelated Slate, font, ICU,
 localization, and configuration data.
+
+## Legacy Pak
+
+`LegacyPak/Tagged` and `LegacyPak/Unversioned` provide Oodle, Zlib,
+uncompressed, and AES-encrypted Oodle variants. Each Pak contains only
+`DA_AllProperties`, `DT_AllProperties`, and `T_Streaming` with their split
+`.uasset`, `.uexp`, and bulk payload files, plus `T_BC6H` and the `Empty` map.
+Tests exercise classic `.uasset` and `.umap` loading, compression dispatch, key
+submission, hard and soft cross-package references, semantic parity with IoStore,
+and split bulk lookup without duplicating the complete fixture set.

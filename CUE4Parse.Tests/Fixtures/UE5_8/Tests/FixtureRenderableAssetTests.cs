@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
+using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using static CUE4Parse.Tests.Fixtures.UE5_8.FixtureTestUtilities;
@@ -46,6 +47,16 @@ public class FixtureRenderableAssetTests
             (socket.RelativeRotation.Pitch, socket.RelativeRotation.Yaw, socket.RelativeRotation.Roll));
         AssertVector(socket.RelativeScale, 1.25f, 0.75f, 2.0f);
         Assert.Equal("DeterministicFixtureSocket", socket.Tag);
+
+        var bodySetup = Assert.IsType<UBodySetup>(mesh.BodySetup.Load<UBodySetup>());
+        Assert.True(bodySetup.BodySetupGuid.IsValid());
+        var aggregate = Assert.IsType<FKAggregateGeom>(bodySetup.AggGeom);
+        Assert.True(
+            aggregate.SphereElems.Length + aggregate.BoxElems.Length + aggregate.SphylElems.Length +
+            aggregate.ConvexElems.Length + aggregate.TaperedCapsuleElems.Length > 0);
+        Assert.NotNull(bodySetup.CookedFormatData);
+        Assert.NotEmpty(bodySetup.CookedFormatData.Formats);
+        Assert.All(bodySetup.CookedFormatData.Formats.Values, data => Assert.True(data.GetDataSize() > 0));
     }
 
     [Theory]

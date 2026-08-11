@@ -82,6 +82,30 @@ public class FixtureAnimationTests
     [Theory]
     [InlineData(FixtureSerialization.Tagged)]
     [InlineData(FixtureSerialization.Unversioned)]
+    public void AnimationCompositePreservesOrderedSegmentsAndPlayback(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var composite = LoadExport<UAnimComposite>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Animations/AC_Fixture.uasset",
+            "AC_Fixture");
+
+        Assert.Equal(2, composite.AnimationTrack.AnimSegments.Length);
+        var first = composite.AnimationTrack.AnimSegments[0];
+        var second = composite.AnimationTrack.AnimSegments[1];
+        Assert.All(composite.AnimationTrack.AnimSegments, segment =>
+            Assert.Equal("AS_Fixture", Assert.IsType<UAnimSequence>(segment.AnimReference.Load()).Name));
+        Assert.Equal((0f, 1f, 1f, 1),
+            (first.AnimStartTime, first.AnimEndTime, first.AnimPlayRate, first.LoopingCount));
+        Assert.Equal((0f, 1f, 0.5f, 2),
+            (second.AnimStartTime, second.AnimEndTime, second.AnimPlayRate, second.LoopingCount));
+        Assert.Equal(first.GetLength(), second.StartPos, precision: 5);
+        Assert.Equal(composite.SequenceLength, composite.AnimationTrack.GetLength(), precision: 5);
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
     public void BlendSpacePreservesSamples(FixtureSerialization serialization)
     {
         using var provider = CreateMountedIoStoreProvider(serialization);

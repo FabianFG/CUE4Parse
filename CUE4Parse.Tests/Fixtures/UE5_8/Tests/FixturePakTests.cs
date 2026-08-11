@@ -3,6 +3,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.FileProvider;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.AssetRegistry;
+using CUE4Parse.UE4.AssetRegistry.Objects;
 using CUE4Parse.UE4.Localization;
 using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Versions;
@@ -191,6 +192,77 @@ public class FixturePakTests
             asset => asset.PackageName.Text == "/Game/Fixtures/Maps/Empty" &&
                      asset.AssetName.Text == "Empty" &&
                      asset.AssetClass.Text == "World");
+
+        var primaryAsset = Assert.Single(registry.PreallocatedAssetDataBuffers,
+            asset => asset.PackageName.Text == "/Game/Fixtures/Properties/DA_PrimaryAsset");
+        Assert.Equal("FixturePrimaryAsset", primaryAsset.AssetClass.Text);
+        Assert.Equal("Primary_Registry_0x13579BDF",
+            primaryAsset.TagsAndValues.Single(tag => tag.Key.Text == "RegistryMarker").Value);
+        var bundle = Assert.Single(primaryAsset.TaggedAssetBundles.Bundles);
+        Assert.Equal("Fixture", bundle.BundleName.Text);
+        Assert.Equal("/Game/Fixtures/Properties/DA_AllProperties.DA_AllProperties",
+            Assert.Single(bundle.BundleAssets).AssetPathName.Text);
+
+        var primaryNode = Assert.Single(registry.PreallocatedDependsNodeDataBuffers,
+            node => node.Identifier?.PackageName.Text == primaryAsset.PackageName.Text);
+        Assert.Contains(primaryNode.PackageDependencies,
+            index => registry.PreallocatedDependsNodeDataBuffers[index].Identifier?.PackageName.Text ==
+                     "/Game/Fixtures/Properties/DA_AllProperties");
+        var propertyNode = Assert.Single(registry.PreallocatedDependsNodeDataBuffers,
+            node => node.Identifier?.PackageName.Text == "/Game/Fixtures/Properties/DA_AllProperties");
+        var dataTableDependency = FindPackageDependency(
+            registry, propertyNode, "/Game/Fixtures/DataTables/DT_AllProperties");
+        Assert.Contains(UnpackPackageProperties(propertyNode, dataTableDependency),
+            static properties => (properties & 1) != 0);
+        var softTextureDependency = FindPackageDependency(
+            registry, propertyNode, "/Game/Fixtures/Textures/T_BC6H");
+        Assert.All(UnpackPackageProperties(propertyNode, softTextureDependency),
+            static properties => Assert.Equal(0, properties & 1));
+        var primaryNodeIndex = Array.IndexOf(registry.PreallocatedDependsNodeDataBuffers, primaryNode);
+        Assert.Contains(propertyNode.Referencers, index => index == primaryNodeIndex);
+
+        var packageData = Assert.Single(registry.PreallocatedPackageDataBuffers,
+            package => package.PackageName.Text == primaryAsset.PackageName.Text);
+        Assert.True(packageData.DiskSize > 0);
+        Assert.Equal(".uasset", Assert.IsType<string>(packageData.ExtensionText).TrimEnd('\0'));
+        Assert.NotEmpty(packageData.ImportedClasses ?? []);
+    }
+
+    private static int FindPackageDependency(
+        FAssetRegistryState registry,
+        FDependsNode node,
+        string packageName)
+    {
+        var dependency = Assert.Single(node.PackageDependencies.Select((nodeIndex, dependencyIndex) =>
+                (NodeIndex: nodeIndex, DependencyIndex: dependencyIndex)),
+            candidate => registry.PreallocatedDependsNodeDataBuffers[candidate.NodeIndex]
+                .Identifier?.PackageName.Text == packageName);
+        return dependency.DependencyIndex;
+    }
+
+    private static int[] UnpackPackageProperties(FDependsNode node, int dependencyIndex)
+    {
+        var packed = 0;
+        for (var bit = 0; bit < 5; ++bit)
+        {
+            if (node.PackageFlags[dependencyIndex * 5 + bit]) packed |= 1 << bit;
+        }
+        return packed switch
+        {
+            < 8 => [packed],
+            8 => [1, 2],
+            9 => [1, 4],
+            10 => [1, 6],
+            11 => [2, 4],
+            12 => [2, 5],
+            13 => [3, 4],
+            14 => [3, 5],
+            15 => [3, 6],
+            16 => [5, 6],
+            17 => [1, 2, 4],
+            18 => [3, 5, 6],
+            _ => throw new InvalidDataException($"Invalid packed package property set {packed}")
+        };
     }
 
     private static void AssertLocresEntry(

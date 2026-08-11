@@ -1,5 +1,6 @@
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse_Conversion.Textures;
 using SkiaSharp;
 using static CUE4Parse.Tests.Fixtures.UE5_8.FixtureTestUtilities;
@@ -142,6 +143,110 @@ public class FixtureTextureDecodeTests
             Assert.Equal((8, 32), (bitmap.Width, bitmap.Height));
             for (var slice = 0; slice < 4; slice++)
                 AssertGeneratedSlice(bitmap, 8, 8, slice, slice * 8);
+        }
+
+        var cubeArray = LoadExport<UTextureCubeArray>(
+            provider,
+            "CUE4ParseFixtures/Content/Fixtures/Textures/T_CubeArray.uasset",
+            "T_CubeArray");
+        Assert.Equal(EPixelFormat.PF_B8G8R8A8, cubeArray.Format);
+        Assert.Equal(12, cubeArray.PlatformData.GetNumSlices());
+        var cubeArrayMip = Assert.IsType<FTexture2DMipMap>(cubeArray.GetFirstMip());
+        var decodedFirstSlice = cubeArray.Decode(cubeArrayMip);
+        Assert.NotNull(decodedFirstSlice);
+        using (var bitmap = decodedFirstSlice!.ToSkBitmap())
+        {
+            Assert.Equal((16, 16), (bitmap.Width, bitmap.Height));
+            AssertGeneratedSlice(bitmap, 16, 16, 0);
+        }
+
+        var cubeArrayData = Assert.IsType<byte[]>(cubeArrayMip.BulkData!.Data);
+        Assert.Equal(12 * 16 * 16 * 4, cubeArrayData.Length);
+        for (var slice = 0; slice < 12; slice++)
+        {
+            for (var y = 0; y < 16; y++)
+            {
+                for (var x = 0; x < 16; x++)
+                {
+                    var offset = ((slice * 16 * 16) + (y * 16) + x) * 4;
+                    var actual = new SKColor(
+                        cubeArrayData[offset + 2], cubeArrayData[offset + 1],
+                        cubeArrayData[offset], cubeArrayData[offset + 3]);
+                    Assert.Equal(MakeFixtureColor(x, y, slice), actual);
+                }
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void SpecializedTextureFormatsDecodeRepresentativeValues(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+
+        using var g16 = DecodeBitmap("T_G16", EPixelFormat.PF_G16);
+        Assert.Equal(new SKColor(0, 0, 0, 255), g16.GetPixel(0, 0));
+        Assert.Equal(new SKColor(255, 255, 255, 255), g16.GetPixel(15, 15));
+
+        using var r16f = DecodeBitmap("T_R16F", EPixelFormat.PF_R16F);
+        Assert.Equal(new SKColor(0, 0, 0, 255), r16f.GetPixel(0, 0));
+        Assert.InRange(r16f.GetPixel(0, 6).Red, 127, 130);
+        Assert.Equal(new SKColor(255, 255, 255, 255), r16f.GetPixel(15, 15));
+
+        using var floatRgba = DecodeBitmap("T_FloatRGBA", EPixelFormat.PF_FloatRGBA);
+        Assert.Equal(new SKColor(0, 255, 0, 255), floatRgba.GetPixel(0, 0));
+        var last = floatRgba.GetPixel(15, 15);
+        Assert.Equal(255, last.Red);
+        Assert.Equal(0, last.Green);
+        Assert.InRange(last.Blue, 127, 128);
+        Assert.Equal(255, last.Alpha);
+
+        var lightProfile = LoadExport<UTextureLightProfile>(provider,
+            "CUE4ParseFixtures/Content/Fixtures/Textures/T_IES.uasset", "T_IES");
+        Assert.Equal(EPixelFormat.PF_G8, lightProfile.Format);
+        Assert.Equal(1250.5f, lightProfile.Brightness);
+        Assert.Equal(0.03125f, lightProfile.TextureMultiplier);
+        var decodedLightProfile = lightProfile.Decode();
+        Assert.NotNull(decodedLightProfile);
+        using (var bitmap = decodedLightProfile.ToSkBitmap())
+        {
+            Assert.Equal((16, 16), (bitmap.Width, bitmap.Height));
+            Assert.Equal(new SKColor(0, 0, 0, 255), bitmap.GetPixel(0, 0));
+            Assert.Equal(new SKColor(255, 255, 255, 255), bitmap.GetPixel(15, 15));
+        }
+
+        var atlas = LoadExport<UCurveLinearColorAtlas>(provider,
+            "CUE4ParseFixtures/Content/Fixtures/Textures/T_CurveAtlas.uasset", "T_CurveAtlas");
+        Assert.Equal(EPixelFormat.PF_FloatRGBA, atlas.Format);
+        Assert.Equal(64u, atlas.Get<uint>("TextureSize"));
+        Assert.Equal("Curve_LinearColor",
+            Assert.Single(atlas.Get<FPackageIndex[]>("GradientCurves")).Name);
+        var decodedAtlas = atlas.Decode();
+        Assert.NotNull(decodedAtlas);
+        using (var bitmap = decodedAtlas.ToSkBitmap())
+        {
+            Assert.Equal((64, 1), (bitmap.Width, bitmap.Height));
+            var first = bitmap.GetPixel(0, 0);
+            var lastAtlasPixel = bitmap.GetPixel(63, 0);
+            Assert.True(first.Red < lastAtlasPixel.Red);
+            Assert.True(first.Green < lastAtlasPixel.Green);
+            Assert.True(first.Blue < lastAtlasPixel.Blue);
+            Assert.True(first.Alpha > lastAtlasPixel.Alpha);
+        }
+        return;
+
+        SKBitmap DecodeBitmap(string asset, EPixelFormat expectedFormat)
+        {
+            var texture = LoadTexture(provider, asset);
+            Assert.Equal(expectedFormat, texture.Format);
+            Assert.Equal((16, 16, 1),
+                (texture.PlatformData.SizeX, texture.PlatformData.SizeY, texture.PlatformData.Mips.Length));
+            var decoded = texture.Decode();
+            Assert.NotNull(decoded);
+            var bitmap = decoded.ToSkBitmap();
+            Assert.Equal((16, 16), (bitmap.Width, bitmap.Height));
+            return bitmap;
         }
     }
 

@@ -60,6 +60,8 @@ public class FixtureStructuredAssetTests
             "CUE4ParseFixtures/Content/Fixtures/DataTables/DT_Composite.uasset",
             "DT_Composite");
 
+        Assert.Equal(["DT_AllProperties", "DT_Overrides"],
+            table.Get<FPackageIndex[]>("ParentTables").Select(static parent => parent.Name));
         Assert.Equal("FixtureTableRow", table.RowStructName);
         Assert.Equal(["Alpha", "Beta", "Defaults", "Gamma"],
             table.RowMap.Keys.Select(name => name.Text).Order().ToArray());
@@ -73,6 +75,13 @@ public class FixtureStructuredAssetTests
         Assert.True(table.TryGetDataTableRow("Gamma", StringComparison.Ordinal, out var gamma));
         Assert.Equal(303030303030, gamma.Get<long>("LargeNumber"));
         Assert.Equal([3, 0, 3], gamma.Get<int[]>("Values"));
+
+        var overrides = LoadExport<UDataTable>(provider,
+            "CUE4ParseFixtures/Content/Fixtures/DataTables/DT_Overrides.uasset", "DT_Overrides");
+        Assert.Equal(["Beta", "Gamma"],
+            overrides.RowMap.Keys.Select(static name => name.Text).Order().ToArray());
+        Assert.True(overrides.TryGetDataTableRow("Beta", StringComparison.Ordinal, out var directBeta));
+        Assert.Equal(8080, directBeta.Get<int>("Number"));
     }
 
     [Theory]
@@ -109,12 +118,20 @@ public class FixtureStructuredAssetTests
             provider,
             "CUE4ParseFixtures/Content/Fixtures/Curves/CT_Composite.uasset",
             "CT_Composite");
+        Assert.Equal(["CT_Simple", "CT_SimpleOverrides"],
+            composite.Get<FPackageIndex[]>("ParentTables").Select(static parent => parent.Name));
         Assert.Equal(["CompositeOnly", "Constant", "Linear"],
             composite.RowMap.Keys.Select(name => name.Text).Order().ToArray());
         Assert.Equal(300.0f, Assert.IsType<FSimpleCurve>(
             composite.FindCurve(new FName("Linear"))).Eval(1.0f));
         Assert.Equal(-25.0f, Assert.IsType<FSimpleCurve>(
             composite.FindCurve(new FName("CompositeOnly"))).Eval(2.5f));
+
+        var overrides = LoadCurveTable(provider, "CT_SimpleOverrides");
+        Assert.Equal(["CompositeOnly", "Linear"],
+            overrides.RowMap.Keys.Select(static name => name.Text).Order().ToArray());
+        Assert.Equal(300.0f,
+            Assert.IsType<FSimpleCurve>(overrides.FindCurve(new FName("Linear"))).Eval(1.0f));
     }
 
     [Theory]
