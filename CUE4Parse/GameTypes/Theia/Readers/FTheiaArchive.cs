@@ -24,7 +24,7 @@ public sealed class FTheiaArchive : FArchive
         _fileHandle = File.OpenHandle(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, FileOptions.Asynchronous | FileOptions.RandomAccess);
         Length = RandomAccess.GetLength(_fileHandle);
         var meta = File.ReadAllBytes(filePath + ".meta");
-        _decryptor = new TheiaDecryptor(meta, Length);
+        _decryptor = new TheiaDecryptor(meta, Length, Versions.Game);
     }
 
     public override string Name { get; }

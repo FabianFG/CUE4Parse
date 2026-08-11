@@ -221,7 +221,7 @@ public enum EGame : uint
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
         GAME_NevernessToEverness_CBT2 = GAME_UE5_5 + 7, // keep for now, will be removed later
         GAME_FateTrigger = GAME_UE5_5 + 8,
-        GAME_Placeholder6 = GAME_UE5_5 + 9,
+        GAME_MARVELTokonFightingSouls = GAME_UE5_5 + 9,
         GAME_Borderlands4 = GAME_UE5_5 + 10,
         GAME_Rennsport = GAME_UE5_5 + 11,
         GAME_GrayZoneWarfare = GAME_UE5_5 + 12,
