@@ -47,14 +47,13 @@ public class FStaticMeshLODResources
         if (Ar.Game == GAME_APBReloaded)
         {
             Ar.Position += 8;
-            goto SkipRawTriangles;
         }
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedRawTriangles && Ar.Game < GAME_UE4_0)
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedRawTriangles && Ar.Game < GAME_UE4_0 && Ar.Game != GAME_APBReloaded)
         {
             new FByteBulkData((FAssetArchive)Ar); // RawTriangles
         }
 
-        SkipRawTriangles:
         if (Ar.Game == GAME_TheDivisionResurgence) Ar.Position += 4;
 
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
