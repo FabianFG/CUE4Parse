@@ -11,6 +11,30 @@ public class FixtureTextureDecodeTests
 {
     private const int ChannelCount = 4;
 
+    private static readonly TextureExpectation[] AndroidTextureExpectations =
+    [
+        new("T_ASTC_4x4", "rgba.png", 64, 64, EPixelFormat.PF_ASTC_4x4,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 5.0, 60),
+        new("T_ASTC_6x6", "rgba.png", 64, 64, EPixelFormat.PF_ASTC_6x6,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 8.0, 80),
+        new("T_ASTC_8x8", "rgba.png", 64, 64, EPixelFormat.PF_ASTC_8x8,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 10.0, 100),
+        new("T_ASTC_10x10", "rgba.png", 64, 64, EPixelFormat.PF_ASTC_10x10,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 12.0, 180),
+        new("T_ASTC_12x12", "rgba.png", 64, 64, EPixelFormat.PF_ASTC_12x12,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 16.0, 150),
+        new("T_ASTC_Normal", "normal.png", 64, 64, EPixelFormat.PF_ASTC_6x6,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 8.0, 80),
+        new("T_ETC2_RGB", "rgb.png", 64, 64, EPixelFormat.PF_ETC2_RGB,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 8.0, 80),
+        new("T_ETC2_RGBA", "rgba.png", 64, 64, EPixelFormat.PF_ETC2_RGBA,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 8.0, 80),
+        new("T_EAC_R11", "grayscale.png", 64, 64, EPixelFormat.PF_ETC2_R11_EAC,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 5.0, 40),
+        new("T_EAC_RG11", "normal.png", 64, 64, EPixelFormat.PF_ETC2_RG11_EAC,
+            EPixelFormat.PF_R8G8B8A8, SKColorType.Rgba8888, 1, 5.0, 40)
+    ];
+
     [Theory]
     [InlineData(FixtureSerialization.Tagged)]
     [InlineData(FixtureSerialization.Unversioned)]
@@ -26,6 +50,49 @@ public class FixtureTextureDecodeTests
 
             if (expectation.MipCount > 1)
                 AssertEveryMipDecodes(texture, expectation.Width, expectation.MipCount);
+        }
+    }
+
+    [Fact]
+    public void AndroidTexturePackagesParseAndDecodeAstcEtc2AndEac()
+    {
+        using var provider = CreateMountedAndroidTextureProvider();
+
+        foreach (var expectation in AndroidTextureExpectations)
+        {
+            var texture = LoadExport<UTexture2D>(provider,
+                $"CUE4ParseFixtures/Content/PlatformFixtures/Android/{expectation.Asset}.uasset",
+                expectation.Asset);
+            AssertCookedPlatformData(texture, expectation);
+
+            var decoded = texture.Decode();
+            Assert.NotNull(decoded);
+            using var actual = decoded.ToSkBitmap();
+            Assert.Equal(expectation.DecodedFormat, decoded.PixelFormat);
+            Assert.Equal(expectation.SkiaColorType, actual.ColorType);
+            Assert.Equal((expectation.Width, expectation.Height), (actual.Width, actual.Height));
+
+            if (expectation.Asset == "T_ASTC_Normal")
+            {
+                using var source = SKBitmap.Decode(FixturePath("SourceTextures", expectation.Source));
+                Assert.NotNull(source);
+                var storageMetrics = Measure(actual, source, [0, 0, 2, 1]);
+                AssertChannelMetric(expectation, storageMetrics, 0);
+                AssertChannelMetric(expectation, storageMetrics, 1);
+                AssertChannelMetric(expectation, storageMetrics, 3);
+                continue;
+            }
+
+            using var expected = CreateExpectedBitmap(expectation);
+            var metrics = Measure(actual, expected);
+            var channels = expectation.Asset switch
+            {
+                "T_EAC_R11" => 1,
+                "T_EAC_RG11" => 2,
+                _ => ChannelCount
+            };
+            for (var channel = 0; channel < channels; channel++)
+                AssertChannelMetric(expectation, metrics, channel);
         }
     }
 
@@ -270,7 +337,7 @@ public class FixtureTextureDecodeTests
         var reference = SKBitmap.Decode(path);
         Assert.NotNull(reference);
 
-        if (expectation.Asset == "T_BC4")
+        if (expectation.Asset is "T_BC4" or "T_EAC_R11")
         {
             for (var y = 0; y < reference.Height; y++)
                 for (var x = 0; x < reference.Width; x++)
@@ -279,7 +346,7 @@ public class FixtureTextureDecodeTests
                     reference.SetPixel(x, y, new SKColor(value, 0, 0, 255));
                 }
         }
-        else if (expectation.Asset == "T_BC5")
+        else if (expectation.Asset is "T_BC5" or "T_EAC_RG11")
         {
             for (var y = 0; y < reference.Height; y++)
                 for (var x = 0; x < reference.Width; x++)
@@ -325,17 +392,20 @@ public class FixtureTextureDecodeTests
         Assert.Equal(actual.Height, expected.Height);
         var metrics = Measure(actual, expected);
         for (var channel = 0; channel < ChannelCount; channel++)
-        {
-            var channelMetrics = metrics[channel];
-            Assert.True(
-                channelMetrics.Mean <= expectation.MaximumMeanError,
-                $"{expectation.Asset} channel {ChannelName(channel)} mean error " +
-                $"{channelMetrics.Mean:F3} exceeds {expectation.MaximumMeanError:F3}. {metrics}");
-            Assert.True(
-                channelMetrics.Maximum <= expectation.MaximumPixelError,
-                $"{expectation.Asset} channel {ChannelName(channel)} maximum error " +
-                $"{channelMetrics.Maximum} exceeds {expectation.MaximumPixelError}. {metrics}");
-        }
+            AssertChannelMetric(expectation, metrics, channel);
+    }
+
+    private static void AssertChannelMetric(TextureExpectation expectation, PixelMetrics metrics, int channel)
+    {
+        var channelMetrics = metrics[channel];
+        Assert.True(
+            channelMetrics.Mean <= expectation.MaximumMeanError,
+            $"{expectation.Asset} channel {ChannelName(channel)} mean error " +
+            $"{channelMetrics.Mean:F3} exceeds {expectation.MaximumMeanError:F3}. {metrics}");
+        Assert.True(
+            channelMetrics.Maximum <= expectation.MaximumPixelError,
+            $"{expectation.Asset} channel {ChannelName(channel)} maximum error " +
+            $"{channelMetrics.Maximum} exceeds {expectation.MaximumPixelError}. {metrics}");
     }
 
     private static byte ToByte(float value) => (byte) Math.Clamp(value * 255.0f, 0, 255);
@@ -362,8 +432,13 @@ public class FixtureTextureDecodeTests
         (byte) (((x + y) * 11 + slice * 97) & 0xff),
         (byte) (255 - ((x * 3 + y * 5 + slice * 7) & 0x7f)));
 
-    private static PixelMetrics Measure(SKBitmap actual, SKBitmap expected)
+    private static PixelMetrics Measure(
+        SKBitmap actual,
+        SKBitmap expected,
+        ReadOnlySpan<int> expectedChannels = default)
     {
+        ReadOnlySpan<int> channels = expectedChannels.IsEmpty ? [0, 1, 2, 3] : expectedChannels;
+        Assert.Equal(ChannelCount, channels.Length);
         Span<long> sums = stackalloc long[ChannelCount];
         Span<int> maxima = stackalloc int[ChannelCount];
         Span<int> differences = stackalloc int[ChannelCount];
@@ -373,10 +448,10 @@ public class FixtureTextureDecodeTests
             {
                 var a = actual.GetPixel(x, y);
                 var e = expected.GetPixel(x, y);
-                differences[0] = Math.Abs(a.Red - e.Red);
-                differences[1] = Math.Abs(a.Green - e.Green);
-                differences[2] = Math.Abs(a.Blue - e.Blue);
-                differences[3] = Math.Abs(a.Alpha - e.Alpha);
+                differences[0] = Math.Abs(a.Red - GetChannel(e, channels[0]));
+                differences[1] = Math.Abs(a.Green - GetChannel(e, channels[1]));
+                differences[2] = Math.Abs(a.Blue - GetChannel(e, channels[2]));
+                differences[3] = Math.Abs(a.Alpha - GetChannel(e, channels[3]));
                 for (var channel = 0; channel < differences.Length; channel++)
                 {
                     sums[channel] += differences[channel];
@@ -392,6 +467,15 @@ public class FixtureTextureDecodeTests
             new ChannelMetrics(sums[2] / (double) pixels, maxima[2]),
             new ChannelMetrics(sums[3] / (double) pixels, maxima[3]));
     }
+
+    private static byte GetChannel(SKColor color, int channel) => channel switch
+    {
+        0 => color.Red,
+        1 => color.Green,
+        2 => color.Blue,
+        3 => color.Alpha,
+        _ => throw new ArgumentOutOfRangeException(nameof(channel))
+    };
 
     private static void AssertEveryMipDecodes(UTexture2D texture, int baseSize, int mipCount)
     {

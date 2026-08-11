@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "engine": {
     "major": 5,
     "minor": 8,
@@ -1716,6 +1716,45 @@
       "name": "Unversioned/Zlib/CUE4ParseFixtures-Legacy-Unversioned-Zlib.pak",
       "size": 17211,
       "sha256": "be5367b93b0ce894f33bd548636b188739d2c815df18fea3428363851b955984"
+    }
+  ],
+  "androidTexturePakFixtures": [
+    {
+      "name": "CUE4ParseFixtures-Android-Textures.pak",
+      "size": 38197,
+      "sha256": "f0c04637077cfa5f7c9e412ee29e1ce7d44724b03effda3386dcda32776497a3"
+    }
+  ],
+  "patchFixtures": [
+    {
+      "name": "IoStore/CUE4ParseFixtures-PatchBase.ucas",
+      "size": 1968,
+      "sha256": "235bd10aa31a60aa0986adf649019df65593c67a138157f26e95a0d9aa08bc80"
+    },
+    {
+      "name": "IoStore/CUE4ParseFixtures-PatchBase.utoc",
+      "size": 488,
+      "sha256": "431032e96eb901fbf01898dc444e37bb56696e1b851caf2215363710d985e721"
+    },
+    {
+      "name": "IoStore/CUE4ParseFixtures-PatchBase_0_P.ucas",
+      "size": 816,
+      "sha256": "6c99897a2ab3eaa4ff4636563bf7e6156f80fab5026ae6361ffc9471264f41de"
+    },
+    {
+      "name": "IoStore/CUE4ParseFixtures-PatchBase_0_P.utoc",
+      "size": 384,
+      "sha256": "48c2bfa0e82ad321c11d4ea56228d684702314296d14097369e864aa50e2c330"
+    },
+    {
+      "name": "Pak/CUE4ParseFixtures-PatchBase.pak",
+      "size": 3492,
+      "sha256": "2032f5888794f1e1a75c808921a17235800da1524b207bf96a96b45b0d2d6eae"
+    },
+    {
+      "name": "Pak/CUE4ParseFixtures-PatchBase_0_P.pak",
+      "size": 1738,
+      "sha256": "3a570865bb9cec12d48fa059be750c4d2d721fb5ef194dbfb77b43973744cbd0"
     }
   ],
   "assetPackages": [

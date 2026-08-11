@@ -198,6 +198,20 @@ internal static class FixtureTestUtilities
         return provider;
     }
 
+    public static DefaultFileProvider CreateMountedAndroidTextureProvider()
+    {
+        var directory = FixturePath("AndroidPak");
+        Assert.True(Directory.Exists(directory), $"Missing Android texture fixture directory: {directory}");
+        var provider = new DefaultFileProvider(
+            directory,
+            SearchOption.TopDirectoryOnly,
+            new VersionContainer(EGame.GAME_UE5_8),
+            StringComparer.OrdinalIgnoreCase);
+        provider.Initialize();
+        Assert.Equal(1, provider.Mount());
+        return provider;
+    }
+
     public static T LoadExport<T>(DefaultFileProvider provider, string packageSuffix, string exportName)
         where T : UObject
     {
@@ -208,7 +222,7 @@ internal static class FixtureTestUtilities
     public static UObject[] LoadPackageExports(DefaultFileProvider provider, string packageSuffix)
     {
         var packagePath = Assert.Single(
-            provider.Files.Keys,
+            provider.Files.Keys.Distinct(StringComparer.OrdinalIgnoreCase),
             path => path.EndsWith(packageSuffix, StringComparison.OrdinalIgnoreCase));
         return provider.LoadPackage(packagePath).GetExports().ToArray();
     }

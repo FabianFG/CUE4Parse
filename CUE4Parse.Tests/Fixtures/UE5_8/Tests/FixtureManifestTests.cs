@@ -23,8 +23,10 @@ public class FixtureManifestTests
         }
         AddEntries(root.GetProperty("pakFixtures"), "Pak");
         AddEntries(root.GetProperty("legacyPakFixtures"), "LegacyPak");
+        AddEntries(root.GetProperty("androidTexturePakFixtures"), "AndroidPak");
+        AddEntries(root.GetProperty("patchFixtures"), "Patch");
 
-        var actualPaths = new[] { "IoStore", "Pak", "LegacyPak" }
+        var actualPaths = new[] { "IoStore", "Pak", "LegacyPak", "AndroidPak", "Patch" }
             .SelectMany(directory => Directory.EnumerateFiles(
                 Path.Combine(fixtureRoot, directory), "*", SearchOption.AllDirectories))
             .Select(path => Path.GetRelativePath(fixtureRoot, path))
