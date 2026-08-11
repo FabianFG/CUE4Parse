@@ -37,6 +37,17 @@ public class FixturePatchPrecedenceTests
     }
 
     [Fact]
+    public void PakPatchPrecedenceIsIndependentOfMountOrder()
+    {
+        using var provider = CreatePatchProvider(PatchContainerType.Pak);
+        MountContainer(provider, PatchContainerType.Pak, patched: true);
+        MountContainer(provider, PatchContainerType.Pak, patched: false);
+
+        AssertPatchedTargetAndReferences(provider);
+        AssertSelectedArchive(provider, TargetPackageSuffix, "CUE4ParseFixtures-PatchBase_0_P.pak");
+    }
+
+    [Fact]
     public void IoStorePatchOverridesDirectHardAndSoftAssetLoads()
     {
         using var provider = CreatePatchProvider(PatchContainerType.IoStore);
