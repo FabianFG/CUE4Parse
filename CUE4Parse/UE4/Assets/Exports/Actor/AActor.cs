@@ -276,7 +276,7 @@ public class APrefabInstance : AActor
         base.Deserialize(Ar, validPos);
 
         Ar.ReadMap(() => new FPackageIndex(Ar), () => new FPackageIndex(Ar)); // ArchetypeToInstanceMap
-        Ar.ReadMap(() => new FPackageIndex(Ar), Ar.Read<int>); // PI_ObjectMap
+        Ar.ReadMap(() => new FPackageIndex(Ar), () => Ar.Read<int>()); // PI_ObjectMap
     }
 }
 

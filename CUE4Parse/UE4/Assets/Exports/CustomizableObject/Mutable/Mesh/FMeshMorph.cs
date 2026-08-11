@@ -26,7 +26,7 @@ public class FMeshMorph
         MinimumValuePerMorph = Ar.ReadArray<FVector4>();
         BatchStartOffsetPerMorph = Ar.ReadArray<uint>();
         BatchesPerMorph = Ar.ReadArray<uint>();
-        SurfacesInUsePerMorph = Ar.ReadArray(Ar.ReadArray<int>);
+        SurfacesInUsePerMorph = Ar.ReadArray(() => Ar.ReadArray<int>());
         UsageFlagsPerMorph = Ar.ReadArray<EMorphUsageFlags>();
         NumTotalBatches = Ar.Read<uint>();
         PositionPrecision = Ar.Read<float>();

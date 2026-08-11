@@ -40,7 +40,7 @@ public struct FRigVMNodeLayout
         }
         else
         {
-            PinIndexInCategory = Ar.ReadMap(Ar.ReadFString, Ar.Read<int>);
+            PinIndexInCategory = Ar.ReadMap(Ar.ReadFString, () => Ar.Read<int>());
         }
         DisplayNames = Ar.ReadMap(Ar.ReadFString, Ar.ReadFString);
     }

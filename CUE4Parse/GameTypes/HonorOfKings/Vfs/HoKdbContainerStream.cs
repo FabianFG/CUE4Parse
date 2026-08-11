@@ -167,7 +167,7 @@ public sealed class HoKdbContainerStream : FRandomAccessFileStreamArchive
         using var Ar = new FByteArchive(indexPath, File.ReadAllBytes(indexPath));
         if (Ar.Read<ulong>() == _hash)
         {
-            CompressedChunks = Ar.ReadMap(Ar.Read<ulong>, Ar.ReadArray<FHoKCompressedChunk>);
+            CompressedChunks = Ar.ReadMap(() => Ar.Read<ulong>(), () => Ar.ReadArray<FHoKCompressedChunk>());
         }
         else
         {

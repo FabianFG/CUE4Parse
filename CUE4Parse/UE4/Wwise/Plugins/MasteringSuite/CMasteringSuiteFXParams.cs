@@ -12,7 +12,7 @@ public struct MasteringSuiteFXParams(FWwiseArchive Ar)
     public bool[] moduleBypassFlags = Ar.ReadArray(4, () => Ar.Read<byte>() != 0);
     public SceAudioOut2MasteringParamEqParamsV2 paramEqParams = new SceAudioOut2MasteringParamEqParamsV2(Ar);
     public SceAudioOut2MasteringCompressorParamsV2 compressorParams = new SceAudioOut2MasteringCompressorParamsV2(Ar);
-    public float[] masterVolumeParams = Ar.ReadArray(12, Ar.Read<float>);
+    public float[] masterVolumeParams = Ar.ReadArray(12, () => Ar.Read<float>());
     public SceAudioOut2MasteringLimiterParamsV2 limiterParams = new SceAudioOut2MasteringLimiterParamsV2(Ar);
 };
 
@@ -50,7 +50,7 @@ public struct SceAudioOut2MasteringCompressorParamsV2(FWwiseArchive Ar)
     public float linkStrength = Ar.Read<float>();
     public bool linkStereoPairs = Ar.Read<byte>() != 0;
     public bool[] bandsBypassFlags = Ar.ReadArray(4, () => Ar.Read<byte>() != 0);
-    public float[] crossoverFrequencies = Ar.ReadArray(3, Ar.Read<float>);
+    public float[] crossoverFrequencies = Ar.ReadArray(3, () => Ar.Read<float>());
     public SceAudioOut2MasteringCompressorBandParams[] bandParams = Ar.ReadArray<SceAudioOut2MasteringCompressorBandParams>(4);
 };
 

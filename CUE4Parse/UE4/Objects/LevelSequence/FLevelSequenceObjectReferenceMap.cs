@@ -11,7 +11,7 @@ public readonly struct FLevelSequenceObjectReferenceMap : IUStruct, IReadOnlyDic
 
     public FLevelSequenceObjectReferenceMap(FArchive Ar)
     {
-        Map = Ar.ReadMap(Ar.Read<FGuid>, () => new FLevelSequenceLegacyObjectReference(Ar));
+        Map = Ar.ReadMap(() => Ar.Read<FGuid>(), () => new FLevelSequenceLegacyObjectReference(Ar));
     }
 
     public FLevelSequenceLegacyObjectReference this[FGuid key] => Map[key];

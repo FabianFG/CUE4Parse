@@ -10,6 +10,6 @@ public class LODMapping
     public LODMapping(FArchiveBigEndian Ar)
     {
         LODs = Ar.ReadArray<ushort>();
-        Indices = Ar.ReadArray(Ar.ReadArray<ushort>);
+        Indices = Ar.ReadArray(() => Ar.ReadArray<ushort>());
     }
 }

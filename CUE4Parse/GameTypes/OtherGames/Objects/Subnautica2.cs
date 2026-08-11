@@ -16,7 +16,7 @@ public struct FUWEWorldPopSpatialCell
 
 public class FUWEWorldPopSpatialLayer(FAssetArchive Ar) : IUStruct
 {
-    public Dictionary<long, FUWEWorldPopSpatialCell> CellMap = Ar.ReadMap(Ar.Read<long>, Ar.Read<FUWEWorldPopSpatialCell>);
+    public Dictionary<long, FUWEWorldPopSpatialCell> CellMap = Ar.ReadMap(() => Ar.Read<long>(), () => Ar.Read<FUWEWorldPopSpatialCell>());
 }
 
 public class AMercunaNavDataChunk : AActor

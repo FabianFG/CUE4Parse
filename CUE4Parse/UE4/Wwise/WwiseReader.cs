@@ -113,11 +113,11 @@ public class WwiseReader
                     break;
                 case EChunkID.BankInit:
                     LoadedSize += sectionLength;
-                    AKPluginList = Ar.ReadMap(Ar.Read<uint>, () => Ar.Version <= 136 ? Ar.ReadFString() : Ar.ReadStzString());
+                    AKPluginList = Ar.ReadMap(() => Ar.Read<uint>(), () => Ar.Version <= 136 ? Ar.ReadFString() : Ar.ReadStzString());
                     break;
                 case EChunkID.BankDataIndex:
                     LoadedSize += sectionLength;
-                    WemIndexes = Ar.ReadArray(sectionLength / 12, Ar.Read<MediaHeader>);
+                    WemIndexes = Ar.ReadArray(sectionLength / 12, () => Ar.Read<MediaHeader>());
                     break;
                 case EChunkID.BankData:
                     if (WemIndexes == null)
@@ -147,8 +147,8 @@ public class WwiseReader
                     break;
                 case EChunkID.BankStrMap:
                     LoadedSize += sectionLength;
-                    Ar.Position += 4; //var type = Ar.Read<AKBKStringType>;
-                    BankIDToFileName = Ar.ReadMap(Ar.Read<uint>, Ar.ReadString);
+                    Ar.Position += 4; //var type = () => Ar.Read<AKBKStringType>();
+                    BankIDToFileName = Ar.ReadMap(() => Ar.Read<uint>(), Ar.ReadString);
                     break;
                 case EChunkID.BankStateMg:
                     if (Ar.IsSupported()) // Let's guard this just in case

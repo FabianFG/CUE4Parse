@@ -27,6 +27,6 @@ public class FRuntimeSkinWeightProfileData
             NumWeightsPerVertex = Ar.Read<byte>();
         }
 
-        VertexIndexToInfluenceOffset = Ar.ReadMap(Ar.Read<uint>, Ar.Read<uint>);
+        VertexIndexToInfluenceOffset = Ar.ReadMap(() => Ar.Read<uint>(), () => Ar.Read<uint>());
     }
 }

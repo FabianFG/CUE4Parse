@@ -24,7 +24,7 @@ public class USeqAct_Interp : UObject
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SEQACT_INTERP_SAVEACTORTRANSFORMS)
         {
-            SavedActorTransforms = Ar.ReadMap(() => new FPackageIndex(Ar), Ar.Read<FSavedTransform>);
+            SavedActorTransforms = Ar.ReadMap(() => new FPackageIndex(Ar), () => Ar.Read<FSavedTransform>());
         }
     }
 

@@ -42,7 +42,7 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             }
 
             if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
-            NumberlessNames = Ar.ReadArray(nums[0], Ar.Read<uint>);
+            NumberlessNames = Ar.ReadArray(nums[0], () => Ar.Read<uint>());
 
             if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             Names = Ar.ReadArray(nums[1], Ar.ReadFName);
@@ -59,10 +59,10 @@ namespace CUE4Parse.UE4.AssetRegistry.Objects
             }
 
             if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
-            AnsiStringOffsets = Ar.ReadArray(nums[5], Ar.Read<uint>);
+            AnsiStringOffsets = Ar.ReadArray(nums[5], () => Ar.Read<uint>());
 
             if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
-            WideStringOffsets = Ar.ReadArray(nums[6], Ar.Read<uint>);
+            WideStringOffsets = Ar.ReadArray(nums[6], () => Ar.Read<uint>());
 
             if (order == ELoadOrder.TextFirst) Ar.AlignPosInArchive();
             AnsiStrings = Ar.ReadBytes(nums[7]);

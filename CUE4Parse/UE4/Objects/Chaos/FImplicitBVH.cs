@@ -59,7 +59,7 @@ public class TBoundingVolumeHierarchy<OBJECT_ARRAY, LEAF_TYPE, T> where T: struc
         MMaxLevels = Ar.Read<int>();
 
         Elements = Ar.ReadArray(() => new TBVHNode<T>(Ar, d));
-        Leafs = Ar.ReadArray(Ar.ReadArray<LEAF_TYPE>);
+        Leafs = Ar.ReadArray(() => Ar.ReadArray<LEAF_TYPE>());
     }
 }
 

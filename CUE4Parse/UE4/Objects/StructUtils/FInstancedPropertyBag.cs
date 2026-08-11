@@ -156,6 +156,6 @@ public struct FPropertyBagContainerTypes
 
     public FPropertyBagContainerTypes(FAssetArchive Ar)
     {
-        Types = Ar.ReadArray(Ar.Read<byte>(), Ar.Read<EPropertyBagContainerType>);
+        Types = Ar.ReadArray(Ar.Read<byte>(), () => Ar.Read<EPropertyBagContainerType>());
     }
 }

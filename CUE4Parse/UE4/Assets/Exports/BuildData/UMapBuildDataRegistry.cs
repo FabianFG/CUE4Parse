@@ -30,20 +30,20 @@ public class UMapBuildDataRegistry : UObject
 
         if (!stripFlags.IsAudioVisualDataStripped())
         {
-            MeshBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FMeshMapBuildData(Ar));
-            LevelPrecomputedLightVolumeBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FPrecomputedLightVolumeData(Ar));
+            MeshBuildData = Ar.ReadMap(() => Ar.Read<FGuid>(), () => new FMeshMapBuildData(Ar));
+            LevelPrecomputedLightVolumeBuildData = Ar.ReadMap(() => Ar.Read<FGuid>(), () => new FPrecomputedLightVolumeData(Ar));
 
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.VolumetricLightmaps)
             {
-                LevelPrecomputedVolumetricLightmapBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FPrecomputedVolumetricLightmapData(Ar));
+                LevelPrecomputedVolumetricLightmapBuildData = Ar.ReadMap(() => Ar.Read<FGuid>(), () => new FPrecomputedVolumetricLightmapData(Ar));
             }
 
-            LightBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FLightComponentMapBuildData(Ar));
+            LightBuildData = Ar.ReadMap(() => Ar.Read<FGuid>(), () => new FLightComponentMapBuildData(Ar));
             if (FReflectionCaptureObjectVersion.Get(Ar) >= FReflectionCaptureObjectVersion.Type.MoveReflectionCaptureDataToMapBuildData)
             {
                 if (Ar.Game is GAME_TheFirstDescendant) return;
                 if (Ar.Game is GAME_SilverPalace) Ar.SkipFixedArray(17);
-                ReflectionCaptureBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FReflectionCaptureMapBuildData(Ar));
+                ReflectionCaptureBuildData = Ar.ReadMap(() => Ar.Read<FGuid>(), () => new FReflectionCaptureMapBuildData(Ar));
             }
 
             if (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) return;
@@ -56,7 +56,7 @@ public class UMapBuildDataRegistry : UObject
 
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.SkyAtmosphereStaticLightingVersioning)
             {
-                SkyAtmosphereBuildData = Ar.ReadMap(Ar.Read<FGuid>, () => new FSkyAtmosphereMapBuildData(Ar));
+                SkyAtmosphereBuildData = Ar.ReadMap(() => Ar.Read<FGuid>(), () => new FSkyAtmosphereMapBuildData(Ar));
             }
 
             if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.VolumetricLightMapGridDescSupport)

@@ -22,13 +22,13 @@ public class FSmartNameMapping
         {
             if (frwAniVer < FAnimPhysObjectVersion.Type.SmartNameRefactorForDeterministicCooking)
             {
-                GuidMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<FGuid>);
+                GuidMap = Ar.ReadMap(Ar.ReadFName, () => Ar.Read<FGuid>());
             }
         }
         else if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_ADD_SMARTNAMES)
         {
             Ar.Read<ushort>();
-            UidMap = Ar.ReadMap(Ar.Read<ushort>, Ar.ReadFName);
+            UidMap = Ar.ReadMap(() => Ar.Read<ushort>(), Ar.ReadFName);
         }
 
         if (frwObjVer >= FFrameworkObjectVersion.Type.MoveCurveTypesToSkeleton)

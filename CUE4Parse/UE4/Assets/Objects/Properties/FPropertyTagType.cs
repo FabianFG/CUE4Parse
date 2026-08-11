@@ -81,7 +81,14 @@ public abstract class FPropertyTagType
                 var search = storedEnum.SubstringAfter("::"); // Strip enum name on namespaced and enum class enums
                 var values = type.GetEnumNames();
                 var idx = Array.FindIndex(values, it => it == search);
-                return idx == -1 ? null : type.GetEnumValues().GetValue(idx);
+                if (idx == -1) return null;
+                // Type.GetEnumValues() builds an array of the enum type itself, which under
+                // NativeAOT throws unless ILC happened to generate that array type - rooting
+                // the assembly keeps the enum but not EFoo[]. Going through the underlying
+                // primitive sidesteps it: int[]/byte[] always have native code, and
+                // Enum.ToObject boxes back to the enum without needing its array type.
+                var underlying = Enum.GetValuesAsUnderlyingType(type).GetValue(idx);
+                return underlying is null ? null : Enum.ToObject(type, underlying);
             //TODO There are also Enums stored as ByteProperty but UModel uses them nowhere besides in UE2
             case FPropertyTagType<UScriptMap> mapProp when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>):
                 return CreateDictionary(type, mapProp.Value!.Properties);

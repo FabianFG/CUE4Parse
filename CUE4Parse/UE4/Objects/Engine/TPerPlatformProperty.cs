@@ -31,23 +31,28 @@ public class FPerPlatformBool : TPerPlatformProperty<bool>
     public FPerPlatformBool(FAssetArchive Ar) : base(Ar, Ar.ReadBoolean) { }
 }
 
+// Read<T> is a generic virtual method. Passing it as a method group (Ar.Read<FFrameRate>)
+// builds the delegate through runtime GVM resolution, which NativeAOT cannot do for an
+// instantiation it never generated - and it FailFasts the process rather than throwing.
+// Wrapping the call in a lambda makes the instantiation a static call site that ILC sees
+// and generates, which costs nothing under JIT.
 public class FPerPlatformFloat : TPerPlatformProperty<float>
 {
     public FPerPlatformFloat() { }
     public FPerPlatformFloat(float value) { Default = value; }
-    public FPerPlatformFloat(FAssetArchive Ar) : base(Ar, Ar.Read<float>) { }
+    public FPerPlatformFloat(FAssetArchive Ar) : base(Ar, () => Ar.Read<float>()) { }
 }
 
 public class FPerPlatformInt : TPerPlatformProperty<int>
 {
     public FPerPlatformInt() { }
-    public FPerPlatformInt(FAssetArchive Ar) : base(Ar, Ar.Read<int>) { }
+    public FPerPlatformInt(FAssetArchive Ar) : base(Ar, () => Ar.Read<int>()) { }
 }
 
 public class FPerPlatformFrameRate : TPerPlatformProperty<FFrameRate>
 {
     public FPerPlatformFrameRate() { }
-    public FPerPlatformFrameRate(FAssetArchive Ar) : base(Ar, Ar.Read<FFrameRate>) { }
+    public FPerPlatformFrameRate(FAssetArchive Ar) : base(Ar, () => Ar.Read<FFrameRate>()) { }
 }
 
 public class FPerPlatformFString : TPerPlatformProperty<string>

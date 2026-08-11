@@ -35,7 +35,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
             }
 
             Ar.SkipFixedArray(4);
-            PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
+            PerInstanceSMCustomData = Ar.ReadBulkArray(() => Ar.Read<float>());
             Ar.Position += Ar.Read<long>()+8;
             PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
             return;
@@ -99,7 +99,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
 
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.PerInstanceCustomData || Ar.Game == GAME_DeltaForce)
             {
-                PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
+                PerInstanceSMCustomData = Ar.ReadBulkArray(() => Ar.Read<float>());
             }
         }
 

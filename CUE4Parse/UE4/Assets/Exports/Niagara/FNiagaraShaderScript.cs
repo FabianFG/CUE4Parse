@@ -19,7 +19,7 @@ public class FNiagaraShaderScript
         NumPermutations = Ar.Read<int>();
         if (Ar.Game is >= GAME_UE4_26 and < GAME_UE5_0)
         {
-            ShaderStageToPermutation = Ar.ReadMap(Ar.Read<int>, Ar.Read<int>);
+            ShaderStageToPermutation = Ar.ReadMap(() => Ar.Read<int>(), () => Ar.Read<int>());
         }
         if (Ar.Game >= GAME_UE5_2 || Ar.Game is GAME_DuetNightAbyss or GAME_HonorofKingsWorld)
         {

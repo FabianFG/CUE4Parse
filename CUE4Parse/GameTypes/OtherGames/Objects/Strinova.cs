@@ -10,6 +10,6 @@ public abstract class TEveryPlatformProperty<T>(FAssetArchive Ar, Func<T> getter
     public Dictionary<FName, T> PlatformOverrides = Ar.ReadMap(Ar.ReadFName, getter);
 }
 
-public class FEveryPlatformFloat(FAssetArchive Ar) : TEveryPlatformProperty<float>(Ar, Ar.Read<float>);
+public class FEveryPlatformFloat(FAssetArchive Ar) : TEveryPlatformProperty<float>(Ar, () => Ar.Read<float>());
 public class FEveryPlatformBool(FAssetArchive Ar) : TEveryPlatformProperty<bool>(Ar, Ar.ReadBoolean);
-public class FEveryPlatformInt(FAssetArchive Ar) : TEveryPlatformProperty<int>(Ar, Ar.Read<int>);
+public class FEveryPlatformInt(FAssetArchive Ar) : TEveryPlatformProperty<int>(Ar, () => Ar.Read<int>());

@@ -196,7 +196,7 @@ public partial class PakFileReader
         if (total < fileCount)
         {
             var regex = new Regex(@"^(0|[1-9]\d*)$");
-            var pathHashIndex = directoryIndex.ReadMap(directoryIndex.Read<ulong>, directoryIndex.Read<int>);
+            var pathHashIndex = directoryIndex.ReadMap(() => directoryIndex.Read<ulong>(), () => directoryIndex.Read<int>());
             var used = new HashSet<ulong>();
 
             void FindPayload(GenericBufferReader Ar, string path, string extension, bool warning = false)

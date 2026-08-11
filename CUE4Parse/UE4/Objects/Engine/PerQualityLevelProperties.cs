@@ -14,7 +14,7 @@ public class FPerQualityLevelProperty<T> : IUStruct where T : struct
     {
         bCooked = Ar.ReadBoolean();
         Default = Ar.Read<T>();
-        PerQuality = Ar.ReadMap(Ar.Read<int>, Ar.Read<T>);
+        PerQuality = Ar.ReadMap(() => Ar.Read<int>(), () => Ar.Read<T>());
     }
 }
 

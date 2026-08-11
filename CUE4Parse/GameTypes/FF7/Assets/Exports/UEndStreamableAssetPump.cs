@@ -12,7 +12,7 @@ public struct FF7AssetPumpStruct1
 
 public struct FF7AssetPumpStruct2(FMemoryMappedImageArchive Ar)
 {
-    public byte[][] idk = Ar.ReadArray(Ar.ReadArray<byte>, 1);
+    public byte[][] idk = Ar.ReadArray(() => Ar.ReadArray<byte>(), 1);
     public int Type = Ar.Read<int>();
 }
 

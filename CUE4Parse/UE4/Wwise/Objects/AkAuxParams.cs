@@ -41,7 +41,7 @@ public readonly struct AkAuxParams
 
         if (hasAux)
         {
-            AuxIds = Ar.ReadArray(4, Ar.Read<uint>);
+            AuxIds = Ar.ReadArray(4, () => Ar.Read<uint>());
         }
 
         if (Ar.Version > 134)

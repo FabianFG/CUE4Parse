@@ -18,9 +18,9 @@ public class ULionAnimSequenceAssetUserData : UAssetUserData
     {
         base.Deserialize(Ar, validPos);
         Data = Ar.ReadMap(Ar.ReadFName,
-            () => Ar.ReadMap(Ar.Read<Fixed64>,
+            () => Ar.ReadMap(() => Ar.Read<Fixed64>(),
                 () => new FTransform(Ar.Read<FixedQuaternion>(), Ar.Read<Vector3d>(), Ar.Read<Vector3d>())));
-        Vectors = Ar.ReadMap(Ar.Read<Fixed64>, () => (FVector)Ar.Read<Vector3d>());
+        Vectors = Ar.ReadMap(() => Ar.Read<Fixed64>(), () => (FVector)Ar.Read<Vector3d>());
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

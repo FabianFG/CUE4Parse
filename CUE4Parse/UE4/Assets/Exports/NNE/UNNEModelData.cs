@@ -32,7 +32,7 @@ public class UNNEModelData : UObject
                 FileType = Ar.ReadFString();
                 FileData = Ar.ReadArray<byte>();
                 FileId = Ar.Read<FGuid>();
-                ModelData = Ar.ReadMap(Ar.ReadFString, Ar.ReadArray<byte>);
+                ModelData = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadArray<byte>());
                 break;
             case NNEModelDataVersion.Type.V2:
                 TargetRuntimes = Ar.ReadArray(Ar.ReadFString);
@@ -53,7 +53,7 @@ public class UNNEModelData : UObject
                 TargetRuntimes = Ar.ReadArray(Ar.ReadFString);
                 FileType = Ar.ReadFString();
                 FileData = Ar.ReadArray<byte>();
-                AdditionalFileData = Ar.ReadMap(Ar.ReadFString, Ar.ReadArray<byte>);
+                AdditionalFileData = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadArray<byte>());
                 FileId = Ar.Read<FGuid>();
                 numItems = Ar.Read<int>();
                 ModelData = [];

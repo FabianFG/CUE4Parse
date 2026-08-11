@@ -56,12 +56,12 @@ public class FRocoAudioConfig
 
     public FRocoAudioConfig(FArchive Ar, FArchive descAr, FArchive typeDescAr)
     {
-        var typeDescTable = typeDescAr.ReadMap(typeDescAr.Read<byte>, () => typeDescAr.Read<byte>() != 0);
-        var descTable = descAr.ReadMap(descAr.Read<int>, descAr.ReadFString);
+        var typeDescTable = typeDescAr.ReadMap(() => typeDescAr.Read<byte>(), () => typeDescAr.Read<byte>() != 0);
+        var descTable = descAr.ReadMap(() => descAr.Read<int>(), descAr.ReadFString);
 
         Entries = Ar.ReadArray(() => new FAudioEntry(Ar, descTable, typeDescTable));
         EventEntries = Ar.ReadArray(() => new FAudioEventEntry(Ar));
-        SurfaceTypes = Ar.ReadMap(Ar.Read<uint>, Ar.ReadFString);
-        MaterialTypes = Ar.ReadMap(Ar.Read<uint>, Ar.ReadFString);
+        SurfaceTypes = Ar.ReadMap(() => Ar.Read<uint>(), Ar.ReadFString);
+        MaterialTypes = Ar.ReadMap(() => Ar.Read<uint>(), Ar.ReadFString);
     }
 }

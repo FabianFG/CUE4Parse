@@ -39,7 +39,7 @@ public abstract class FPCGMetadataAttributeBase
 
     public FPCGMetadataAttributeBase(FAssetArchive Ar)
     {
-        EntryToValueKeyMap = Ar.ReadMap(Ar.Read<long>, Ar.Read<int>);
+        EntryToValueKeyMap = Ar.ReadMap(() => Ar.Read<long>(), () => Ar.Read<int>());
         ParentAttributeId = Ar.Read<int>();
         Name = Ar.ReadFName();
         AttributeId = Ar.Read<int>();
@@ -50,10 +50,10 @@ public abstract class FPCGMetadataAttributeBase
         var attributeTypeId = Ar.Read<int>();
         FPCGMetadataAttributeBase attribute = attributeTypeId switch
         {
-            0 => new FPCGMetadataAttribute<float>(Ar, Ar.Read<float>),
-            1 => new FPCGMetadataAttribute<double>(Ar, Ar.Read<double>),
-            2 => new FPCGMetadataAttribute<int>(Ar, Ar.Read<int>),
-            3 => new FPCGMetadataAttribute<long>(Ar, Ar.Read<long>),
+            0 => new FPCGMetadataAttribute<float>(Ar, () => Ar.Read<float>()),
+            1 => new FPCGMetadataAttribute<double>(Ar, () => Ar.Read<double>()),
+            2 => new FPCGMetadataAttribute<int>(Ar, () => Ar.Read<int>()),
+            3 => new FPCGMetadataAttribute<long>(Ar, () => Ar.Read<long>()),
             4 => new FPCGMetadataAttribute<FVector2D>(Ar, () => new FVector2D(Ar)),
             5 => new FPCGMetadataAttribute<FVector>(Ar, () => new FVector(Ar)),
             6 => new FPCGMetadataAttribute<FVector4>(Ar, () => new FVector4(Ar)),

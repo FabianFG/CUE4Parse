@@ -11,7 +11,7 @@ public class FTslSomeSKStruct : IUStruct
     public FTslSomeSKStruct(FAssetArchive Ar)
     {
         SomeBoneStructs = Ar.ReadArray(() =>
-            Ar.ReadArray(() => Ar.ReadMap(Ar.Read<FTslSomeBoneStruct>, Ar.Read<FTslSomeBoneStruct>)));
+            Ar.ReadArray(() => Ar.ReadMap(() => Ar.Read<FTslSomeBoneStruct>(), () => Ar.Read<FTslSomeBoneStruct>())));
     }
 }
 

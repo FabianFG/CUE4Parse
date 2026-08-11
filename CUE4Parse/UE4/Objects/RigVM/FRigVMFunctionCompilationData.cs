@@ -36,11 +36,11 @@ public class FRigVMFunctionCompilationData
         ExternalPropertyDescriptions = Ar.ReadArray(() => new FRigVMFunctionCompilationPropertyDescription(Ar));
         ExternalPropertyPathDescriptions = Ar.ReadArray(() => new FRigVMFunctionCompilationPropertyPath(Ar));
 
-        ExternalRegisterIndexToVariable = Ar.ReadMap(Ar.Read<int>, Ar.ReadFName);
-        Operands = Ar.ReadMap(Ar.ReadFString, Ar.Read<FRigVMOperand>);
+        ExternalRegisterIndexToVariable = Ar.ReadMap(() => Ar.Read<int>(), Ar.ReadFName);
+        Operands = Ar.ReadMap(Ar.ReadFString, () => Ar.Read<FRigVMOperand>());
         if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.RigVMCallables)
         {
-            InterfaceOperands = Ar.ReadMap(Ar.ReadFName, Ar.Read<FRigVMOperand>);
+            InterfaceOperands = Ar.ReadMap(Ar.ReadFName, () => Ar.Read<FRigVMOperand>());
         }
         Hash = Ar.Read<uint>();
         bEncounteredSurpressedErrors = false;
@@ -49,6 +49,6 @@ public class FRigVMFunctionCompilationData
             FFortniteMainBranchObjectVersion.Get(Ar) < FFortniteMainBranchObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData)
             return;
         if (FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.DebugOperandMappingSimplified)
-            OperandToDebugRegisters = Ar.ReadMap(Ar.Read<byte>(), Ar.Read<FRigVMOperand>, () => Ar.ReadArray(Ar.Read<byte>(), Ar.Read<FRigVMOperand>));
+            OperandToDebugRegisters = Ar.ReadMap(Ar.Read<byte>(), () => Ar.Read<FRigVMOperand>(), () => Ar.ReadArray(Ar.Read<byte>(), () => Ar.Read<FRigVMOperand>()));
     }
 }

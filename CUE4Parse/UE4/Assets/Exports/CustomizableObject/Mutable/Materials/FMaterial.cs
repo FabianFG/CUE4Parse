@@ -15,7 +15,7 @@ public class FMaterial
     {
         ReferenceID = Ar.Game < GAME_UE5_8 ? Ar.Read<int>() : -1;
         ImageParameters = Ar.ReadMap(() => new FParameterKey(Ar), () => new FImageParameterData(Ar));
-        ColorParameters = Ar.ReadMap(() => new FParameterKey(Ar), Ar.Read<FVector4>);
-        ScalarParameters = Ar.ReadMap(() => new FParameterKey(Ar), Ar.Read<float>);
+        ColorParameters = Ar.ReadMap(() => new FParameterKey(Ar), () => Ar.Read<FVector4>());
+        ScalarParameters = Ar.ReadMap(() => new FParameterKey(Ar), () => Ar.Read<float>());
     }
 }

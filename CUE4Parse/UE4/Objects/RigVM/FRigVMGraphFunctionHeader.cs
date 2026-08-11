@@ -44,7 +44,7 @@ public class FRigVMGraphFunctionHeader
         Category = Ar.ReadFString();
         Keywords = Ar.ReadFString();
         Arguments = Ar.ReadArray(() => new FRigVMGraphFunctionArgument(Ar));
-        Dependencies = Ar.ReadMap(() => new FRigVMGraphFunctionIdentifier(Ar), Ar.Read<uint>);
+        Dependencies = Ar.ReadMap(() => new FRigVMGraphFunctionIdentifier(Ar), () => Ar.Read<uint>());
         ExternalVariables = Ar.ReadArray(() => new FRigVMExternalVariable(Ar));
 
         if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.FunctionHeaderStoresLayout)

@@ -5,5 +5,5 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation.PoseSearch;
 
 public class FEventData(FAssetArchive Ar)
 {
-    public Dictionary<FGameplayTag, int[]> Data = Ar.ReadMap(() => new FGameplayTag(Ar), Ar.ReadArray<int>);
+    public Dictionary<FGameplayTag, int[]> Data = Ar.ReadMap(() => new FGameplayTag(Ar), () => Ar.ReadArray<int>());
 }

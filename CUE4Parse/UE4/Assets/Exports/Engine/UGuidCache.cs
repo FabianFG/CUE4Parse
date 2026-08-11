@@ -12,7 +12,7 @@ public class UGuidCache : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        PackageGuidMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<FGuid>);
+        PackageGuidMap = Ar.ReadMap(Ar.ReadFName, () => Ar.Read<FGuid>());
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

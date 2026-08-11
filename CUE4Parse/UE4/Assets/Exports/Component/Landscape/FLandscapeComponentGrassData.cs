@@ -21,7 +21,7 @@ public class FLandscapeComponentGrassData
         if (Ar.Game >= GAME_UE5_8)
         {
             NumElements = Ar.Read<int>();
-            WeightOffsetsNew = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
+            WeightOffsetsNew = Ar.ReadMap(Ar.ReadFName, () => Ar.Read<int>());
             HeightWeightData = Ar.ReadArray<byte>();
             foreach (var kvp in WeightOffsetsNew)
             {
@@ -39,7 +39,7 @@ public class FLandscapeComponentGrassData
         else if (Ar.Game >= GAME_UE5_0)
         {
             NumElements = Ar.Read<int>();
-            WeightOffsets = Ar.ReadMap(() => new FPackageIndex(Ar), Ar.Read<int>);
+            WeightOffsets = Ar.ReadMap(() => new FPackageIndex(Ar), () => Ar.Read<int>());
             HeightWeightData = Ar.ReadArray<byte>();
         }
         else
@@ -78,7 +78,7 @@ public class FLandscapeComponentGrassData
             }
 
             HeightData = Ar.ReadBulkArray<ushort>();
-            WeightData = Ar.ReadMap(() => new FPackageIndex(Ar), Ar.ReadArray<byte>);
+            WeightData = Ar.ReadMap(() => new FPackageIndex(Ar), () => Ar.ReadArray<byte>());
         }
     }
 }

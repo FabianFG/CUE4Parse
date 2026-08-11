@@ -15,8 +15,8 @@ public class UConstantQNRT : UObject
         base.Deserialize(Ar, validPos);
         DurationInSeconds = Ar.Read<float>();
         bIsSortedChronologically = Ar.ReadBoolean();
-        ChannelCQTFrames = Ar.ReadMap(Ar.Read<int>, () => Ar.ReadArray(() => new FConstantQFrame(Ar)));
-        ChannelCQTIntervals = Ar.ReadMap(Ar.Read<int>, Ar.Read<FFloatInterval>);
+        ChannelCQTFrames = Ar.ReadMap(() => Ar.Read<int>(), () => Ar.ReadArray(() => new FConstantQFrame(Ar)));
+        ChannelCQTIntervals = Ar.ReadMap(() => Ar.Read<int>(), () => Ar.Read<FFloatInterval>());
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

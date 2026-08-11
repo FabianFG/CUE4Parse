@@ -30,5 +30,5 @@ public sealed class TBox<T> : FImplicitObject where T : struct
         }
     }
 
-    public static Dictionary<int, TAABB<T>> SerializeAsAABBs(FChaosArchive Ar, int dimensions) => Ar.ReadMap(Ar.Read<int>, () => SerializeAsAABB(Ar, dimensions));
+    public static Dictionary<int, TAABB<T>> SerializeAsAABBs(FChaosArchive Ar, int dimensions) => Ar.ReadMap(() => Ar.Read<int>(), () => SerializeAsAABB(Ar, dimensions));
 }

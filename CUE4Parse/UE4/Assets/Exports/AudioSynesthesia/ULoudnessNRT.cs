@@ -16,8 +16,8 @@ public class ULoudnessNRT : UObject
         base.Deserialize(Ar, validPos);
         DurationInSeconds = Ar.Read<float>();
         bIsSortedChronologically = Ar.ReadBoolean();
-        ChannelLoudnessArrays = Ar.ReadMap(Ar.Read<int>, Ar.ReadArray<FLoudnessDatum>);
-        ChannelLoudnessIntervals = Ar.ReadMap(Ar.Read<int>, Ar.Read<FFloatInterval>);
+        ChannelLoudnessArrays = Ar.ReadMap(() => Ar.Read<int>(), () => Ar.ReadArray<FLoudnessDatum>());
+        ChannelLoudnessIntervals = Ar.ReadMap(() => Ar.Read<int>(), () => Ar.Read<FFloatInterval>());
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

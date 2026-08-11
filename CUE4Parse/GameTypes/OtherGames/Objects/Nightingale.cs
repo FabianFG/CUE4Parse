@@ -54,8 +54,8 @@ public class AffinityTable : UObject
             }
         }
 
-        Rows = Ar.ReadMap(Ar.ReadFName, Ar.Read<FVector4>);
-        Columns = Ar.ReadMap(Ar.ReadFName, Ar.Read<FVector4>);
+        Rows = Ar.ReadMap(Ar.ReadFName, () => Ar.Read<FVector4>());
+        Columns = Ar.ReadMap(Ar.ReadFName, () => Ar.Read<FVector4>());
 
         Tags = Ar.ReadMap(Ar.ReadFName, () => Ar.ReadMap(Ar.ReadFString, () => (Ar.ReadFName(), Ar.ReadFName())));
     }

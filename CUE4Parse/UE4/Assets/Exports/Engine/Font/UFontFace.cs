@@ -56,7 +56,7 @@ public class FFontFaceData
 public class FPreprocessedFontGeometry(FArchive Ar)
 {
     public bool GlobalWindingReversal = Ar.ReadBoolean();
-    public Dictionary<int, FGlyphHeader> Glyphs = Ar.ReadMap(Ar.Read<int>, Ar.Read<FGlyphHeader>);
+    public Dictionary<int, FGlyphHeader> Glyphs = Ar.ReadMap(() => Ar.Read<int>(), () => Ar.Read<FGlyphHeader>());
     public byte[] ContourData = Ar.ReadArray<byte>();
     public short[] CoordinateData = Ar.ReadArray<short>();
 }

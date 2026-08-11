@@ -10,6 +10,6 @@ public class RawMeshRegionMembership
     public RawMeshRegionMembership(FArchiveBigEndian Ar)
     {
         RegionNames = Ar.ReadArray(() => Ar.ReadArray(Ar.ReadString));
-        Indices = Ar.ReadArray(() => Ar.ReadArray(Ar.ReadArray<ushort>));
+        Indices = Ar.ReadArray(() => Ar.ReadArray(() => Ar.ReadArray<ushort>()));
     }
 }

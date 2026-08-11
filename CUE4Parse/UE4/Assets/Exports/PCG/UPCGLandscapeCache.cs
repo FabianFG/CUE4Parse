@@ -17,7 +17,7 @@ public class UPCGLandscapeCache : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        CachedData = Ar.ReadMap(Ar.Read<CacheMapKey>, () => new FPCGLandscapeCacheEntry(Ar));
+        CachedData = Ar.ReadMap(() => Ar.Read<CacheMapKey>(), () => new FPCGLandscapeCacheEntry(Ar));
     }
 
     override protected internal void WriteJson(JsonWriter writer, JsonSerializer serializer)

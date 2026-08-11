@@ -55,7 +55,7 @@ public class URigVM : Assets.Exports.UObject
                 if (FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData
                     || FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData)
                 {
-                    OperandToDebugRegisters = Ar.ReadMap(Ar.Read<FRigVMOperand>, () => Ar.ReadArray(Ar.Read<FRigVMOperand>));
+                    OperandToDebugRegisters = Ar.ReadMap(() => Ar.Read<FRigVMOperand>(), () => Ar.ReadArray(() => Ar.Read<FRigVMOperand>()));
                 }
 
                 if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.VMStoringUserDefinedStructMap
@@ -88,7 +88,7 @@ public class URigVM : Assets.Exports.UObject
             FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.RigVMSaveDebugMapInGraphFunctionData)
         {
             if (FRigVMObjectVersion.Get(Ar) < FRigVMObjectVersion.Type.DebugOperandMappingSimplified)
-                OperandToDebugRegisters = Ar.ReadMap(Ar.Read<FRigVMOperand>, () => Ar.ReadArray(Ar.Read<FRigVMOperand>));
+                OperandToDebugRegisters = Ar.ReadMap(() => Ar.Read<FRigVMOperand>(), () => Ar.ReadArray(() => Ar.Read<FRigVMOperand>()));
         }
 
         if (FRigVMObjectVersion.Get(Ar) >= FRigVMObjectVersion.Type.VMStoringUserDefinedStructMap &&

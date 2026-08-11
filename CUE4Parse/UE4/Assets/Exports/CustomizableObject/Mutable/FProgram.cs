@@ -118,7 +118,7 @@ public class FProgram
             if (Ar.Game < GAME_UE5_7) ConstantPhysicsBodies = Ar.ReadPtrArray(() => new FPhysicsBody(Ar));
             Parameters = Ar.ReadArray(() => new FParameterDesc(Ar));
             Ranges = Ar.ReadArray(() => new FRangeDesc(Ar));
-            ParameterLists = Ar.ReadArray(Ar.ReadArray<ushort>);
+            ParameterLists = Ar.ReadArray(() => Ar.ReadArray<ushort>());
             return;
         }
         else
@@ -149,16 +149,16 @@ public class FProgram
         ConstantStrings = Ar.Game >= GAME_UE5_4 ? Ar.ReadArray(Ar.ReadFString) : Ar.ReadArray(Ar.ReadString);
         if (Ar.Game >= GAME_UE5_8)
         {
-            ConstantUInt32Lists = Ar.ReadArray(Ar.ReadArray<uint>);
-            ConstantInt32Lists = Ar.ReadArray(Ar.ReadArray<int>);
-            ConstantUInt64Lists = Ar.ReadArray(Ar.ReadArray<ulong>);
-            ConstantFloatLists = Ar.ReadArray(Ar.ReadArray<float>);
+            ConstantUInt32Lists = Ar.ReadArray(() => Ar.ReadArray<uint>());
+            ConstantInt32Lists = Ar.ReadArray(() => Ar.ReadArray<int>());
+            ConstantUInt64Lists = Ar.ReadArray(() => Ar.ReadArray<ulong>());
+            ConstantFloatLists = Ar.ReadArray(() => Ar.ReadArray<float>());
             ConstantBoolLists = Ar.ReadArray(() => Ar.ReadArray(Ar.ReadFlag));
         }
         else if (Ar.Game >= GAME_UE5_7)
         {
-            ConstantUInt32Lists = Ar.ReadArray(Ar.ReadArray<uint>);
-            ConstantUInt64Lists = Ar.ReadArray(Ar.ReadArray<ulong>);
+            ConstantUInt32Lists = Ar.ReadArray(() => Ar.ReadArray<uint>());
+            ConstantUInt64Lists = Ar.ReadArray(() => Ar.ReadArray<ulong>());
         }
         ConstantLayouts = Ar.ReadPtrArray(() => new FLayout(Ar));
         ConstantProjectors = Ar.ReadArray<FProjector>();
@@ -176,13 +176,13 @@ public class FProgram
         if (Ar.Game < GAME_UE5_7) ConstantPhysicsBodies = Ar.ReadPtrArray(() => new FPhysicsBody(Ar));
         Parameters = Ar.ReadArray(() => new FParameterDesc(Ar));
         Ranges = Ar.ReadArray(() => new FRangeDesc(Ar));
-        ParameterLists = Ar.ReadArray(Ar.ReadArray<ushort>);
-        if (Ar.Game >= GAME_UE5_8) RelevantParameterList = Ar.ReadMap(Ar.Read<uint>, Ar.Read<int>);
+        ParameterLists = Ar.ReadArray(() => Ar.ReadArray<ushort>());
+        if (Ar.Game >= GAME_UE5_8) RelevantParameterList = Ar.ReadMap(() => Ar.Read<uint>(), () => Ar.Read<int>());
         if (Ar.Game >= GAME_UE5_7) ConstantMaterials = Ar.ReadPtrArray(() => new FMaterial(Ar));
         if (Ar.Game >= GAME_UE5_8)
         {
-            ConstantNames = Ar.ReadMap(Ar.Read<uint>, Ar.ReadFName);
-            ConstantSockets = Ar.ReadMap(Ar.Read<uint>, () => new FMeshSocket(Ar));
+            ConstantNames = Ar.ReadMap(() => Ar.Read<uint>(), Ar.ReadFName);
+            ConstantSockets = Ar.ReadMap(() => Ar.Read<uint>(), () => new FMeshSocket(Ar));
         }
     }
 }

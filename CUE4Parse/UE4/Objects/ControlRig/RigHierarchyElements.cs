@@ -549,7 +549,7 @@ public struct FRigControlSettings
         FilteredChannels = [];
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.ControlTransformChannelFiltering)
         {
-            FilteredChannels = Ar.ReadArray(Ar.Read<ERigControlTransformChannel>);
+            FilteredChannels = Ar.ReadArray(() => Ar.Read<ERigControlTransformChannel>());
         }
 
         PreferredRotationOrder = EEulerRotationOrder.YZX;

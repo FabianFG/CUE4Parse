@@ -11,7 +11,7 @@ public readonly struct AkPropBundle(FWwiseArchive Ar)
     public static AkProp[] ReadSequentialAkProp(FWwiseArchive Ar)
     {
         int propCount = Ar.Read<byte>();
-        var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
+        var ids = Ar.ReadArray(propCount, () => Ar.Read<byte>());
 
         var props = new AkProp[propCount];
         for (int i = 0; i < propCount; i++)
@@ -23,7 +23,7 @@ public readonly struct AkPropBundle(FWwiseArchive Ar)
     public static AkPropRange[] ReadSequentialAkPropRange(FWwiseArchive Ar)
     {
         int propCount = Ar.Read<byte>();
-        var ids = Ar.ReadArray(propCount, Ar.Read<byte>);
+        var ids = Ar.ReadArray(propCount, () => Ar.Read<byte>());
 
         var ranges = new AkPropRange[propCount];
         for (int i = 0; i < propCount; i++)
