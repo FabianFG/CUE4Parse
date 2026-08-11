@@ -47,7 +47,7 @@ public class FModelElement
             LegacyMapBuildData = new FMeshMapBuildData();
             if (Ar.Ver < EUnrealEngineObjectUE3Version.LIGHTMAP_NON_UOBJECT)
             {
-                new FPackageIndex(Ar); // LightMap
+                Ar.Position += sizeof(int); // FPackageIndex - LightMap
             }
             else
             {

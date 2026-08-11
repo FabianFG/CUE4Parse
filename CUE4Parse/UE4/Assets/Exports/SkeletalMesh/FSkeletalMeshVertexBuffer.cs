@@ -34,7 +34,7 @@ public class FSkeletalMeshVertexBuffer
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.USE_FLOAT16_SKELETAL_MESH_UVS)
         {
-            Ar.ReadBulkArray(() => new FSoftVertex(Ar)); // LegacyVerts
+            Ar.ReadBulkArray(() => new FSoftVertex(Ar)); // LegacyVerts, TODO: skip
             return;
         }
 

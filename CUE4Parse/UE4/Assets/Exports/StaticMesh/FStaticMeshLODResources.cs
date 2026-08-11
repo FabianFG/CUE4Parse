@@ -227,7 +227,9 @@ public class FStaticMeshLODResources
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
-                new FStaticMeshShadowVolumeStream(Ar); // ShadowExtrusionVertexBuffer (FColorVertexBuffer but uses floats)
+                // FStaticMeshShadowVolumeStream - ShadowExtrusionVertexBuffer (FColorVertexBuffer but uses floats)
+                Ar.Position += sizeof(int); // int - Stride
+                if (Ar.Read<int>() > 0) Ar.SkipBulkArrayData(sizeof(float)); // NumVertices, VertexData
             }
 
             skipStreams:
@@ -235,17 +237,12 @@ public class FStaticMeshLODResources
         }
         else
         {
+            Ar.SkipArray<FQuat>();
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.USE_UMA_RESOURCE_ARRAY_MESH_DATA)
             {
-                Ar.ReadArray<FQuat>();
-                Ar.ReadArray<int>();
-                Ar.ReadArray(() => Ar.ReadArray(() => Ar.ReadBytes(8)));
+                Ar.SkipArray<int>();
             }
-            else
-            {
-                Ar.ReadArray<FQuat>();
-                Ar.ReadArray(() => Ar.ReadArray(() => Ar.ReadBytes(8)));
-            }
+            Ar.SkipArray(() => Ar.SkipFixedArray(8));
         }
 
         IndexBuffer = new FRawStaticIndexBuffer(Ar);
@@ -290,11 +287,11 @@ public class FStaticMeshLODResources
 
             if (!stripDataFlags.IsEditorDataStripped() && Ar.Game != GAME_APBReloaded)
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
-            
+
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
-                Ar.ReadBulkArray(() => Ar.ReadBytes(16)); // LegacyEdges
-                Ar.ReadArray<byte>(); // LegacyShadowTriangleDoubleSided
+                Ar.SkipBulkArrayData(16); // LegacyEdges
+                Ar.SkipArray<byte>(); // LegacyShadowTriangleDoubleSided
             }
 
             if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData) && Ar.Ver > EUnrealEngineObjectUE3Version.CRACK_FREE_DISPLACEMENT_SUPPORT)

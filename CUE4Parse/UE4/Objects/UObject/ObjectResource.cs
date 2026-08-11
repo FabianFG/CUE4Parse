@@ -250,7 +250,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag && Ar.Game < GAME_UE4_0)
             {
-                Ar.Read<ulong>(); // ObjectFlagsLegacy
+                Ar.Position += sizeof(ulong); // ulong - ObjectFlagsLegacy
             }
             else
             {

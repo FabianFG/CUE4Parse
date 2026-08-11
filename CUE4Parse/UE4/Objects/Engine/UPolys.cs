@@ -19,7 +19,7 @@ public class UPolys : Assets.Exports.UObject
             
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.SERIALIZE_TTRANSARRAY_OWNER)
             {
-                _ = new FPackageIndex(Ar);
+                Ar.Position += sizeof(int); // FPackageIndex
             }
 
             Element = Ar.ReadArray(dbNum, () => new FPoly(Ar));

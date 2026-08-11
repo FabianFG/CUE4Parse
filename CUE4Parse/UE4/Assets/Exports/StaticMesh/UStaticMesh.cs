@@ -44,7 +44,7 @@ public class UStaticMesh : UObject
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVE_STATICMESH_COLLISIONMODEL)
         {
-            new FPackageIndex(Ar); // CollisionModel;
+            Ar.Position += sizeof(int); // FPackageIndex - CollisionModel
         }
 
         if (Ar.Versions["StaticMesh.HasNavCollision"])
@@ -52,40 +52,26 @@ public class UStaticMesh : UObject
 
         if (Ar.Game < GAME_UE4_0)
         {
+            var bShortCollisionData = Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedShortProperties || Ar.Ver > EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE;
+
             if (Ar.Ver < EUnrealEngineObjectUE3Version.COMPACTKDOPSTATICMESH || Ar.Game == GAME_Dishonored)
             {
-                // hacky way to skip without defining struct, can't use skipbulkarray because of EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING
-                Ar.ReadBulkArray(() =>
-                {
-                    Ar.Position += 24 + 4;
-                    if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedShortProperties || Ar.Ver > EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE)
-                        Ar.Position += 4;
-                    else
-                        Ar.Position += 8;
-                    return (byte) 0;
-                });
+                Ar.SkipBulkArrayData(bShortCollisionData ? 24 + 4 + 4 : 24 + 4 + 8);
             }
             else
             {
                 Ar.Position += 24;
-                Ar.ReadBulkArray(() => Ar.ReadBytes(6)); // bound
+                Ar.SkipBulkArrayData(6); // bound
             }
 
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedShortProperties || Ar.Ver > EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE)
-            {
-                Ar.ReadBulkArray(() => Ar.ReadBytes(8)); // Collision Triangle
-            }
-            else
-            {
-                Ar.ReadBulkArray(() => Ar.ReadBytes(16)); // Collision Triangle
-            }
+            Ar.SkipBulkArrayData(bShortCollisionData ? 8 : 16); // Collision Triangle
 
             var InternalVersion = Ar.Read<int>();
             var STATICMESH_VERSION_CONTENT_TAGS = 17; // Content tags were introduced in SM version 17
 
             if (InternalVersion >= STATICMESH_VERSION_CONTENT_TAGS && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_LEGACY_CONTENT_TAGS)
             {
-                Ar.ReadArray(Ar.ReadFName); // ContentTags
+                Ar.SkipArray(Ar.SkipFName); // ContentTags
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATIC_MESH_SOURCE_DATA_COPY)
@@ -112,12 +98,12 @@ public class UStaticMesh : UObject
                     }
                 }
 
-                Ar.ReadBoolean(); // bHasBeenSimplified
+                Ar.Position += sizeof(int); // bool - bHasBeenSimplified
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.TAG_MESH_PROXIES)
             {
-                Ar.ReadBoolean(); // bIsMeshProxy
+                Ar.Position += sizeof(int); // bool - bIsMeshProxy
             }
 
             RenderData = new FStaticMeshRenderData(Ar);
@@ -129,7 +115,7 @@ public class UStaticMesh : UObject
                 Materials[i] = RenderData.LODs[0].Sections[i].Material!;
             }
 
-            Ar.Read<int>(); // LODInfo
+            Ar.Position += sizeof(int); // int - LODInfo
         }
 
         if (!stripDataFlags.IsEditorDataStripped())
@@ -167,23 +153,23 @@ public class UStaticMesh : UObject
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRESERVE_SMC_VERT_COLORS && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
         {
-            Ar.Read<int>(); // VertexPositionVersionNumber
+            Ar.Position += sizeof(int); // int - VertexPositionVersionNumber
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.DYNAMICTEXTUREINSTANCES && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_CACHED_STATIC_MESH_STREAMING_FACTORS)
         {
-            Ar.ReadArray<float>(); // CachedStreamingTextureFactors
+            Ar.SkipArray<float>(); // CachedStreamingTextureFactors
         }
 
         if (!stripDataFlags.IsEditorDataStripped() && Ar.Ver >= EUnrealEngineObjectUE3Version.KEEP_STATIC_MESH_DEGENERATES && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
         {
-            Ar.ReadBoolean(); // bRemoveDegenerates
+            Ar.Position += sizeof(int); // bool - bRemoveDegenerates
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.INSTANCED_STATIC_MESH_PER_LOD_STATIC_LIGHTING && Ar.Game < GAME_UE4_0)
         {
-            Ar.ReadBoolean(); // bPerLODStaticLightingForInstancing
-            Ar.Read<int>(); // ConsolePreallocateInstanceCount
+            Ar.Position += sizeof(int); // bool - bPerLODStaticLightingForInstancing
+            Ar.Position += sizeof(int); // int - ConsolePreallocateInstanceCount
         }
 
         if (Ar.Ver > EUnrealEngineObjectUE4Version.STATIC_MESH_SOCKETS)

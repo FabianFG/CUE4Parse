@@ -73,11 +73,11 @@ public class FSkelMeshSection
         if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedOldLodformat)
         {
             BaseIndex = Ar.Read<short>();
-            Ar.ReadArray<short>(6);
+            Ar.Position += sizeof(short) * 6;
             NumTriangles = Ar.Read<int>();
             if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecateSkelMeshArray)
             {
-                Ar.ReadArray<short>();
+                Ar.SkipArray<short>();
             }
             return;
         }
@@ -102,7 +102,7 @@ public class FSkelMeshSection
         {
             var bReadArray = Ar.ReadFlag();
 
-            if (bReadArray) Ar.ReadArray<byte>();
+            if (bReadArray) Ar.SkipArray<byte>();
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH)

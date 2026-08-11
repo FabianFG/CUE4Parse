@@ -49,16 +49,16 @@ public partial class USkeletalMesh : UObject
 
         if (Ar.Game == GAME_Dishonored && Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SCALES2)
         {
-            Ar.ReadFName(); // m_BoneName
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.OPTIMIZED_ANIMSEQ) Ar.Read<FVector>(); // m_Offset
-            Ar.Read<float>(); // m_fRadius
+            Ar.SkipFName(); // m_BoneName
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.OPTIMIZED_ANIMSEQ) Ar.Position += sizeof(float) * 3; // FVector - m_Offset
+            Ar.Position += sizeof(float); // float - m_fRadius
         }
 
         ImportedBounds = new FBoxSphereBounds(Ar);
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedPointer)
         {
-            new FPackageIndex(Ar);
+            Ar.Position += sizeof(int); // FPackageIndex
         }
 
         SkeletalMaterials = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
@@ -70,11 +70,11 @@ public partial class USkeletalMesh : UObject
 
         if (Ar.Game < GAME_UE4_0)
         {
-            Ar.Read<FVector>(); // MeshOrigin
-            Ar.Read<FRotator>(); // RotOrigin
+            Ar.Position += sizeof(float) * 3; // FVector - MeshOrigin
+            Ar.Position += sizeof(float) * 3; // FRotator - RotOrigin
             if (Ar.Game == GAME_Dishonored && Ar.Ver >= EUnrealEngineObjectUE3Version.FIXCLAMP_NON_TONEMAP)
             {
-                Ar.ReadArray<byte>();
+                Ar.SkipArray<byte>();
             }
         }
 
@@ -83,7 +83,7 @@ public partial class USkeletalMesh : UObject
         ReferenceSkeleton = new FReferenceSkeleton(Ar);
         if (Ar.Game < GAME_UE4_0)
         {
-            Ar.Read<int>(); // SkeletalDepth
+            Ar.Position += sizeof(int); // int - SkeletalDepth
         }
 
         if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
@@ -181,15 +181,15 @@ public partial class USkeletalMesh : UObject
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELMESH_BONE_KDOP && Ar.Game < GAME_UE4_0)
         {
             // this is not an array of ints, it's a complex FPerPolyBoneCollisionData struct
-            Ar.ReadArray<int>(); // PerPolyBoneKDOPs
+            Ar.SkipArray<int>(); // PerPolyBoneKDOPs
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_MAPPING && Ar.Game < GAME_UE4_0)
         {
-            Ar.ReadArray(Ar.ReadFString); // BoneBreakNames
+            Ar.SkipArray(Ar.SkipFString); // BoneBreakNames
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_CUSTOM_MAPPING)
             {
-                Ar.ReadArray(Ar.Read<int>); // BoneBreakOptions
+                Ar.SkipArray<int>(); // BoneBreakOptions
             }
         }
 
@@ -202,8 +202,8 @@ public partial class USkeletalMesh : UObject
 
                 if (bAssetValid)
                 {
-                    Ar.ReadArray<byte>(); // NameBuffer
-                    Ar.ReadArray<byte>(); // Buffer
+                    Ar.SkipArray<byte>(); // NameBuffer
+                    Ar.SkipArray<byte>(); // Buffer
                 }
             }
         }

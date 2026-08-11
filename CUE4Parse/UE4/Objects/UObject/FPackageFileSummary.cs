@@ -293,10 +293,10 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Ar.Game == GAME_APBReloaded)
             {
-                if ((int)FileVersionLicenseeUE > 29) Ar.Read<int>();
+                if ((int)FileVersionLicenseeUE > 29) Ar.Position += sizeof(int);
                 if ((int) FileVersionLicenseeUE > 28)
                 {
-                    Ar.ReadArray<int>(5);
+                    Ar.Position += sizeof(int) * 5;
                 }
             }
 
@@ -392,7 +392,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Ar.Game == GAME_APBReloaded && (int)FileVersionLicenseeUE > 32)
             {
-                Ar.Read<FGuid>();
+                Ar.Position += sizeof(uint) * 4; // FGuid
             }
 
             Generations = Ar.ReadArray(Count, () => new FGenerationInfo(Ar));
@@ -553,8 +553,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             
             if (Ar.Game == GAME_SuddenAttack2)
             {
-                Ar.Read<int>(); // count
-                Ar.Read<int>(); // offset
+                Ar.Position += sizeof(int) * 2; // int - count, offset
             }
         }
 

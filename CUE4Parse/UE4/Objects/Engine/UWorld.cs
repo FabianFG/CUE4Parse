@@ -26,7 +26,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             PersistentLevel = new FPackageIndex(Ar);
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.WORLD_PERSISTENT_FACEFXANIMSET && Ar.Game < GAME_UE4_0)
             {
-                new FPackageIndex(Ar); // PersistentFaceFXAnimSet
+                Ar.Position += sizeof(int); // FPackageIndex - PersistentFaceFXAnimSet
             }
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.ADD_EDITOR_VIEWS)
@@ -36,12 +36,12 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_SAVEGAMESUMMARY)
             {
-                new FPackageIndex(Ar); // SaveGameSummary
+                Ar.Position += sizeof(int); // FPackageIndex - SaveGameSummary
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_DECAL_MANAGER && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_DECAL_MANAGER_FROM_UWORLD)
             {
-                new FPackageIndex(Ar); // DecalManager
+                Ar.Position += sizeof(int); // FPackageIndex - DecalManager
             }
 
             if (Ar.Game is GAME_Dishonored) return;

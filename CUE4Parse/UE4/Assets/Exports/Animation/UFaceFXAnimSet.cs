@@ -29,8 +29,8 @@ public class UFaceFXAnimSet : UObject
         }
         else
         {
-            Ar.ReadArray<byte>(); // RawFaceFXAnimSetBytes
-            Ar.ReadArray<byte>(); // RawFaceFXMiniSessionBytes
+            Ar.SkipArray<byte>(); // RawFaceFXAnimSetBytes
+            Ar.SkipArray<byte>(); // RawFaceFXMiniSessionBytes
         }
     }
 }

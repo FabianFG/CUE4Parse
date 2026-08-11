@@ -73,11 +73,11 @@ public struct FFoliageMeshInfo_Deprecated
             }
             else
             {
-                Ar.ReadArray(() => new FFoliageInstanceCluster_LegacyDeprecated(Ar)); // InstanceClusters
-                Ar.ReadArray(() => new FFoliageInstance_Deprecated(Ar)); // Instances
+                Ar.SkipArray(() => new FFoliageInstanceCluster_LegacyDeprecated(Ar)); // InstanceClusters
+                Ar.SkipArray(() => new FFoliageInstance_Deprecated(Ar)); // Instances
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.FOLIAGE_SAVE_UI_DATA)
                 {
-                    new FPackageIndex(Ar); // Settings
+                    Ar.Position += sizeof(int); // FPackageIndex - Settings
                 }
             }
         }
@@ -88,30 +88,33 @@ public struct FFoliageInstance_Deprecated
 {
     public FFoliageInstance_Deprecated(FAssetArchive Ar)
     {
-        new FPackageIndex(Ar); // Base
-        Ar.Read<FVector>(); // Location
-        Ar.Read<FRotator>(); // Rotation
-        Ar.Read<FVector>(); // DrawScale3D
+        Ar.Position += sizeof(int); // FPackageIndex - Base
+        Ar.Position += sizeof(float) * 3; // FVector - Location
+        Ar.Position += sizeof(float) * 3; // FRotator - Rotation
+        Ar.Position += sizeof(float) * 3; // FVector - DrawScale3D
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.FOLIAGE_INSTANCE_SAVE_EDITOR_DATA)
         {
-            Ar.Read<int>(); // ClusterIndex
-            Ar.Read<FRotator>(); // PreAlignRotation
-            Ar.Read<uint>(); // ClusterIndex
+            Ar.Position += sizeof(int); // int - ClusterIndex
+            Ar.Position += sizeof(float) * 3; // FRotator - PreAlignRotation
+            Ar.Position += sizeof(uint); // uint - ClusterIndex
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.FOLIAGE_INSTANCE_SAVE_EDITOR_DATA)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.FOLIAGE_ADDED_Z_OFFSET)
         {
-            Ar.Read<float>(); // ZOffset
+            Ar.Position += sizeof(float); // float - ZOffset
         }
     }
 }
 
-public class FFoliageInstanceCluster_LegacyDeprecated(FAssetArchive Ar)
+public class FFoliageInstanceCluster_LegacyDeprecated
 {
-    public FBoxSphereBounds Bounds = new FBoxSphereBounds(Ar);
-    public FPackageIndex ClusterComponent = new FPackageIndex(Ar);
-    public int[] InstanceIndices = Ar.ReadArray(() => Ar.Read<int>());
+    public FFoliageInstanceCluster_LegacyDeprecated(FAssetArchive Ar)
+    {
+        Ar.Position += sizeof(float) * 7; // FBoxSphereBounds - Bounds
+        Ar.Position += sizeof(int); // FPackageIndex - ClusterComponent
+        Ar.SkipArray<int>(); // InstanceIndices
+    }
 }
 
 public class FFoliageInstanceCluster_Deprecated(FAssetArchive Ar)

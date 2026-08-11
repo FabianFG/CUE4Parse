@@ -38,18 +38,17 @@ public class UStruct : UField
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.MovedFriendlyNameToUFunction)
         {
-            Ar.ReadFName();
+            Ar.SkipFName();
         }
 
         if (Ar.Ver < EUnrealEngineObjectUE4Version.CONSOLIDATE_HEADER_PARSER_ONLY_PROPERTIES)
         {
             if (Ar.Ver > EUnrealEngineObjectUE3Version.AddedCppTextToUStruct)
             {
-                new FPackageIndex(Ar); // CppText
+                Ar.Position += sizeof(int); // FPackageIndex - CppText
             }
 
-            Ar.Read<int>(); // Line
-            Ar.Read<int>(); // TextPos
+            Ar.Position += sizeof(int) * 2; // int - Line, TextPos
         }
 
         if (FCoreObjectVersion.Get(Ar) >= FCoreObjectVersion.Type.FProperties)

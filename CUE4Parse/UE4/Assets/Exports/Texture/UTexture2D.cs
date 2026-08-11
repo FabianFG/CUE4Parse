@@ -36,8 +36,7 @@ public class UTexture2D : UTexture
         {
             if (Ar.Ver < EUnrealEngineObjectUE3Version.RENDERING_REFACTOR)
             {
-                var SizeX = Ar.Read<int>();
-                var SizeY = Ar.Read<int>();
+                Ar.Position += sizeof(int) * 2; // int - SizeX, SizeY
                 Format = (EPixelFormat)Ar.Read<int>();
             }
 
@@ -51,7 +50,7 @@ public class UTexture2D : UTexture
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_FILECACHE_GUIDS)
             {
-                var textureFileCacheGuidDeprecated = Ar.Read<FGuid>();
+                Ar.Position += sizeof(uint) * 4; // FGuid - TextureFileCacheGuid_DEPRECATED
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_IPHONE_DATA)
@@ -61,7 +60,7 @@ public class UTexture2D : UTexture
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.VERSION_NUMBER_FIX_FOR_FLASH_TEXTURES)
             {
-                Ar.Read<int>(); // CachedFlashMipsMaxResolution
+                Ar.Position += sizeof(int); // int - CachedFlashMipsMaxResolution
                 Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedATITCMips
                 new FByteBulkData(Ar); // CachedFlashMips
             }

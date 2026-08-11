@@ -213,14 +213,17 @@ namespace CUE4Parse.UE4.Readers
             return array;
         }
 
+        private bool HasBulkArraySizeHeader =>
+            Ver >= EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING ||
+            (Game == GAME_AvaGlobal && Ver >= EUnrealEngineObjectUE3Version.SHARED_SHADER_PARAMS);
+
         public T[] ReadBulkArray<T>() where T : struct
         {
-            if (Game == GAME_AvaGlobal && Ver >= EUnrealEngineObjectUE3Version.SHARED_SHADER_PARAMS) goto elementsize;
-            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            if (!HasBulkArraySizeHeader)
             {
                 return ReadArray<T>();
             }
-            elementsize:
+
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             if (elementCount == 0)
@@ -236,7 +239,7 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadBulkArray<T>(Func<T> getter)
         {
-            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            if (!HasBulkArraySizeHeader)
             {
                 return ReadArray(getter);
             }
@@ -246,13 +249,17 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SkipBulkArrayData()
+        public void SkipBulkArrayData(int elementSize = -1)
         {
-            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            if (HasBulkArraySizeHeader)
             {
-                throw new ParserException("Cannot skip bulk array data for UE3 versions before ADDED_BULKSERIALIZE_SANITY_CHECKING");
+                elementSize = Read<int>();
             }
-            var elementSize = Read<int>();
+            else if (elementSize < 0)
+            {
+                throw new ParserException($"element size must be provided for games without bulk array size header (Game={Game}, Ver={Ver})");
+            }
+
             var elementCount = Read<int>();
             Position += elementSize * elementCount;
         }
@@ -271,6 +278,16 @@ namespace CUE4Parse.UE4.Readers
         {
             var num = Read<int>();
             Position += num * size;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipArray(Action skip)
+        {
+            var length = Read<int>();
+            for (var i = 0; i < length; i++)
+            {
+                skip();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

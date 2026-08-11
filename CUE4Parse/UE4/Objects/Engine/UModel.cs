@@ -164,13 +164,12 @@ namespace CUE4Parse.UE4.Objects.Engine
             vTextureV = Ar.Read<int>();
             if (Ar.Ver < EUnrealEngineObjectUE3Version.LightMapIndexRemovedFromPoly)
             {
-                new FPackageIndex(Ar); // iLightMap
+                Ar.Position += sizeof(int); // FPackageIndex - iLightMap
             }
             iBrushPoly = Ar.Read<int>();
             if (Ar.Ver < EUnrealEngineObjectUE3Version.PanUVRemovedFromPoly)
             {
-                Ar.Read<short>(); // PanU
-                Ar.Read<short>(); // PanV
+                Ar.Position += sizeof(short) * 2; // short - PanU, PanV
             }
             Actor = new FPackageIndex(Ar);
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.PlaneAddedToPoly)
@@ -183,7 +182,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             }
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.BSP_LIGHTING_CHANNEL_SUPPORT && Ar.Game < GAME_UE4_0)
             {
-                Ar.Read<int>(); // LightingChannels
+                Ar.Position += sizeof(int); // int - LightingChannels
             }
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.INTEGRATED_LIGHTMASS)
             {

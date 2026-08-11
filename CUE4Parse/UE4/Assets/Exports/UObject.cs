@@ -139,8 +139,7 @@ public class UObject : AbstractPropertyHolder
         {
             if (Ar.Ver < EUnrealEngineObjectUE3Version.Release40)
             {
-                Ar.Read<int>(); // TempNum
-                Ar.Read<int>(); // TempMax
+                Ar.Position += sizeof(int) * 2; // int - TempNum, TempMax
             }
 
             if (Class?.Name.Text == null && Ar.Game < GAME_UE4_0)
@@ -151,52 +150,52 @@ public class UObject : AbstractPropertyHolder
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.Release47)
             {
-                var Node = new FPackageIndex();
+                var node = 0;
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release51)
                 {
-                    Node = new FPackageIndex(Ar);
-                    new FPackageIndex(Ar); // StateNode
+                    node = Ar.Read<int>(); // FPackageIndex - Node
+                    Ar.Position += sizeof(int); // FPackageIndex - StateNode
                 }
                 else
                 {
-                    var OldClass = new FPackageIndex(Ar); // OldClass
-                    if (!OldClass.IsNull)
+                    var oldClass = Ar.Read<int>(); // FPackageIndex - OldClass
+                    if (oldClass != 0)
                     {
-                        Ar.Read<int>(); // iOldNode
+                        Ar.Position += sizeof(int); // int - iOldNode
                     }
                 }
 
                 if (Ar.Ver < EUnrealEngineObjectUE3Version.Release52)
                 {
-                    new FPackageIndex(Ar); // Tmp
+                    Ar.Position += sizeof(int); // FPackageIndex - Tmp
                 }
 
                 if (Ar.Ver < EUnrealEngineObjectUE3Version.REDUCED_PROBEMASK_REMOVED_IGNOREMASK)
                 {
-                    Ar.Read<long>(); // ProbeMask
+                    Ar.Position += sizeof(long); // long - ProbeMask
                 }
                 else
                 {
-                    Ar.Read<int>(); // ProbeMask
+                    Ar.Position += sizeof(int); // int - ProbeMask
                 }
 
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.REDUCED_STATEFRAME_LATENTACTION_SIZE)
                 {
-                    Ar.Read<short>(); // LatentAction
+                    Ar.Position += sizeof(short); // short - LatentAction
                 }
                 else if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release55)
                 {
-                    Ar.Read<int>(); // LatentAction
+                    Ar.Position += sizeof(int); // int - LatentAction
                 }
 
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedStateStackToUStateFrame)
                 {
-                    Ar.ReadArray(() => Ar.ReadBytes(9)); // StateStack
+                    Ar.SkipFixedArray(9); // StateStack
                 }
 
-                if (!Node.IsNull)
+                if (node != 0)
                 {
-                    Ar.Read<int>();
+                    Ar.Position += sizeof(int);
                 }
             }
 
@@ -204,10 +203,10 @@ public class UObject : AbstractPropertyHolder
             {
                 if (this is UComponent)
                 {
-                    new FPackageIndex(Ar);
+                    Ar.Position += sizeof(int); // FPackageIndex
                     if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_COMPONENT_TEMPLATES)
                     {
-                        Ar.ReadFName();
+                        Ar.SkipFName();
                     }
                 }
             }
@@ -240,12 +239,12 @@ public class UObject : AbstractPropertyHolder
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.Release57)
         {
-            Ar.ReadFName(); // TempState
+            Ar.SkipFName(); // TempState
         }
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.Release58)
         {
-            Ar.ReadFName(); // TempGroup
+            Ar.SkipFName(); // TempGroup
         }
 
         if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SparseClassDataStructSerialization || !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
