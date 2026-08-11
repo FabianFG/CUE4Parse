@@ -61,20 +61,31 @@ public partial class USkeletalMesh : UObject
             Ar.Position += sizeof(int); // FPackageIndex
         }
 
-        SkeletalMaterials = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
-        Materials = new FPackageIndex?[SkeletalMaterials.Length];
-        for (var i = 0; i < Materials.Length; i++)
-        {
-            Materials[i] = SkeletalMaterials[i].Material;
-        }
 
         if (Ar.Game < GAME_UE4_0)
         {
+            Materials = Ar.ReadArray(() => new FPackageIndex(Ar));
+
+            SkeletalMaterials = new FSkeletalMaterial[Materials.Length];
+            for (var i = 0; i < Materials.Length; i++)
+            {
+                SkeletalMaterials[i] = new FSkeletalMaterial(Materials[i]);
+            }
+
             Ar.Position += sizeof(float) * 3; // FVector - MeshOrigin
             Ar.Position += sizeof(float) * 3; // FRotator - RotOrigin
             if (Ar.Game == GAME_Dishonored && Ar.Ver >= EUnrealEngineObjectUE3Version.FIXCLAMP_NON_TONEMAP)
             {
                 Ar.SkipArray<byte>();
+            }
+        }
+        else
+        {
+            SkeletalMaterials = Ar.ReadArray(() => new FSkeletalMaterial(Ar));
+            Materials = new FPackageIndex?[SkeletalMaterials.Length];
+            for (var i = 0; i < Materials.Length; i++)
+            {
+                Materials[i] = SkeletalMaterials[i].Material;
             }
         }
 
