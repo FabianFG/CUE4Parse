@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
-    public class FLevelViewportInfo
+    public struct FLevelViewportInfo
     {
         public FVector CamPosition;
         public FRotator CamRotation;
