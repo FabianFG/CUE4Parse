@@ -61,7 +61,6 @@ public partial class USkeletalMesh : UObject
             Ar.Position += sizeof(int); // FPackageIndex
         }
 
-
         if (Ar.Game < GAME_UE4_0)
         {
             Materials = Ar.ReadArray(() => new FPackageIndex(Ar));

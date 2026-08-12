@@ -48,8 +48,7 @@ public class FStaticMeshLODResources
         {
             Ar.Position += 8;
         }
-
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedRawTriangles && Ar.Game < GAME_UE4_0 && Ar.Game != GAME_APBReloaded)
+        else if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedRawTriangles && Ar.Game < GAME_UE4_0)
         {
             new FByteBulkData((FAssetArchive)Ar); // RawTriangles
         }
@@ -283,8 +282,7 @@ public class FStaticMeshLODResources
             {
                 Ar.Position += 8; // bulkdata
             }
-
-            if (!stripDataFlags.IsEditorDataStripped() && Ar.Game != GAME_APBReloaded)
+            else if (!stripDataFlags.IsEditorDataStripped())
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
