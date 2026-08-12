@@ -85,6 +85,18 @@ public class CVertexShare
         return isNew;
     }
 
+    public bool TryGetPointIndexForWedge(uint wedgeIndex, out int pointIndex)
+    {
+        if (wedgeIndex < WedgeToVert.Count)
+        {
+            pointIndex = WedgeToVert[(int) wedgeIndex];
+            return true;
+        }
+
+        pointIndex = -1;
+        return false;
+    }
+
     private void ComputeBounds<TVertex>(TVertex[] vertices, bool updateBounds = false) where TVertex : struct, IMeshVertex
     {
         var numVerts = vertices.Length;

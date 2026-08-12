@@ -315,27 +315,20 @@ public class ActorXMesh
                 continue;
 
             var morphModel = morphTarget.MorphLODModels[lod.SourceLodIndex];
-            var morphVertCount = 0;
-            var localMorphDeltas = new List<VMorphData>();
+            var localMorphDeltas = new List<VMorphData>(morphModel.Vertices.Length);
+            var exportedPointIndices = new HashSet<int>(morphModel.Vertices.Length);
             for (var j = 0; j < morphModel.Vertices.Length; j++)
             {
                 var delta = morphModel.Vertices[j];
-                if (delta.SourceIdx >= lod.Vertices.Length) continue;
-
-                var vertex = lod.Vertices[delta.SourceIdx];
-
-                var index = FindVertex(vertex.Position, share.Points);
-                if (index == -1) continue;
-                if (localMorphDeltas.Any(x => x.PointIdx == index)) continue;
+                if (!share.TryGetPointIndexForWedge(delta.SourceIdx, out var index) || !exportedPointIndices.Add(index)) continue;
 
                 var morphData = new VMorphData(delta.PositionDelta, delta.TangentZDelta, index);
                 localMorphDeltas.Add(morphData);
-                morphVertCount++;
             }
 
             morphDeltas.AddRange(localMorphDeltas);
 
-            var morphInfo = new VMorphInfo(morphTarget.Name, morphVertCount);
+            var morphInfo = new VMorphInfo(morphTarget.Name, localMorphDeltas.Count);
             morphInfo.Serialize(Ar);
         }
 
@@ -432,14 +425,4 @@ public class ActorXMesh
         }
     }
 
-    private int FindVertex(FVector a, IReadOnlyList<FVector> vertices)
-    {
-        for (var i = 0; i < vertices.Count; i++)
-        {
-            if (vertices[i].Equals(a))
-                return i;
-        }
-
-        return -1;
-    }
 }
