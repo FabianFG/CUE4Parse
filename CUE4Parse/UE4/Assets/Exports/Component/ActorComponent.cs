@@ -48,30 +48,6 @@ public class UApexStaticComponent : UApexComponentBase;
 public class ApexStaticDestructibleComponent : UApexStaticComponent;
 public class UArchVisCharMovementComponent : UCharacterMovementComponent;
 public class UAsyncPhysicsInputComponent : UActorComponent;
-
-public class UAtmosphericFogComponent : USkyAtmosphereComponent;
-/*
-    // Untested
-
-{
-    public override void Deserialize(FAssetArchive Ar, long validPos)
-    {
-        base.Deserialize(Ar, validPos);
-
-        if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RemovedAtmosphericFog)
-        {
-            if (Ar.Ver >= EUnrealEngineObjectUE4Version.ATMOSPHERIC_FOG_CACHE_DATA)
-            {
-                new FByteBulkData(Ar); // TransmittanceData
-                new FByteBulkData(Ar); // IrradianceData
-            }
-
-            new FByteBulkData(Ar); //InscatterData
-            Ar.Read<int>(); // CounterVal
-        }
-    }
-}*/
-
 public class UAudioCaptureComponent : USynthComponent;
 public class UAudioCurveSourceComponent : UAudioComponent;
 public class UAxisGizmoHandleGroup : UGizmoHandleGroup;

@@ -6,11 +6,13 @@ namespace CUE4Parse.UE4.Objects.Engine;
 public class ULevelStreaming : Assets.Exports.UObject
 {
     public FSoftObjectPath? WorldAsset;
-    
+    public FName? PackageName;
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
         WorldAsset = GetOrDefault<FSoftObjectPath>(nameof(WorldAsset));
+        PackageName = GetOrDefault<FName>(nameof(PackageName));
     }
 }
 
