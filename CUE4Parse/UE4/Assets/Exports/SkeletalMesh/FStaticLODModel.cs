@@ -166,16 +166,27 @@ public class FStaticLODModel
             Indices = new FMultisizeIndexContainer(Ar.ReadBulkArray<uint>());
         }
 
-        ActiveBoneIndices = Ar.ReadArray<short>();
-
-        if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedOldLodformat)
         {
-            Chunks = Ar.ReadArray(() => new FSkelMeshChunk(Ar));
+            var RigidVertices = Ar.ReadArray(() => new FRigidVertex(Ar));
+            var SoftVertices = Ar.ReadArray(() => new FSoftVertex(Ar));
+
+            Chunks = Ar.ReadArray(() => new FSkelMeshChunk(RigidVertices, SoftVertices));
         }
 
-        Size = Ar.Read<int>();
-        if (!stripDataFlags.IsAudioVisualDataStripped())
-            NumVertices = Ar.Read<int>();
+        ActiveBoneIndices = Ar.ReadArray<short>();
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.DeprecatedOldLodformat)
+        {
+            if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
+            {
+                Chunks = Ar.ReadArray(() => new FSkelMeshChunk(Ar));
+            }
+
+            Size = Ar.Read<int>();
+            if (!stripDataFlags.IsAudioVisualDataStripped())
+                NumVertices = Ar.Read<int>();
+        }
 
         RequiredBones = Ar.ReadArray<short>();
         if (!stripDataFlags.IsEditorDataStripped())
