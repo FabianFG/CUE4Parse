@@ -11,13 +11,13 @@ public class CVertexShare
     public List<FVector4> Normals;
     public List<uint> ExtraInfos;
     public List<int> WedgeToVert;
-    public Lazy<int[]> VertToWedge;
+    public int[] VertToWedge;
     public int WedgeIndex;
     public FVector Mins;
     public FVector Maxs;
-    public Lazy<FVector> Extents;
+    public FVector Extents;
     public int[] Hash;
-    public Lazy<int[]> HashNext;
+    public int[] HashNext;
 
     public void Prepare<TVertex>(TVertex[] vertices) where TVertex : struct, IMeshVertex
     {
@@ -28,7 +28,7 @@ public class CVertexShare
         Normals = [];
         ExtraInfos = [];
         WedgeToVert = [];
-        VertToWedge = new Lazy<int[]>(new int[numVerts]);
+        VertToWedge = new int[numVerts];
 
         ComputeBounds(vertices);
 
@@ -36,23 +36,12 @@ public class CVertexShare
         extents[0] += 1f;
         extents[1] += 1f;
         extents[2] += 1f;
-        Extents = new Lazy<FVector>(extents);
+        Extents = extents;
 
         Hash = new int[Constants.MESH_HASH_SIZE];
-        for (var i = 0; i < Hash.Length; i++)
-        {
-            Hash[i] = -1;
-        }
-
-        HashNext = new Lazy<int[]>(() =>
-        {
-            var ret = new int[numVerts];
-            for (var i = 0; i < ret.Length; i++)
-            {
-                ret[i] = -1;
-            }
-            return ret;
-        });
+        Array.Fill(Hash, -1);
+        HashNext = new int[numVerts];
+        Array.Fill(HashNext, -1);
     }
 
     public bool AddVertex(FVector position, FVector4 normal, uint extraInfo = 0)
@@ -60,13 +49,13 @@ public class CVertexShare
         var pointIndex = -1;
         // normal.Data &= 0xFFFFFFu;
 
-        var h = (int)Math.Floor(((position[0] - Mins[0]) / Extents.Value[0] + (position[1] - Mins[1]) / Extents.Value[1] + (position[2] - Mins[2]) / Extents.Value[2]) * (Constants.MESH_HASH_SIZE / 3.0f * 16)) % Constants.MESH_HASH_SIZE;
+        var h = (int)Math.Floor(((position[0] - Mins[0]) / Extents[0] + (position[1] - Mins[1]) / Extents[1] + (position[2] - Mins[2]) / Extents[2]) * (Constants.MESH_HASH_SIZE / 3.0f * 16)) % Constants.MESH_HASH_SIZE;
         pointIndex = Hash[h];
         while (pointIndex >= 0)
         {
             if (Points[pointIndex] == position && Normals[pointIndex] == normal && ExtraInfos[pointIndex] == extraInfo)
                 break;
-            pointIndex = HashNext.Value[pointIndex];
+            pointIndex = HashNext[pointIndex];
         }
 
         var isNew = pointIndex == -1;
@@ -76,12 +65,12 @@ public class CVertexShare
             pointIndex = Points.Count - 1;
             Normals.Add(normal);
             ExtraInfos.Add(extraInfo);
-            HashNext.Value[pointIndex] = Hash[h];
+            HashNext[pointIndex] = Hash[h];
             Hash[h] = pointIndex;
         }
 
         WedgeToVert.Add(pointIndex);
-        VertToWedge.Value[pointIndex] = WedgeIndex++;
+        VertToWedge[pointIndex] = WedgeIndex++;
         return isNew;
     }
 

@@ -97,7 +97,7 @@ public class ActorXMesh
         {
             for (var i = 0; i < share.Points.Count; i++)
             {
-                if (lod.Vertices[share.VertToWedge.Value[i]] is not SkinnedMeshVertex v) continue;
+                if (lod.Vertices[share.VertToWedge[i]] is not SkinnedMeshVertex v) continue;
 
                 foreach (var influence in v.Influences)
                 {
