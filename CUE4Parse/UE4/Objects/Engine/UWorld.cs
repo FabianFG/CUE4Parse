@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Objects.Engine
     {
         public FPackageIndex PersistentLevel { get; private set; }
         public FPackageIndex[] ExtraReferencedObjects { get; private set; }
-        public FPackageIndex[] StreamingLevels { get; private set; }
+        public FPackageIndex[]? StreamingLevels { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
