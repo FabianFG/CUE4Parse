@@ -449,12 +449,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                     throw new ParserException($"Invalid compression flags ({(uint) CompressionFlags})");
                 }
 
-                var compressedChunks = Ar.ReadArray<FCompressedChunk>();
-
-                if (compressedChunks.Length > 0)
-                {
-                    CompressedChunks = Ar.ReadArray(() => new FCompressedChunk(Ar));
-                }
+                CompressedChunks = Ar.ReadArray(() => new FCompressedChunk(Ar));
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedPackageSource)
