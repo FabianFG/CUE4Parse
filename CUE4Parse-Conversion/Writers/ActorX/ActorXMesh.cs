@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse_Conversion.Dto;
@@ -70,34 +69,23 @@ public class ActorXMesh
     private void ExportCommonMeshLod<TVertex>(MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
     {
         var numInfluences = 0;
-        var share = new CVertexShare();
-        share.Prepare(lod.Vertices);
         foreach (var vert in lod.Vertices)
         {
             if (vert is SkinnedMeshVertex sv)
             {
-                var extraInfo = (uint) StructuralComparisons.StructuralEqualityComparer.GetHashCode(sv.Influences);
-                var newPoint = share.AddVertex(vert.Position, vert.Normal, extraInfo);
-                if (newPoint)
-                {
-                    numInfluences += sv.Influences.Length;
-                }
-            }
-            else
-            {
-                share.AddVertex(vert.Position, vert.Normal);
+                numInfluences += sv.Influences.Length;
             }
         }
 
-        ExportCommonMeshData(lod, share);
+        ExportCommonMeshData(lod);
 
         var infHdr = new VChunkHeader { DataCount = numInfluences, DataSize = 12 };
         Ar.SerializeChunkHeader(infHdr, "RAWWEIGHTS");
         if (infHdr.DataCount > 0)
         {
-            for (var i = 0; i < share.Points.Count; i++)
+            for (var i = 0; i < lod.Vertices.Length; i++)
             {
-                if (lod.Vertices[share.VertToWedge[i]] is not SkinnedMeshVertex v) continue;
+                if (lod.Vertices[i] is not SkinnedMeshVertex v) continue;
 
                 foreach (var influence in v.Influences)
                 {
@@ -116,11 +104,11 @@ public class ActorXMesh
 
         if (Options.ExportMorphTargets && lod.Owner is SkeletalMeshDto { MorphTargets: { Length: > 0 } morphTargets })
         {
-            ExportMorphTargets(morphTargets, lod, share);
+            ExportMorphTargets(morphTargets, lod);
         }
     }
 
-    private void ExportCommonMeshData<TVertex>(MeshLodDto<TVertex> lod, CVertexShare share) where TVertex : struct, IMeshVertex
+    private void ExportCommonMeshData<TVertex>(MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
     {
         var mainHdr = new VChunkHeader();
         var ptsHdr = new VChunkHeader();
@@ -132,13 +120,13 @@ public class ActorXMesh
         mainHdr.TypeFlag = Constants.PSK_VERSION;
         Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
 
-        var numPoints = share.Points.Count;
+        var numPoints = lod.Vertices.Length;
         ptsHdr.DataCount = numPoints;
         ptsHdr.DataSize = 12;
         Ar.SerializeChunkHeader(ptsHdr, "PNTS0000");
         for (var i = 0; i < numPoints; i++)
         {
-            var point = share.Points[i];
+            var point = lod.Vertices[i].Position;
             point.Y = -point.Y; // MIRROR_MESH
             point.Serialize(Ar);
         }
@@ -162,7 +150,7 @@ public class ActorXMesh
         Ar.SerializeChunkHeader(wedgHdr, "VTXW0000");
         for (var i = 0; i < numVerts; i++)
         {
-            Ar.Write(share.WedgeToVert[i]);
+            Ar.Write(i);
             Ar.Write(lod.Vertices[i].Uv.U);
             Ar.Write(lod.Vertices[i].Uv.V);
             Ar.Write((byte) wedgeMat[i]);
@@ -227,13 +215,13 @@ public class ActorXMesh
             new VMaterial(materialName, i, 0u, 0, 0u, 0, 0).Serialize(Ar);
         }
 
-        var numNormals = share.Normals.Count;
+        var numNormals = lod.Vertices.Length;
         normHdr.DataCount = numNormals;
         normHdr.DataSize = 12;
         Ar.SerializeChunkHeader(normHdr, "VTXNORMS");
         for (var i = 0; i < numNormals; i++)
         {
-            var normal = (FVector)share.Normals[i];
+            var normal = (FVector) lod.Vertices[i].Normal;
 
             // Normalize
             normal /= MathF.Sqrt(normal | normal);
@@ -302,7 +290,7 @@ public class ActorXMesh
         }
     }
 
-    private void ExportMorphTargets<TVertex>(FPackageIndex[] morphTargets, MeshLodDto<TVertex> lod, CVertexShare share) where TVertex : struct, IMeshVertex
+    private void ExportMorphTargets<TVertex>(FPackageIndex[] morphTargets, MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
     {
         var morphInfoHdr = new VChunkHeader { DataCount = morphTargets.Length, DataSize = 64 + sizeof(int) };
         Ar.SerializeChunkHeader(morphInfoHdr, "MRPHINFO");
@@ -316,13 +304,12 @@ public class ActorXMesh
 
             var morphModel = morphTarget.MorphLODModels[lod.SourceLodIndex];
             var localMorphDeltas = new List<VMorphData>(morphModel.Vertices.Length);
-            var exportedPointIndices = new HashSet<int>(morphModel.Vertices.Length);
             for (var j = 0; j < morphModel.Vertices.Length; j++)
             {
                 var delta = morphModel.Vertices[j];
-                if (!share.TryGetPointIndexForWedge(delta.SourceIdx, out var index) || !exportedPointIndices.Add(index)) continue;
+                if (delta.SourceIdx >= lod.Vertices.Length) continue;
 
-                var morphData = new VMorphData(delta.PositionDelta, delta.TangentZDelta, index);
+                var morphData = new VMorphData(delta.PositionDelta, delta.TangentZDelta, (int) delta.SourceIdx);
                 localMorphDeltas.Add(morphData);
             }
 
