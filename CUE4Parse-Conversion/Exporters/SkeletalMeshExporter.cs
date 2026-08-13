@@ -34,6 +34,6 @@ public sealed class SkeletalMeshExporter(USkeletalMesh originalMesh) : MeshExpor
         }
 
         var materialPaths = EnqueueMaterials(dto.Materials);
-        return format.BuildSkeletalMesh(ObjectName, Session.Options, dto, materialPaths);
+        return format.BuildSkeletalMesh(ObjectName, ObjectPath, Session.Options, dto, materialPaths);
     }
 }
