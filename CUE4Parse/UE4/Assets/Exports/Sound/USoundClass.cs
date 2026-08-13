@@ -17,7 +17,7 @@ public class USoundClass : UObject
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.SOUND_CLASS_SERIALISATION_UPDATE && Ar.Ver < EUnrealEngineObjectUE4Version.SOUND_CLASS_GRAPH_EDITOR)
         {
-            EditorData = Ar.ReadMap(() => new FPackageIndex(Ar), () => Ar.Read<FSoundEditorData>());
+            EditorData = Ar.ReadMap(() => new FPackageIndex(Ar), Ar.Read<FSoundEditorData>);
         }
     }
 
