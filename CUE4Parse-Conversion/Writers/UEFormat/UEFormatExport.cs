@@ -1,29 +1,35 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.IO.Compression;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers.UEFormat.Enums;
 using CUE4Parse_Conversion.Writers.UEFormat.Structs;
-using OodleDotNet;
 using ZstdSharp;
 
 namespace CUE4Parse_Conversion.Writers.UEFormat;
 
-public abstract class UEFormatExport(string objectName, ExportOptions options)
+public abstract class UEFormatExport(string objectName, string objectPath, ExportOptions options)
 {
     protected abstract string Identifier { get; }
 
     protected readonly FArchiveWriter Ar = new();
     protected readonly EFileCompressionFormat CompressionFormat = options.CompressionFormat;
+    private readonly string _objectName = objectName;
+    private readonly string _objectPath = objectPath;
 
-    // TODO make user selectable
-    private const OodleCompressor OODLE_COMPRESSOR = OodleCompressor.Leviathan;
-    private const OodleCompressionLevel OODLE_COMPRESSION_LEVEL = OodleCompressionLevel.Fast;
     private const int ZSTD_LEVEL = 6;
+
+    protected void WriteRoot(Action<FDataAttributeSet> build)
+    {
+        var root = new FDataAttributeSet();
+        build(root);
+        root.Serialize(Ar);
+    }
 
     public void Save(FArchiveWriter archive)
     {
-        var header = new FUEFormatHeader(Identifier, objectName, CompressionFormat);
+        var header = new FUEFormatHeader(Identifier, _objectName, _objectPath, CompressionFormat);
         var data = Ar.GetBuffer();
         header.UncompressedSize = data.Length;
 
