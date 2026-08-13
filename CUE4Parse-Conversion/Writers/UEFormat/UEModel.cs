@@ -85,6 +85,7 @@ public sealed class UEModel : UEFormatExport
                 writer.Write(bone.ParentIndex);
                 bone.Transform.Translation.Serialize(writer);
                 bone.Transform.Rotation.Serialize(writer);
+                bone.Transform.Scale3D.Serialize(writer);
             }));
 
             if (exportSockets && skeleton.Sockets is { Length: > 0 })
