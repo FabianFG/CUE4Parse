@@ -39,7 +39,7 @@ public abstract class TBulkData<T> where T: struct
         _data = data;
     }
 
-    protected TBulkData(FAssetArchive ar, string? tfc = null)
+    protected TBulkData(FAssetArchive ar, string tfc)
         : this(ar)
     {
         _savedAr = ar;

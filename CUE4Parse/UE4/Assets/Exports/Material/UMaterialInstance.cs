@@ -143,7 +143,7 @@ public class FStaticParameterSet
     public FStaticSwitchParameter[] StaticSwitchParameters;
     public FStaticComponentMaskParameter[] StaticComponentMaskParameters;
     public FNormalParameter[]? NormalParameters;
-    public FStaticTerrainLayerWeightParameter[] TerrainLayerWeightParameters;
+    public FStaticTerrainLayerWeightParameter[]? TerrainLayerWeightParameters;
     public FStaticMaterialLayersParameter[]? MaterialLayersParameters;
 
     public FStaticParameterSet(FArchive Ar)
