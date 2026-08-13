@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Encryption.Aes;
 
@@ -105,7 +106,23 @@ namespace CUE4Parse.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Contains(this string orig, string value, StringComparison comparisonType) =>
-            orig.IndexOf(value, comparisonType) >= 0;
+        public static bool Contains(this string orig, string value, StringComparison comparisonType) => orig.IndexOf(value, comparisonType) >= 0;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetReadableSize<T>(this T size) where T : INumber<T>
+        {
+            if (size == T.Zero) return "0 B";
+
+            string[] sizes = ["B", "KB", "MB", "GB", "TB"];
+            var order = 0;
+            var converted = double.CreateChecked(size);
+            while (converted >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                converted /= 1024;
+            }
+
+            return $"{converted:F2} {sizes[order]}".TrimStart();
+        }
     }
 }

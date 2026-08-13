@@ -1,12 +1,13 @@
 // ReSharper disable CheckNamespace
 
+using System.Buffers.Binary;
 using System.Text;
 using Blake3;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 using static CUE4Parse.Compression.Compression;
 
@@ -27,7 +28,7 @@ public partial class PakFileReader
     {
         var limit = Game switch
         {
-            GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
+            GAME_MarvelRivals or GAME_TamasShadowveil => CalculateEncryptedBytesCountForNetEase(pakEntry.Path),
             GAME_OperationApocalypse or GAME_MindsEye => 0x1000,
             GAME_WutheringWaves => CalculateEncryptedBytesCountForWutheringWaves(pakEntry),
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
@@ -128,7 +129,7 @@ public partial class PakFileReader
     {
         var limit = Game switch
         {
-            GAME_MarvelRivals => CalculateEncryptedBytesCountForMarvelRivals(pakEntry),
+            GAME_MarvelRivals or GAME_TamasShadowveil => CalculateEncryptedBytesCountForNetEase(pakEntry.Path),
             GAME_OperationApocalypse or GAME_MindsEye => 0x1000,
             GAME_WutheringWaves => CalculateEncryptedBytesCountForWutheringWaves(pakEntry),
             _ => throw new ArgumentOutOfRangeException(nameof(reader.Game), "Unsupported game for partial encrypted pak entry extraction")
@@ -178,15 +179,25 @@ public partial class PakFileReader
         return encrypted[..(int) pakEntry.UncompressedSize];
     }
 
-    private int CalculateEncryptedBytesCountForMarvelRivals(FPakEntry pakEntry)
+    // Marvel Rivals; Tamas: Shadowveil;
+    public static int CalculateEncryptedBytesCountForNetEase(string path) =>
+        CalculateEncryptedBytesCountForNetEase(Encoding.UTF8.GetBytes(path.ToLowerInvariant()));
+    public static int CalculateEncryptedBytesCountForNetEase(FIoChunkId chunkId)
+    {
+        Span<byte> bytes = stackalloc byte[12];
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes, chunkId.ChunkId);
+        BinaryPrimitives.WriteUInt16LittleEndian(bytes[8..], chunkId._chunkIndex);
+        bytes[10] = chunkId._padding;
+        bytes[11] = chunkId.ChunkType;
+        return CalculateEncryptedBytesCountForNetEase(bytes);
+    }
+    private static int CalculateEncryptedBytesCountForNetEase(ReadOnlySpan<byte> value)
     {
         using var hasher = Hasher.New();
 
         var initialSeedBytes = BitConverter.GetBytes(0x44332211);
         hasher.Update(initialSeedBytes);
-
-        var assetPathBytes = Encoding.UTF8.GetBytes(pakEntry.Path.ToLower());
-        hasher.Update(assetPathBytes);
+        hasher.Update(value);
 
         var finalHash = hasher.Finalize().AsSpan();
 
@@ -197,7 +208,7 @@ public partial class PakFileReader
         return (int) final;
     }
 
-    private int CalculateEncryptedBytesCountForWutheringWaves(FPakEntry pakEntry)
+    private static int CalculateEncryptedBytesCountForWutheringWaves(FPakEntry pakEntry)
     {
         return pakEntry.CustomData switch
         {

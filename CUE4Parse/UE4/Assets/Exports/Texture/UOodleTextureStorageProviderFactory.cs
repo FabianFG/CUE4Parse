@@ -43,7 +43,6 @@ public class UOodleTextureStorageProviderFactory : UTextureAllMipDataProviderFac
         if (Ar.Game != GAME_WutheringWaves) return;
 
         var pixelFormatName = Ar.ReadFName();
-        if (pixelFormatName.Text == "PF_BC6H_Signed") pixelFormatName = "PF_BC6H";
         while (!pixelFormatName.IsNone)
         {
             if (!Enum.TryParse(pixelFormatName.Text, ignoreCase: true, out EPixelFormat pixelFormat))

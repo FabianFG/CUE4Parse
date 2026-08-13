@@ -308,8 +308,8 @@ public class FScriptStruct
             "EveryPlatformBool" => new FEveryPlatformBool(Ar),
             "EveryPlatformInt" => new FEveryPlatformInt(Ar),
 
-            // Killing Floor 3
-            "HavokAIAnyArray" => new FHavokAIAnyArray(Ar),
+            // Killing Floor 3(AI), Gears of War E-Day(Nav)
+            "HavokAIAnyArray" or "HavokNavAnyArray" => new FHavokAnyArray(Ar, structName),
 
             // Upin&Ipin Universe
             "SUDSValue" => type == ReadType.ZERO ? new FStructFallback() : new FSUDSValue(Ar),
@@ -441,6 +441,11 @@ public class FScriptStruct
 
             "GameplayEffectVersion" when Ar.Game is GAME_ArcRaiders => Ar.Read<FRawStruct<byte>>(),
             "AISensingStatusTransition" when Ar.Game is GAME_ArcRaiders => new FStructFallback(Ar, "AISensingStatusTransitionStruct"),//hack for struct/class with the same name
+
+            "TCPresentationCueNamedParam_Vector" or "TCPresentationCueNamedParam_Float" or "TCPresentationCueNamedParam_LinearColor"
+                or "TCGameplayBlackboardNamedParam_Float" or "TCGameplayBlackboardNamedParam_Vector" or "TCPresentationCueNamedParam_Bool"
+                or "TCPresentationCueNamedParam_Texture" or "TCPresentationCueNamedParam_Vector2D" or "TCPresentationCueNamedParam_Material"
+                or "TCPresentationCueNamedParam_StaticMesh" when Ar.Game is GAME_GearsofWarEDay => new FTCNamedParam(Ar, structName),
 
             _ => Ar.Game switch
             {

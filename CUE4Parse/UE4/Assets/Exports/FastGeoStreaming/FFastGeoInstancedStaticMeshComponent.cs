@@ -31,6 +31,9 @@ public class FFastGeoInstancedStaticMeshComponent : FFastGeoStaticMeshComponentB
             _ => true,
         };
 
+        // i think it's FMatrix3x4, where 3x3 is scale and rotation, and last row is translation
+        if (Ar.Game is GAME_GearsofWarEDay) Ar.SkipBulkArrayData();
+
         if (bUseHighPrecisionPerInstanceSMData)
         {
             PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
@@ -39,14 +42,14 @@ public class FFastGeoInstancedStaticMeshComponent : FFastGeoStaticMeshComponentB
         {
             PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar.Read<FTransform>()));
         }
-        
+
         LastInstanceBodyIndex = Ar.Game >= GAME_UE5_8 ? Ar.Read<int>() : 0;
         InstancingRandomSeed = Ar.Read<int>();
         PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
         AdditionalRandomSeeds = Ar.ReadArray<FInstancedStaticMeshRandomSeed>();
         if (Ar.Game is GAME_SilverPalace)
         {
-            Ar.Position += 16;            
+            Ar.Position += 16;
             return;
         }
         NavigationBounds = new FBox(Ar);

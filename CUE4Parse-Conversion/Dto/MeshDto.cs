@@ -34,6 +34,11 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
 
     }
 
+    protected MeshDto(UObject owner, MeshMaterialDto[] materials) : base(owner)
+    {
+        Materials = materials;
+    }
+
     protected MeshDto(UStaticMesh mesh) : base(mesh)
     {
         Materials = new MeshMaterialDto[mesh.StaticMaterials.Length];
@@ -173,6 +178,21 @@ public class StaticMeshDto : MeshDto<MeshVertex>
     protected StaticMeshDto(UObject owner) : base(owner)
     {
 
+    }
+
+    /// <summary>
+    /// Builds a static mesh DTO purely from nanite cluster data
+    /// </summary>
+    public StaticMeshDto(UObject owner, MeshMaterialDto[] materials, FNaniteResources nanite, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NaniteOnly) : base(owner, materials)
+    {
+        Bounds = new FBox(FVector.ZeroVector, FVector.OneVector);
+
+        if (nanite.PageStreamingStates.Length > 0)
+        {
+            ParseNaniteResources(this, nanite, naniteFormat);
+        }
+
+        SetLodSuffixes();
     }
 
     public StaticMeshDto(UStaticMesh mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, USplineMeshComponent? spline = null) : base(mesh)

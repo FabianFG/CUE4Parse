@@ -14,6 +14,7 @@ public class FFastGeoComponentCluster
     {
         Name = Ar.ReadFString();
         ComponentClusterIndex = Ar.Read<int>();
+        if (Ar.Game is GAME_GearsofWarEDay) Ar.Position += 16;
         StaticMeshComponents = Ar.ReadArray(() => new FFastGeoStaticMeshComponent(Ar));
         if (Ar.Game is GAME_WutheringWaves) return;
         InstancedStaticMeshComponents = Ar.ReadArray(() => new FFastGeoInstancedStaticMeshComponent(Ar));

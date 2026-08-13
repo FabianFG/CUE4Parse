@@ -117,6 +117,20 @@ public partial class USkeletalMesh : UObject
                 var minMobileLODIdx = Ar.Read<int>();
             }
 
+            if (Ar.Game is GAME_GearsofWarEDay)
+            {
+                Ar.SkipBulkArrayData();
+                Ar.SkipArray<uint>();
+                var count = Ar.Read<int>();
+                for (var i = 0; i < count; i++)
+                {
+                    Ar.Position += 8;
+                    Ar.SkipArray<uint>();
+                    Ar.Position += 4;
+                }
+                Ar.Position += 32;
+            }
+
             if (bCooked && LODModels == null)
             {
                 var useNewCookedFormat = Ar.Versions["SkeletalMesh.UseNewCookedFormat"];
@@ -180,6 +194,13 @@ public partial class USkeletalMesh : UObject
             {
                 if (Ar.ReadBoolean() && GetOrDefault<bool>("bGenerateMeshDistanceField")) _ = new FDistanceFieldVolumeData5(Ar);
             }
+        }
+
+        if (Ar.Game is GAME_GearsofWarEDay && Ar.ReadBoolean())
+        {
+            Ar.Position += 16;
+            Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 3);
+            Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 32);
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_SKELMESH_NAMEINDEXMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REFERENCE_SKELETON_REFACTOR)

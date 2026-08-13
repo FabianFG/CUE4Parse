@@ -40,12 +40,15 @@ public class ActorXMesh
     {
         ExportCommonMeshLod(lod);
 
+        var bones = new List<MeshBoneDto>();
         if (lod.Owner.Sockets is { Length: > 0 } sockets)
         {
-            var bones = new List<MeshBoneDto>();
             ExportStaticSockets(sockets, bones);
-            ExportSkeletonData(bones.ToArray());
         }
+
+        // the legacy importer needs its REFSKELT chunk to initialize Bones and later do len(Bones)
+        // https://github.com/Befzz/blender3d_import_psk_psa/blob/master/addons/io_import_scene_unreal_psa_psk_280.py#L711
+        ExportSkeletonData(bones.ToArray());
     }
 
     public ActorXMesh(MeshLodDto<SkinnedMeshVertex> lod, ExportOptions options) : this(options)
@@ -242,8 +245,6 @@ public class ActorXMesh
 
     private void ExportSkeletonData(MeshBoneDto[] bones)
     {
-        if (bones.Length == 0) return;
-
         var boneHdr = new VChunkHeader();
 
         var numBones = bones.Length;

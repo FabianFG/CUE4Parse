@@ -88,7 +88,7 @@ public abstract class ExporterBase : IExporter
     private async Task<string> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
     {
         var (fileName, path) = ResolveOutputPath(file); // fileName may not be the real file name, it's just for logging
-        Log.ForContext("FilePath", path).Information("Writing {FileName} ({FileSize} bytes)", fileName, file.Data.Length);
+        Log.ForContext("FilePath", path).Information("Writing {FileName} ({ReadableFileSize:l})", fileName, file.Data.Length.GetReadableSize());
 
         await File.WriteAllBytesAsync(path, file.Data, ct).ConfigureAwait(false);
 

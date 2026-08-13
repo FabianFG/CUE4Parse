@@ -11,6 +11,11 @@ public class FFastGeoHLOD : FFastGeoComponentCluster
 
     public FFastGeoHLOD(FFastGeoArchive Ar) : base(Ar)
     {
+        if (Ar.Game is GAME_GearsofWarEDay)
+        {
+            Ar.Position += 72;
+            return;
+        }
         bRequireWarmup = Ar.ReadBoolean();
         SourceCellGuid = Ar.Read<FGuid>();
         StandaloneHLODGuid = Ar.Read<FGuid>();

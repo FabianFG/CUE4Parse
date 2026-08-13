@@ -5,6 +5,7 @@ namespace CUE4Parse_Conversion.Textures.DXT;
 /// </summary>
 public static class DXTDecoder
 {
+    [Obsolete("Deprecated. Use BCDecoder.BC1 instead")]
     public static byte[] DXT1(byte[] inp, int sizeX, int sizeY, int sizeZ)
     {
         int bitsPerSecond = sizeX * Constants.DXT_BITS_PER_PIXEL;
@@ -93,6 +94,7 @@ public static class DXTDecoder
         return rawData;
     }
 
+    [Obsolete("Deprecated. Use BCDecoder.BC2 instead")]
     public static byte[] DXT3(byte[] inp, int sizeX, int sizeY, int sizeZ)
     {
         int bitsPerPixel = Constants.DXT_BITS_PER_PIXEL;
@@ -163,6 +165,8 @@ public static class DXTDecoder
         return rawData;
     }
 
+
+    [Obsolete("Deprecated. Use BCDecoder.BC3 instead")]
     public static byte[] DXT5(byte[] inp, int sizeX, int sizeY, int sizeZ)
     {
         int bitsPerSecond = sizeX * Constants.DXT_BITS_PER_PIXEL;

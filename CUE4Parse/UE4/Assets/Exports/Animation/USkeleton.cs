@@ -111,11 +111,11 @@ public class USkeleton : UObject
 }
 
 [StructFallback]
-public class FVirtualBone
+public readonly struct FVirtualBone
 {
-    public FName SourceBoneName;
-    public FName TargetBoneName;
-    public FName VirtualBoneName;
+    public readonly FName SourceBoneName;
+    public readonly FName TargetBoneName;
+    public readonly FName VirtualBoneName;
 
     public FVirtualBone(FStructFallback fallback)
     {

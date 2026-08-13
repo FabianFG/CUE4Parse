@@ -102,6 +102,8 @@ public class FPositionVertexBuffer
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
 
+        if (Ar.Game is GAME_TamasShadowveil) Ar.Position += 4;
+
         if (Ar.Game is GAME_Valorant_PRE_11_2 or GAME_NeedForSpeedMobile || (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile && Stride == 8))
         {
             bool bUseFullPrecisionPositions = Ar.Game is not GAME_ArenaBreakoutInfinite and not GAME_ArenaBreakoutMobile && Ar.ReadBoolean();
@@ -173,6 +175,7 @@ public class FPositionVertexBuffer
             NumVertices >>= 9;
         }
         if (Ar.Game == GAME_Gollum) Ar.Position += 25;
+        if (Ar.Game is GAME_GearsofWarEDay && NumVertices == 0) return;
 
         if (Ar.Game == GAME_LifeIsStrange && (int)Ar.LicenseeVer >= 18)
         {

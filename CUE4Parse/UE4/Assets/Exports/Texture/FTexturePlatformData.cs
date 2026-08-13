@@ -42,7 +42,7 @@ public class FTexturePlatformData
     private const uint BitMask_NumSlices = BitMask_HasOptData - 1u;
 
     public readonly int SizeX;
-    public int SizeY;
+    public readonly int SizeY;
     public readonly uint PackedData; // NumSlices: 1 for simple texture, 6 for cubemap - 6 textures are joined into one
     public readonly string PixelFormat;
     public readonly FOptTexturePlatformData OptData;
@@ -137,14 +137,6 @@ public class FTexturePlatformData
         for (var i = 0; i < Mips.Length; i++)
         {
             Mips[i] = new FTexture2DMipMap(Ar, bSerializeMipData);
-
-            if (Owner is UVolumeTexture or UTextureCube)
-            {
-                var slices = GetNumSlices();
-                if (Ar.Game == GAME_Borderlands4) slices = slices != 1 ? slices >> 1 : 1;
-                Mips[i].SizeY *= slices;
-                Mips[i].SizeZ = Mips[i].SizeZ == slices ? 1 : Mips[i].SizeZ;
-            }
         }
 
         if (Ar.Versions["VirtualTextures"])
@@ -163,9 +155,6 @@ public class FTexturePlatformData
         {
             SizeX = Mips[0].SizeX;
             SizeY = Mips[0].SizeY;
-
-            if (Owner is UVolumeTexture)
-                PackedData = (uint) ((Mips[0].SizeZ & BitMask_NumSlices) | (PackedData & ~BitMask_NumSlices));
         }
         else if (VTData != null)
         {

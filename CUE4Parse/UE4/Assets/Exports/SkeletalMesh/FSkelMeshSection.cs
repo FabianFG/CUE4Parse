@@ -19,7 +19,7 @@ public enum ESkinVertexColorChannel : byte
 [JsonConverter(typeof(FSkelMeshSectionConverter))]
 public class FSkelMeshSection
 {
-    
+
     public short MaterialIndex;
     public int BaseIndex;
     public int NumTriangles;
@@ -255,6 +255,10 @@ public class FSkelMeshSection
         if (Ar.Game == GAME_Paragon) Ar.Position += 1; // bool
         bRecomputeTangent = Ar.ReadBoolean();
         RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
+        if (Ar.Game == GAME_WutheringWaves && Ar.Owner?.NameMap.Any(n => n.Name == "KuroRuntimeLODBias_PackedData2") == true)
+        {
+            Ar.Position += 4; // WuWa 3.6+: extra int32 field after RecomputeTangentsVertexMaskChannel
+        }
         if (Ar.Game == GAME_DeltaForce) Ar.Position += 3;
         if (Ar.Game == GAME_BigRumbleBoxingCreedChampions) Ar.Position += 4;
         bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
@@ -262,6 +266,8 @@ public class FSkelMeshSection
         bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
         BaseVertexIndex = Ar.Read<uint>();
         ClothMappingDataLODs = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? [Ar.ReadArray(() => new FMeshToMeshVertData(Ar))] : Ar.ReadArray(() => Ar.ReadArray(() => new FMeshToMeshVertData(Ar)));
+        if (Ar.Game is GAME_GearsofWarEDay) SkipGearsofWarCustomData(Ar);
+        if (Ar.Game is GAME_TamasShadowveil) Ar.Position += 8;
         BoneMap = Ar.ReadArray<ushort>();
         NumVertices = Ar.Read<int>();
 
@@ -307,5 +313,32 @@ public class FSkelMeshSection
             GAME_SuicideSquad => 11,
             _ => 0,
         };
+    }
+
+    private void SkipGearsofWarCustomData(FAssetArchive Ar)
+    {
+        var count = Ar.Read<int>();
+        for (var i = 0; i < count; i++)
+        {
+            Ar.Position += 112;
+            var count1 = Ar.Read<int>();
+            for (var j = 0; j < count1; j++)
+            {
+                Ar.Position += 16;
+                Ar.SkipFixedArray(3);
+            }
+            Ar.SkipMultipleFixedArrays([3, 3, 4, 4]);
+            Ar.Position += 30;
+        }
+
+        Ar.Position += 4;
+        count = Ar.Read<int>();
+        for (var i = 0; i < count; i++)
+        {
+            Ar.Position += 160;
+            Ar.SkipFixedArray(3);
+            Ar.Position += 4;
+        }
+        Ar.SkipMultipleFixedArrays([3, 7]);
     }
 }

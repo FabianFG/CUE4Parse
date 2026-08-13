@@ -294,6 +294,9 @@ public class UStaticMesh : UObject
             }
         }
 
+        if (Ar.Game is GAME_TamasShadowveil)
+            StaticMaterials = Ar.ReadArray(() => new FStaticMaterial(Ar));
+
         Materials = new FPackageIndex?[StaticMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
         {

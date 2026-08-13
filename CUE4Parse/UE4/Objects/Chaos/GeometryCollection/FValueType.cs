@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.StructUtils;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
@@ -125,6 +126,9 @@ public readonly struct FValueType
             // UE 5.7
             EManagedArrayType.Name => new FManagedArray<FName>(Ar.ReadFName),
             EManagedArrayType.SoftObjectPath => new FManagedArray<FSoftObjectPath>(() => new FSoftObjectPath(Ar)),
+
+            //Custom
+            EManagedArrayType.GroupBoneIndex => new FManagedArray<FFixedSizeStruct>(() => new FFixedSizeStruct(Ar, 48)),
             _ => throw new NotImplementedException($"EManagedArrayType Type: '{ArrayType}' currently does not have serialization implemented")
         };
     }
