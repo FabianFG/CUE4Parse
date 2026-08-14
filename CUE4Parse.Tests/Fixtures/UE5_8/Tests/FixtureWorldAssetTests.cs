@@ -59,6 +59,13 @@ public class FixtureWorldAssetTests
         Assert.NotEmpty(lod.Vertices);
         Assert.NotEmpty(lod.Indices);
         Assert.Equal(0, lod.Indices.Length % 3);
+
+        var convertedMaterial = Assert.Single(converted.Materials);
+        Assert.Equal("M_Landscape", convertedMaterial.SlotName);
+        var section = Assert.Single(lod.Sections);
+        Assert.Equal(0, section.MaterialIndex);
+        Assert.Equal(0, section.FirstIndex);
+        Assert.Equal(lod.Indices.Length / 3, section.NumFaces);
     }
 
     [Theory]
