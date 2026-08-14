@@ -34,7 +34,6 @@ public enum EPakFileVersion
 
 public partial class FPakInfo
 {
-    
     public const uint PAK_FILE_MAGIC = 0x5A6F12E1;
     public const uint PAK_FILE_MAGIC_OutlastTrials = 0xA590ED1E;
     public const uint PAK_FILE_MAGIC_TorchlightInfinite = 0x6B2A56B8;
@@ -103,6 +102,25 @@ public partial class FPakInfo
             IndexHash = new FSHAHash(Ar);
             IndexSize = (long)(Ar.Read<ulong>() ^ 0x8924b0e3298b7069);
             IndexOffset = (long) (Ar.Read<ulong>() ^ 0xd74af37faa6b020d);
+            CompressionMethods =
+            [
+                CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle,
+                CompressionMethod.LZ4, CompressionMethod.Zstd
+            ];
+            return;
+        }
+
+        if (Ar.Game == GAME_Overhit)
+        {
+            EncryptionKeyGuid = default;
+            EncryptedIndex = Ar.Read<byte>() != 0;
+            Magic = Ar.Read<uint>();
+            if (Magic != PAK_FILE_MAGIC) return;
+            Version = Ar.Read<EPakFileVersion>();
+            Ar.Position += 8;
+            IndexOffset = Ar.Read<long>();
+            IndexSize = Ar.Read<long>();
+            IndexHash = new FSHAHash(Ar);
             CompressionMethods =
             [
                 CompressionMethod.None, CompressionMethod.Zlib, CompressionMethod.Gzip, CompressionMethod.Oodle,
@@ -369,7 +387,7 @@ public partial class FPakInfo
             IndexSize = Ar.Read<long>() >> 1;
             goto beforeCompression;
         }
-        
+
         if (Ar.Game == GAME_StateOfDecay2)
         {
             // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
@@ -532,6 +550,7 @@ public partial class FPakInfo
         Size = sizeof(int) * 2 + sizeof(long) * 2 + 20 + /* new fields */ 1 + 16, // sizeof(FGuid)
         // Just to be sure
         SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
+        SizeOverhit = 53,
         Size8_1 = Size + 32,
         Size8_2 = Size8_1 + 32,
         Size8_3 = Size8_2 + 32,
@@ -622,6 +641,7 @@ public partial class FPakInfo
                 GAME_Back4Blood => [OffsetsToTry.SizeBack4Blood],
                 GAME_ArenaBreakoutMobile => [OffsetsToTry.SizeArenaBreakoutMobile, OffsetsToTry.Size8a],
                 GAME_ValorantSource => [OffsetsToTry.SizeValorantSource],
+                GAME_Overhit => [OffsetsToTry.SizeOverhit],
                 _ => _offsetsToTry
             };
 

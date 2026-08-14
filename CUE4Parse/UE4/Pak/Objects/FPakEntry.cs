@@ -102,6 +102,7 @@ public class FPakEntry : VfsEntry
         if (reader.Info.Version < PakFile_Version_NoTimestamps)
             Ar.Position += 8; // Timestamp
         Ar.Position += 20; // Hash
+        if (Ar.Game is GAME_Overhit) Ar.Position += 20;
 
         if (reader.Info.Version >= PakFile_Version_CompressionEncryption)
         {

@@ -41,6 +41,7 @@ public enum EGame : uint
         GAME_NarutotoBorutoShinobiStriker = GAME_UE4_16 + 3,
     GAME_UE4_17 = GameUtils.GameUe4Base + (17 << 16),
         GAME_AWayOut = GAME_UE4_17 + 1,
+        GAME_Overhit = GAME_UE4_17 + 2,
     GAME_UE4_18 = GameUtils.GameUe4Base + (18 << 16),
         GAME_KingdomHearts3 = GAME_UE4_18 + 1,
         GAME_FinalFantasy7Remake = GAME_UE4_18 + 2,
