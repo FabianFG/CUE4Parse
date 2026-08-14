@@ -44,9 +44,32 @@ public class UUAEDataTable : UDataTable
             if (taggedNumRows < 0)
                 throw new ParserException(Ar, $"Invalid UAEDataTable row count {taggedNumRows}");
 
-            RowMap = new Dictionary<FName, FStructFallback>(taggedNumRows);
-            for (var i = 0; i < taggedNumRows; i++)
-                RowMap[Ar.ReadFName()] = new FStructFallback(Ar, rowStruct);
+            var hasFNameRowKeys = taggedNumRows == 0 || Ar.TestReadFName();
+            if (hasFNameRowKeys)
+            {
+                RowMap = Ar.ReadMap(taggedNumRows, Ar.ReadFName, () => new FStructFallback(Ar, rowStruct));
+                return;
+            }
+
+            Ar.Position += 4; // Size
+
+            var rowsByOffset = Ar.ReadMap(taggedNumRows, () => Ar.Position, () => new FStructFallback(Ar, rowStruct));
+
+            var indexedNumRows = Ar.Read<int>();
+            if (indexedNumRows != taggedNumRows)
+                throw new ParserException(Ar, $"Mismatched UAEDataTable row index count {indexedNumRows}, expected {taggedNumRows}");
+
+            RowMap = new Dictionary<FName, FStructFallback>(indexedNumRows);
+            for (var i = 0; i < indexedNumRows; i++)
+            {
+                var rowName = Ar.ReadFName();
+                var rowOffset = Ar.Read<int>();
+                if (!rowsByOffset.TryGetValue(rowOffset, out var row))
+                    throw new ParserException(Ar, $"Invalid UAEDataTable row offset {rowOffset}");
+
+                RowMap[rowName] = row;
+            }
+
             return;
         }
 
