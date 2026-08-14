@@ -8,7 +8,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse.GameTypes.Tencent.PUBGMobile.Assets.Exports;
+namespace CUE4Parse.GameTypes.Tencent.UE4.Assets.Exports;
 
 public class UUAEDataTable : UDataTable
 {
