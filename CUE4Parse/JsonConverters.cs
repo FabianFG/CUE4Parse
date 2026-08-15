@@ -362,7 +362,23 @@ public class AssetObjectPropertyConverter : JsonConverter<AssetObjectProperty>
 {
     public override void WriteJson(JsonWriter writer, AssetObjectProperty value, JsonSerializer serializer)
     {
-        writer.WriteValue(value.Value);
+        if (value.Value is null)
+            writer.WriteNull();
+        else
+        {
+            var str = value.Value;
+            var index = str.LastIndexOf('.');
+            var (path, substring) = index == -1 ? (str, "") : (str[..index], str[(index+1)..]);
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("AssetPathName");
+            writer.WriteValue(path);
+
+            writer.WritePropertyName("SubPathString");
+            writer.WriteValue(substring);
+
+            writer.WriteEndObject();
+        }
     }
 
     public override AssetObjectProperty ReadJson(JsonReader reader, Type objectType, AssetObjectProperty existingValue, bool hasExistingValue,
@@ -2789,14 +2805,12 @@ public class FSoftObjectPathConverter : JsonConverter<FSoftObjectPath>
 {
     public override void WriteJson(JsonWriter writer, FSoftObjectPath value, JsonSerializer serializer)
     {
-        /*var path = value.ToString();
-        writer.WriteValue(path.Length > 0 ? path : "None");*/
         writer.WriteStartObject();
 
-        writer.WritePropertyName("AssetPathName");
+        writer.WritePropertyName(nameof(value.AssetPathName));
         serializer.Serialize(writer, value.AssetPathName);
 
-        writer.WritePropertyName("SubPathString");
+        writer.WritePropertyName(nameof(value.SubPathString));
         writer.WriteValue(value.SubPathString);
 
         writer.WriteEndObject();

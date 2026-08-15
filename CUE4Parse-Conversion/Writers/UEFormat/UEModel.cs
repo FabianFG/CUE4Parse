@@ -10,7 +10,6 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse_Conversion.Writers.UEFormat;
 
@@ -18,281 +17,211 @@ public sealed class UEModel : UEFormatExport
 {
     protected override string Identifier => "UEMODEL";
 
-    public UEModel(string name, StaticMeshDto mesh, ExportOptions options, Func<MeshLodDto<MeshVertex>, bool>? predicate = null) : base(name, options)
+    public UEModel(string name, string objectPath, StaticMeshDto mesh, ExportOptions options, Func<MeshLodDto<MeshVertex>, bool>? predicate = null)
+        : base(name, objectPath, options)
     {
-        using (var lodChunk = new FDataChunk("LODS"))
+        WriteRoot(root =>
         {
-            foreach (var lod in mesh.LODs)
-            {
-                if (predicate is not null && !predicate(lod)) continue;
-                using var subLodChunk = new FStaticDataChunk($"LOD{lod.SourceLodIndex}");
-                SerializeCommonMeshData(subLodChunk, lod);
-                subLodChunk.Serialize(lodChunk);
-
-                lodChunk.Count++;
-            }
-
-            lodChunk.Serialize(Ar);
-        }
-
-        if (mesh.BodySetup?.TryLoad<UBodySetup>(out var bodySetup) == true && bodySetup.AggGeom?.ConvexElems is { } convexElems)
-        {
-            using var collisionChunk = new FDataChunk("COLLISION", convexElems.Length);
-            foreach (var convexElem in convexElems)
-            {
-                var collision = new FConvexMeshCollision(convexElem);
-                collision.Serialize(collisionChunk);
-            }
-            collisionChunk.Serialize(Ar);
-        }
-
+            WriteLods(root, FilterLods(mesh.LODs, predicate), WriteCommonMesh);
+            WriteCollision(root, mesh);
+        });
     }
 
-    public UEModel(string name, SkeletonDto skeleton, ExportOptions options) : base(name, options)
+    public UEModel(string name, string objectPath, SkeletonDto skeleton, ExportOptions options)
+        : base(name, objectPath, options)
     {
-        using (var skeletonChunk = new FDataChunk("SKELETON", 1))
-        {
-            SerializeSkeletonData(skeletonChunk, skeleton, options.SocketFormat != ESocketFormat.None);
-            skeletonChunk.Serialize(Ar);
-        }
+        WriteRoot(root => WriteSkeleton(root, skeleton, options.SocketFormat != ESocketFormat.None));
     }
 
-    public UEModel(string name, SkeletalMeshDto mesh, ExportOptions options, Func<MeshLodDto<SkinnedMeshVertex>, bool>? predicate = null) : base(name, options)
+    public UEModel(string name, string objectPath, SkeletalMeshDto mesh, ExportOptions options, Func<MeshLodDto<SkinnedMeshVertex>, bool>? predicate = null)
+        : base(name, objectPath, options)
     {
-        if (mesh.LODs.Count > 0)
+        WriteRoot(root =>
         {
-            using var lodChunk = new FDataChunk("LODS");
-
-            foreach (var lod in mesh.LODs)
+            var lods = FilterLods(mesh.LODs, predicate);
+            WriteLods(root, lods, (attrs, lod) =>
             {
-                if (predicate is not null && !predicate(lod)) continue;
-                using var subLodChunk = new FStaticDataChunk($"LOD{lod.SourceLodIndex}");
-                SerializeCommonMeshData(subLodChunk, lod);
-                SerializeSkeletalMeshData(subLodChunk, lod, options.ExportMorphTargets ? mesh.MorphTargets : null);
-                subLodChunk.Serialize(lodChunk);
+                WriteCommonMesh(attrs, lod);
+                WriteSkinning(attrs, lod, options.ExportMorphTargets ? mesh.MorphTargets : []);
+            });
 
-                lodChunk.Count++;
-            }
-
-            lodChunk.Serialize(Ar);
-        }
-
-        using (var skeletonChunk = new FDataChunk("SKELETON", 1))
-        {
-            SerializeSkeletonData(skeletonChunk, mesh, options.SocketFormat != ESocketFormat.None);
-            skeletonChunk.Serialize(Ar);
-        }
-
-        // if (mesh.PhysicsAsset?.TryLoad<UPhysicsAsset>(out var physicsAsset) == true)
-        // {
-        //     using var physicsChunk = new FDataChunk("PHYSICS", 1);
-        //     SerializePhysicsData(physicsChunk, physicsAsset);
-        //     physicsChunk.Serialize(Ar);
-        // }
+            WriteSkeleton(root, mesh, options.SocketFormat != ESocketFormat.None);
+        });
     }
 
-    private void SerializeCommonMeshData<TVertex>(FArchiveWriter archive, MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
+    private static void WriteLods<TVertex>(
+        FDataAttributeSet root,
+        IReadOnlyList<MeshLodDto<TVertex>> lods,
+        Action<FDataAttributeSet, MeshLodDto<TVertex>> writeLodAttrs) where TVertex : struct, IMeshVertex
     {
-        var vertexCount = lod.Vertices.Length;
-        using var vertexChunk = new FDataChunk("VERTICES", vertexCount);
-        using var normalsChunk = new FDataChunk("NORMALS", vertexCount);
-        using var tangentsChunk = new FDataChunk("TANGENTS", vertexCount);
+        if (lods.Count == 0) return;
 
-        var mainUvs = new FMeshUVFloat[vertexCount];
-        for (var i = 0; i < vertexCount; i++)
+        root.AddAttribute("LODS", attr => attr.WriteArray(lods, (writer, lod) =>
         {
-            var vertex = lod.Vertices[i];
-            vertex.Position.Serialize(vertexChunk);
-
-            normalsChunk.Write(vertex.Normal.W); // EUEFormatVersion.SerializeBinormalSign
-
-            var normal = (FVector) vertex.Normal;
-            normal /= MathF.Sqrt(normal | normal);
-            normal.Serialize(normalsChunk);
-
-            var tangent = (FVector) vertex.Tangent;
-            tangent.Normalize();
-            tangent.Serialize(tangentsChunk);
-
-            mainUvs[i] = vertex.Uv;
-        }
-
-        vertexChunk.Serialize(archive);
-        normalsChunk.Serialize(archive);
-        tangentsChunk.Serialize(archive);
-
-        using (var texCoordsChunk = new FDataChunk("TEXCOORDS"))
-        {
-            void SerializeUvSet(IEnumerable<FMeshUVFloat> uvSet)
-            {
-                texCoordsChunk.WriteArray(uvSet, uv => uv.Serialize(texCoordsChunk));
-                texCoordsChunk.Count++;
-            }
-
-            SerializeUvSet(mainUvs);
-            foreach (var extraUvs in lod.ExtraUvs)
-            {
-                SerializeUvSet(extraUvs);
-            }
-
-            texCoordsChunk.Serialize(archive);
-        }
-
-        using (var indexChunk = new FDataChunk("INDICES", lod.Indices.Length))
-        {
-            for (var i = 0; i < lod.Indices.Length; i++)
-            {
-                indexChunk.Write(lod.Indices[i]);
-            }
-            indexChunk.Serialize(archive);
-        }
-
-        if (lod.VertexColors is { Length: > 0 })
-        {
-            using var vertexColorChunk = new FDataChunk("VERTEXCOLORS");
-            foreach (var vertexColor in lod.VertexColors)
-            {
-                vertexColorChunk.WriteFString(vertexColor.Name);
-                vertexColorChunk.WriteArray(vertexColor.Colors, (writer, color) => color.Serialize(writer));
-                vertexColorChunk.Count++;
-            }
-
-            vertexColorChunk.Serialize(archive);
-        }
-
-        using (var materialChunk = new FDataChunk("MATERIALS", lod.Sections.Length))
-        {
-            for (var i = 0; i < lod.Sections.Length; i++)
-            {
-                var section = lod.Sections[i];
-                var material = lod.Owner.GetMaterial(section);
-
-                materialChunk.WriteFString(material?.SlotName ?? $"MaterialSlot_{i}");
-                materialChunk.WriteFString(material?.Material?.ResolvedObject?.GetPathName() ?? string.Empty);
-                materialChunk.Write(section.FirstIndex);
-                materialChunk.Write(section.NumFaces);
-            }
-
-            materialChunk.Serialize(archive);
-        }
+            writer.WriteFString($"LOD{lod.SourceLodIndex}");
+            writer.WriteAttributes(attrs => writeLodAttrs(attrs, lod));
+        }));
     }
 
-    private void SerializeSkeletalMeshData(FArchiveWriter archive, MeshLodDto<SkinnedMeshVertex> lod, FPackageIndex[]? morphTargets)
+    private static void WriteCollision(FDataAttributeSet root, StaticMeshDto mesh)
     {
-        using (var weightsChunk = new FDataChunk("WEIGHTS"))
-        {
-            for (var vertexIndex = 0; vertexIndex < lod.Vertices.Length; vertexIndex++)
-            {
-                var vert = lod.Vertices[vertexIndex];
+        if (mesh.BodySetup is null) return;
+        if (!mesh.BodySetup.TryLoad<UBodySetup>(out var bodySetup)) return;
+        if (bodySetup.AggGeom?.ConvexElems is not { Length: > 0 } convexElems) return;
 
-                foreach (var influence in vert.Influences)
+        root.AddAttribute("COLLISION", attr => attr.WriteArray(convexElems, (writer, elem) =>
+            new FConvexMeshCollision(elem).Serialize(writer)));
+    }
+
+    private static void WriteSkeleton(FDataAttributeSet root, SkeletonDto skeleton, bool exportSockets)
+    {
+        root.AddAttribute("SKELETON", attr => attr.WriteAttributes(attrs =>
+        {
+            attrs.AddAttribute("METADATA", attr => attr.WriteFString(skeleton.SkeletonPathName ?? "Skeleton"));
+
+            attrs.AddAttribute("BONES", attr => attr.WriteArray(skeleton.Bones, (writer, bone) =>
+            {
+                writer.WriteFString(bone.Name);
+                writer.Write(bone.ParentIndex);
+                bone.Transform.Translation.Serialize(writer);
+                bone.Transform.Rotation.Serialize(writer);
+                bone.Transform.Scale3D.Serialize(writer);
+            }));
+
+            if (exportSockets && skeleton.Sockets is { Length: > 0 })
+            {
+                var sockets = new List<USkeletalMeshSocket>();
+                foreach (var socketObject in skeleton.Sockets)
                 {
-                    weightsChunk.Write(influence.Bone);
-                    weightsChunk.Write(vertexIndex);
-                    weightsChunk.Write(influence.Weight);
-                    weightsChunk.Count++;
+                    if (socketObject.Load<USkeletalMeshSocket>() is { } socket)
+                        sockets.Add(socket);
+                }
+
+                if (sockets.Count > 0)
+                {
+                    attrs.AddAttribute("SOCKETS", attr => attr.WriteArray(sockets, (writer, socket) =>
+                    {
+                        writer.WriteFString(socket.SocketName.Text);
+                        writer.WriteFString(socket.BoneName.Text);
+                        socket.RelativeLocation.Serialize(writer);
+                        socket.RelativeRotation.Quaternion().Serialize(writer);
+                        socket.RelativeScale.Serialize(writer);
+                    }));
                 }
             }
 
-            weightsChunk.Serialize(archive);
-        }
-
-        if (morphTargets is { Length: > 0 })
-        {
-            using var morphTargetsChunk = new FDataChunk("MORPHTARGETS");
-            foreach (var morphTarget in morphTargets)
+            if (skeleton.VirtualBones is { Length: > 0 })
             {
-                var morph = morphTarget.Load<UMorphTarget>();
-                if (morph?.MorphLODModels is null || lod.SourceLodIndex >= morph.MorphLODModels.Length || morph.MorphLODModels[lod.SourceLodIndex].Vertices.Length == 0)
-                    continue;
-
-                var morphLod = morph.MorphLODModels[lod.SourceLodIndex];
-
-                var morphData = new FMorphTarget(morph.Name, morphLod);
-                morphData.Serialize(morphTargetsChunk);
-                morphTargetsChunk.Count++;
+                attrs.AddAttribute("VIRTUALBONES", attr => attr.WriteArray(skeleton.VirtualBones, (writer, virtualBone) =>
+                {
+                    writer.WriteFString(virtualBone.SourceBoneName.Text);
+                    writer.WriteFString(virtualBone.TargetBoneName.Text);
+                    writer.WriteFString(virtualBone.VirtualBoneName.Text);
+                }));
             }
-            morphTargetsChunk.Serialize(archive);
-        }
+        }));
     }
 
-    private void SerializeSkeletonData(FArchiveWriter archive, SkeletonDto skeleton, bool exportSockets)
+    private static void WriteCommonMesh<TVertex>(FDataAttributeSet attrs, MeshLodDto<TVertex> lod)
+        where TVertex : struct, IMeshVertex
     {
-        using (var metaDataChunk = new FDataChunk("METADATA", 1))
-        {
-            metaDataChunk.WriteFString(skeleton.SkeletonPathName ?? "Skeleton");
-            metaDataChunk.Serialize(archive);
-        }
+        attrs.AddAttribute("VERTICES", attr => attr.WriteArray(lod.Vertices, (writer, vertex) =>
+            vertex.Position.Serialize(writer)));
 
-        using (var boneChunk = new FDataChunk("BONES", skeleton.Bones.Length))
+        attrs.AddAttribute("NORMALS", attr => attr.WriteArray(lod.Vertices, (writer, vertex) =>
         {
-            foreach (var bone in skeleton.Bones)
+            writer.Write(vertex.Normal.W);
+            var normal = (FVector) vertex.Normal;
+            normal /= MathF.Sqrt(normal | normal);
+            normal.Serialize(writer);
+        }));
+
+        attrs.AddAttribute("TANGENTS", attr => attr.WriteArray(lod.Vertices, (writer, vertex) =>
+        {
+            var tangent = (FVector) vertex.Tangent;
+            tangent.Normalize();
+            tangent.Serialize(writer);
+        }));
+
+        attrs.AddAttribute("TEXCOORDS", attr =>
+        {
+            var mainUvs = lod.Vertices.Select(v => v.Uv).ToArray();
+            
+            var uvSets = new List<(string Name, FMeshUVFloat[] Uvs)>(1 + lod.ExtraUvs.Length) { ("UV0", mainUvs) };
+            uvSets.AddRange(lod.ExtraUvs.Select((t, i) => ($"UV{i + 1}", t)));
+
+            attr.WriteArray(uvSets, (writer, uvSet) =>
             {
-                var boneName = new FString(bone.Name);
-                boneName.Serialize(boneChunk);
+                writer.WriteFString(uvSet.Name);
+                writer.WriteArray(uvSet.Uvs, (writer, uv) => uv.Serialize(writer));
+            });
+        });
 
-                boneChunk.Write(bone.ParentIndex);
+        attrs.AddAttribute("INDICES", attr => attr.WriteArray(lod.Indices, (writer, index) => writer.Write(index)));
 
-                var bonePos = bone.Transform.Translation;
-                bonePos.Serialize(boneChunk);
-
-                var boneRot = bone.Transform.Rotation;
-                boneRot.Serialize(boneChunk);
-            }
-            boneChunk.Serialize(archive);
-        }
-
-        if (exportSockets && skeleton.Sockets is { Length: > 0 })
+        if (lod.VertexColors is { Length: > 0 })
         {
-            using var socketChunk = new FDataChunk("SOCKETS", skeleton.Sockets.Length);
-            foreach (var socketObject in skeleton.Sockets)
+            attrs.AddAttribute("VERTEXCOLORS", attr => attr.WriteArray(lod.VertexColors, (writer, colorSet) =>
             {
-                var socket = socketObject.Load<USkeletalMeshSocket>();
-                if (socket is null) continue;
-
-                socketChunk.WriteFString(socket.SocketName.Text);
-                socketChunk.WriteFString(socket.BoneName.Text);
-
-                var bonePos = socket.RelativeLocation;
-                bonePos.Serialize(socketChunk);
-
-                var boneRot = socket.RelativeRotation.Quaternion();
-                boneRot.Serialize(socketChunk);
-
-                var boneScale = socket.RelativeScale;
-                boneScale.Serialize(socketChunk);
-            }
-
-            socketChunk.Serialize(archive);
+                writer.WriteFString(colorSet.Name);
+                writer.WriteArray(colorSet.Colors, (writer, color) => color.Serialize(writer));
+            }));
         }
 
-        if (skeleton.VirtualBones is { Length: > 0 })
+        attrs.AddAttribute("MATERIALS", attr => attr.WriteArray(lod.Sections, (writer, section, i) =>
         {
-            using var virtualBoneChunk = new FDataChunk("VIRTUALBONES", skeleton.VirtualBones.Length);
-            foreach (var virtualBone in skeleton.VirtualBones)
-            {
-                virtualBoneChunk.WriteFString(virtualBone.SourceBoneName.Text);
-                virtualBoneChunk.WriteFString(virtualBone.TargetBoneName.Text);
-                virtualBoneChunk.WriteFString(virtualBone.VirtualBoneName.Text);
-            }
-
-            virtualBoneChunk.Serialize(archive);
-        }
+            var material = lod.Owner.GetMaterial(section);
+            writer.WriteFString(material?.SlotName ?? $"MaterialSlot_{i}");
+            writer.WriteFString(material?.Material?.ResolvedObject?.GetPathName() ?? string.Empty);
+            writer.Write(section.FirstIndex);
+            writer.Write(section.NumFaces);
+        }));
     }
 
-    private void SerializePhysicsData(FArchiveWriter archive, UPhysicsAsset physicsAsset)
+    private static void WriteSkinning(FDataAttributeSet attrs, MeshLodDto<SkinnedMeshVertex> lod, FPackageIndex[]? morphTargets)
     {
-        using var bodyChunk = new FDataChunk("BODIES", physicsAsset.SkeletalBodySetups.Length);
-
-        foreach (var bodySetupLazy in physicsAsset.SkeletalBodySetups)
+        var weights = new List<(ushort Bone, int VertexIndex, float Weight)>();
+        for (var vertexIndex = 0; vertexIndex < lod.Vertices.Length; vertexIndex++)
         {
-            if (!bodySetupLazy.TryLoad<USkeletalBodySetup>(out var bodySetup)) continue;
-
-            var exportBodySetup = new FBodySetup(bodySetup);
-            exportBodySetup.Serialize(bodyChunk);
+            weights.AddRange(lod.Vertices[vertexIndex].Influences.Select(influence => (influence.Bone, vertexIndex, influence.Weight)));
         }
 
-        bodyChunk.Serialize(archive);
+        if (weights.Count > 0)
+        {
+            attrs.AddAttribute("WEIGHTS", attr => attr.WriteArray(weights, (writer, weight) =>
+            {
+                writer.Write(weight.Bone);
+                writer.Write(weight.VertexIndex);
+                writer.Write(weight.Weight);
+            }));
+        }
+        
+        var morphList = new List<FMorphTarget>();
+        foreach (var morphTarget in morphTargets ?? [])
+        {
+            var morph = morphTarget.Load<UMorphTarget>();
+            if (morph?.MorphLODModels is null ||
+                lod.SourceLodIndex >= morph.MorphLODModels.Length ||
+                morph.MorphLODModels[lod.SourceLodIndex].Vertices.Length == 0)
+                continue;
+
+            morphList.Add(new FMorphTarget(morph.Name, morph.MorphLODModels[lod.SourceLodIndex]));
+        }
+
+        if (morphList.Count > 0)
+        {
+            attrs.AddAttribute("MORPHTARGETS", attr => attr.WriteArray(morphList));
+        }
+        
     }
 
+    private static List<MeshLodDto<TVertex>> FilterLods<TVertex>(
+        IList<MeshLodDto<TVertex>> lods,
+        Func<MeshLodDto<TVertex>, bool>? predicate) where TVertex : struct, IMeshVertex
+    {
+        if (predicate is null)
+            return lods as List<MeshLodDto<TVertex>> ?? [..lods];
+
+        return lods.Where(predicate).ToList();
+    }
 }

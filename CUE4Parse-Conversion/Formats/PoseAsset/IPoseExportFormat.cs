@@ -5,6 +5,5 @@ namespace CUE4Parse_Conversion.Formats.PoseAsset;
 
 public interface IPoseExportFormat : IExportFormat
 {
-    public ExportFile Build(string objectName, ExportOptions options, CPoseAsset poseAsset);
+    public ExportFile Build(string objectName, string objectPath, ExportOptions options, CPoseAsset poseAsset);
 }
-

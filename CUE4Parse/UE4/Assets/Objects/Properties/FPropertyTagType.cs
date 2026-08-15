@@ -36,7 +36,6 @@ public abstract class FPropertyTagType<T> : FPropertyTagType
 [JsonConverter(typeof(FPropertyTagTypeConverter))]
 public abstract class FPropertyTagType
 {
-    
     public abstract object? GenericValue { get; }
     public object? GetValue(Type type)
     {
@@ -87,6 +86,12 @@ public abstract class FPropertyTagType
                 return CreateDictionary(type, mapProp.Value!.Properties);
             case OptionalProperty optionalProperty:
                 return optionalProperty.Value?.GetValue(type);
+            case AssetObjectProperty assetObjectProp when typeof(FSoftObjectPath).IsAssignableFrom(type):
+                var str = assetObjectProp.Value;
+                if (str is null or "None") return new FSoftObjectPath();
+                var index = str.LastIndexOf('.');
+                var (path, substring) = index == -1 ? (str, "") : (str[..index], str[(index+1)..]);
+                return new FSoftObjectPath(path, substring, assetObjectProp.Owner);
             default:
                 Log.Warning("Incorrect type conversion from {0} to {1}", this, type);
                 return null;
@@ -145,8 +150,7 @@ public abstract class FPropertyTagType
         var tagType = propertyType switch
         {
             "ArrayProperty" => new ArrayProperty(Ar, tagData, type, size),
-            "AssetObjectProperty" => new AssetObjectProperty(Ar, type),
-            "AssetClassProperty" => new AssetObjectProperty(Ar, type),
+            "AssetObjectProperty" or "AssetClassProperty" => new AssetObjectProperty(Ar, type),
             "BoolProperty" => new BoolProperty(Ar, tagData, type),
             "ByteProperty" => (tagData?.EnumName != null && !tagData.EnumName.Equals("None", StringComparison.OrdinalIgnoreCase)) || (type is ReadType.MAP && Ar.TestReadFName()) || (Ar.Game < GAME_UE4_0 && Ar.Ver > EUnrealEngineObjectUE3Version.PropertyFlagsSizeExpandedTo64Bits && size != 1)
                 ? (FPropertyTagType?) new EnumProperty(Ar, tagData, type)
@@ -175,8 +179,7 @@ public abstract class FPropertyTagType
                     _ => new ObjectProperty(Ar, type),
                 },
             "SetProperty" => new SetProperty(Ar, tagData, type),
-            "SoftClassProperty" => new SoftObjectProperty(Ar, type),
-            "SoftObjectProperty" => new SoftObjectProperty(Ar, type),
+            "SoftClassProperty" or "SoftObjectProperty" => new SoftObjectProperty(Ar, type),
             "StrProperty" => new StrProperty(Ar, type),
             "AnsiStrProperty" => new AnsiStrProperty(Ar, type),
             "Utf8StrProperty" => new Utf8StrProperty(Ar, type),

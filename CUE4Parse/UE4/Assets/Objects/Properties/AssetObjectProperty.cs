@@ -1,4 +1,4 @@
-using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects.Properties;
@@ -6,10 +6,17 @@ namespace CUE4Parse.UE4.Assets.Objects.Properties;
 [JsonConverter(typeof(AssetObjectPropertyConverter))]
 public class AssetObjectProperty : FPropertyTagType<string>
 {
-    public AssetObjectProperty(string value) => Value = value;
+    public readonly IPackage? Owner;
 
-    public AssetObjectProperty(FArchive Ar, ReadType type)
+    public AssetObjectProperty(string value, IPackage? owner)
     {
+        Owner = owner;
+        Value = value;
+    }
+
+    public AssetObjectProperty(FAssetArchive Ar, ReadType type)
+    {
+        Owner = Ar.Owner;
         Value = type switch
         {
             ReadType.ZERO => string.Empty,

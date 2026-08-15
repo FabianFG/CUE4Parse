@@ -12,7 +12,7 @@ public class UsdAnimFormat : IAnimExportFormat
 {
     public string DisplayName => "USD Animation (.usda)";
 
-    public IReadOnlyList<ExportFile> Build(string objectName, ExportOptions options, CAnimSet animSet)
+    public IReadOnlyList<ExportFile> Build(string objectName, string objectPath, ExportOptions options, CAnimSet animSet)
     {
         var dto = new SkeletonDto(animSet.Skeleton);
         var root = dto.ToSkelRoot();

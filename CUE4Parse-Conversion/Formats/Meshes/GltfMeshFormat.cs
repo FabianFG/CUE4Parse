@@ -9,7 +9,7 @@ public sealed class GltfMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "glTF 2.0 (binary)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, string objectPath, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
 
@@ -24,7 +24,7 @@ public sealed class GltfMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, string objectPath, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
 
@@ -39,7 +39,7 @@ public sealed class GltfMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, SkeletonDto dto)
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, string objectPath, ExportOptions options, SkeletonDto dto)
         => throw new NotSupportedException(
             "glTF does not support skeleton-only exports. Please export a skeletal mesh to get a glTF file containing the skeleton.");
 }

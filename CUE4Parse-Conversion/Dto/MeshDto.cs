@@ -70,11 +70,6 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         Sockets = skeleton.Sockets;
     }
 
-    protected MeshDto(ALandscapeProxy landscape) : base(landscape)
-    {
-        Materials = [new MeshMaterialDto(null, landscape.LandscapeMaterial)];
-    }
-
     public MeshMaterialDto? GetMaterial(MeshSectionDto section)
     {
         var index = section.MaterialIndex;
@@ -180,6 +175,11 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
     }
 
+    protected StaticMeshDto(UObject owner, MeshMaterialDto[] materials) : base(owner, materials)
+    {
+
+    }
+
     /// <summary>
     /// Builds a static mesh DTO purely from nanite cluster data
     /// </summary>
@@ -222,11 +222,6 @@ public class StaticMeshDto : MeshDto<MeshVertex>
     }
 
     public StaticMeshDto(USplineMeshComponent spline, EMeshQuality quality = EMeshQuality.All) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), quality, ENaniteMeshFormat.NoNanite, spline)
-    {
-
-    }
-
-    protected StaticMeshDto(ALandscapeProxy landscape) : base(landscape)
     {
 
     }
@@ -365,7 +360,31 @@ public sealed class LandscapeMeshDto : StaticMeshDto
     public readonly ConcurrentDictionary<string, SKBitmap>? BitmapTextures;
     public readonly Image<L16>? HeightmapTexture;
 
-    public LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeFlags flags = ELandscapeFlags.Mesh, ULandscapeComponent[]? components = null) : base(landscape)
+    public LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeFlags flags = ELandscapeFlags.Mesh, ULandscapeComponent[]? components = null)
+        : this(landscape, flags, PrepareComponents(landscape, components))
+    {
+
+    }
+
+    private LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeFlags flags, (ULandscapeComponent[] Components, int SizeQuads, MeshMaterialDto[] Materials) prepared)
+        : base(landscape, prepared.Materials)
+    {
+        foreach (var component in prepared.Components)
+        {
+            Bounds = Bounds.ExpandBy(component.CachedLocalBox.GetSize());
+        }
+
+        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, prepared.Components, prepared.SizeQuads, flags, out BitmapTextures, out HeightmapTexture));
+    }
+
+    public LandscapeMeshDto(ULandscapeComponent component)
+        : base(component, [new MeshMaterialDto(component.OverrideMaterial?.Name, component.OverrideMaterial)])
+    {
+        Bounds = component.CachedLocalBox;
+        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, ELandscapeFlags.Mesh, out BitmapTextures, out HeightmapTexture));
+    }
+
+    private static (ULandscapeComponent[] Components, int SizeQuads, MeshMaterialDto[] Materials) PrepareComponents(ALandscapeProxy landscape, ULandscapeComponent[]? components)
     {
         var sizeQuads = landscape.ComponentSizeQuads;
 
@@ -386,18 +405,14 @@ public sealed class LandscapeMeshDto : StaticMeshDto
             }
         }
 
-        foreach (var component in components)
+        var materials = new MeshMaterialDto[components.Length];
+        for (var i = 0; i < components.Length; i++)
         {
-            Bounds = Bounds.ExpandBy(component.CachedLocalBox.GetSize());
+            var mat = components[i].OverrideMaterial ?? landscape.LandscapeMaterial;
+            materials[i] = new MeshMaterialDto(mat?.Name, mat);
         }
 
-        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, components, sizeQuads, flags, out BitmapTextures, out HeightmapTexture));
-    }
-
-    public LandscapeMeshDto(ULandscapeComponent component) : base(component)
-    {
-        Bounds = component.CachedLocalBox;
-        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, ELandscapeFlags.Mesh, out BitmapTextures, out HeightmapTexture));
+        return (components, sizeQuads, materials);
     }
 
     public override void Dispose()
