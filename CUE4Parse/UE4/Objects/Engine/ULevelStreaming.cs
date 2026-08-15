@@ -12,7 +12,7 @@ public class ULevelStreaming : Assets.Exports.UObject
     {
         base.Deserialize(Ar, validPos);
         WorldAsset = GetOrDefault<FSoftObjectPath>(nameof(WorldAsset));
-        PackageName = GetOrDefault<FName>(nameof(PackageName));
+        PackageName = GetOrDefault<FName?>(nameof(PackageName));
     }
 }
 

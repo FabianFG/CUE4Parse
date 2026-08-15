@@ -6,11 +6,11 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Engine
 {
-    public struct FLevelViewportInfo
+    public readonly struct FLevelViewportInfo
     {
-        public FVector CamPosition;
-        public FRotator CamRotation;
-        public float CamOrthoZoom;
+        public readonly FVector CamPosition;
+        public readonly FRotator CamRotation;
+        public readonly float CamOrthoZoom;
     }
 
     public class UWorld : Assets.Exports.UObject

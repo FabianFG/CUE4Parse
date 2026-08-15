@@ -438,15 +438,15 @@ public class AWorldPartitionReplay : AActor;
 public class AWorldPartitionVolume : AVolume;
 public class AWorldSettings : AInfo
 {
-    public FPackageIndex WorldPartition;
-    public FPackageIndex[] StreamingLevels { get; private set; }
+    public FPackageIndex? WorldPartition { get; private set; }
+    public FPackageIndex[]? StreamingLevels { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 20;
         base.Deserialize(Ar, validPos);
 
-        WorldPartition = GetOrDefault(nameof(WorldPartition), new FPackageIndex());
-        StreamingLevels = GetOrDefault<FPackageIndex[]>("StreamingLevels", []);
+        WorldPartition = GetOrDefault<FPackageIndex?>(nameof(WorldPartition));
+        StreamingLevels = GetOrDefault<FPackageIndex[]?>(nameof(StreamingLevels));
     }
 }
