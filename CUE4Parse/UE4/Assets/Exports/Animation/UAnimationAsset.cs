@@ -8,14 +8,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public abstract class UAnimationAsset : UObject
     {
-        public FPackageIndex? Skeleton; // USkeleton
+        public FPackageIndex? Skeleton { get; private set; } // USkeleton
         public FGuid SkeletonGuid;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
 
-            Skeleton = GetOrDefault<FPackageIndex>(nameof(Skeleton));
+            Skeleton = GetOrDefault<FPackageIndex?>(nameof(Skeleton));
 
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKELETON_GUID_SERIALIZATION)
             {
