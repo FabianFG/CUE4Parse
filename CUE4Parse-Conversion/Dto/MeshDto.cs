@@ -1,14 +1,11 @@
-﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse_Conversion.Writers;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -47,6 +44,15 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
             Materials[i] = new MeshMaterialDto(mesh.StaticMaterials[i]);
         }
         Sockets = mesh.Sockets;
+    }
+
+    protected MeshDto(UGeometryCollection mesh) : base(mesh)
+    {
+        Materials = new MeshMaterialDto[mesh.Materials.Length];
+        for (var i = 0; i < Materials.Length; i++)
+        {
+            Materials[i] = new MeshMaterialDto($"{i}", mesh.Materials[i]);
+        }
     }
 
     protected MeshDto(USkeletalMesh mesh) : base(mesh)
@@ -218,6 +224,25 @@ public class StaticMeshDto : MeshDto<MeshVertex>
             ParseMeshRenderData(mesh.RenderData, quality, spline);
         }
 
+        SetLodSuffixes();
+    }
+
+    public StaticMeshDto(UGeometryCollection mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite) : base(mesh)
+    {
+        if (mesh.RenderData?.NaniteResources is not { PageStreamingStates.Length: > 0 } nanite) return;
+
+        ParseNaniteResources(this, nanite, naniteFormat);
+
+        if (nanite.MeshBounds is { } meshBounds)
+            Bounds = meshBounds.GetBox();
+        else if (mesh.RenderData.PreSkinnedBounds is { }  preSkinnedBounds )
+            Bounds = preSkinnedBounds.GetBox();
+        else if (mesh.RenderData.MeshDescription?.PreSkinnedBounds  is { } meshDescriptionBounds)
+            Bounds = meshDescriptionBounds.GetBox();
+        else if (LODs.First() is { } naniteLod)
+            Bounds = naniteLod.CalculateLodBounds();
+        else
+            return;
         SetLodSuffixes();
     }
 

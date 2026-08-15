@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 
@@ -11,11 +12,12 @@ public class FGeometryCollectionRenderData
 {
     public bool bHasMeshData;
     public bool bHasNaniteData;
-    public FGeometryCollectionMeshResources? MeshResources;
+    [JsonIgnore] public FGeometryCollectionMeshResources? MeshResources;
     public FGeometryCollectionMeshDescription? MeshDescription;
     public FNaniteResources? NaniteResources;
     public FBoxSphereBounds? PreSkinnedBounds;
-    public object? CustomData;
+    [JsonIgnore] public object? CustomData;
+
     public FGeometryCollectionRenderData(FAssetArchive Ar, bool bStripRenderDataOnCook, bool nanite = false)
     {
         if (Ar.Game < GAME_UE5_3)

@@ -47,7 +47,7 @@ public class FManagedArrayCollectionConverter : JsonConverter<FManagedArrayColle
         foreach (var kvp in value.Map)
         {
             writer.WritePropertyName(kvp.Key.ToString());
-            serializer.Serialize(writer, kvp.Value.ArrayType);
+            writer.WriteValue($"{kvp.Value.ArrayType}, Length: {kvp.Value.ManagedArray?.Data?.Length ?? 0}");
         }
         writer.WriteEndObject();
 
