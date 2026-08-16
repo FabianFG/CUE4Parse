@@ -58,7 +58,7 @@ public sealed class UEModel : UEFormatExport
 
         root.AddAttribute("LODS", attr => attr.WriteArray(lods, (writer, lod) =>
         {
-            writer.WriteFString($"LOD{lod.SourceLodIndex}");
+            writer.WriteFString(lod.IsNanite ? "Nanite" : $"LOD{lod.SourceLodIndex}");
             writer.WriteAttributes(attrs => writeLodAttrs(attrs, lod));
         }));
     }

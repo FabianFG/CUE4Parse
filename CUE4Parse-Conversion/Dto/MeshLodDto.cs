@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 
 namespace CUE4Parse_Conversion.Dto;
@@ -6,6 +6,9 @@ namespace CUE4Parse_Conversion.Dto;
 public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
 {
     public readonly MeshDto<TVertex> Owner;
+    /// <summary>
+    /// Index into the original mesh LOD array, or uint.MaxValue for the Nanite LOD.
+    /// </summary>
     public readonly uint SourceLodIndex;
     public readonly uint[] Indices;
     public readonly TVertex[] Vertices;
@@ -14,7 +17,7 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
     public readonly MeshVertexColorDto[]? VertexColors;
     public readonly float ScreenSize;
     public readonly bool IsTwoSided;
-    public readonly bool IsNanite;
+    public bool IsNanite => SourceLodIndex == uint.MaxValue;
 
     internal string? _suffix;
 
@@ -39,11 +42,10 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
         VertexColors = vertexColors;
         ScreenSize = screenSize;
         IsTwoSided = isTwoSided;
-        IsNanite = isNanite;
     }
 
-    private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false, bool isNanite = false)
-        : this(owner, sourceLodIndex, indices, vertices, sections, extraUv, vertexColors != null ? [new MeshVertexColorDto("COL0", vertexColors)] : null, screenSize, isTwoSided, isNanite)
+    private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
+        : this(owner, sourceLodIndex, indices, vertices, sections, extraUv, vertexColors != null ? [new MeshVertexColorDto("COL0", vertexColors)] : null, screenSize, isTwoSided)
     {
 
     }

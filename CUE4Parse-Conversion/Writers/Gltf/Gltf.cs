@@ -43,7 +43,7 @@ public class Gltf
             throw new ArgumentException("LOD owner must be a SkeletalMeshDto for skeletal meshes.", nameof(lod));
 
         var sceneBuilder = new SceneBuilder();
-        var armatureRoot = new NodeBuilder($"{name}.ao_LOD{lod.SourceLodIndex}");
+        var armatureRoot = new NodeBuilder(string.IsNullOrEmpty(lod._suffix) ? $"{name}.ao" : $"{name}.ao{lod._suffix}");
         var armature = CreateGltfSkeleton(mesh.Bones, armatureRoot);
 
         var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(name);

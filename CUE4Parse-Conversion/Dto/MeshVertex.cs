@@ -39,7 +39,7 @@ public readonly struct MeshVertex : IMeshVertex, INaniteVertex<MeshVertex>
 
     }
 
-    private MeshVertex(FVector position, FNaniteVertexAttributes attributes, bool hasTangents) : this(position, new FVector4(attributes.Normal), hasTangents ? attributes.TangentXAndSign : FVector4.ZeroVector, new FMeshUVFloat(attributes.UVs[0].X, attributes.UVs[0].Y))
+    private MeshVertex(FVector position, FNaniteVertexAttributes attributes, bool hasTangents) : this(position, new FVector4(attributes.Normal), hasTangents ? attributes.TangentXAndSign : new FVector4(0, 0, 0, 1), new FMeshUVFloat(attributes.UVs[0].X, attributes.UVs[0].Y))
     {
 
     }

@@ -93,7 +93,7 @@ public partial class MeshLodDto<TVertex>
             }
         });
 
-        return new MeshLodDto<TNaniteVertex>(owner, 0, indices, vertices, sections, extraUvs, vertexColors, 1.0f, false, true);
+        return new MeshLodDto<TNaniteVertex>(owner, uint.MaxValue, indices, vertices, sections, extraUvs, vertexColors, 1.0f, false);
 
         int FetchAdd(ref int location, int value) => Interlocked.Add(ref location, value) - value;
     }

@@ -376,7 +376,7 @@ public sealed class SkeletalMeshDto : SkeletonDto
     public FPackageIndex[]? MorphTargets { get; private set; }
     public FPackageIndex[]? AssetUserData { get; private set; }
 
-    public SkeletalMeshDto(USkeletalMesh mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite) : base(mesh)
+    public SkeletalMeshDto(USkeletalMesh mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, bool exportMorphTarget = true) : base(mesh)
     {
         ArgumentNullException.ThrowIfNull(mesh.LODModels, "Mesh has no LOD data");
 
@@ -389,7 +389,7 @@ public sealed class SkeletalMeshDto : SkeletonDto
             ParseMeshRenderData(mesh, quality);
         }
 
-        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
+        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite && MorphTargets is { Length: > 0} && exportMorphTarget || LODs.Count == 0;
         if (shouldParseNanite && mesh.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
         {
             ParseNaniteResources(this, nanite, naniteFormat);
