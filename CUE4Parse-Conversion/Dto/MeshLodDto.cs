@@ -50,19 +50,21 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
 
     public FBox CalculateLodBounds()
     {
+        if (Vertices.Length == 0) return new FBox(FVector.ZeroVector, FVector.OneVector);
+
         var min = new FVector(float.MaxValue, float.MaxValue, float.MaxValue);
         var max = new FVector(float.MinValue, float.MinValue, float.MinValue);
         foreach (var vert in Vertices)
         {
             var v = vert.Position;
-            if (v[0] < min[0]) min[0] = v[0];
-            if (v[0] > max[0]) max[0] = v[0];
-            if (v[1] < min[1]) min[1] = v[1];
-            if (v[1] > max[1]) max[1] = v[1];
-            if (v[2] < min[2]) min[2] = v[2];
-            if (v[2] > max[2]) max[2] = v[2];
+            if (v.X < min.X) min.X = v.X;
+            if (v.X > max.X) max.X = v.X;
+            if (v.Y < min.Y) min.Y = v.Y;
+            if (v.Y > max.Y) max.Y = v.Y;
+            if (v.Z < min.Z) min.Z = v.Z;
+            if (v.Z > max.Z) max.Z = v.Z;
         }
 
-        return new FBox((min + max) / 2.0f, (max - min) / 2.0f);
+        return new FBox(min, max);
     }
 }

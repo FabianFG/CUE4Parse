@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
+using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -227,22 +228,42 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         SetLodSuffixes();
     }
 
-    public StaticMeshDto(UGeometryCollection mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite) : base(mesh)
+    public StaticMeshDto(UGeometryCollection mesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite) : base(mesh)
     {
-        if (mesh.RenderData?.NaniteResources is not { PageStreamingStates.Length: > 0 } nanite) return;
+        // geometry collection meshes can also simply have a FGeometryCollection to work with, as of today this is not the goal of the dto to support this variant
+        // (see GeometryCollectionComponentDto)
 
-        ParseNaniteResources(this, nanite, naniteFormat);
+        ArgumentNullException.ThrowIfNull(mesh.RenderData, "Geometry collection has no render data");
 
-        if (nanite.MeshBounds is { } meshBounds)
-            Bounds = meshBounds.GetBox();
-        else if (mesh.RenderData.PreSkinnedBounds is { }  preSkinnedBounds )
-            Bounds = preSkinnedBounds.GetBox();
+        FBox? bounds = null;
+        if (mesh.RenderData.PreSkinnedBounds is { } preSkinnedBounds)
+            bounds = preSkinnedBounds.GetBox();
         else if (mesh.RenderData.MeshDescription?.PreSkinnedBounds  is { } meshDescriptionBounds)
-            Bounds = meshDescriptionBounds.GetBox();
-        else if (LODs.First() is { } naniteLod)
-            Bounds = naniteLod.CalculateLodBounds();
-        else
-            return;
+            bounds = meshDescriptionBounds.GetBox();
+
+        if (naniteFormat != ENaniteMeshFormat.NaniteOnly) // just so we don't waste time
+        {
+            ParseCollectionRenderData(mesh.RenderData);
+        }
+
+        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
+        if (shouldParseNanite && mesh.RenderData.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
+        {
+            ParseNaniteResources(this, nanite, naniteFormat);
+
+            if (nanite.MeshBounds is { } meshBounds)
+                bounds = meshBounds.GetBox();
+        }
+        else if (LODs.Count == 0) // in case someone put NaniteOnly but there was no nanite to parse
+        {
+            ParseCollectionRenderData(mesh.RenderData);
+        }
+
+        if (bounds == null && LODs.First() is { } lod)
+            bounds = lod.CalculateLodBounds();
+
+        Bounds = bounds ?? new FBox(FVector.ZeroVector, FVector.OneVector);
+
         SetLodSuffixes();
     }
 
@@ -263,6 +284,25 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
             LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, sourceLodIndex, renderData.LODs[sourceLodIndex], screenSize, spline));
         }
+    }
+
+    private void ParseCollectionRenderData(FGeometryCollectionRenderData renderData)
+    {
+        FGeometryCollectionMeshResources? resources = null;
+        FGeometryCollectionMeshDescription? description = null;
+        if (renderData.CustomData is List<(FGeometryCollectionMeshResources?, FGeometryCollectionMeshDescription?)> { Count: > 0 } customData) // MR
+        {
+            resources = customData[0].Item1;
+            description = customData[0].Item2;
+            // CustomData[0] = SM
+            // CustomData[1] = plane
+            // CustomData[2] = SK?? it really looks like it's CustomData[0] with all bones at the origin
+            // CustomData[3] = plane
+        }
+
+        ArgumentNullException.ThrowIfNull(resources, "Geometry collection has no mesh resources");
+        ArgumentNullException.ThrowIfNull(description, "Geometry collection has no mesh description");
+        LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, 0u, resources, description.Value));
     }
 
     public override void Dispose()

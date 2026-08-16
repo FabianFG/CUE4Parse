@@ -1,6 +1,7 @@
 ﻿using System;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
+using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 
@@ -57,5 +58,47 @@ public partial class MeshLodDto<TVertex>
         }
 
         return new MeshLodDto<MeshVertex>(owner, sourceLodIndex, lod.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors, screenSize, lod.CardRepresentationData?.bMostlyTwoSided ?? false);
+    }
+
+    internal static MeshLodDto<MeshVertex> FromStaticMesh(StaticMeshDto owner, uint sourceLodIndex, FGeometryCollectionMeshResources resources, FGeometryCollectionMeshDescription description)
+    {
+        ArgumentNullException.ThrowIfNull(resources.IndexBuffer.Buffer, "LOD has no index buffer");
+
+        var extraUvs = new FMeshUVFloat[resources.StaticMeshVertexBuffer.NumTexCoords - 1][];
+        var vertices = new MeshVertex[resources.PositionVertexBuffer.Verts.Length];
+
+        for (var i = 0; i < extraUvs.Length; i++)
+        {
+            extraUvs[i] = new FMeshUVFloat[vertices.Length];
+        }
+
+        FColor[]? vertexColors = null;
+        if (resources.ColorVertexBuffer is { Data.Length: > 0 })
+        {
+            vertexColors = new FColor[vertices.Length]; // we don't need colors that don't belong to any vertex
+            Array.Copy(resources.ColorVertexBuffer.Data, vertexColors, vertexColors.Length);
+        }
+
+        for (var i = 0; i < vertices.Length; i++)
+        {
+            var pos = resources.PositionVertexBuffer.Verts[i];
+
+            var uv = resources.StaticMeshVertexBuffer.UV[i];
+            vertices[i] = new MeshVertex(pos, uv.Normal[2], uv.Normal[0], uv.UV[0]);
+
+            for (var j = 0; j < extraUvs.Length; j++)
+            {
+                extraUvs[j][i].U = uv.UV[j + 1].U;
+                extraUvs[j][i].V = uv.UV[j + 1].V;
+            }
+        }
+
+        var sections = new MeshSectionDto[description.Sections.Length];
+        for (var i = 0; i < sections.Length; i++)
+        {
+            sections[i] = new MeshSectionDto(description.Sections[i]);
+        }
+
+        return new MeshLodDto<MeshVertex>(owner, sourceLodIndex, resources.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors);
     }
 }

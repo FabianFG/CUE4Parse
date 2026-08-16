@@ -51,7 +51,7 @@ internal sealed class WorldParseContext
                         _ => new StaticMeshComponentDto(mesh, sm, owner)
                     },
                     USkeletalMeshComponent sk when sk.TryGetValue<FPackageIndex>(out var mesh, "SkeletalMesh", "SkinnedAsset") => new SkeletalMeshComponentDto(mesh, sk, owner),
-                    UGeometryCollectionComponent gc => new GeometryCollectionComponentDto(gc, owner),
+                    UGeometryCollectionComponent { RestCollection: not null } gc => new GeometryCollectionComponentDto(gc.RestCollection, gc, owner),
                     ULandscapeComponent landscape => new LandscapeMeshComponentDto(landscape, owner),
                     ULandscapeSplinesComponent splines => new LandscapeSplinesComponentDto(splines, owner),
                     // UBillboardComponent billboard => new BillboardComponent(billboard),
