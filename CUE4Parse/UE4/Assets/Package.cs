@@ -345,7 +345,7 @@ namespace CUE4Parse.UE4.Assets
             var import = ImportMap[-importIndex.Index - 1];
             var className = import.ClassName.Text;
 
-            if (className.StartsWith("Class", StringComparison.Ordinal) || className.StartsWith("Package", StringComparison.Ordinal))
+            if (className.StartsWith("Package", StringComparison.Ordinal))
             {
                 return new ResolvedImportObject(import, this);
             }
@@ -368,7 +368,7 @@ namespace CUE4Parse.UE4.Assets
             outerMostImport = ImportMap[-outerMostIndex.Index - 1];
             // We don't support loading script packages, so just return a fallback
             var outerMostObjectName = outerMostImport.ObjectName.Text;
-            if (outerMostObjectName.StartsWith("/Script/", StringComparison.Ordinal) || outerMostObjectName.StartsWith("Class", StringComparison.Ordinal) || outerMostObjectName.StartsWith("Package", StringComparison.Ordinal))
+            if (outerMostObjectName.StartsWith("/Script/", StringComparison.Ordinal) || outerMostObjectName.StartsWith("Package", StringComparison.Ordinal))
             {
                 return new ResolvedImportObject(import, this);
             }
