@@ -60,7 +60,7 @@ public partial class MeshLodDto<TVertex>
         return new MeshLodDto<MeshVertex>(owner, sourceLodIndex, lod.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors, screenSize, lod.CardRepresentationData?.bMostlyTwoSided ?? false);
     }
 
-    internal static MeshLodDto<MeshVertex> FromStaticMesh(StaticMeshDto owner, uint sourceLodIndex, FGeometryCollectionMeshResources resources, FGeometryCollectionMeshDescription description)
+    internal static MeshLodDto<MeshVertex> FromStaticMesh(StaticMeshDto owner, uint sourceLodIndex, FGeometryCollectionMeshResources resources, FGeometryCollectionMeshDescription description, FGeometryCollection? collection)
     {
         ArgumentNullException.ThrowIfNull(resources.IndexBuffer.Buffer, "LOD has no index buffer");
 
@@ -77,6 +77,15 @@ public partial class MeshLodDto<TVertex>
         {
             vertexColors = new FColor[vertices.Length]; // we don't need colors that don't belong to any vertex
             Array.Copy(resources.ColorVertexBuffer.Data, vertexColors, vertexColors.Length);
+        }
+        else if (resources.BoneMapVertexBuffer.BoneMap is { Length: > 0 } && collection?.GetAttributeValue<FLinearColor>("BoneColor", "Transform") is { } boneColors)
+        {
+            vertexColors = new FColor[vertices.Length];
+            for (var i = 0; i < vertexColors.Length; i++)
+            {
+                var boneIndex = resources.BoneMapVertexBuffer.BoneMap[i];
+                vertexColors[i] = boneColors[boneIndex].ToFColor(true);
+            }
         }
 
         for (var i = 0; i < vertices.Length; i++)

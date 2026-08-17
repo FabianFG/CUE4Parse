@@ -243,7 +243,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
         if (naniteFormat != ENaniteMeshFormat.NaniteOnly) // just so we don't waste time
         {
-            ParseCollectionRenderData(mesh.RenderData);
+            ParseCollectionRenderData(mesh.RenderData, mesh.GeometryCollection);
         }
 
         var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
@@ -256,7 +256,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         }
         else if (LODs.Count == 0) // in case someone put NaniteOnly but there was no nanite to parse
         {
-            ParseCollectionRenderData(mesh.RenderData);
+            ParseCollectionRenderData(mesh.RenderData, mesh.GeometryCollection);
         }
 
         if (bounds == null && LODs.First() is { } lod)
@@ -286,10 +286,10 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         }
     }
 
-    private void ParseCollectionRenderData(FGeometryCollectionRenderData renderData)
+    private void ParseCollectionRenderData(FGeometryCollectionRenderData renderData, FGeometryCollection? collection)
     {
-        FGeometryCollectionMeshResources? resources = null;
-        FGeometryCollectionMeshDescription? description = null;
+        FGeometryCollectionMeshResources? resources;
+        FGeometryCollectionMeshDescription? description;
         if (renderData.CustomData is List<(FGeometryCollectionMeshResources?, FGeometryCollectionMeshDescription?)> { Count: > 0 } customData) // MR
         {
             resources = customData[0].Item1;
@@ -299,10 +299,15 @@ public class StaticMeshDto : MeshDto<MeshVertex>
             // CustomData[2] = SK?? it really looks like it's CustomData[0] with all bones at the origin
             // CustomData[3] = plane
         }
+        else
+        {
+            resources = renderData.MeshResources;
+            description = renderData.MeshDescription;
+        }
 
         ArgumentNullException.ThrowIfNull(resources, "Geometry collection has no mesh resources");
         ArgumentNullException.ThrowIfNull(description, "Geometry collection has no mesh description");
-        LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, 0u, resources, description.Value));
+        LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, 0u, resources, description.Value, collection));
     }
 
     public override void Dispose()
