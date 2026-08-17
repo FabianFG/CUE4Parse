@@ -343,11 +343,6 @@ namespace CUE4Parse.UE4.Assets
         private ResolvedObject? ResolveImport(FPackageIndex importIndex)
         {
             var import = ImportMap[-importIndex.Index - 1];
-            if (import.ClassName.Text is "Class" or "SharpClass" or "PythonClass" or "ASClass" or "ScriptStruct")
-            {
-                return new ResolvedImportObject(import, this);
-            }
-
             var outerMostIndex = importIndex;
             FObjectImport outerMostImport;
             while (true)
