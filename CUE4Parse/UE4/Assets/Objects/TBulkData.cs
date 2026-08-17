@@ -181,12 +181,11 @@ public abstract class TBulkData<T> where T: struct
             archive = ubulkAr;
             position = ubulkAr.Length == Header.SizeOnDisk ? 0 : Header.OffsetInFile;
         }
-        else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile) && archive.Game < GAME_UE4_0)
+        else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile) && archive.Game < GAME_UE4_0) // basically a BULKDATA_PayloadInSeperateFile
         {
             if (_savedTfc is null)
             {
-                // what does this mean and how is ths possible?
-                throw new ParserException(archive, "TFC: something wrong");
+                return false; // This is some very stupid stuff. You need to get the outermost export, get its ObjectName, and then load that .upk
             }
 
             if (!_savedAr.Owner.Provider.TextureCachePaths.TryGetValue(_savedTfc, out var tfcPath))
