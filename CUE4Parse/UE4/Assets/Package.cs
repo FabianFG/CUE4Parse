@@ -349,7 +349,6 @@ namespace CUE4Parse.UE4.Assets
             }
 
             var outerMostIndex = importIndex;
-
             FObjectImport outerMostImport;
             while (true)
             {
@@ -371,7 +370,8 @@ namespace CUE4Parse.UE4.Assets
                 return new ResolvedImportObject(import, this);
             }
 
-            if (Provider == null) return null;
+            if (Provider == null)
+                return null;
             Package? importPackage = null;
             if (Provider.TryLoadPackage(outerMostObjectName, out var package) || Provider.TryLoadPackage(outerMostImport.ClassPackage.Text, out package))
             {
@@ -392,7 +392,6 @@ namespace CUE4Parse.UE4.Assets
                 }
                 importPackage = package as Package;
             }
-
             if (importPackage == null)
             {
 #if DEBUG
