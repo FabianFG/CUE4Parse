@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Assets
     [SkipObjectRegistration]
     public sealed class Package : AbstractUePackage
     {
-        
+
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
         public override int ImportMapLength => ImportMap.Length;
@@ -86,7 +86,7 @@ namespace CUE4Parse.UE4.Assets
                 uassetAr = new FAssetArchive(new FArchiveBigEndian(uasset), this);
             }
             uassetAr.Position -= 4;
-            
+
             Summary = new FPackageFileSummary(uassetAr);
 
             // Decompresses CompressedChunks and Decrypts Rocket league encrypted files
@@ -343,9 +343,7 @@ namespace CUE4Parse.UE4.Assets
         private ResolvedObject? ResolveImport(FPackageIndex importIndex)
         {
             var import = ImportMap[-importIndex.Index - 1];
-            var className = import.ClassName.Text;
-
-            if (className is "Class" or "SharpClass" or "PythonClass" or "ASClass" or "ScriptStruct")
+            if (import.ClassName.Text is "Class" or "SharpClass" or "PythonClass" or "ASClass" or "ScriptStruct")
             {
                 return new ResolvedImportObject(import, this);
             }
@@ -373,9 +371,9 @@ namespace CUE4Parse.UE4.Assets
                 return new ResolvedImportObject(import, this);
             }
 
-            if (Provider == null)
-                return null;
-            if (Provider.TryLoadPackage(outerMostObjectName, out var package))
+            if (Provider == null) return null;
+            Package? importPackage = null;
+            if (Provider.TryLoadPackage(outerMostObjectName, out var package) || Provider.TryLoadPackage(outerMostImport.ClassPackage.Text, out package))
             {
                 if (package is IoPackage ioPackage)
                 {
@@ -392,13 +390,7 @@ namespace CUE4Parse.UE4.Assets
 #endif
                     return new ResolvedImportObject(import, this);
                 }
-            }
-
-            Package? importPackage = package as Package;
-
-            if (importPackage == null && Provider.TryLoadPackage(outerMostImport.ClassPackage.Text, out var packageLast))
-            {
-                importPackage = packageLast as Package;
+                importPackage = package as Package;
             }
 
             if (importPackage == null)
