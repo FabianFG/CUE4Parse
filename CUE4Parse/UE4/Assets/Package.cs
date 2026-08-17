@@ -345,7 +345,7 @@ namespace CUE4Parse.UE4.Assets
             var import = ImportMap[-importIndex.Index - 1];
             var className = import.ClassName.Text;
 
-            if (className.StartsWith("Package", StringComparison.Ordinal))
+            if (className is "Class" or "SharpClass" or "PythonClass" or "ASClass" or "ScriptStruct")
             {
                 return new ResolvedImportObject(import, this);
             }
@@ -368,14 +368,13 @@ namespace CUE4Parse.UE4.Assets
             outerMostImport = ImportMap[-outerMostIndex.Index - 1];
             // We don't support loading script packages, so just return a fallback
             var outerMostObjectName = outerMostImport.ObjectName.Text;
-            if (outerMostObjectName.StartsWith("/Script/", StringComparison.Ordinal) || outerMostObjectName.StartsWith("Package", StringComparison.Ordinal))
+            if (outerMostObjectName.StartsWith("/Script/", StringComparison.Ordinal))
             {
                 return new ResolvedImportObject(import, this);
             }
 
             if (Provider == null)
                 return null;
-            Package? importPackage = null;
             if (Provider.TryLoadPackage(outerMostObjectName, out var package))
             {
                 if (package is IoPackage ioPackage)
@@ -393,9 +392,15 @@ namespace CUE4Parse.UE4.Assets
 #endif
                     return new ResolvedImportObject(import, this);
                 }
-                else
-                    importPackage = package as Package;
             }
+
+            Package? importPackage = package as Package;
+
+            if (importPackage == null && Provider.TryLoadPackage(outerMostImport.ClassPackage.Text, out var packageLast))
+            {
+                importPackage = packageLast as Package;
+            }
+
             if (importPackage == null)
             {
 #if DEBUG
