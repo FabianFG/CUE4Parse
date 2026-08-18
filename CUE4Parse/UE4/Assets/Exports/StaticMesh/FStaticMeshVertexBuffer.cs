@@ -15,7 +15,7 @@ public class FStaticMeshVertexBuffer
     public int NumVertices;
     public bool UseFullPrecisionUVs;
     public bool UseHighPrecisionTangentBasis;
-    public FStaticMeshUVItem[] UV;  // TangentsData ?
+    [JsonIgnore] public FStaticMeshUVItem[] UV;  // TangentsData ?
 
     public FStaticMeshVertexBuffer()
     {

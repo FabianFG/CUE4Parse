@@ -12,7 +12,7 @@ public class FGeometryCollectionRenderData
 {
     public bool bHasMeshData;
     public bool bHasNaniteData;
-    [JsonIgnore] public FGeometryCollectionMeshResources? MeshResources;
+    public FGeometryCollectionMeshResources? MeshResources;
     public FGeometryCollectionMeshDescription? MeshDescription;
     public FNaniteResources? NaniteResources;
     public FBoxSphereBounds? PreSkinnedBounds;
@@ -39,6 +39,7 @@ public class FGeometryCollectionRenderData
                 if (nanite)
                 {
                     NaniteResources = new FNaniteResources(Ar);
+                    bHasNaniteData = true;
                     return;
                 }
                 var size = Ar.Read<int>(); // bulksize -96
@@ -64,7 +65,7 @@ public class FGeometryCollectionRenderData
             }
 
             CustomData = customData;
-
+            bHasMeshData = true;
             return;
         }
 
@@ -81,5 +82,10 @@ public class FGeometryCollectionRenderData
 
         if (bHasNaniteData) NaniteResources = new FNaniteResources(Ar);
         if (Ar.Game >= GAME_UE5_7) PreSkinnedBounds = new FBoxSphereBounds(Ar);
+
+        if (Ar.Game == GAME_GearsofWarEDay && MeshResources?.StaticMeshVertexBuffer.Strides == -1)
+        {
+            bHasMeshData = false;
+        }
     }
 }

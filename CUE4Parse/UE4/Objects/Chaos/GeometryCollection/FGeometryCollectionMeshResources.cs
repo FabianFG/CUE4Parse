@@ -1,12 +1,13 @@
 ﻿using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
 public class FGeometryCollectionMeshResources
 {
-    public FRawStaticIndexBuffer IndexBuffer;
+    [JsonIgnore] public FRawStaticIndexBuffer IndexBuffer;
     public FPositionVertexBuffer PositionVertexBuffer;
     public FStaticMeshVertexBuffer StaticMeshVertexBuffer;
     public FColorVertexBuffer ColorVertexBuffer;

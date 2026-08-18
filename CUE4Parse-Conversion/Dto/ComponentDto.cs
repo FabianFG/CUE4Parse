@@ -247,12 +247,8 @@ public class GeometryCollectionComponentDto : MeshComponentDto
         // there's also some kind of bone relation that we fully ignore here but it might actually be important
 
         var group = new FName("Transform");
-
-        var meshIndices = collection.GetAttributeValue<int>("AutoInstanceMeshIndex", group);
-        if (meshIndices is not { Length: > 0 }) return;
-
-        var transforms = collection.GetAttributeValue<FTransform>("Transform", group);
-        if (transforms is not { Length: > 0 }) return;
+        if (!collection.TryGetAttributeValue<int>("AutoInstanceMeshIndex", group, out var meshIndices) ||
+            !collection.TryGetAttributeValue<FTransform>("Transform", group, out var transforms)) return;
 
         const int rigid = 1;
         var simulationTypes = collection.GetAttributeValue<int>("SimulationType", group);

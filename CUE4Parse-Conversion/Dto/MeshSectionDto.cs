@@ -32,4 +32,9 @@ public struct MeshSectionDto(int index, int firstIndex, int numFaces, bool castS
     {
 
     }
+
+    public MeshSectionDto(FGeometryCollectionSection section) : this(section.MaterialID, section.FirstIndex, section.NumTriangles, true)
+    {
+
+    }
 }
