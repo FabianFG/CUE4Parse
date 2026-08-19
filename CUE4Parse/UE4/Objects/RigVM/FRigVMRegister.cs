@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.RigVM;
 
@@ -32,8 +33,8 @@ public class FRigVMRegister
         Name = Ar.ReadFName();
         ScriptStructIndex = Ar.Read<int>();
         // FRigVMRegister::Serialize - 4.26 snapshots can have bIsArray but not bIsDynamic
-        bIsArray = layout.bSerializeRegisterArrayState && Ar.ReadBoolean();
-        bIsDynamic = layout.bSerializeRegisterDynamicState && Ar.ReadBoolean();
+        bIsArray = layout.AnimVersion >= FAnimObjectVersion.Type.SerializeRigVMRegisterArrayState && Ar.ReadBoolean();
+        bIsDynamic = layout.AnimVersion >= FAnimObjectVersion.Type.SerializeRigVMRegisterDynamicState && Ar.ReadBoolean();
     }
 
     public bool IsDynamic() => bIsDynamic;

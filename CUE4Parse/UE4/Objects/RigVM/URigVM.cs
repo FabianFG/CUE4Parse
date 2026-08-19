@@ -26,45 +26,6 @@ public class URigVM : Assets.Exports.UObject
     public FRigVMMemoryContainer? DefaultDebugMemoryStorageOld;
     public FRigVMRegistry_NoLock? LocalizedRegistry;
 
-    // UClass-based storage (4.25 - 5.0). Unversioned packages can't say which layout they used, so each
-    // candidate is tried against the whole block - a bad guess in memory only shows up at the parameters.
-    private void ReadUClassBasedStorage(FAssetArchive Ar)
-    {
-        var start = Ar.Position;
-        var candidates = FRigVMMemoryLayout.GetCandidates(Ar);
-        for (var i = 0; i < candidates.Length; i++)
-        {
-            Ar.Position = start;
-            try
-            {
-                var workMemory = new FRigVMMemoryContainer(Ar, candidates[i]);
-                var literalMemory = new FRigVMMemoryContainer(Ar, candidates[i]);
-                if (!workMemory.HasValidScriptStructs() || !literalMemory.HasValidScriptStructs()) continue;
-
-                var functionNames = Ar.ReadArray(Ar.ReadFName);
-                var byteCode = new FRigVMByteCode(Ar, candidates[i]);
-                var parameters = Ar.ReadArray(() => new FRigVMParameter(Ar));
-
-                if (i > 0)
-                    Log.Debug("RigVM did not match the layout implied by the package's engine version; using {Layout} instead", candidates[i]);
-
-                WorkMemoryStorage = workMemory;
-                LiteralMemoryStorageOld = literalMemory;
-                FunctionNamesStorage = functionNames;
-                ByteCodeStorage = byteCode;
-                Parameters = parameters;
-                return;
-            }
-            catch (Exception e) when (e is ParserException or ArgumentException or IndexOutOfRangeException or ArgumentOutOfRangeException)
-            {
-                // Wrong layout, try the next
-            }
-        }
-
-        Ar.Position = start;
-        throw new ParserException(Ar, "Could not read RigVM storage with any known serialization layout");
-    }
-
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if (FAnimObjectVersion.Get(Ar) < FAnimObjectVersion.Type.StoreMarkerNamesOnSkeleton) return;
@@ -84,7 +45,45 @@ public class URigVM : Assets.Exports.UObject
 
             if (RigVMUClassBasedStorageDefine == 1)
             {
-                ReadUClassBasedStorage(Ar);
+                // Unversioned packages can't say which layout they used, so each candidate is tried
+                // against the whole block, a bad guess in memory only shows up at the parameters
+                var start = Ar.Position;
+                var read = false;
+                var candidates = FRigVMMemoryLayout.GetCandidates(Ar);
+                for (var i = 0; i < candidates.Length && !read; i++)
+                {
+                    Ar.Position = start;
+                    try
+                    {
+                        var workMemory = new FRigVMMemoryContainer(Ar, candidates[i]);
+                        var literalMemory = new FRigVMMemoryContainer(Ar, candidates[i]);
+                        if (!workMemory.HasValidScriptStructs() || !literalMemory.HasValidScriptStructs()) continue;
+
+                        var functionNames = Ar.ReadArray(Ar.ReadFName);
+                        var byteCode = new FRigVMByteCode(Ar, candidates[i]);
+                        var parameters = Ar.ReadArray(() => new FRigVMParameter(Ar));
+
+                        if (i > 0)
+                            Log.Debug("RigVM did not match the layout implied by the package's engine version; using {Layout} instead", candidates[i]);
+
+                        WorkMemoryStorage = workMemory;
+                        LiteralMemoryStorageOld = literalMemory;
+                        FunctionNamesStorage = functionNames;
+                        ByteCodeStorage = byteCode;
+                        Parameters = parameters;
+                        read = true;
+                    }
+                    catch (Exception e) when (e is ParserException or ArgumentException or IndexOutOfRangeException or ArgumentOutOfRangeException)
+                    {
+                        // Wrong layout, try the next
+                    }
+                }
+
+                if (!read)
+                {
+                    Ar.Position = start;
+                    throw new ParserException(Ar, "Could not read RigVM storage with any known serialization layout");
+                }
 
                 if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.RigVMCopyOpStoreNumBytes) return;
 

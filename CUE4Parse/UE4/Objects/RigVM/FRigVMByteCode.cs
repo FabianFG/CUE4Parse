@@ -48,7 +48,7 @@ public class FRigVMByteCode
             Instructions.Add(ReadRigVMInstruction(Ar));
         }
 
-        if (layout.bSerializeEntries)
+        if (layout.AnimVersion >= FAnimObjectVersion.Type.SerializeRigVMEntries)
         {
             Entries = Ar.ReadArray(Ar.ReadFString);
         }

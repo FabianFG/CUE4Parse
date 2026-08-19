@@ -12,15 +12,6 @@ public readonly struct FRigVMMemoryLayout(FAnimObjectVersion.Type animVersion, b
     public readonly FAnimObjectVersion.Type AnimVersion = animVersion;
     public readonly bool bSerializeOffsetSegmentPaths = bSerializeOffsetSegmentPaths;
 
-    // FRigVMRegister::Serialize - trailing bIsDynamic bool
-    public bool bSerializeRegisterDynamicState => AnimVersion >= FAnimObjectVersion.Type.SerializeRigVMRegisterDynamicState;
-
-    // FRigVMRegister::Serialize - trailing bIsArray bool
-    public bool bSerializeRegisterArrayState => AnimVersion >= FAnimObjectVersion.Type.SerializeRigVMRegisterArrayState;
-
-    // FRigVMByteCode::Serialize - trailing entry name table
-    public bool bSerializeEntries => AnimVersion >= FAnimObjectVersion.Type.SerializeRigVMEntries;
-
     // Most likely first: what the versions imply, then what a snapshot build could have shipped with
     public static FRigVMMemoryLayout[] GetCandidates(FArchive Ar)
     {
