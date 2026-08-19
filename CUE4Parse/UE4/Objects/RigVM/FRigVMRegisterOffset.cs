@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.RigVM
 {
@@ -15,14 +16,14 @@ namespace CUE4Parse.UE4.Objects.RigVM
         public readonly string? CachedSegmentPath;
         public readonly int ArrayIndex;
 
-        public FRigVMRegisterOffset(FAssetArchive Ar, FRigVMMemoryLayout layout)
+        public FRigVMRegisterOffset(FAssetArchive Ar)
         {
             Segments = Ar.ReadArray<int>();
             Type = Ar.Read<ERigVMRegisterType>();
             CPPType = Ar.ReadFName();
 
             // Before SerializeRigVMOffsetSegmentPaths the struct is an FName path with no tail
-            if (!layout.bSerializeOffsetSegmentPaths)
+            if (FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.SerializeRigVMOffsetSegmentPaths)
             {
                 ScriptStructPath = Ar.ReadFName();
                 ElementSize = Ar.Read<ushort>();

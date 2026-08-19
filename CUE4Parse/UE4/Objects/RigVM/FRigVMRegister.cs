@@ -20,7 +20,7 @@ public class FRigVMRegister
     public readonly bool bIsDynamic;
     public object? View;
 
-    public FRigVMRegister(FArchive Ar, FRigVMMemoryLayout layout)
+    public FRigVMRegister(FArchive Ar)
     {
         Type = Ar.Read<ERigVMRegisterType>();
         ByteIndex = Ar.Read<uint>();
@@ -32,9 +32,8 @@ public class FRigVMRegister
         TrailingBytes = Ar.Read<ushort>();
         Name = Ar.ReadFName();
         ScriptStructIndex = Ar.Read<int>();
-        // FRigVMRegister::Serialize - 4.26 snapshots can have bIsArray but not bIsDynamic
-        bIsArray = layout.AnimVersion >= FAnimObjectVersion.Type.SerializeRigVMRegisterArrayState && Ar.ReadBoolean();
-        bIsDynamic = layout.AnimVersion >= FAnimObjectVersion.Type.SerializeRigVMRegisterDynamicState && Ar.ReadBoolean();
+        bIsArray = FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.SerializeRigVMRegisterArrayState && Ar.ReadBoolean();
+        bIsDynamic = FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.SerializeRigVMRegisterDynamicState && Ar.ReadBoolean();
     }
 
     public bool IsDynamic() => bIsDynamic;
