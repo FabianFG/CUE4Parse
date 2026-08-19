@@ -18,14 +18,12 @@ public readonly struct FRigVMMemoryLayout(FAnimObjectVersion.Type animVersion, b
         var animVersion = FAnimObjectVersion.Get(Ar);
         var bOffsetSegmentPaths = FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.SerializeRigVMOffsetSegmentPaths;
 
-        // Pinned just below the first RigVM change a pre-release build could be missing
-        const FAnimObjectVersion.Type snapshot = FAnimObjectVersion.Type.NotifyAndSyncMarkerGuids;
-
+        // NotifyAndSyncMarkerGuids sits just below the first RigVM change a pre-release build COULD be missing
         return
         [
             new FRigVMMemoryLayout(animVersion, bOffsetSegmentPaths),
-            new FRigVMMemoryLayout(snapshot, false),
-            new FRigVMMemoryLayout(snapshot, true),
+            new FRigVMMemoryLayout(FAnimObjectVersion.Type.NotifyAndSyncMarkerGuids, false),
+            new FRigVMMemoryLayout(FAnimObjectVersion.Type.NotifyAndSyncMarkerGuids, true),
             new FRigVMMemoryLayout(animVersion, !bOffsetSegmentPaths)
         ];
     }
