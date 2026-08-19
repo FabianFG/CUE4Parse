@@ -576,10 +576,10 @@ public struct FRigPreferredEulerAngles(FArchive Ar)
 public class FRigNullElement : FRigMultiParentElement;
 public class FRigControlElement : FRigMultiParentElement
 {
-    FRigControlSettings Settings;
-    FRigCurrentAndInitialTransform Offset;
-    FRigCurrentAndInitialTransform Shape;
-    FRigPreferredEulerAngles? PreferredEulerAngles;
+    public FRigControlSettings Settings;
+    public FRigCurrentAndInitialTransform Offset;
+    public FRigCurrentAndInitialTransform Shape;
+    public FRigPreferredEulerAngles? PreferredEulerAngles;
 
     public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {

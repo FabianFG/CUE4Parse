@@ -54,9 +54,14 @@ public class URigHierarchy : UObject
         }
 
         bool bAllocateStoragePerElement = FControlRigObjectVersion.Get(archiveForElements) < FControlRigObjectVersion.Type.RigHierarchyIndirectElementStorage;
+
         if (Ar.Game == GAME_Aion2) bAllocateStoragePerElement = false;
 
         var elementCount = archiveForElements.Read<int>();
+
+        // A snapshot build can report a version its cooker didn't match, so the bytes decide instead
+        if (elementCount > 1) bAllocateStoragePerElement = ProbeInterleavedElements(archiveForElements) ?? bAllocateStoragePerElement;
+
         Elements = new FRigBaseElement[elementCount];
         for (var elementIndex = 0; elementIndex < elementCount; elementIndex++)
         {
@@ -154,6 +159,26 @@ public class URigHierarchy : UObject
         {
             writer.WritePropertyName(nameof(Elements));
             serializer.Serialize(writer, Elements);
+        }
+    }
+
+    // Interleaved storage repeats the key at the start of the element, so key 2 == key 1. Null if it doesn't parse.
+    private static bool? ProbeInterleavedElements(FArchive Ar)
+    {
+        var position = Ar.Position;
+        try
+        {
+            var first = new FRigElementKey(Ar);
+            var second = new FRigElementKey(Ar);
+            return first.Type == second.Type && first.Name.Equals(second.Name);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+        finally
+        {
+            Ar.Position = position;
         }
     }
 }

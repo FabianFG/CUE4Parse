@@ -16,7 +16,10 @@ public class FRigVMByteCode
     public FTopLevelAssetPath? PublicContextAssetPath;
     public bool bHasPublicContextPathName = false;
 
-    public FRigVMByteCode(FAssetArchive Ar)
+    public FRigVMByteCode(FAssetArchive Ar) : this(Ar, new FRigVMMemoryLayout(FAnimObjectVersion.Get(Ar),
+        FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.SerializeRigVMOffsetSegmentPaths)) { }
+
+    public FRigVMByteCode(FAssetArchive Ar, FRigVMMemoryLayout layout)
     {
         if (FAnimObjectVersion.Get(Ar) < FAnimObjectVersion.Type.StoreMarkerNamesOnSkeleton)
         {
@@ -45,7 +48,7 @@ public class FRigVMByteCode
             Instructions.Add(ReadRigVMInstruction(Ar));
         }
 
-        if (FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.SerializeRigVMEntries)
+        if (layout.bSerializeEntries)
         {
             Entries = Ar.ReadArray(Ar.ReadFString);
         }

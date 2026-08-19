@@ -11,12 +11,17 @@ public class FRigVMMemoryContainer
     public string[] ScriptStructPaths;
     public ulong TotalBytes;
 
-    public FRigVMMemoryContainer(FAssetArchive Ar)
+    // Script struct entries are object paths, so anything else means the layout was wrong
+    public bool HasValidScriptStructs() =>
+        ScriptStructPaths.All(path => path.StartsWith('/')) &&
+        Registers.All(register => register.ScriptStructIndex < ScriptStructPaths.Length);
+
+    public FRigVMMemoryContainer(FAssetArchive Ar, FRigVMMemoryLayout layout)
     {
         bUseNameMap = Ar.ReadBoolean();
         MemoryType = Ar.Read<ERigVMMemoryType>();
-        Registers = Ar.ReadArray(() => new FRigVMRegister(Ar));
-        RegisterOffsets = Ar.ReadArray(() => new FRigVMRegisterOffset(Ar));
+        Registers = Ar.ReadArray(() => new FRigVMRegister(Ar, layout));
+        RegisterOffsets = Ar.ReadArray(() => new FRigVMRegisterOffset(Ar, layout));
         ScriptStructPaths = Ar.ReadArray(Ar.ReadFString);
         TotalBytes = Ar.Read<ulong>();
 
