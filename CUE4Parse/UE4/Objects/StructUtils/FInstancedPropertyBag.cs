@@ -70,18 +70,16 @@ public class FInstancedPropertyBag : IUStruct
         if (Version >= EVersion.SerializeStructSize)
             SerialSize = Ar.Read<int>();
 
-        // The struct isn't serialized - GetOrCreateFromDescs rebuilds it, so the descs are the schema
         var payloadStart = Ar.Position;
         try
         {
             if (Ar.HasUnversionedProperties)
                 Assets.Exports.UObject.DeserializePropertiesUnversioned(Properties, Ar, BuildSchema(Ar), nameof(FInstancedPropertyBag));
             else
-                Assets.Exports.UObject.DeserializePropertiesTagged(Properties, Ar, false);
+                Assets.Exports.UObject.DeserializePropertiesTagged(Properties, Ar, true);
         }
         catch (Exception e)
         {
-            // An unresolvable desc makes the whole payload unreadable, which is what SerialSize is for
             Properties.Clear();
             Log.Warning(e, "Failed to read FInstancedPropertyBag values, skipping {Size} bytes", SerialSize);
         }

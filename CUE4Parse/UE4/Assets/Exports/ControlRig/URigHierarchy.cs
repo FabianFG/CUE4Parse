@@ -58,8 +58,6 @@ public class URigHierarchy : UObject
         if (Ar.Game == GAME_Aion2) bAllocateStoragePerElement = false;
 
         var elementCount = archiveForElements.Read<int>();
-
-        // A snapshot build can report a version its cooker didn't match, so the bytes decide instead
         if (elementCount > 1) bAllocateStoragePerElement = ProbeInterleavedElements(archiveForElements) ?? bAllocateStoragePerElement;
 
         Elements = new FRigBaseElement[elementCount];

@@ -22,7 +22,6 @@ namespace CUE4Parse.UE4.Objects.RigVM
             Type = Ar.Read<ERigVMRegisterType>();
             CPPType = Ar.ReadFName();
 
-            // Before SerializeRigVMOffsetSegmentPaths the struct is an FName path with no tail
             if (FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.SerializeRigVMOffsetSegmentPaths)
             {
                 ScriptStructPath = Ar.ReadFName();
