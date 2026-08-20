@@ -127,10 +127,10 @@ public static class FControlRigObjectVersion
 
         // New setting for connectors to optionally specify their use only during post construction
         RigHierarchyPostConstructionConnectors,
-        
+
         // Overrides store TOC data for properties to solidify loading of data when the definition has changed
         OverridesStoreTOCDataForProperties,
-        
+
         // Overrides the skip offset as int64 - previous versions stored it as int32
         OverridesStoreDatSkipOffsetAsInt64,
 
@@ -139,6 +139,24 @@ public static class FControlRigObjectVersion
 
         // Overrides now only store the hash for validation, not the size since size can change without changing the payload (containers), also starts including hash for maps and sets
         OverridesStoreLeafPropertyHashOnly,
+
+        // New settings struct for sockets
+        RigHierarchySocketSettings,
+
+        // Split between topology and data
+        RigHierarchyTopology,
+
+        // Overrides whose owner struct is transient (e.g. a runtime-generated UPropertyBag backing a
+        // modular rig module's Variables) serialize the owner path as a plain string instead of an
+        // FSoftObjectPath, so a reference to a /Engine/Transient object is never recorded in the package.
+        OverridesStoreTransientOwnerStructByName,
+
+        // Overrides now record their owner struct as a hard package reference during reference collection
+        // (see FControlRigOverrideValue::Serialize / WithSerializerObjectReferences = Strong | Soft), so the
+        // owner struct's package is a real import/dependency of the saved package and is loaded ahead of the
+        // override. Assets saved at/after this version no longer need the load-time dynamic-import injection
+        // (UControlRigRuntimeAsset::InjectDynamicImportsFor) - that path only runs for older assets.
+        OverridesStoreOwnerStructAsHardImport,
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
@@ -167,6 +185,7 @@ public static class FControlRigObjectVersion
             < GAME_UE5_6 => Type.RigHierarchyIndirectElementStorage,
             < GAME_UE5_7 => Type.RigHierarchyPreviousNameAndParentMapUsingHierarchyKey,
             < GAME_UE5_8 => Type.OverridesStoreTOCDataForProperties,
+            < GAME_UE6_0 => Type.OverridesStoreLeafPropertyHashOnly,
             _ => Type.LatestVersion
         };
     }
