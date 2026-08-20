@@ -68,7 +68,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
                 mountPoint = "/";
             }
 
-            if (mountPoint.StartsWith('/')) mountPoint = mountPoint[1..];
+            mountPoint = mountPoint[1..];
             VerifyReadOrder();
         }
 
