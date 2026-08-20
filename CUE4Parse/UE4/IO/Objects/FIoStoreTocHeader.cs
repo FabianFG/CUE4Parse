@@ -65,7 +65,7 @@ public class FIoStoreTocHeader
     private readonly uint _reserved8;
     private readonly ulong[] _reserved9;
 
-    public ulong[] CustomGameData;
+    internal ulong[] CustomGameData;
 
     public FIoStoreTocHeader(FArchive Ar)
     {
@@ -92,16 +92,16 @@ public class FIoStoreTocHeader
         TocChunkPerfectHashSeedsCount = Ar.Read<uint>();
         PartitionSize = Ar.Read<ulong>();
         TocChunksWithoutPerfectHashCount = Ar.Read<uint>();
-        if (Ar.Game is GAME_DeadByDaylight or GAME_DeadByDaylight_Old)
+        if (Ar.Game < GAME_UE6_0)
         {
-            Ar.Position += sizeof(uint);
-            CustomGameData = Ar.ReadArray<ulong>(5);
+            Ar.Position += sizeof(uint); // _reserved7
+            CustomGameData = Ar.ReadArray<ulong>(5); // _reserved8
         }
         else
         {
-            TocSourceHashCount = Ar.Read<uint>();
-            EncryptionIVCount = Ar.Read<uint>();
-            _reserved8 = Ar.Read<uint>();
+            TocSourceHashCount = Ar.Read<uint>(); // _reserved7
+            EncryptionIVCount = Ar.Read<uint>(); // _reserved8[0]
+            _reserved8 = Ar.Read<uint>(); // _reserved8[0]
             _reserved9 = Ar.ReadArray<ulong>(4);
         }
 
