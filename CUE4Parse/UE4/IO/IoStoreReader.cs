@@ -21,7 +21,6 @@ namespace CUE4Parse.UE4.IO;
 
 public partial class IoStoreReader : AbstractAesVfsReader
 {
-
     private readonly record struct DirectoryTraversal(uint Directory, int ParentPathLength);
 
     public readonly IReadOnlyList<FArchive> ContainerStreams;

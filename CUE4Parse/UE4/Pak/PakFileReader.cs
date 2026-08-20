@@ -435,7 +435,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
 
-        if (Info.Version >= PakFile_Version_SortedDirectoryIndex && Ar.Game >= GAME_UE5_9)
+        if (Info.Version >= PakFile_Version_SortedDirectoryIndex && Ar.Game >= GAME_UE6_0)
         {
             ReadFlatDirectoryIndex(directoryIndex, files, encodedPakEntries, NonEncodedEntries);
             Files = files;
