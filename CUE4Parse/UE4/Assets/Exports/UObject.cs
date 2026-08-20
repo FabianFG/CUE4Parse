@@ -263,9 +263,6 @@ public class UObject : AbstractPropertyHolder
 
     internal static void DeserializePropertiesUnversioned(List<FPropertyTag> properties, FAssetArchive Ar, UStruct struc)
     {
-        var header = new FUnversionedHeader(Ar);
-        if (!header.HasValues)
-            return;
         var type = struc.Name;
 
         Struct? propMappings = null;
@@ -273,6 +270,15 @@ public class UObject : AbstractPropertyHolder
             Ar.Owner!.Mappings?.Types.TryGetValue(type, out propMappings);
         else
             propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
+
+        DeserializePropertiesUnversioned(properties, Ar, propMappings, type);
+    }
+
+    internal static void DeserializePropertiesUnversioned(List<FPropertyTag> properties, FAssetArchive Ar, Struct? propMappings, string type)
+    {
+        var header = new FUnversionedHeader(Ar);
+        if (!header.HasValues)
+            return;
 
         if (propMappings == null)
         {
