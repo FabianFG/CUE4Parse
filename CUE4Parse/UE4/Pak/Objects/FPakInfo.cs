@@ -74,7 +74,7 @@ public partial class FPakInfo
     public readonly FIoStoreEncryptionIV? IndexIv;
     public readonly FIoStoreEncryptionIV? PathHasIndexIv;
     public readonly FIoStoreEncryptionIV? FullDirectoryIndexIv;
-    
+
     public byte[] CustomEncryptionData { get; private set; }
 
     private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
@@ -564,19 +564,22 @@ public partial class FPakInfo
     {
         Size = sizeof(int) * 2 + sizeof(long) * 2 + 20 + /* new fields */ 1 + 16, // sizeof(FGuid)
         // Just to be sure
-        SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
-        SizeOverhit = 53,
         Size8_1 = Size + 32,
         Size8_2 = Size8_1 + 32,
         Size8_3 = Size8_2 + 32,
         Size8 = Size8_3 + 32, // added size of CompressionMethods as char[32]
         Size8a = Size8 + 32, // UE4.23 - also has version 8 (like 4.22) but different pak file structure
-        Size9 = Size8a + 1, // UE4.25 - removed in later versions 
+        Size9 = Size8a + 1, // UE4.25 - removed in later versions
+        SizeB1 = Size9 + 1, // plus 1
         Size9a = Size8a + 4, // UE6.0 - Added pakchunk index int32
         Size10 = Size9a + 1 + 3 * 12, // UE6.0 - Custom Encryption
-        SizeB1 = Size9 + 1, // plus 1
         //Size10 = Size8a
 
+        // ------- SizeLast is very important and should represent the max range we look for FPakInfo
+        SizeLast,
+        SizeMax = SizeLast - 1,
+
+        // ------- CUSTOM (order should not matter) -------
         SizeRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
         SizeHotta = Size8a + 4, // additional int for custom pak version
@@ -587,8 +590,8 @@ public partial class FPakInfo
         SizeQQ = Size8a + 26,
         SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
 
-        SizeLast,
-        SizeMax = SizeLast - 1,
+        SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
+        SizeOverhit = 53,
         SizeBack4Blood = 222,
         SizeArenaBreakoutMobile = 205,
         SizeDuneAwakening = 261,
