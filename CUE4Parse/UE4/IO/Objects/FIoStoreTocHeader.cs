@@ -18,7 +18,7 @@ public enum EIoStoreTocVersion : byte
     ReplaceIoChunkHashWithIoHash,
     AddedSourceHashes,
     ContainerEncryptionMethod,
-    
+
     LatestPlusOne,
     Latest = LatestPlusOne - 1
 }
@@ -66,7 +66,7 @@ public class FIoStoreTocHeader
     private readonly ulong[] _reserved9;
 
     public ulong[] CustomGameData;
-    
+
     public FIoStoreTocHeader(FArchive Ar)
     {
         TocMagic = Ar.ReadBytes(16);
@@ -87,6 +87,7 @@ public class FIoStoreTocHeader
         ContainerId = Ar.Read<FIoContainerId>();
         EncryptionKeyGuid = Ar.Read<FGuid>();
         ContainerFlags = Ar.Read<EIoContainerFlags>();
+        EncryptionMethod = Ar.Read<EIoEncryptionMethod>();
         _reserved4 = Ar.Read<ushort>();
         TocChunkPerfectHashSeedsCount = Ar.Read<uint>();
         PartitionSize = Ar.Read<ulong>();
@@ -103,7 +104,7 @@ public class FIoStoreTocHeader
             _reserved8 = Ar.Read<uint>();
             _reserved9 = Ar.ReadArray<ulong>(4);
         }
-        
+
         Ar.Position = Ar.Position.Align(4);
     }
 }

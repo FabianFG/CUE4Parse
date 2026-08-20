@@ -53,7 +53,8 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             if (mountPoint == "" || mountPoint[0] != '/' || ( (mountPoint.Length > 1) && (mountPoint[1] == '.') ))
                 badMountPoint = true;
 
-            if (badMountPoint)
+            // Hacky fix but works for now
+            if (badMountPoint && Game < GAME_UE6_0)
             {
                 if (Globals.LogVfsMounts)
                 {
@@ -63,7 +64,7 @@ namespace CUE4Parse.UE4.VirtualFileSystem
                 mountPoint = "/";
             }
 
-            mountPoint = mountPoint[1..];
+            if (mountPoint.StartsWith('/')) mountPoint = mountPoint[1..];
             VerifyReadOrder();
         }
 
