@@ -1,5 +1,6 @@
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -27,6 +28,8 @@ namespace CUE4Parse.UE4.IO.Objects
         public readonly int[]? ChunkIndicesWithoutPerfectHash;
         public readonly FIoStoreTocCompressedBlockEntry[] CompressionBlocks;
         public readonly CompressionMethod[] CompressionMethods;
+        public readonly EIoEncryptionMethod EncryptionMethod;
+        public readonly FIoStoreEncryptionIV[] EncryptionIVs;
 
         public byte[]? GetDirectoryIndexBuffer()
         {
@@ -69,6 +72,12 @@ namespace CUE4Parse.UE4.IO.Objects
             {
                 Header.PartitionCount = 1;
                 Header.PartitionSize = ulong.MaxValue;
+            }
+
+            if (Header.Version < EIoStoreTocVersion.ContainerEncryptionMethod)
+            {
+                Header.EncryptionMethod = Header.ContainerFlags.HasFlag(EIoContainerFlags.Encrypted) ? EIoEncryptionMethod.AES : EIoEncryptionMethod.None;
+                Header.EncryptionIVCount = 0;
             }
 
             // Chunk IDs
@@ -123,6 +132,15 @@ namespace CUE4Parse.UE4.IO.Objects
                     archive.Position += 4;
                 }
             }
+
+            var directoryIndexIVCount = Header.ContainerFlags.HasFlag(EIoContainerFlags.Indexed) ? 1 : 0;
+            var expectedIVCount = Header.EncryptionMethod == EIoEncryptionMethod.AES_CTR ? Header.TocCompressedBlockEntryCount + directoryIndexIVCount : 0;
+
+            if (Header.EncryptionIVCount != expectedIVCount)
+                throw new ParserException(Ar, $"TOC has {Header.EncryptionIVCount} encryption IVs but {Header.EncryptionMethod} over {Header.TocCompressedBlockEntryCount} compression bocks needs {expectedIVCount}");
+
+            EncryptionMethod = Header.EncryptionMethod;
+            EncryptionIVs = Header.EncryptionIVCount > 0 ? Ar.ReadArray((int)Header.EncryptionIVCount, () => new FIoStoreEncryptionIV(Ar)) : [];
 
             // Compression methods
             unsafe

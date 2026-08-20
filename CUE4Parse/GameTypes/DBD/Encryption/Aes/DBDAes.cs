@@ -42,7 +42,7 @@ public static class DBDAes
                 return pak.Info.CustomEncryptionData;
             case IoStoreReader ioreader:
                 var key = new byte[36];
-                Buffer.BlockCopy(ioreader.TocResource.Header._reserved8, 0, key, 0, key.Length);
+                Buffer.BlockCopy(ioreader.TocResource.Header.CustomGameData, 0, key, 0, key.Length);
                 return key;
             default:
                 return [];
