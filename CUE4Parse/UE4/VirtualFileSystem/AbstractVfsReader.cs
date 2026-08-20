@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Objects;
@@ -65,6 +66,27 @@ namespace CUE4Parse.UE4.VirtualFileSystem
 
             mountPoint = mountPoint[1..];
             VerifyReadOrder();
+        }
+
+        public static string NormalizeVirtualPath(string path)
+        {
+            var i = SkipLeadingParents(path.AsSpan());
+            return i == 0 ? path : path[i..];
+        }
+
+        public static ReadOnlySpan<char> NormalizeVirtualPath(ReadOnlySpan<char> path)
+        {
+            var i = SkipLeadingParents(path);
+            return i == 0 ? path : path[i..];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int SkipLeadingParents(ReadOnlySpan<char> path)
+        {
+            var i = 0;
+            while (i + 3 <= path.Length && path[i] == '.' && path[i + 1] == '.' && path[i + 2] == '/')
+                i += 3;
+            return i;
         }
 
         private void VerifyReadOrder()

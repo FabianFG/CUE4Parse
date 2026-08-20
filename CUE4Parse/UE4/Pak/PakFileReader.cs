@@ -342,7 +342,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
         for (var i = 0; i < fileCount; i++)
         {
-            var path = string.Concat(mountPoint, index.ReadFString());
+            var path = NormalizeVirtualPath(string.Concat(mountPoint, index.ReadFString()));
             var entry = new FPakEntry(this, path, index);
             if (entry is { IsDeleted: true, Size: 0 }) continue;
             if (entry.IsEncrypted) EncryptedFileCount++;
@@ -464,7 +464,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 var fileName = directoryIndex.ReadFStringMemory(); // supports PakFile_Version_Utf8PakDirectory too
                 var fileNameLength = fileName.GetEncoding().GetChars(fileName.GetSpan(), fileNameSpan);
                 fileNameSpan = fileNameSpan[..fileNameLength];
-                var path = string.Concat(mountPointSpan, dirSpan, fileNameSpan);
+                var path = NormalizeVirtualPath(string.Concat(mountPointSpan, dirSpan, fileNameSpan));
 
                 var offset = directoryIndex.Read<int>();
                 if (offset == int.MinValue) continue;
@@ -558,7 +558,7 @@ public partial class PakFileReader : AbstractAesVfsReader
 
                 var nameStart = fileNameOffsets[global];
                 var fileName = Encoding.UTF8.GetString(fileBlob.AsSpan(nameStart, fileNameOffsets[global + 1] - nameStart));
-                var path = string.Concat(MountPoint, dir, fileName);
+                var path = NormalizeVirtualPath(string.Concat(MountPoint, dir, fileName));
 
                 FPakEntry entry;
                 if (location >= 0)
@@ -617,6 +617,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 else
                     path = string.Concat(mountPoint, dir, name);
 
+                path = NormalizeVirtualPath(path);
                 var entry = entries[fileIndex];
                 entry.Path = path;
 
