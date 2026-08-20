@@ -491,6 +491,7 @@ public partial class FPakInfo
             var maxNumCompressionMethods = offsetToTry switch
             {
                 OffsetsToTry.Size8a => 5,
+                OffsetsToTry.Size10 => 5,
                 OffsetsToTry.SizeHotta => 5,
                 OffsetsToTry.SizeDbD => 5,
                 OffsetsToTry.SizeRennsport => 5,

@@ -293,7 +293,8 @@ public partial class IoStoreReader : AbstractAesVfsReader
             reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
             // FragPunk decided to encrypt the global utoc too.
             // For Lord of Mysteries utoc files are "synthetic", without dir index, so we can't test the key.
-            compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == GAME_LordOfMysteries || Game == GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
+            compressedBuffer = DecryptCompressionBlock(compressedBuffer, (int) rawSize, blockIndex,
+                Game == GAME_LordOfMysteries || Game == GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
 
             byte[] src;
             if (compressionBlock.CompressionMethodIndex == 0)
@@ -498,6 +499,28 @@ public partial class IoStoreReader : AbstractAesVfsReader
         {
             ArrayPool<char>.Shared.Return(dirNamePool);
         }
+    }
+
+    protected override byte[] DecryptBytes(byte[] bytes, int beginOffset, int count, FAesKey key, bool isIndex)
+    {
+        if (TocResource.EncryptionMethod != EIoEncryptionMethod.AES_CTR)
+            return base.DecryptBytes(bytes, beginOffset, count, key, isIndex);
+        if (!isIndex)
+            throw new InvalidOperationException("AES-CTR IoStore data requires a compression-block IV.");
+
+        var directoryIndexIv = TocResource.EncryptionIVs[^1];
+        return bytes.CryptCtr(beginOffset, count, key, directoryIndexIv.Bytes);
+    }
+
+    private byte[] DecryptCompressionBlock(byte[] bytes, int count, int blockIndex, bool bypassMountPointCheck)
+    {
+        if (!IsEncrypted || TocResource.EncryptionMethod != EIoEncryptionMethod.AES_CTR)
+            return DecryptIfEncrypted(bytes, 0, count, IsEncrypted, bypassMountPointCheck);
+        if (CustomEncryption is not null)
+            return CustomEncryption(bytes, 0, count, false, this);
+
+        EnsureValidAesKey(AesKey, bypassMountPointCheck);
+        return bytes.CryptCtr(0, count, AesKey!, TocResource.EncryptionIVs[blockIndex].Bytes);
     }
 
     private void ReadIndex(char[] pathBuffer, int mountPointLength,

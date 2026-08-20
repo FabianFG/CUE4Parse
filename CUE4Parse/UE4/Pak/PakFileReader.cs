@@ -21,6 +21,7 @@ using CUE4Parse.GameTypes.Tencent.ValorantSource.Lua;
 using CUE4Parse.GameTypes.UDWN.Lua;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
@@ -155,7 +156,10 @@ public partial class PakFileReader : AbstractAesVfsReader
                     compressedBuffer = new byte[srcSize];
                 }
                 // Read the compressed block
-                var compressed = ReadAndDecryptAt(compressedBuffer, block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
+                var offsetInEncryptionUnit = checked((ulong)
+                    (block.CompressedStart - pakEntry.CompressionBlocks[0].CompressedStart));
+                var compressed = ReadAndDecryptEntryAt(compressedBuffer, block.CompressedStart, srcSize, reader,
+                    pakEntry, offsetInEncryptionUnit);
                 // Calculate the uncompressed size,
                 // its either just the compression block size,
                 // or if it's the last block, it's the remaining data size
@@ -221,7 +225,8 @@ public partial class PakFileReader : AbstractAesVfsReader
         var readOffset = offset & ~((long) alignment - 1);
         var dataOffset = offset - readOffset;
         var readSize = (dataOffset + requestedSize).Align(alignment);
-        var data = ReadAndDecryptAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize, reader, pakEntry.IsEncrypted);
+        var data = ReadAndDecryptEntryAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize,
+            reader, pakEntry, (ulong) readOffset);
 
         switch (Ar.Game)
         {
@@ -421,6 +426,11 @@ public partial class PakFileReader : AbstractAesVfsReader
             throw new ParserException("Corrupt pak PrimaryIndex detected");
 
         var NonEncodedEntries = primaryIndex.ReadArray(FilesNum, () => new FPakEntry(this, "", primaryIndex));
+        if (Info.EncryptionMethod == EIoEncryptionMethod.AES_CTR)
+        {
+            foreach (var entry in NonEncodedEntries)
+                entry.EncryptionIV = new FIoStoreEncryptionIV(primaryIndex);
+        }
 
         // Read FDirectoryIndex
         Ar.Position = directoryIndexOffset;
@@ -428,7 +438,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         {
             GAME_Rennsport => RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true),
             GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, 0, directoryIndexOffset, this),
-            _ => ReadAndDecryptIndex((int) directoryIndexSize),
+            _ => ReadAndDecryptIndex((int) directoryIndexSize, Info.FullDirectoryIndexIv),
         };
 
         using var directoryIndex = new GenericBufferReader(data);
@@ -633,6 +643,53 @@ public partial class PakFileReader : AbstractAesVfsReader
     protected override byte[] ReadAndDecrypt(int length) => ReadAndDecrypt(length, Ar, IsEncrypted);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected override byte[] ReadAndDecryptIndex(int length) => ReadAndDecryptIndex(length, Ar, IsEncrypted);
+
+    protected override byte[] DecryptBytes(byte[] bytes, int beginOffset, int count, FAesKey key, bool isIndex)
+    {
+        if (Info.EncryptionMethod != EIoEncryptionMethod.AES_CTR)
+            return base.DecryptBytes(bytes, beginOffset, count, key, isIndex);
+        if (!isIndex || Info.IndexIv is null)
+            throw new InvalidOperationException("AES-CTR pak data requires the IV for its encryption unit.");
+
+        return bytes.CryptCtr(beginOffset, count, key, Info.IndexIv.Bytes);
+    }
+
+    private byte[] ReadAndDecryptIndex(int length, FIoStoreEncryptionIV? iv)
+    {
+        var bytes = Ar.ReadBytes(length);
+        return DecryptPakEncryptionUnit(bytes, IsEncrypted, iv, 0, true);
+    }
+
+    private byte[] ReadAndDecryptEntryAt(byte[] buffer, long position, int length, FArchive reader,
+        FPakEntry entry, ulong offsetInEncryptionUnit)
+    {
+        reader.ReadAt(position, buffer, 0, length);
+        return DecryptPakEncryptionUnit(buffer, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit);
+    }
+
+    private byte[] ReadAndDecryptEntryAt(long position, int length, FArchive reader, FPakEntry entry,
+        ulong offsetInEncryptionUnit)
+    {
+        var bytes = reader.ReadBytesAt(position, length);
+        return DecryptPakEncryptionUnit(bytes, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit);
+    }
+
+    private byte[] DecryptPakEncryptionUnit(byte[] bytes, bool isEncrypted,
+        FIoStoreEncryptionIV? iv, ulong offsetInEncryptionUnit, bool isIndex = false)
+    {
+        if (!isEncrypted || Info.EncryptionMethod != EIoEncryptionMethod.AES_CTR)
+            return DecryptIfEncrypted(bytes, isEncrypted, isIndex);
+        if (CustomEncryption is not null)
+            return CustomEncryption(bytes, 0, bytes.Length, isIndex, this);
+        if (iv is null)
+            throw new ParserException("AES-CTR pak encryption unit is missing its IV");
+        if (offsetInEncryptionUnit % Aes.ALIGN != 0)
+            throw new ParserException("AES-CTR pak encryption unit offset is not block-aligned");
+
+        EnsureValidAesKey(AesKey);
+        var initialBlockIndex = checked((uint) (offsetInEncryptionUnit / Aes.ALIGN));
+        return bytes.CryptCtr(0, bytes.Length, AesKey!, iv.Bytes, initialBlockIndex);
+    }
 
     public override byte[] MountPointCheckBytes()
     {
