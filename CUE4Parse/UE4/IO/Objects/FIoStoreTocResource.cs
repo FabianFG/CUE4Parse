@@ -139,7 +139,7 @@ namespace CUE4Parse.UE4.IO.Objects
                 throw new ParserException(Ar, $"TOC has {Header.EncryptionIVCount} encryption IVs but {Header.EncryptionMethod} over {Header.TocCompressedBlockEntryCount} compression bocks needs {expectedIVCount}");
 
             EncryptionMethod = Header.EncryptionMethod;
-            EncryptionIVs = Header.EncryptionIVCount > 0 ? Ar.ReadArray((int)Header.EncryptionIVCount, () => new FIoStoreEncryptionIV(Ar)) : [];
+            EncryptionIVs = Header.EncryptionIVCount > 0 ? archive.ReadArray((int)Header.EncryptionIVCount, () => new FIoStoreEncryptionIV(archive)) : [];
 
             // Compression methods
             unsafe
