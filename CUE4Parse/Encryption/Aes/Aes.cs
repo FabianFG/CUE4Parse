@@ -20,22 +20,83 @@ public static class Aes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] Decrypt(this byte[] encrypted, FAesKey key)
     {
-        return Provider.CreateDecryptor(key.Key, null).TransformFinalBlock(encrypted, 0, encrypted.Length);
+        var decrypted = (byte[]) encrypted.Clone();
+        decrypted.DecryptInPlace(key);
+        return decrypted;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] Decrypt(this ArraySegment<byte> encrypted, FAesKey key)
     {
         if (encrypted.Array is null) throw new ArgumentException("ArraySegment has no backing array.", nameof(encrypted));
-
-        using var decryptor = Provider.CreateDecryptor(key.Key, null);
-        return decryptor.TransformFinalBlock(encrypted.Array, encrypted.Offset, encrypted.Count);
+        var decrypted = encrypted.AsSpan().ToArray();
+        decrypted.DecryptInPlace(key);
+        return decrypted;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte[] Decrypt(this byte[] encrypted, int beginOffset, int count, FAesKey key)
     {
-        return Provider.CreateDecryptor(key.Key, null).TransformFinalBlock(encrypted, beginOffset, count);
+        ValidateRange(encrypted, beginOffset, count);
+        var decrypted = encrypted.AsSpan(beginOffset, count).ToArray();
+        decrypted.DecryptInPlace(key);
+        return decrypted;
+    }
+
+    /// <summary>
+    /// Decrypts an arbitrary range within an AES-ECB encryption unit. The input buffer must start at the
+    /// encryption unit's first block and contain every complete block surrounding the requested range.
+    /// </summary>
+    public static byte[] DecryptRange(this byte[] encrypted, int beginOffset, int count, FAesKey key)
+    {
+        ValidateRange(encrypted, beginOffset, count);
+        if (count == 0)
+            return [];
+
+        var alignedBeginOffset = beginOffset & -ALIGN;
+        var alignedEndOffset = ((long) beginOffset + count).Align(ALIGN);
+        if (alignedEndOffset > encrypted.Length)
+            throw new ArgumentException(
+                "Partial AES-ECB decryption requires the input buffer to contain the complete surrounding blocks.",
+                nameof(count));
+
+        var decrypted = encrypted.AsSpan(alignedBeginOffset, (int) alignedEndOffset - alignedBeginOffset).ToArray();
+        decrypted.DecryptInPlace(key);
+
+        var offsetInDecrypted = beginOffset - alignedBeginOffset;
+        return offsetInDecrypted == 0 && count == decrypted.Length
+            ? decrypted
+            : decrypted.AsSpan(offsetInDecrypted, count).ToArray();
+    }
+
+    /// <summary>
+    /// Decrypts complete AES-ECB blocks in place.
+    /// </summary>
+    public static void DecryptInPlace(this byte[] encrypted, FAesKey key) =>
+        encrypted.DecryptInPlace(0, encrypted.Length, key);
+
+    /// <summary>
+    /// Decrypts complete AES-ECB blocks in place within an array.
+    /// </summary>
+    public static void DecryptInPlace(this byte[] encrypted, int beginOffset, int count, FAesKey key)
+    {
+        ValidateRange(encrypted, beginOffset, count);
+        if (count % ALIGN != 0)
+            throw new ArgumentException($"AES-ECB input length must be a multiple of {ALIGN} bytes.", nameof(count));
+        if (count == 0)
+            return;
+
+        using var decryptor = Provider.CreateDecryptor(key.Key, null);
+        var written = decryptor.TransformBlock(encrypted, beginOffset, count, encrypted, beginOffset);
+        if (written != count)
+            throw new CryptographicException($"AES-ECB decrypted {written} of {count} bytes.");
+    }
+
+    private static void ValidateRange(byte[] input, int beginOffset, int count)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(beginOffset);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        if (beginOffset > input.Length - count)
+            throw new ArgumentException("The requested range exceeds the input buffer.", nameof(count));
     }
 
     /// <summary>

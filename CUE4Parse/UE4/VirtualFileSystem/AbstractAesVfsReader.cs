@@ -70,8 +70,16 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
         throw new InvalidAesKeyException("Reading encrypted data requires a valid aes key");
     }
 
-    protected virtual byte[] DecryptBytes(byte[] bytes, int beginOffset, int count, FAesKey key, bool isIndex) =>
-        bytes.Decrypt(beginOffset, count, key);
+    protected virtual byte[] DecryptBytes(byte[] bytes, int beginOffset, int count, FAesKey key, bool isIndex)
+    {
+        if (beginOffset == 0 && count == bytes.Length)
+        {
+            bytes.DecryptInPlace(key);
+            return bytes;
+        }
+
+        return bytes.Decrypt(beginOffset, count, key);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected byte[] DecryptIfEncrypted(byte[] bytes) => DecryptIfEncrypted(bytes, IsEncrypted);
