@@ -683,12 +683,10 @@ public partial class PakFileReader : AbstractAesVfsReader
             return CustomEncryption(bytes, 0, bytes.Length, isIndex, this);
         if (iv is null)
             throw new ParserException("AES-CTR pak encryption unit is missing its IV");
-        if (offsetInEncryptionUnit % Aes.ALIGN != 0)
-            throw new ParserException("AES-CTR pak encryption unit offset is not block-aligned");
-
         EnsureValidAesKey(AesKey);
         var initialBlockIndex = checked((uint) (offsetInEncryptionUnit / Aes.ALIGN));
-        bytes.AsSpan().CryptCtrInPlace(AesKey!, iv.Bytes, initialBlockIndex);
+        var initialBlockByteOffset = (int) (offsetInEncryptionUnit % Aes.ALIGN);
+        bytes.AsSpan().CryptCtrInPlace(AesKey!, iv.Bytes, initialBlockIndex, initialBlockByteOffset);
         return bytes;
     }
 
