@@ -1,10 +1,10 @@
 {
   "schemaVersion": 8,
   "engine": {
-    "major": 5,
-    "minor": 8,
-    "patch": 1,
-    "gitSha": "71fe36aac5a8df5ccd66c763ffc902b29b6a9c43"
+    "major": 6,
+    "minor": 0,
+    "patch": 0,
+    "gitSha": "4268b7097cf76b6deb5046d6af48d9958c85c8f8"
   },
   "target": {
     "platform": "Win64",
@@ -21,22 +21,22 @@
     {
       "name": "CUE4ParseFixtures-Common-Win64-Shipping.dll",
       "size": 140288,
-      "sha256": "3cb2117427d486f86936bbfa04497cddd8b6c44c3bbabb7d81ada03c1e75b54c"
+      "sha256": "01fb0b777e7f96cdf882f1bab8f71b5e20215aace3c8fe92a2e280bcddcb5c57"
     },
     {
       "name": "CUE4ParseFixtures-Engine-Win64-Shipping.dll",
-      "size": 140949504,
-      "sha256": "33ab3dd4a2c91172386f3eebad94107006d8042b22e3a0a1c79d2f6a8c8377d4"
+      "size": 149020672,
+      "sha256": "c24df7bfd7b18bab94f4d36c29200d11a8a2266bc29404aefdb72fad0573d2a4"
     },
     {
       "name": "CUE4ParseFixtures-Win64-Shipping.exe",
-      "size": 187904,
-      "sha256": "8001f74adda6433809b2415f5a78749d964b7eee7f308a5d88505113ff9888ca"
+      "size": 197120,
+      "sha256": "3ece24c70cfcfcb563ab90e1dca5ef704ebbe0f3fc1b2a0bf98ecc45d269ed61"
     },
     {
       "name": "CUE4ParseFixtures-Win64-Shipping.modules",
-      "size": 15515,
-      "sha256": "7469150b9f2bb0632d912abd3640989da1d75e7cf06945be8f4624389dcf8922"
+      "size": 16240,
+      "sha256": "e85f915e1562a22b4d53653b74822696f3ece3e8fc23dd9d04fee5cc2f39c65c"
     },
     {
       "name": "CUE4ParseFixtures-Win64-Shipping.version",
@@ -45,13 +45,13 @@
     },
     {
       "name": "D3D12/x64/D3D12Core.dll",
-      "size": 4821064,
-      "sha256": "560f9574372a52ab66ad95ee1222f1eb4c9f6161d8f6b7b025d89f684b07246c"
+      "size": 5027640,
+      "sha256": "eddf4cff4eda8162624b88694ad2adf4b09bc5aee6339191f39adf8ae48b41e7"
     },
     {
       "name": "D3D12/x64/d3d12SDKLayers.dll",
-      "size": 4932640,
-      "sha256": "bcec9e1315fb4dbc767371926fb5eb8281de1b3ab1fb530a636b3c193a9a2bbd"
+      "size": 4965688,
+      "sha256": "a78bca22ebe6c8ccdd6efff630d798b27447f8922bb889de2f50e0dd1ab10f85"
     },
     {
       "name": "DML/x64/DirectML.dll",
@@ -84,38 +84,38 @@
       "containers": [
         {
           "name": "global.ucas",
-          "size": 2405728,
-          "sha256": "f4468f9765a02a239de49511a952b0fb77baeed5ba47a7b9eff362c4093e407e"
+          "size": 2466784,
+          "sha256": "97930da72de87a08a560b7965fe45a96764b09de3ad02ac049f06d3c1a70c01f"
         },
         {
           "name": "global.utoc",
-          "size": 638,
-          "sha256": "83a4deccb11ed41e9d9edafa62acac8eac5f202b9aeebfc6c7b7b82962fbb09d"
+          "size": 650,
+          "sha256": "ad36e6816b83ec33749d0164decb00c690be5e27d6e82a7c9b5aa7297af4f97c"
         },
         {
           "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.ucas",
-          "size": 1004336,
-          "sha256": "60cf4204faff166b5a899fd147dd3e3800297e4f67d43a27eef72a4d4b67db74"
+          "size": 987968,
+          "sha256": "bf1aab6dc46a167b82ab41a899c35e4b92388b8dffcedb259b3b9d33335898a7"
         },
         {
           "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.utoc",
-          "size": 12013,
-          "sha256": "50e6189783a4f42be5f2cf113232c5cfdcc1ee2e5f5dfa8c905dd535cf7a170c"
+          "size": 11989,
+          "sha256": "96c1d92e8bad5f7eb7f8dd70f65f39f27b25c1e08231f20a195bb28704bad02d"
         },
         {
           "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.ucas",
-          "size": 1004336,
-          "sha256": "9b84eda12c6a29cf47eb29407e6c47190178f45a137d8e232b69cb782215bff7"
+          "size": 987968,
+          "sha256": "1856902cae4e10d4be409a124900ca932b5b232ad16c40c480d71d7d242727e0"
         },
         {
           "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.utoc",
-          "size": 12020,
-          "sha256": "60bd88945c817ea37b09e7045f7058e4711fcf5c960da56bd3c052411839ea78"
+          "size": 11996,
+          "sha256": "fbb255df5515a1772c4ee14d1e2a4dd90bdcaca6c619762d3fe92f5c3d2f4b79"
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s1.ucas",
-          "size": 114496,
-          "sha256": "2938030aed9e78a1ff61cf3fb67b865df8b3cfc50ff24f22cfd540a13a18046a"
+          "size": 98112,
+          "sha256": "7b813d4a0beb78fc5d8c9b90a55e7eb5b91553185635a0c8184f2da5cfb99666"
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s2.ucas",
@@ -129,38 +129,38 @@
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s4.ucas",
-          "size": 181040,
-          "sha256": "60e002b1f328fb5a856f95cf0eaf2e23004ea5eb41efcbd734a85ec719b1409b"
+          "size": 181056,
+          "sha256": "e0c1314d6bd7a76974504f11b4d88d530cbc15f7a7abcf579474b8018f3d9953"
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows.ucas",
-          "size": 261984,
-          "sha256": "4bd503928fd852514fa1078dca6c6d9dae8cf6e121247de7424f73608b7c9e45"
+          "size": 261872,
+          "sha256": "f7b5d0cff658ef2bfa1290bfd4b002bb67c47f9d87827822bc41bbb1bb88fc62"
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows.utoc",
-          "size": 12013,
-          "sha256": "a93e6366a30310fa5274c7fcf0171950cf527819a4c4c81ddf7f1198ec0e0bd7"
+          "size": 11989,
+          "sha256": "4eed2303d18f65df8f04251899e714cd82ca3c84181771e3efbef2c4653923ce"
         },
         {
           "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.ucas",
-          "size": 2542384,
-          "sha256": "924179cf893fb4b9b048d7f34762961485dbffb84caecab1d54fa42683faf46d"
+          "size": 2376512,
+          "sha256": "bad57db18b26bbcafec3f6cc37d7d25d441252acd2ef2935b376bff55d474207"
         },
         {
           "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.utoc",
-          "size": 11981,
-          "sha256": "f23a37dbc2ac48f07e6a7b185e1a9f9daeb6b4daa6bbbe10cd881821faa2fdee"
+          "size": 11957,
+          "sha256": "9d63d9c54f89324bc0cea5bb4c0cf46e678b49616d41e021cbd5daf16d87e500"
         },
         {
           "name": "Zlib/CUE4ParseFixtures-Minimal-Zlib-Windows.ucas",
-          "size": 1145648,
-          "sha256": "d1950f20b7e594185b0a62847b381fca360b897142c683fc1965fd82665d6f78"
+          "size": 1123136,
+          "sha256": "daf58b409e294bfe6d663ca7bf08903569f6c0c05fd59347fbcd90f8861c3ad6"
         },
         {
           "name": "Zlib/CUE4ParseFixtures-Minimal-Zlib-Windows.utoc",
-          "size": 12013,
-          "sha256": "7406951a9b493b306b8e593dc972f3b01fd073a08f9c2fc539ce1ace092e5aef"
+          "size": 12005,
+          "sha256": "0664fe56e00689eb61f119dfda7e06497de3cb403e004e9229a6502d50272c1d"
         }
       ],
       "assets": [
@@ -883,33 +883,33 @@
       "containers": [
         {
           "name": "global.ucas",
-          "size": 2405728,
-          "sha256": "f4468f9765a02a239de49511a952b0fb77baeed5ba47a7b9eff362c4093e407e"
+          "size": 2466784,
+          "sha256": "97930da72de87a08a560b7965fe45a96764b09de3ad02ac049f06d3c1a70c01f"
         },
         {
           "name": "global.utoc",
-          "size": 638,
-          "sha256": "83a4deccb11ed41e9d9edafa62acac8eac5f202b9aeebfc6c7b7b82962fbb09d"
+          "size": 650,
+          "sha256": "ad36e6816b83ec33749d0164decb00c690be5e27d6e82a7c9b5aa7297af4f97c"
         },
         {
           "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.ucas",
-          "size": 924464,
-          "sha256": "a7fd7664f3f43b3aac61e80cd2e02f888d90b750b328044325a54dec23807d39"
+          "size": 906048,
+          "sha256": "543b008eb4a5e0ea1fbb18808d1f25097a968c26a40e3edcaebef9a76e72925a"
         },
         {
           "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.utoc",
-          "size": 11989,
-          "sha256": "b074b2be1847de88e7101249abda59b4687c2ca15f576b9eb339bbe8c1139dc1"
+          "size": 11977,
+          "sha256": "01522af6b20614fd447e4b54af2e834fdcab8139e5d75a81829def16dd62598b"
         },
         {
           "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.ucas",
-          "size": 924464,
-          "sha256": "f0a4ec03665bdc8bdd6cc7adae322121c2d303f99841c00aabf67b21519a368e"
+          "size": 906048,
+          "sha256": "b9446f96bda8c4035a4cbcc4f3cb213b741433f49e05cfc68202b2163485321a"
         },
         {
           "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.utoc",
-          "size": 11996,
-          "sha256": "4642c346201e375eeb0528c5b359926ee9398ffffe09bc2e241f4c958e19065b"
+          "size": 11984,
+          "sha256": "82905cf47499e519967d23cb42f5d065134c3fb7c731049c9200ea7478bead0b"
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s1.ucas",
@@ -923,38 +923,38 @@
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s3.ucas",
-          "size": 181040,
-          "sha256": "60e002b1f328fb5a856f95cf0eaf2e23004ea5eb41efcbd734a85ec719b1409b"
+          "size": 181056,
+          "sha256": "e0c1314d6bd7a76974504f11b4d88d530cbc15f7a7abcf579474b8018f3d9953"
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows.ucas",
-          "size": 252560,
-          "sha256": "13d3112b955b21be60317ecae70ebf34f435960400b37266783b41077bf6c3b8"
+          "size": 234128,
+          "sha256": "f27deebc0cf300ec174e3056a700c6d06299e84ce4b10787a2bcbf8d545e1e67"
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows.utoc",
-          "size": 11989,
-          "sha256": "3d34c15073ae1e58f0410f8ef15ec470c5d327e83b3624dcbfea0ebea8e5ae45"
+          "size": 11977,
+          "sha256": "9bdbd29eebf22f86857ed49782e73e04d648e9a43651c0f1b2a2e86f8c44c783"
         },
         {
           "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.ucas",
-          "size": 2259760,
-          "sha256": "598bb229a937c7163ed9fa2f6ee90e923e7342231da7ce50553017bfccb208b9"
+          "size": 2165568,
+          "sha256": "c4458ac110ee08ea2a7c8ee775960a26625d808f5051177f52d0438c35cd98a5"
         },
         {
           "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.utoc",
-          "size": 11957,
-          "sha256": "6cb83a343d37adb24758d442106518a3f441e39117fd537fbcb1e49141e00956"
+          "size": 11945,
+          "sha256": "ce6fee4080ae1cda83140632d89b3ca23357a6e79b9e4d996a0bc45cd7d14edf"
         },
         {
           "name": "Zlib/CUE4ParseFixtures-Minimal-Zlib-Windows.ucas",
-          "size": 1059632,
-          "sha256": "7e86258919bf784117036621d814c4f44395f45c28a8b2c247cda014a0684d6f"
+          "size": 1039168,
+          "sha256": "cd6e9e52e45bff2b7fb0b641c101bf56c6107353d13c85cc8f3e1283c1e8a958"
         },
         {
           "name": "Zlib/CUE4ParseFixtures-Minimal-Zlib-Windows.utoc",
-          "size": 11989,
-          "sha256": "ad4f06a103813f1f850a411a4a28fe349efa97e211bc0d393a0f6b7b7c03d0a2"
+          "size": 11993,
+          "sha256": "882c1c828ed6f0e85e86a0594a3ac35078dc2eeaa4ef726c6fb238308db8d03f"
         }
       ],
       "assets": [
@@ -1667,75 +1667,65 @@
   "pakFixtures": [
     {
       "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle.pak",
-      "size": 58466,
-      "sha256": "43d75014493f57e4c1a1969bcae52571af8fb977e17340137763d33df04816d5"
+      "size": 60501,
+      "sha256": "23c79eb8b25da7b4aa59a0c2d79fb84935af8f2fdc7f20249e127d6f613bed80"
     },
     {
       "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed.pak",
-      "size": 241116,
-      "sha256": "81ba09cbe63f59861ed7221079fe1861e4f1c886dfbec8f5caf4a5f0cbaf775d"
+      "size": 250996,
+      "sha256": "5bcb3e5b2b2b5614335b6cc97f7f671c1bf86de997fbaf2907e2a9171922d10b"
     }
   ],
   "legacyPakFixtures": [
     {
       "name": "Tagged/Oodle/CUE4ParseFixtures-Legacy-Tagged-Oodle.pak",
-      "size": 18887,
-      "sha256": "e2acc8e881b4c155f5ce46a8926a6ae65b803d3292656db2907b7cf1432b26d2"
+      "size": 19069,
+      "sha256": "e7ef5248aa4aea927788d5441fce3154c4c8e9ac97c8f5f0eb1b2dcc61a57a38"
     },
     {
       "name": "Tagged/OodleEncrypted/CUE4ParseFixtures-Legacy-Tagged-OodleEncrypted.pak",
-      "size": 19036,
-      "sha256": "10439cb02358429ac906ece08b96e45a6d5ebb234d581caa04016ce575a8d591"
+      "size": 19221,
+      "sha256": "119f96c5b9d33a40479db6b91d5c801835abdbf696d9c12f3507de8e0ccfcf2e"
     },
     {
       "name": "Tagged/Uncompressed/CUE4ParseFixtures-Legacy-Tagged-Uncompressed.pak",
-      "size": 202193,
-      "sha256": "776873aa5ec0d26c5db6ba74aee7e1615b9b998ec71344f2fd987d9de3023b31"
+      "size": 202425,
+      "sha256": "4e871061efbfdd3b709eb062138d89e3b208519ddbf844670726601f4e4e5aaa"
     },
     {
       "name": "Tagged/Zlib/CUE4ParseFixtures-Legacy-Tagged-Zlib.pak",
-      "size": 20893,
-      "sha256": "f939e2a85c63eee0e332758fb432c3252619da84bf9904a2e3c2dffdc9465a4c"
+      "size": 21120,
+      "sha256": "346a9e85bce620d26bda79f77fa98c4cea15a37d1225fe77d27972d3aaa8854c"
     },
     {
       "name": "Unversioned/Oodle/CUE4ParseFixtures-Legacy-Unversioned-Oodle.pak",
-      "size": 15991,
-      "sha256": "1eb674c15734ab2f2f637424cf3721029a6a24841e8f9438300cdf372842eacf"
+      "size": 16221,
+      "sha256": "7751196402a2a7cb6ec8755c4ea9e4d0849899c9f87d16312dc8e58688629e85"
     },
     {
       "name": "Unversioned/OodleEncrypted/CUE4ParseFixtures-Legacy-Unversioned-OodleEncrypted.pak",
-      "size": 16144,
-      "sha256": "b83f532e9457b24337a76c49e7370d17e883b79f22d991a3c8ede7bda15fb370"
+      "size": 16377,
+      "sha256": "ef7142e1f9a56a7e9c46c74d74072eb17e221930ffa7233f444ad568733d5e21"
     },
     {
       "name": "Unversioned/Uncompressed/CUE4ParseFixtures-Legacy-Unversioned-Uncompressed.pak",
-      "size": 191572,
-      "sha256": "ad721f2e1c3d234cb09f44cac5a509a99ca9c36125ac029aefefbb00c8c319d8"
+      "size": 191804,
+      "sha256": "da6bcef1d929b42dc0950d333bd0b86412e1076551513e8c6ee2401008d84e14"
     },
     {
       "name": "Unversioned/Zlib/CUE4ParseFixtures-Legacy-Unversioned-Zlib.pak",
-      "size": 17211,
-      "sha256": "be5367b93b0ce894f33bd548636b188739d2c815df18fea3428363851b955984"
+      "size": 17442,
+      "sha256": "ab6d517bf0edd143b4949b07a35446bc584ac286e1cc6e3ade0b91837a8ae42d"
     }
   ],
   "androidTexturePakFixtures": [
     {
       "name": "CUE4ParseFixtures-Android-Textures.pak",
-      "size": 38197,
-      "sha256": "f0c04637077cfa5f7c9e412ee29e1ce7d44724b03effda3386dcda32776497a3"
+      "size": 38525,
+      "sha256": "c252582258d4eb21bbb3c30eeab4185ff610e8633db6df9d2340b1ac48333d2f"
     }
   ],
   "patchFixtures": [
-    {
-      "name": "IoStore/CUE4ParseFixtures-PatchBase.ucas",
-      "size": 1968,
-      "sha256": "235bd10aa31a60aa0986adf649019df65593c67a138157f26e95a0d9aa08bc80"
-    },
-    {
-      "name": "IoStore/CUE4ParseFixtures-PatchBase.utoc",
-      "size": 488,
-      "sha256": "431032e96eb901fbf01898dc444e37bb56696e1b851caf2215363710d985e721"
-    },
     {
       "name": "IoStore/CUE4ParseFixtures-PatchBase_0_P.ucas",
       "size": 816,
@@ -1744,17 +1734,27 @@
     {
       "name": "IoStore/CUE4ParseFixtures-PatchBase_0_P.utoc",
       "size": 384,
-      "sha256": "48c2bfa0e82ad321c11d4ea56228d684702314296d14097369e864aa50e2c330"
+      "sha256": "6f084cd5925e15338d3791f028289bfc7cd42e691ef7d99ea7c0d3c45e586285"
     },
     {
-      "name": "Pak/CUE4ParseFixtures-PatchBase.pak",
-      "size": 3492,
-      "sha256": "2032f5888794f1e1a75c808921a17235800da1524b207bf96a96b45b0d2d6eae"
+      "name": "IoStore/CUE4ParseFixtures-PatchBase.ucas",
+      "size": 1968,
+      "sha256": "b50da5d879c246ce776d940568800c81f12c37abc8be50a09d16287497496913"
+    },
+    {
+      "name": "IoStore/CUE4ParseFixtures-PatchBase.utoc",
+      "size": 488,
+      "sha256": "2255ce186190ef9393f41ba2c6722470681d956b301666dd3885c3b0a220d83c"
     },
     {
       "name": "Pak/CUE4ParseFixtures-PatchBase_0_P.pak",
-      "size": 1738,
-      "sha256": "3a570865bb9cec12d48fa059be750c4d2d721fb5ef194dbfb77b43973744cbd0"
+      "size": 1850,
+      "sha256": "4978afa693d0f84bdb34e721b05a43dfeb1d9490acd834b7d6fe596bb0c2cd86"
+    },
+    {
+      "name": "Pak/CUE4ParseFixtures-PatchBase.pak",
+      "size": 3628,
+      "sha256": "72859d87265360ae64e614305d57f98161906eba0ce9dc15cd18ce191487ea7c"
     }
   ],
   "assetPackages": [
@@ -1952,23 +1952,23 @@
     "/Game/Fixtures/Compute/CG_Fixture",
     "/Game/Fixtures/Geometry/GeoCache_Fixture",
     "/Game/Fixtures/ControlRig/CR_Fixture",
-    "/Game/Fixtures/Maps/WorldPartition/_Generated_/1WD4NAK7SVY0JF8AXYPOSA7U8"
+    "/Game/Fixtures/Maps/WorldPartition/_Generated_/D1R7UA0VD18MKP5K9AR4EIV91"
   ],
   "testContainerBulkPaths": [
-    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ADPCM.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Textures/T_Streaming.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Textures/T_Virtual.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Textures/T_UDIM.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Meshes/SM_Nanite.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Inline.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Streaming.ubulk",
     "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_BinkAudio.ubulk",
-    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_Opus.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ADPCM.ubulk",
     "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_PCM.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_Opus.ubulk",
     "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_PlatformSpecific.ubulk",
     "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ProjectDefined.ubulk",
     "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_RADAudio.ubulk",
-    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Inline.ubulk",
-    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Streaming.ubulk",
-    "CUE4ParseFixtures/Content/Fixtures/Geometry/GeoCache_Fixture.ubulk",
-    "CUE4ParseFixtures/Content/Fixtures/Meshes/SM_Nanite.ubulk",
-    "CUE4ParseFixtures/Content/Fixtures/Textures/T_Streaming.ubulk",
-    "CUE4ParseFixtures/Content/Fixtures/Textures/T_UDIM.ubulk",
-    "CUE4ParseFixtures/Content/Fixtures/Textures/T_Virtual.ubulk"
+    "CUE4ParseFixtures/Content/Fixtures/Geometry/GeoCache_Fixture.ubulk"
   ],
   "uobjectTypes": [
     "/Script/CUE4ParseFixtures.ParserFixtureBaseData",
