@@ -105,12 +105,12 @@
         {
           "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.ucas",
           "size": 987968,
-          "sha256": "1856902cae4e10d4be409a124900ca932b5b232ad16c40c480d71d7d242727e0"
+          "sha256": "86e4cb793fa7e31432ad41eaa8fbed9828fc08263eef541434bddc19a596ea8a"
         },
         {
           "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.utoc",
-          "size": 11996,
-          "sha256": "fbb255df5515a1772c4ee14d1e2a4dd90bdcaca6c619762d3fe92f5c3d2f4b79"
+          "size": 13604,
+          "sha256": "2121915aa45019056b7f28fd621111810916e75bda34457213d5f39114e3faa1"
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s1.ucas",
@@ -904,12 +904,12 @@
         {
           "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.ucas",
           "size": 906048,
-          "sha256": "b9446f96bda8c4035a4cbcc4f3cb213b741433f49e05cfc68202b2163485321a"
+          "sha256": "9237d97c00391d917dd27f98157d2a5e6ed594440392f9874e16854c749fb183"
         },
         {
           "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.utoc",
-          "size": 11984,
-          "sha256": "82905cf47499e519967d23cb42f5d065134c3fb7c731049c9200ea7478bead0b"
+          "size": 13580,
+          "sha256": "a3d83eb5f16d73d6a35c95184491d28487f083ed9b9749b083be68e68137c592"
         },
         {
           "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s1.ucas",
@@ -1684,8 +1684,8 @@
     },
     {
       "name": "Tagged/OodleEncrypted/CUE4ParseFixtures-Legacy-Tagged-OodleEncrypted.pak",
-      "size": 19221,
-      "sha256": "119f96c5b9d33a40479db6b91d5c801835abdbf696d9c12f3507de8e0ccfcf2e"
+      "size": 19349,
+      "sha256": "2000ed9a604fcd9e99e98441ec44bf8b2f24c16cc066ac4f89e20ba2f1bcfa63"
     },
     {
       "name": "Tagged/Uncompressed/CUE4ParseFixtures-Legacy-Tagged-Uncompressed.pak",
@@ -1704,8 +1704,8 @@
     },
     {
       "name": "Unversioned/OodleEncrypted/CUE4ParseFixtures-Legacy-Unversioned-OodleEncrypted.pak",
-      "size": 16377,
-      "sha256": "ef7142e1f9a56a7e9c46c74d74072eb17e221930ffa7233f444ad568733d5e21"
+      "size": 16505,
+      "sha256": "418ae46855a9075dfab2b3383924b263695e19bd85b4378aebb3dac83865c5d8"
     },
     {
       "name": "Unversioned/Uncompressed/CUE4ParseFixtures-Legacy-Unversioned-Uncompressed.pak",
