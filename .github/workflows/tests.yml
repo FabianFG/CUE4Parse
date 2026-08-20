@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests-linux:
-    name: tests-linux
+  tests-with-ue58-fixtures-linux:
+    name: tests-with-ue58-fixtures-linux
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -27,7 +27,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Run Release tests
+      - name: Run all tests with UE5.8 fixtures
         run: dotnet test CUE4Parse.Tests/CUE4Parse.Tests.csproj --configuration Release --logger "console;verbosity=normal"
 
   fixtures-ue6-linux:
