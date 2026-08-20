@@ -1,4 +1,6 @@
+using System.Buffers;
 using System.Buffers.Binary;
+using System.Numerics.Tensors;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using AesProvider = System.Security.Cryptography.Aes;
@@ -10,6 +12,7 @@ public static class Aes
     public const int ALIGN = 16;
     public const int BLOCK_SIZE = 16 * 8;
     private const int CounterPrefixSize = 12;
+    private const int MaxCtrScratchSize = 1024 * 1024;
 
     private static readonly AesProvider Provider;
 
@@ -41,28 +44,61 @@ public static class Aes
         ArgumentOutOfRangeException.ThrowIfNegative(count);
         if (beginOffset > input.Length - count)
             throw new ArgumentException("The requested range exceeds the input buffer.", nameof(count));
-        if (initializationVector.Length != CounterPrefixSize)
-            throw new ArgumentException($"Unreal AES-CTR initialization vectors must be {CounterPrefixSize} bytes.", nameof(initializationVector));
-        if (count == 0)
-            return [];
 
-        var blockCount = checked((int) ((count + (long) ALIGN - 1) / ALIGN));
-        var counterBlocks = new byte[checked(blockCount * ALIGN)];
-        for (var block = 0; block < blockCount; block++)
-        {
-            var counter = counterBlocks.AsSpan(block * ALIGN, ALIGN);
-            initializationVector.CopyTo(counter);
-            var blockIndex = checked(initialBlockIndex + (uint) block);
-            BinaryPrimitives.WriteUInt32BigEndian(counter[CounterPrefixSize..], blockIndex);
-        }
-
-        using var encryptor = Provider.CreateEncryptor(key.Key, null);
-        var keyStream = encryptor.TransformFinalBlock(counterBlocks, 0, counterBlocks.Length);
-        var result = new byte[count];
-        for (var i = 0; i < count; i++)
-            result[i] = (byte) (input[beginOffset + i] ^ keyStream[i]);
+        var result = beginOffset == 0 && count == input.Length
+            ? input
+            : input.AsSpan(beginOffset, count).ToArray();
+        result.AsSpan().CryptCtrInPlace(key, initializationVector, initialBlockIndex);
         return result;
     }
+
+    public static void CryptCtrInPlace(this Span<byte> data, FAesKey key,
+        ReadOnlySpan<byte> initializationVector, uint initialBlockIndex = 0)
+    {
+        if (initializationVector.Length != CounterPrefixSize)
+            throw new ArgumentException($"Unreal AES-CTR initialization vectors must be {CounterPrefixSize} bytes.", nameof(initializationVector));
+        if (data.IsEmpty)
+            return;
+
+        var scratchSize = AlignCtrLength(Math.Min(data.Length, MaxCtrScratchSize));
+        var counterBlocks = ArrayPool<byte>.Shared.Rent(scratchSize);
+        try
+        {
+            using var encryptor = Provider.CreateEncryptor(key.Key, null);
+            var processed = 0;
+            while (processed < data.Length)
+            {
+                var dataLength = Math.Min(MaxCtrScratchSize, data.Length - processed);
+                var encryptedLength = AlignCtrLength(dataLength);
+                var counters = counterBlocks.AsSpan(0, encryptedLength);
+                FillCounterBlocks(counters, initializationVector,
+                    checked(initialBlockIndex + (uint) (processed / ALIGN)));
+                _ = encryptor.TransformBlock(counterBlocks, 0, encryptedLength, counterBlocks, 0);
+
+                var dataChunk = data.Slice(processed, dataLength);
+                TensorPrimitives.Xor(dataChunk, counters[..dataLength], dataChunk);
+                processed += dataLength;
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(counterBlocks);
+        }
+    }
+
+    private static void FillCounterBlocks(Span<byte> counters, ReadOnlySpan<byte> initializationVector,
+        uint initialBlockIndex)
+    {
+        for (var offset = 0; offset < counters.Length; offset += ALIGN)
+        {
+            var counter = counters.Slice(offset, ALIGN);
+            initializationVector.CopyTo(counter);
+            BinaryPrimitives.WriteUInt32BigEndian(counter[CounterPrefixSize..],
+                checked(initialBlockIndex + (uint) (offset / ALIGN)));
+        }
+    }
+
+    private static int AlignCtrLength(int length) => checked((length + ALIGN - 1) / ALIGN * ALIGN);
 
     static Aes()
     {

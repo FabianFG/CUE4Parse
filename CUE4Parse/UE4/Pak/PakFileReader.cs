@@ -688,7 +688,8 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         EnsureValidAesKey(AesKey);
         var initialBlockIndex = checked((uint) (offsetInEncryptionUnit / Aes.ALIGN));
-        return bytes.CryptCtr(0, bytes.Length, AesKey!, iv.Bytes, initialBlockIndex);
+        bytes.AsSpan().CryptCtrInPlace(AesKey!, iv.Bytes, initialBlockIndex);
+        return bytes;
     }
 
     public override byte[] MountPointCheckBytes()

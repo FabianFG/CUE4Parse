@@ -520,7 +520,8 @@ public partial class IoStoreReader : AbstractAesVfsReader
             return CustomEncryption(bytes, 0, count, false, this);
 
         EnsureValidAesKey(AesKey, bypassMountPointCheck);
-        return bytes.CryptCtr(0, count, AesKey!, TocResource.EncryptionIVs[blockIndex].Bytes);
+        bytes.AsSpan(0, count).CryptCtrInPlace(AesKey!, TocResource.EncryptionIVs[blockIndex].Bytes);
+        return bytes;
     }
 
     private void ReadIndex(char[] pathBuffer, int mountPointLength,
