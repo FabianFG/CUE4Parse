@@ -10,6 +10,8 @@ public class FAlkimiaLightweightStaticMeshProxyDesc : FStructFallback
     public FAlkimiaLightweightStaticMeshProxyDesc(FAssetArchive Ar) : base()
     {
         Ar.Position += 96;
-        Properties.AddRange(new FStructFallback(Ar, "AlkimiaLightweightStaticMeshProxyDesc", FRawHeader.FullRead, ReadType.RAW).Properties);
+        Properties.AddRange(new FStructFallback(Ar,
+            Ar.ResolveTypeIdentifier("AlkimiaLightweightStaticMeshProxyDesc"),
+            FRawHeader.FullRead, ReadType.RAW).Properties);
     }
 }

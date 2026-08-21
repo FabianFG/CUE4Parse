@@ -1,7 +1,8 @@
-using System.Collections.Concurrent;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -13,30 +14,19 @@ namespace CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 
 public static class DAStructs
 {
-    private static ConcurrentDictionary<string, string?> _resolvedSuperStructs = new();
-
-    public static IUStruct ParseDAStruct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)
+    public static IUStruct ParseDAStruct(FAssetArchive Ar, string? structName, string? fullTypeIdentifier, UStruct? struc, ReadType? type)
     {
+        var fallbackIdentifier = fullTypeIdentifier ?? structName;
         if (structName is null)
             return type == ReadType.ZERO ? new FStructFallback() :
-                struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName);
+                struc != null ? new FStructFallback(Ar, struc, fullTypeIdentifier) : new FStructFallback(Ar, fallbackIdentifier);
 
-        var mappings = Ar.Owner?.Mappings?.Types;
-        var resolvedSuper = _resolvedSuperStructs.GetOrAdd(structName, s =>
-        {
-            var mappingType = mappings?.GetValueOrDefault(s);
-            string? superStructName = mappingType?.SuperType;
-            while (mappingType is not null)
-            {
-                var super = mappingType.Super.Value;
-                if (super is null) return superStructName;
-                superStructName = mappingType.SuperType;
-                mappingType = super;
-            }
-            return superStructName;
-        });
+        var resolvedSuper = ResolveRootMappedSuper(Ar.Owner?.Mappings, structName, fullTypeIdentifier);
 
-        if (resolvedSuper == "StringEnumValue" && structName is not ("EItemCraftingRecipeId" or "ESchematicId"))
+        if (resolvedSuper != null &&
+            (Ar.Owner?.Mappings?.MatchesResolvedTypeIdentifier(resolvedSuper, "StringEnumValue") ??
+             resolvedSuper.Equals("StringEnumValue", StringComparison.OrdinalIgnoreCase)) &&
+            structName is not ("EItemCraftingRecipeId" or "ESchematicId"))
             return new FStringEnumValue(Ar);
 
         return structName switch
@@ -48,8 +38,23 @@ public static class DAStructs
             "BotAutoBorderCrossingConfig" => new FBotAutoBorderCrossingConfig(Ar),
             "StringEnumValue" => new FStringEnumValue(Ar),
 
-            _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
+            _ when type == ReadType.RAW => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+            _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc, fullTypeIdentifier) : new FStructFallback(Ar, fallbackIdentifier)
         };
+    }
+
+    private static string? ResolveRootMappedSuper(TypeMappings? mappings, string shortName, string? fullTypeIdentifier)
+    {
+        if (mappings?.TryGetType(shortName, fullTypeIdentifier, out var mappingType) != true)
+            return null;
+
+        string? root = null;
+        while (mappingType.Super.Value is { } super)
+        {
+            root = super.Name;
+            mappingType = super;
+        }
+        return root ?? mappingType.SuperType;
     }
 
     public static FPropertyTagData? ResolveSetPropertyInnerTypeData(FPropertyTagData tagData)

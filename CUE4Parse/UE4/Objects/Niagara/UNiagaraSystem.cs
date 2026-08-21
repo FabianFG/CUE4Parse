@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Objects.Niagara
                 NiagaraEmitterCompiledDataStructs = new List<FStructFallback>();
                 for (var emitterIndex = 0; emitterIndex < emitterCompiledDataNum; ++emitterIndex)
                 {
-                    NiagaraEmitterCompiledDataStructs.Add(new FStructFallback(Ar, "NiagaraEmitterCompiledData"));
+                    NiagaraEmitterCompiledDataStructs.Add(new FStructFallback(Ar, "/Script/Niagara.NiagaraEmitterCompiledData"));
                 }
             }
         }

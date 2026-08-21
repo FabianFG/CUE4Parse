@@ -71,9 +71,10 @@ public class UClass : UStruct
         if (Ar.Game == GAME_Borderlands4) _ = Ar.ReadMap(Ar.Read<ulong>, Ar.Read<int>);
     }
 
-    public Assets.Exports.UObject? ConstructObject(EObjectFlags flags)
+    public Assets.Exports.UObject? ConstructObject(EObjectFlags flags, string? fullTypeIdentifier = null,
+        TypeMappings? mappings = null)
     {
-        var type = ObjectTypeRegistry.Get(Name);
+        var type = ObjectTypeRegistry.Get(Name, fullTypeIdentifier, mappings);
         if (type is null && this is UBlueprintGeneratedClass && flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
         {
             type = typeof(Assets.Exports.UObject);
@@ -192,11 +193,28 @@ public class UClass : UStruct
                         break;
                     case EX_CallMath math:
                         // creates Labels for Delayed jumps
-                        if (math.StackNode.ToString().Contains("KismetSystemLibrary") && math.StackNode.ToString().Contains("Delay"))
+                        var delayFunction = math.StackNode.ResolvedObject;
+                        var delayFunctionIdentifier = delayFunction?.GetPathName();
+                        var isDelayFunction = Owner?.Mappings?.UsesFullTypeIdentifiers == true
+                            ? string.Equals(delayFunctionIdentifier, "/Script/Engine.KismetSystemLibrary:Delay",
+                                StringComparison.OrdinalIgnoreCase)
+                            : string.Equals(math.StackNode.Name, "Delay", StringComparison.OrdinalIgnoreCase) &&
+                              string.Equals(delayFunction?.Outer?.Name.Text, "KismetSystemLibrary",
+                                  StringComparison.OrdinalIgnoreCase);
+                        if (isDelayFunction)
                         {
                             foreach (var parameter in math.Parameters)
                             {
-                                if (parameter is EX_StructConst structConst && structConst.Struct.Name.Contains("LatentActionInfo"))
+                                if (parameter is not EX_StructConst structConst)
+                                    continue;
+
+                                var structIdentifier = structConst.Struct.ResolvedObject?.GetPathName();
+                                var isLatentActionInfo = Owner?.Mappings?.UsesFullTypeIdentifiers == true
+                                    ? string.Equals(structIdentifier, "/Script/Engine.LatentActionInfo",
+                                        StringComparison.OrdinalIgnoreCase)
+                                    : string.Equals(structConst.Struct.Name, "LatentActionInfo",
+                                        StringComparison.OrdinalIgnoreCase);
+                                if (isLatentActionInfo)
                                 {
                                     if (structConst.Properties.FirstOrDefault() is EX_SkipOffsetConst skipOffsetConst)
                                     {

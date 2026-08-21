@@ -14,7 +14,8 @@ public class UAkInitBank : UAkAudioType
 
         if (Ar.Position >= validPos) return;
 
-        InitBankCookedData = new FWwiseInitBankCookedData(new FStructFallback(Ar, "WwiseInitBankCookedData"));
+        InitBankCookedData = new FWwiseInitBankCookedData(new FStructFallback(
+            Ar, Ar.ResolveTypeIdentifier("WwiseInitBankCookedData")));
         InitBankCookedData.SerializeBulkData(Ar);
     }
 

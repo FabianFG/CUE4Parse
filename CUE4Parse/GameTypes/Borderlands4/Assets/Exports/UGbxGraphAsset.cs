@@ -1,5 +1,6 @@
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 using CUE4Parse.GameTypes.Borderlands4.Wwise;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -39,21 +40,22 @@ public class UGbxGraphAsset : UObject
         {
             var key = new FNodeInfo(Ar);
             if (NodeSettingsTypes[i].IsNull) continue;
+            var fullTypeIdentifier = NodeSettingsTypes[i].ResolvedObject?.GetPathName();
             if (NodeSettingsTypes[i].TryLoad<UStruct>(out var struc))
             {
                 var fallbackStruct = struc.Name switch
                 {
                     "GbxBrainTaskSettings_FlowControl" or "GbxBrainTaskSettings_Parallel" or "GbxBrainTaskSettings_Selector"
                         or "GbxBrainTaskSettings_Priority" or "GbxBrainTaskSettings_AITree" or "GbxBrainTaskSettings_Random"
-                        or "GbxBrainTaskSettings_Sequence" or "GbxBrainTaskSettings_StateMachine" => new FGbxBrainTaskSettings(Ar, struc.Name),
-                    _ => new FStructFallback(Ar, struc),
+                        or "GbxBrainTaskSettings_Sequence" or "GbxBrainTaskSettings_StateMachine" => new FGbxBrainTaskSettings(Ar, struc, fullTypeIdentifier),
+                    _ => new FStructFallback(Ar, struc, fullTypeIdentifier),
                 };
-                GbxAudioUtil.TryRegisterEvent(struc.Name, fallbackStruct);
+                GbxAudioUtil.TryRegisterEvent(fullTypeIdentifier ?? struc.Name, fallbackStruct, Ar.Owner?.Mappings);
                 Nodes[i] = new(key, fallbackStruct);
             }
             else if (NodeSettingsTypes[i].ResolvedObject is { } obj)
             {
-                Nodes[i] = new (key,new FStructFallback(Ar, obj.Name.ToString()));
+                Nodes[i] = new(key, new FStructFallback(Ar, obj.GetPathName()));
             }
             else
             {

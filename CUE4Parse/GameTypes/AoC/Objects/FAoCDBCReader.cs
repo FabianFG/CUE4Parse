@@ -97,10 +97,9 @@ public sealed class FAoCDBCReader : FAssetArchive
         var size = Read<int>();
         var saved = Position;
         if (string.IsNullOrEmpty(strucPath)) return null;
-        var name = strucPath.SubstringAfterLast('.');
         try
         {
-            return new FScriptStruct(this, name, null, ReadType.RAW);
+            return new FScriptStruct(this, strucPath, null, ReadType.RAW);
         }
         catch
         {

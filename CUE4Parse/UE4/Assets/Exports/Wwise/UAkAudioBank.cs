@@ -21,24 +21,28 @@ public class UAkAudioBank : UAkAudioType
                 return;
             case GAME_FateTrigger:
             {
-                var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(4, 1)], ERawHeaderFlags.RawProperties));
+                var idk = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("AkAudioBank"),
+                    new FRawHeader([(4, 1)], ERawHeaderFlags.RawProperties));
                 Properties.AddRange(idk.Properties);
                 return;
             }
             case GAME_CenturyAgeofAshes:
             {
-                var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(2, 1)], ERawHeaderFlags.RawProperties));
+                var idk = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("AkAudioBank"),
+                    new FRawHeader([(2, 1)], ERawHeaderFlags.RawProperties));
                 Properties.AddRange(idk.Properties);
                 return;
             }
             case GAME_GearsofWarEDay:
             {
-                var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(0, -1)], ERawHeaderFlags.RawProperties  | ERawHeaderFlags.Reverse));
+                var idk = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("AkAudioBank"),
+                    new FRawHeader([(0, -1)], ERawHeaderFlags.RawProperties | ERawHeaderFlags.Reverse));
                 Properties.AddRange(idk.Properties);
                 return;
             }
             default:
-                SoundBankCookedData = new FWwiseLocalizedSoundBankCookedData(new FStructFallback(Ar, "WwiseLocalizedSoundBankCookedData"));
+                SoundBankCookedData = new FWwiseLocalizedSoundBankCookedData(new FStructFallback(
+                    Ar, Ar.ResolveTypeIdentifier("WwiseLocalizedSoundBankCookedData")));
                 break;
         }
     }

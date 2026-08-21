@@ -12,13 +12,14 @@ public class FWorldConditionQueryDefinition : IUStruct
 
     public FWorldConditionQueryDefinition(FAssetArchive Ar)
     {
-        StaticStruct = new FStructFallback(Ar, "WorldConditionQueryDefinition");
+        StaticStruct = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("WorldConditionQueryDefinition"));
 
         if (FWorldConditionCustomVersion.Get(Ar) >= FWorldConditionCustomVersion.Type.StructSharedDefinition)
         {
             var bHasSharedDefinition = Ar.ReadBoolean();
             if (bHasSharedDefinition)
-                SharedDefinition = new FStructFallback(Ar, "WorldConditionQuerySharedDefinition");
+                SharedDefinition = new FStructFallback(Ar,
+                    Ar.ResolveTypeIdentifier("WorldConditionQuerySharedDefinition"));
         }
     }
 }

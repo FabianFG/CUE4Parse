@@ -15,7 +15,8 @@ public class UAkAcousticTexture : UAkAudioType
         if (Ar.Position >= validPos)
             return;
 
-        AcousticTextureCookedData = new FStructFallback(Ar, "WwiseAcousticTextureCookedData");
+        AcousticTextureCookedData = new FStructFallback(Ar,
+            Ar.ResolveTypeIdentifier("WwiseAcousticTextureCookedData"));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

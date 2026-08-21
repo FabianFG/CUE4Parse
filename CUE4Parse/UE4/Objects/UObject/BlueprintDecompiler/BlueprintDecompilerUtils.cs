@@ -20,6 +20,9 @@ namespace CUE4Parse.UE4.Objects.UObject.BlueprintDecompiler;
 
 public static class BlueprintDecompilerUtils
 {
+    private const string ObjectClassIdentifier = "/Script/CoreUObject.Object";
+    private const string InterfaceClassIdentifier = "/Script/CoreUObject.Interface";
+    private const string ActorClassIdentifier = "/Script/Engine.Actor";
 
     public static TypeMappings? Mappings { get; set; }
     public static UFunction Function { get; set; }
@@ -37,34 +40,47 @@ public static class BlueprintDecompilerUtils
     private static string GetPrefix(UStruct? struc)
     {
         var current = struc;
+        var currentIdentifier = current is UScriptClass { FullTypeIdentifier: { } scriptIdentifier }
+            ? scriptIdentifier
+            : current?.Outer != null ? current.GetPathName() : current?.Name;
+        if (!TypeMappings.IsFullTypeIdentifier(currentIdentifier) && currentIdentifier != null &&
+            Mappings?.TryResolveUniqueTypeIdentifier(currentIdentifier, out var resolvedIdentifier) == true)
+            currentIdentifier = resolvedIdentifier;
 
         while (current != null)
         {
-            if (current.Name == "Actor")
+            if (MatchesClassIdentity(currentIdentifier, current.Name, "Actor", ActorClassIdentifier))
                 return "A";
-            if (current.Name == "Interface")
+            if (MatchesClassIdentity(currentIdentifier, current.Name, "Interface", InterfaceClassIdentifier))
                 return "I";
-            if (current.Name == "Object")
+            if (MatchesClassIdentity(currentIdentifier, current.Name, "Object", ObjectClassIdentifier))
                 return "U";
 
             var next = current.SuperStruct?.Load<UStruct>();
 
             if (next is null && Mappings is not null &&
-                Mappings.Types.TryGetValue(current.Name, out var structMappings))
+                Mappings.TryGetType(current.Name, currentIdentifier, out var structMappings))
             {
                 if (string.IsNullOrEmpty(structMappings.SuperType) ||
-                    current.Name == structMappings.SuperType)
+                    string.Equals(current.Name, structMappings.SuperType, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(currentIdentifier, structMappings.SuperType, StringComparison.OrdinalIgnoreCase))
                     break;
 
-                if (structMappings.SuperType == "Actor")
+                var superName = TypeMappings.GetShortTypeName(structMappings.SuperType);
+                if (MatchesClassIdentity(structMappings.SuperType, superName, "Actor", ActorClassIdentifier))
                     return "A";
-                if (structMappings.SuperType == "Interface")
+                if (MatchesClassIdentity(structMappings.SuperType, superName, "Interface", InterfaceClassIdentifier))
                     return "I";
-                if (structMappings.SuperType == "Object")
+                if (MatchesClassIdentity(structMappings.SuperType, superName, "Object", ObjectClassIdentifier))
                     return "U";
 
-                next = new UScriptClass(structMappings.SuperType);
+                currentIdentifier = structMappings.SuperType;
+                next = new UScriptClass(superName, structMappings.SuperType);
             }
+            else
+                currentIdentifier = current.SuperStruct?.ResolvedObject?.GetPathName() ??
+                                    (next as UScriptClass)?.FullTypeIdentifier ??
+                                    (next?.Outer != null ? next.GetPathName() : null);
 
             current = next;
         }
@@ -77,21 +93,27 @@ public static class BlueprintDecompilerUtils
             return "U";
 
         var current = strucName;
+        if (!TypeMappings.IsFullTypeIdentifier(current) &&
+            Mappings.TryResolveUniqueTypeIdentifier(current, out var resolvedIdentifier))
+            current = resolvedIdentifier;
+        var currentShortName = TypeMappings.GetShortTypeName(current);
 
-        if (current == "Actor") return "A";
-        if (current == "Interface") return "I";
-        if (current == "Object") return "U";
+        if (MatchesClassIdentity(current, currentShortName, "Actor", ActorClassIdentifier)) return "A";
+        if (MatchesClassIdentity(current, currentShortName, "Interface", InterfaceClassIdentifier)) return "I";
+        if (MatchesClassIdentity(current, currentShortName, "Object", ObjectClassIdentifier)) return "U";
 
-        while (Mappings.Types.TryGetValue(current, out var structMappings))
+        while (Mappings.TryGetType(TypeMappings.GetShortTypeName(current), current, out var structMappings))
         {
             var superType = structMappings.SuperType;
 
-            if (string.IsNullOrEmpty(superType) || superType == current)
+            if (string.IsNullOrEmpty(superType) ||
+                superType.Equals(current, StringComparison.OrdinalIgnoreCase))
                 break;
 
-            if (superType == "Actor") return "A";
-            if (superType == "Interface") return "I";
-            if (superType == "Object") return "U";
+            var superName = TypeMappings.GetShortTypeName(superType);
+            if (MatchesClassIdentity(superType, superName, "Actor", ActorClassIdentifier)) return "A";
+            if (MatchesClassIdentity(superType, superName, "Interface", InterfaceClassIdentifier)) return "I";
+            if (MatchesClassIdentity(superType, superName, "Object", ObjectClassIdentifier)) return "U";
 
             current = superType;
         }
@@ -99,16 +121,46 @@ public static class BlueprintDecompilerUtils
         return "U";
     }
 
+    public static string GetClassPrefix(string classIdentifier) => GetPrefix(classIdentifier);
+
+    private static bool MatchesClassIdentity(string? identifier, string shortName, string legacyName,
+        string fullIdentifier)
+    {
+        if (Mappings?.UsesFullTypeIdentifiers == true)
+            return TypeMappings.IsFullTypeIdentifier(identifier) &&
+                   string.Equals(identifier, fullIdentifier, StringComparison.OrdinalIgnoreCase);
+
+        return TypeMappings.IsFullTypeIdentifier(identifier)
+            ? string.Equals(identifier, fullIdentifier, StringComparison.OrdinalIgnoreCase)
+            : shortName.Equals(legacyName, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool MatchesFunctionLibrary(string identifier, string shortName, string fullIdentifier) =>
+        MatchesClassIdentity(identifier, shortName, TypeMappings.GetShortTypeName(fullIdentifier), fullIdentifier);
+
+    private static bool MatchesContextLibraryReference(string expression, string fullIdentifier)
+    {
+        if (Mappings?.UsesFullTypeIdentifiers == true)
+            return expression.Contains(fullIdentifier, StringComparison.OrdinalIgnoreCase);
+        return expression.Contains(TypeMappings.GetShortTypeName(fullIdentifier),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
     // Add_IntInt = UKismetMathLibrary::Add_IntInt(Temp_int_Loop_Counter_Variable, 1);
     // to
     // Add_IntInt = Temp_int_Loop_Counter_Variable + 1;
     private static string MathFunctionCleaner(
         string className,
+        string classIdentifier,
         string functionName,
         List<string> parametersList,
         string parameters)
     {
-        if (className.StartsWith("SolarisMathLibrary_") || className == "KismetMathLibrary")
+        var isSolarisMathLibrary = TypeMappings.IsFullTypeIdentifier(classIdentifier)
+            ? classIdentifier.StartsWith("/Script/Solaris.SolarisMathLibrary_", StringComparison.OrdinalIgnoreCase)
+            : className.StartsWith("SolarisMathLibrary_", StringComparison.OrdinalIgnoreCase);
+        if (isSolarisMathLibrary || MatchesFunctionLibrary(
+                classIdentifier, className, "/Script/Engine.KismetMathLibrary"))
         {
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
             if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
@@ -207,7 +259,7 @@ public static class BlueprintDecompilerUtils
                 return $"{parametersList[0]} + {parametersList[2]} * ({parametersList[1]} - {parametersList[0]})";
             }
         }
-        if (className == "KismetStringLibrary")
+        if (MatchesFunctionLibrary(classIdentifier, className, "/Script/Engine.KismetStringLibrary"))
         {
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
             if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
@@ -231,7 +283,7 @@ public static class BlueprintDecompilerUtils
             if (functionName.StartsWith("IsNumeric")) return $"{parametersList[0]}.IsNumeric()";
             if (functionName.StartsWith("Len")) return $"{parametersList[0]}.Length";
         }
-        if (className == "KismetSystemLibrary")
+        if (MatchesFunctionLibrary(classIdentifier, className, "/Script/Engine.KismetSystemLibrary"))
         {
             if (functionName.StartsWith("IsValid") || functionName.StartsWith("Conv_SoftClassReferenceToClass") || functionName.StartsWith("Conv_SoftObjectReferenceToObject") || (functionName.StartsWith("Make") && parametersList.Count == 1))
             {
@@ -242,7 +294,10 @@ public static class BlueprintDecompilerUtils
             if (functionName.StartsWith("Conv_SoftClassPathToSoftClassRef")) return $"TSoftClassPtr<UObject>({parametersList[0]})";
             if (functionName.StartsWith("Conv_ClassToSoftClassReference")) return $"TSoftClassPtr<UObject>(*{parametersList[0]})";
         }
-        if (className == "KismetInputLibrary" || className == "BlueprintGameplayTagLibrary" || className == "FortKismetLibrary" || className == "KismetTextLibrary")
+        if (MatchesFunctionLibrary(classIdentifier, className, "/Script/Engine.KismetInputLibrary") ||
+            MatchesFunctionLibrary(classIdentifier, className, "/Script/GameplayTags.BlueprintGameplayTagLibrary") ||
+            MatchesFunctionLibrary(classIdentifier, className, "/Script/FortniteGame.FortKismetLibrary") ||
+            MatchesFunctionLibrary(classIdentifier, className, "/Script/Engine.KismetTextLibrary"))
         {
             if (functionName.StartsWith("EqualEqual_")) return $"{parametersList[0]} == {parametersList[1]}";
             if (functionName.StartsWith("NotEqual_")) return $"({parametersList[0]} != {parametersList[1]})";
@@ -251,16 +306,17 @@ public static class BlueprintDecompilerUtils
         }
 
         // Doesn't work on UE4 as GetPrefix requires mappings
-        return $"{GetPrefix(className)}{className}::{functionName}({parameters})";
+        return $"{GetPrefix(classIdentifier)}{className}::{functionName}({parameters})";
     }
 
     private static string FinalFunctionCleaner(
         string className,
+        string classIdentifier,
         string functionName,
         List<string> parametersList,
         string parameters)
     {
-        if (className == "KismetArrayLibrary")
+        if (MatchesFunctionLibrary(classIdentifier, className, "/Script/Engine.KismetArrayLibrary"))
         {
             if (functionName.StartsWith("Array_Length")) return $"{parametersList[0]}.Length";
             if (functionName.StartsWith("Array_IsNotEmpty")) return $"{parametersList[0]}.Length > 0";
@@ -275,7 +331,7 @@ public static class BlueprintDecompilerUtils
             if (functionName.StartsWith("Array_Insert")) return $"{parametersList[0]}[{parametersList[2]}] = {parametersList[1]}";
         }
 
-        if (className == "BlueprintMapLibrary")
+        if (MatchesFunctionLibrary(classIdentifier, className, "/Script/Engine.BlueprintMapLibrary"))
         {
             if (functionName.StartsWith("Map_Length")) return $"{parametersList[0]}.Length";
             if (functionName.StartsWith("Map_Remove")) return $"{parametersList[0]}.Remove({parametersList[1]})";
@@ -283,7 +339,7 @@ public static class BlueprintDecompilerUtils
             if (functionName.StartsWith("Map_Get")) return $"{parametersList[2]} = {parametersList[0]}[{parametersList[1]}]";
         }
 
-        if (className == "BlueprintSetLibrary")
+        if (MatchesFunctionLibrary(classIdentifier, className, "/Script/Engine.BlueprintSetLibrary"))
         {
             if (functionName.StartsWith("Set_AddItems")) return $"{parametersList[0]}.Add({parametersList[1]})";
             if (functionName.StartsWith("Set_Clear")) return $"{parametersList[0]}.Clear()";
@@ -292,13 +348,13 @@ public static class BlueprintDecompilerUtils
         }
 
         // Doesn't work on UE4 as GetPrefix requires mappings
-        return $"{GetPrefix(className)}{className}::{functionName}({parameters})";
+        return $"{GetPrefix(classIdentifier)}{className}::{functionName}({parameters})";
     }
 
 
-    private static string GetTagTypes(FPropertyTagData? tagType) => tagType?.Type switch
+    public static string GetPropertyTagCppType(FPropertyTagData? tagType) => tagType?.Type switch
         {
-            "EnumProperty" or "ByteProperty" when tagType.EnumName != null => tagType.EnumName,
+            "EnumProperty" or "ByteProperty" when tagType.EnumName != null => CppTypeName(tagType.EnumName),
             "IntProperty" => "int",
             "Int8Property" => "int8",
             "Int16Property" => "int16",
@@ -316,10 +372,20 @@ public static class BlueprintDecompilerUtils
             "FloatProperty" => "float",
             "SoftObjectProperty" or "SoftClassProperty" or "AssetObjectProperty" => "FSoftObjectPath",
             "ObjectProperty" or "ClassProperty" => "UObject*",
-            "StructProperty" => $"F{tagType.StructType}",
-            "InterfaceProperty" => $"I{tagType.StructType}",
+            "StructProperty" when tagType.StructType != null => $"F{CppTypeName(tagType.StructType)}",
+            "InterfaceProperty" when tagType.StructType != null => $"I{CppTypeName(tagType.StructType)}",
             _ => throw new NotSupportedException($"PropertyType {tagType?.Type} is currently not supported")
         };
+
+    private static string CppTypeName(string identifier) => TypeMappings.GetShortTypeName(identifier);
+
+    private static string CppEnumValue(string value)
+    {
+        var separator = value.IndexOf("::", StringComparison.Ordinal);
+        return separator < 0
+            ? CppTypeName(value)
+            : CppTypeName(value[..separator]) + value[separator..];
+    }
 
     private static bool IsPointer(FProperty property) => property.PropertyFlags.HasFlag(EPropertyFlags.ReferenceParm) ||
                                                          property.PropertyFlags.HasFlag(EPropertyFlags.InstancedReference) ||
@@ -737,9 +803,9 @@ public static class BlueprintDecompilerUtils
             {
                 if (propertyTag.Tag?.GenericValue is FName name)
                 {
-                    var enumValue = name.ToString();
+                    var enumValue = CppEnumValue(name.ToString());
 
-                    value = $"{enumValue}";
+                    value = enumValue;
                     type = $"enum {enumValue.SubstringBefore("::")}";
                 }
                 else
@@ -809,7 +875,7 @@ public static class BlueprintDecompilerUtils
                 if (scriptArray.Properties.Count == 0)
                 {
                     value = "{}";
-                    var innerType = GetTagTypes(scriptArray.InnerTagData);
+                    var innerType = GetPropertyTagCppType(scriptArray.InnerTagData);
 
                     type = $"TArray<{innerType}>";
                 }
@@ -856,7 +922,7 @@ public static class BlueprintDecompilerUtils
                     return false;
                 }
 
-                type = propertyTag.TagData?.StructType is { Length: > 0 } structName ? $"struct F{structName}" : "struct";
+                type = propertyTag.TagData?.StructType is { Length: > 0 } structName ? $"struct F{CppTypeName(structName)}" : "struct";
                 break;
             }
             case EPropertyType.StrProperty:
@@ -1010,8 +1076,8 @@ public static class BlueprintDecompilerUtils
                 }
                 else
                 {
-                    var keyType = GetTagTypes(propertyTag.TagData?.InnerTypeData);
-                    var valueType = GetTagTypes(propertyTag.TagData?.ValueTypeData);
+                    var keyType = GetPropertyTagCppType(propertyTag.TagData?.InnerTypeData);
+                    var valueType = GetPropertyTagCppType(propertyTag.TagData?.ValueTypeData);
 
                     type = $"TMap<{keyType}, {valueType}>";
                     value = "{}";
@@ -1021,8 +1087,10 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.EnumProperty:
             {
-                value = propertyTag.GetGenericValueStr<FName>(); // .SubstringAfter("::")
-                type = $"enum";//{propertyTag.TagData?.EnumName}
+                value = CppEnumValue(propertyTag.GetGenericValueStr<FName>());
+                type = propertyTag.TagData?.EnumName is { Length: > 0 } enumName
+                    ? $"enum {CppTypeName(enumName)}"
+                    : "enum";
                 break;
             }
             case EPropertyType.FieldPathProperty:
@@ -1431,7 +1499,11 @@ public static class BlueprintDecompilerUtils
                     customStringBuilder.IncreaseIndentation();
                 }
 
-                if (obj == "FindObject<UObject>(nullptr, this)" || obj.Contains("KismetArrayLibrary") || (!function.EndsWith("Map_Find") && obj.Contains("BlueprintMapLibrary")) || obj.Contains("BlueprintSetLibrary"))
+                if (obj == "FindObject<UObject>(nullptr, this)" ||
+                    MatchesContextLibraryReference(obj, "/Script/Engine.KismetArrayLibrary") ||
+                    (!function.EndsWith("Map_Find") &&
+                     MatchesContextLibraryReference(obj, "/Script/Engine.BlueprintMapLibrary")) ||
+                    MatchesContextLibraryReference(obj, "/Script/Engine.BlueprintSetLibrary"))
                 {
                     customStringBuilder.Append(function);
                 }
@@ -1456,13 +1528,21 @@ public static class BlueprintDecompilerUtils
 
                 var parameters = string.Join(", ", parametersList);
                 var stackNode = final.StackNode.ToString();
-                var functionName = stackNode.SubstringAfter(':').Trim('\'');
-                var className = stackNode.SubstringAfter('.').SubstringBefore(':');
+                var functionSeparator = stackNode.LastIndexOf(':');
+                var functionName = functionSeparator >= 0
+                    ? stackNode[(functionSeparator + 1)..].Trim('\'')
+                    : stackNode.Trim('\'');
+                var classToken = functionSeparator >= 0 ? stackNode[..functionSeparator] : stackNode;
+                var pathStart = classToken.IndexOf('/');
+                var classIdentifier = (pathStart >= 0
+                    ? classToken[pathStart..]
+                    : classToken.SubstringAfter('.')).Trim('\'');
+                var className = TypeMappings.GetShortTypeName(classIdentifier);
 
-                if (expression is EX_CallMath) return MathFunctionCleaner(className, functionName, parametersList, parameters);
-                if (expression is EX_LocalFinalFunction) return $"{(stackNode.Contains("/Script/") ? $"{GetPrefix(className)}{className}::{functionName}" : functionName)}({parameters})";
+                if (expression is EX_CallMath) return MathFunctionCleaner(className, classIdentifier, functionName, parametersList, parameters);
+                if (expression is EX_LocalFinalFunction) return $"{(stackNode.Contains("/Script/") ? $"{GetPrefix(classIdentifier)}{className}::{functionName}" : functionName)}({parameters})";
 
-                return FinalFunctionCleaner(className, functionName, parametersList, parameters);
+                return FinalFunctionCleaner(className, classIdentifier, functionName, parametersList, parameters);
             }
             case EX_VirtualFunction virtualFunc:
             {
@@ -1804,7 +1884,13 @@ public static class BlueprintDecompilerUtils
                     properties.Add(GetLineExpression(property));
                 }
 
-                if (structConst.Struct.Name == "LatentActionInfo") return properties.Count > 0 ? properties[0] : ""; // used for cleaning code output.
+                var structIdentifier = structConst.Struct.ResolvedObject?.GetPathName();
+                var isLatentActionInfo = Mappings?.UsesFullTypeIdentifiers == true
+                    ? string.Equals(structIdentifier, "/Script/Engine.LatentActionInfo",
+                        StringComparison.OrdinalIgnoreCase)
+                    : string.Equals(structConst.Struct.Name, "LatentActionInfo",
+                        StringComparison.OrdinalIgnoreCase);
+                if (isLatentActionInfo) return properties.Count > 0 ? properties[0] : ""; // used for cleaning code output.
 
                 return $"F{structConst.Struct.Name}({string.Join(", ", properties)})";
             }

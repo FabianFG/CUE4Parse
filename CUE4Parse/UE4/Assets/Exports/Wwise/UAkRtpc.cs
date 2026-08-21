@@ -14,7 +14,8 @@ public class UAkRtpc : UAkAudioType
 
         if (Ar.Position >= validPos) return;
 
-        GameParameterCookedData = new FStructFallback(Ar, "WwiseGameParameterCookedData");
+        GameParameterCookedData = new FStructFallback(Ar,
+            Ar.ResolveTypeIdentifier("WwiseGameParameterCookedData"));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

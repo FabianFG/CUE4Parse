@@ -12,11 +12,11 @@ public class FStateTreeInstanceData : IUStruct
     {
         if (FStateTreeInstanceStorageCustomVersion.Get(Ar) >= FStateTreeInstanceStorageCustomVersion.Type.AddedCustomSerialization)
         {
-            Data = new FStructFallback(Ar, "StateTreeInstanceStorage");
+            Data = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("StateTreeInstanceStorage"));
         }
         else
         {
-            Data = new FStructFallback(Ar, "StateTreeInstanceData");
+            Data = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("StateTreeInstanceData"));
         }
     }
 }

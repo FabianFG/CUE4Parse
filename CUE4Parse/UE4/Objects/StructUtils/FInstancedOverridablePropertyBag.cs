@@ -20,7 +20,8 @@ public class FInstancedOverridablePropertyBag : FInstancedPropertyBag
                 try
                 {
                     Ar.Owner.Summary.PackageFlags &= ~EPackageFlags.PKG_UnversionedProperties;
-                    Defaults = new FStructFallback(Ar, "InstancedOverridablePropertyBag");
+                    Defaults = new FStructFallback(Ar,
+                        Ar.ResolveTypeIdentifier("InstancedOverridablePropertyBag"));
                 }
                 catch (Exception e)
                 {
@@ -34,7 +35,8 @@ public class FInstancedOverridablePropertyBag : FInstancedPropertyBag
             }
             else
             {
-                Defaults = new FStructFallback(Ar, "InstancedOverridablePropertyBag");
+                Defaults = new FStructFallback(Ar,
+                    Ar.ResolveTypeIdentifier("InstancedOverridablePropertyBag"));
             }
             return;
         }

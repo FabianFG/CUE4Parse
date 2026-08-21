@@ -2,7 +2,6 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.Engine.Animation;
 
@@ -21,18 +20,17 @@ public struct FAttributeCurve : IUStruct
     {
         Keys = Ar.ReadArray<FAttributeKey>();
         ScriptStructPath = new FSoftObjectPath(Ar);
-        var assetPath = ScriptStructPath.AssetPathName;
+        var assetPath = ScriptStructPath.ToString();
 
-        if (assetPath.IsNone)
+        if (ScriptStructPath.AssetPathName.IsNone)
             return;
 
-        if( assetPath.Text.StartsWith("/Script"))
+        if (assetPath.StartsWith("/Script", StringComparison.Ordinal))
         {
-            var ScriptStructType = ScriptStructPath.AssetPathName.Text.SubstringAfterLast('.');
             Values = new FStructFallback[Keys.Length];
             for (var i = 0; i < Keys.Length; i++)
             {
-                Values[i] = new FStructFallback(Ar, ScriptStructType);
+                Values[i] = new FStructFallback(Ar, assetPath);
             }
         }
         else

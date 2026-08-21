@@ -13,7 +13,7 @@ public class UMetaUSoundSource : USoundWaveProcedural
         base.Deserialize(Ar, validPos);
         if (Ar.Game >= GAME_UE5_4)
         {
-            Settings = new FStructFallback(Ar, "MetaSoundQualitySettings");
+            Settings = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("MetaSoundQualitySettings"));
         }
     }
 }

@@ -1,4 +1,5 @@
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -9,30 +10,33 @@ public static class GbxAudioUtil
     private static readonly Dictionary<FName, bool> _gbxAudioEvents = [];
     private static readonly object _lock = new();
 
-    public static void TryRegisterEvent(string typeName, FStructFallback? fallback)
+    public static void TryRegisterEvent(string typeIdentifier, FStructFallback? fallback, TypeMappings? mappings)
     {
         if (fallback is null)
             return;
 
         FGbxAudioEvent gbxAudioEvent;
-        switch (typeName)
+        if (MatchesHandler(typeIdentifier, "GbxAudioBodyAction_PostEvent", mappings))
         {
-            case "GbxAudioBodyAction_PostEvent":
-                gbxAudioEvent = new FGbxAudioBodyAction_PostEvent(fallback).ActivationSound;
-                break;
-            case "GbxAudioBodyAction_ManagedLoop":
-                gbxAudioEvent = new FGbxAudioBodyAction_ManagedLoop(fallback).LoopStartEvent;
-                break;
-            case "GbxAudioNodeAspectSettings_PostEvent":
-                gbxAudioEvent = new FGbxAudioNodeAspectSettings_PostEvent(fallback).AudioEvent;
-                break;
-            default:
-                return;
+            gbxAudioEvent = new FGbxAudioBodyAction_PostEvent(fallback).ActivationSound;
         }
+        else if (MatchesHandler(typeIdentifier, "GbxAudioBodyAction_ManagedLoop", mappings))
+        {
+            gbxAudioEvent = new FGbxAudioBodyAction_ManagedLoop(fallback).LoopStartEvent;
+        }
+        else if (MatchesHandler(typeIdentifier, "GbxAudioNodeAspectSettings_PostEvent", mappings))
+        {
+            gbxAudioEvent = new FGbxAudioNodeAspectSettings_PostEvent(fallback).AudioEvent;
+        }
+        else return;
 
         var bUseSoundTag = gbxAudioEvent.bUseSoundTag;
         AddEvent(bUseSoundTag ? gbxAudioEvent.SoundTag.TagName : gbxAudioEvent.WwiseEvent.Name, bUseSoundTag);
     }
+
+    private static bool MatchesHandler(string identifier, string legacyName, TypeMappings? mappings) =>
+        mappings?.MatchesResolvedTypeIdentifier(identifier, legacyName) ??
+        identifier.Equals(legacyName, StringComparison.OrdinalIgnoreCase);
 
     private static void AddEvent(FName eventName, bool useSoundTag)
     {

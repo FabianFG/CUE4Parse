@@ -47,25 +47,38 @@ public abstract class AbstractUePackage : UObject, IPackage
         UObject? obj = null;
         var mappings = owner?.Mappings;
         var current = struc?.Object?.Value as UStruct;
+        var currentIdentifier = struc?.GetPathName();
+        if (!TypeMappings.IsFullTypeIdentifier(currentIdentifier) &&
+            current is UScriptClass { FullTypeIdentifier: { } scriptIdentifier })
+            currentIdentifier = scriptIdentifier;
 
         while (current != null) // Traverse up until a known one is found
         {
             if (current is UClass scriptClass)
             {
                 // We know this is a class defined in code at this point
-                obj = scriptClass.ConstructObject(flags);
+                obj = scriptClass.ConstructObject(flags, currentIdentifier, mappings);
                 if (obj != null)
                     break;
             }
 
             var previous = current;
+            var previousIdentifier = currentIdentifier;
+            currentIdentifier = current.SuperStruct?.ResolvedObject?.GetPathName();
             current = current.SuperStruct?.Load<UStruct>();
+            if (!TypeMappings.IsFullTypeIdentifier(currentIdentifier) &&
+                current is UScriptClass { FullTypeIdentifier: { } superIdentifier })
+                currentIdentifier = superIdentifier;
 
-            if (current is null && mappings is not null && mappings.Types.TryGetValue(previous.Name, out var structMappings))
+            if (current is null && mappings is not null &&
+                mappings.TryGetType(previous.Name, previousIdentifier, out var structMappings))
             {
                 // added guard for infinite loop
-                if (string.IsNullOrEmpty(structMappings.SuperType) || previous.Name == structMappings.SuperType) break;
-                current = new UScriptClass(structMappings.SuperType);
+                if (string.IsNullOrEmpty(structMappings.SuperType) ||
+                    string.Equals(previousIdentifier, structMappings.SuperType, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(previous.Name, structMappings.SuperType, StringComparison.OrdinalIgnoreCase)) break;
+                currentIdentifier = structMappings.SuperType;
+                current = new UScriptClass(TypeMappings.GetShortTypeName(structMappings.SuperType), structMappings.SuperType);
             }
         }
 

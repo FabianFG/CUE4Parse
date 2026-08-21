@@ -24,7 +24,7 @@ public struct FAnyValue : IUStruct
         }
         else if (strucindex.ResolvedObject is { } obj)
         {
-            NonConstStruct = new FStructFallback(Ar, obj.Name.ToString());
+            NonConstStruct = new FStructFallback(Ar, obj.GetPathName());
         }
         else
         {

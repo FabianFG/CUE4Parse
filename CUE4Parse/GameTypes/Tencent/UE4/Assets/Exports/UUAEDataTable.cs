@@ -36,6 +36,8 @@ public class UUAEDataTable : UDataTable
         }
 
         RowStructName = rowStruct.Name;
+        var rowStructIdentifier = rowStructIndex.ResolvedObject?.GetPathName() ??
+                                  (rowStruct.Outer != null ? rowStruct.GetPathName() : RowStructName);
         var startPosition = Ar.Position;
         if (Ar.Read<uint>() != RAW_ROWS_PUBG_MAGIC)
         {
@@ -88,7 +90,7 @@ public class UUAEDataTable : UDataTable
             var rowName = Ar.ReadFName();
             if (properties.Length == 0)
             {
-                RowMap[rowName] = new FStructFallback(Ar, RowStructName, FRawHeader.FullRead, ReadType.RAW);
+                RowMap[rowName] = new FStructFallback(Ar, rowStructIdentifier, FRawHeader.FullRead, ReadType.RAW);
                 continue;
             }
 

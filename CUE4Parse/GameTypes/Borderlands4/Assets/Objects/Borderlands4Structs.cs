@@ -12,11 +12,12 @@ namespace CUE4Parse.GameTypes.Borderlands4.Assets.Objects;
 
 public static class Borderlands4Structs
 {
-    public static IUStruct ParseBl4Struct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)
+    public static IUStruct ParseBl4Struct(FAssetArchive Ar, string? structName, string? fullTypeIdentifier, UStruct? struc, ReadType? type)
     {
+        var fallbackIdentifier = fullTypeIdentifier ?? structName;
         if (structName is null)
             return type == ReadType.ZERO ? new FStructFallback() :
-                struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName);
+                struc != null ? new FStructFallback(Ar, struc, fullTypeIdentifier) : new FStructFallback(Ar, fallbackIdentifier);
 
         return structName switch
         {
@@ -37,16 +38,16 @@ public static class Borderlands4Structs
             "NexusBitSet" or "DamageTags" or "GbxVenueTags"
                 or "InventoryTags" => type == ReadType.ZERO ? new FGameplayTagContainer() : new FGameplayTagContainer(Ar),
 
-            "SToken" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
-            "FactAddress" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
-            "GbxAttributeExpression" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
-            "GbxBlackboardEntryRef" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
-            "GbxNavGeometrySettings" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
-            "GbxActorStateMachineKey" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
-            "GbxActorStateMachineStateKey" => new FStructFallback(Ar, structName, new FRawHeader([(0,1)])),
+            "SToken" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead),
+            "FactAddress" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead),
+            "GbxAttributeExpression" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead),
+            "GbxBlackboardEntryRef" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead),
+            "GbxNavGeometrySettings" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead),
+            "GbxActorStateMachineKey" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead),
+            "GbxActorStateMachineStateKey" => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(0,1)])),
 
-            _ when type == ReadType.RAW => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
+            _ when type == ReadType.RAW => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+            _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc, fullTypeIdentifier) : new FStructFallback(Ar, fallbackIdentifier)
         };
     }
 }

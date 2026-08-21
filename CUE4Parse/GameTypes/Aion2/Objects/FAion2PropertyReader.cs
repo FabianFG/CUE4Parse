@@ -28,7 +28,7 @@ public static class FAion2PropertyReader
             "SetProperty" => new SetProperty(ReadSet(Ar, mappings, tagData)),
             "MapProperty" => new MapProperty(ReadMap(Ar, mappings, tagData)),
             "StrProperty" => new StrProperty(Ar.ReadUnencryptedFString()),
-            "StructProperty" => new StructProperty(ReadStruct(Ar, mappings, tagData?.StructType)),
+            "StructProperty" => new StructProperty(ReadStruct(Ar, mappings, tagData?.GetStructTypeIdentifier())),
             "UInt16Property" => new UInt16Property(Ar.Read<ushort>()),
             "UInt32Property" => new UInt32Property(Ar.Read<uint>()),
             "UInt64Property" => new UInt64Property(Ar.Read<ulong>()),
@@ -97,7 +97,7 @@ public static class FAion2PropertyReader
         {
             if (structName == null)
                 throw new ParserException("Struct name is missing");
-            if (!mappings.Types.TryGetValue(structName, out var propMappings))
+            if (!mappings.TryGetType(TypeMappings.GetShortTypeName(structName), structName, out var propMappings))
                 throw new ParserException(Ar, $"No property mappings found for struct {structName}");
 
             var propCount = propMappings.CountProperties(true);

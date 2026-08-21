@@ -14,7 +14,7 @@ public class FBlueprintFunctionLibraryConditional : IUStruct
     {
         if (readType) Ar.Position += 1; 
         Ar.Position += 1;
-        FunctionReference = new FStructFallback(Ar, "MemberReference");
+        FunctionReference = new FStructFallback(Ar, "/Script/Engine.MemberReference");
         Parameters = new FStructFallback();
         Parameters.Properties.AddRange(Ar.ReadArray(() => new FOW2FPropertyTag(Ar)));
     }

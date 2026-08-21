@@ -8,6 +8,7 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports.Engine
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             RowStructName = "HomebaseNodeGameplayEffectDataTableRow";
+            RowStructIdentifier = "/Script/FortniteGame.HomebaseNodeGameplayEffectDataTableRow";
             base.Deserialize(Ar, validPos);
         }
     }

@@ -43,15 +43,14 @@ public class FGbxInlineStruct: IUStruct
         Type = Ar.ReadFString();
         if (string.IsNullOrEmpty(Type)) return;
 
-        string typeName = Type.SubstringAfterLast('.');
-        Struct = new FStructFallback(Ar, typeName);
+        Struct = new FStructFallback(Ar, Type);
 
-        GbxAudioUtil.TryRegisterEvent(typeName, Struct);
+        GbxAudioUtil.TryRegisterEvent(Type, Struct, Ar.Owner?.Mappings);
     }
 }
 
 // using primary constructor trick to initialize Indices before base constructor
-public class FGbxBrainTaskSettings(FAssetArchive Ar, string structName) : FStructFallback(Ar, structName)
+public class FGbxBrainTaskSettings(FAssetArchive Ar, UStruct structType, string? fullTypeIdentifier) : FStructFallback(Ar, structType, fullTypeIdentifier)
 {
     public int[] Indices = Ar.ReadArray<int>();
 }
@@ -145,28 +144,28 @@ public class FGbxParam : IUStruct
             EGbxType.String => Ar.ReadFString(),
             // EGbxType.NavSpot => GbxNavSpot
             EGbxType.Attribute => new FGameDataHandle(Ar),
-            EGbxType.NumericRange => new FStructFallback(Ar, "NumericRange"),
+            EGbxType.NumericRange => new FStructFallback(Ar, Ar.ResolveTypeIdentifier("NumericRange")),
             // EGbxType.TargetInfo
             EGbxType.GraphNodeOutput => Ar.ReadArray<int>(), // maybe
             // EGbxType.SceneComponent
-            EGbxType.TrajectoryOptions => new FStructFallback(Ar, "TrajectoryOptions"),
+            EGbxType.TrajectoryOptions => new FStructFallback(Ar, Ar.ResolveTypeIdentifier("TrajectoryOptions")),
             // EGbxType.Waypoint
-            EGbxType.GraphParam => new FStructFallback(Ar, "GbxAttributeRef"),
+            EGbxType.GraphParam => new FStructFallback(Ar, Ar.ResolveTypeIdentifier("GbxAttributeRef")),
             EGbxType.Name or EGbxType.Blackboard => Ar.ReadFName(),
-            EGbxType.WorldStateRegistryActor => new FStructFallback(Ar, "FactsSystemActorReference"), // ??
+            EGbxType.WorldStateRegistryActor => new FStructFallback(Ar, Ar.ResolveTypeIdentifier("FactsSystemActorReference")), // ??
             EGbxType.Double => Ar.Read<double>(),
-            EGbxType.MissionAliasRef => new FStructFallback(Ar, "MissionAliasRef"),
-            EGbxType.DataTable => new FStructFallback(Ar, "DataTableValueHandle"),
+            EGbxType.MissionAliasRef => new FStructFallback(Ar, Ar.ResolveTypeIdentifier("MissionAliasRef")),
+            EGbxType.DataTable => new FStructFallback(Ar, Ar.ResolveTypeIdentifier("DataTableValueHandle")),
             EGbxType.LinearColor => Ar.Read<FLinearColor>(),
             // EGbxType.HitResult
-            EGbxType.ForceSelection => new FStructFallback(Ar, "ForceSelection"),
+            EGbxType.ForceSelection => new FStructFallback(Ar, Ar.ResolveTypeIdentifier("ForceSelection")),
             EGbxType.Text => new FText(Ar),
             EGbxType.Asset => new FSoftObjectPath(Ar),
             EGbxType.GbxDef => new FGbxDefPtr(Ar),
-            EGbxType.WeightedAttributeInit => new FStructFallback(Ar, "GbxWeightedAttributeInit"), // only 1 entry
+            EGbxType.WeightedAttributeInit => new FStructFallback(Ar, Ar.ResolveTypeIdentifier("GbxWeightedAttributeInit")), // only 1 entry
             // EGbxType.FactAddress
             // EGbxType.DialogEnumValue
-            EGbxType.AttributeEvaluator => new FStructFallback(Ar, "GbxAttributeEvaluator"),
+            EGbxType.AttributeEvaluator => new FStructFallback(Ar, Ar.ResolveTypeIdentifier("GbxAttributeEvaluator")),
             EGbxType.GameplayTag => new FGameplayTag(Ar),
             _ => throw new ParserException($"FGbxParam type {Type} with value {Value} isn't suppoerted at pos {Ar.Position}." ),
         };
@@ -253,7 +252,8 @@ public class FSName : IUStruct
         if (TokenCount > 0)
         {
             SummaryHash = Ar.Read<int>();
-            ExternalTokens = Ar.ReadArray(TokenCount, () => new FStructFallback(Ar, "SToken", FRawHeader.FullRead));
+            ExternalTokens = Ar.ReadArray(TokenCount, () => new FStructFallback(
+                Ar, Ar.ResolveTypeIdentifier("SToken"), FRawHeader.FullRead));
             InlineTokens = ExternalTokens[0];
         }
     }

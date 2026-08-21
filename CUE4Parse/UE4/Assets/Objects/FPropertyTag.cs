@@ -131,7 +131,7 @@ public class FPropertyTag
         Size = (int) (Ar.Position - pos);
     }
 
-    public FPropertyTag(FAssetArchive Ar, bool readData)
+    public FPropertyTag(FAssetArchive Ar, bool readData, Struct? ownerMappings = null)
     {
         Name = Ar.ReadFName();
         if (Name.IsNone)
@@ -196,6 +196,9 @@ public class FPropertyTag
                 }
             }
         }
+
+        if (ownerMappings?.TryGetValue(Name.Text, ArrayIndex, out var propertyInfo) == true)
+            TagData?.ApplyMappingIdentifiers(propertyInfo.MappingType);
 
         if (!readData) return;
 

@@ -21,7 +21,7 @@ public class FNiagaraVariableBase : IUStruct
             return;
         }
         Name = Ar.ReadFName();
-        TypeDef = new FStructFallback(Ar, "NiagaraTypeDefinition");
+        TypeDef = new FStructFallback(Ar, "/Script/Niagara.NiagaraTypeDefinition");
     }
 
     public FNiagaraVariableBase(FName name, FStructFallback typeDef)

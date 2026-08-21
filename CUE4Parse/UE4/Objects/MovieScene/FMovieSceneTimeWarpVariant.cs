@@ -42,22 +42,22 @@ public class FMovieSceneTimeWarpVariant : IUStruct
                 Custom = new FPackageIndex(Ar);
                 break;
             case EMovieSceneTimeWarpType.FixedTime:
-                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpFixedFrame");
+                Variant = new FStructFallback(Ar, "/Script/MovieScene.MovieSceneTimeWarpFixedFrame");
                 break;
             case EMovieSceneTimeWarpType.FrameRate:
-                Variant = new FStructFallback(Ar, "FrameRate");
+                Variant = new FStructFallback(Ar, "/Script/CoreUObject.FrameRate");
                 break;
             case EMovieSceneTimeWarpType.Loop:
-                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpLoop");
+                Variant = new FStructFallback(Ar, "/Script/MovieScene.MovieSceneTimeWarpLoop");
                 break;
             case EMovieSceneTimeWarpType.Clamp:
-                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpClamp");
+                Variant = new FStructFallback(Ar, "/Script/MovieScene.MovieSceneTimeWarpClamp");
                 break;
             case EMovieSceneTimeWarpType.LoopFloat:
-                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpLoopFloat");
+                Variant = new FStructFallback(Ar, "/Script/MovieScene.MovieSceneTimeWarpLoopFloat");
                 break;
             case EMovieSceneTimeWarpType.ClampFloat:
-                Variant = new FStructFallback(Ar, "MovieSceneTimeWarpClampFloat");
+                Variant = new FStructFallback(Ar, "/Script/MovieScene.MovieSceneTimeWarpClampFloat");
                 break;
         }
     }

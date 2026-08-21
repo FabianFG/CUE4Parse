@@ -6,18 +6,20 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [SkipObjectRegistration]
 public class UScriptClass : UClass
 {
-    public UScriptClass(string className)
+    public string? FullTypeIdentifier { get; }
+
+    public UScriptClass(string className, string? fullTypeIdentifier = null)
     {
         Name = className;
+        FullTypeIdentifier = fullTypeIdentifier;
     }
 }
 
 [SkipObjectRegistration]
-public class USharpClass(string className) : UScriptClass(className);
+public class USharpClass(string className, string? fullTypeIdentifier = null) : UScriptClass(className, fullTypeIdentifier);
 
 [SkipObjectRegistration]
-public class UPythonClass(string className) : UScriptClass(className);
+public class UPythonClass(string className, string? fullTypeIdentifier = null) : UScriptClass(className, fullTypeIdentifier);
 
 [SkipObjectRegistration] // AngelScript
-public class UASClass(string className) : UScriptClass(className);
-
+public class UASClass(string className, string? fullTypeIdentifier = null) : UScriptClass(className, fullTypeIdentifier);

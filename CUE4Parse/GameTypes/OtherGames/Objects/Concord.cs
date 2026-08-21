@@ -15,7 +15,7 @@ public class UPMTimelineEvent : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        Properties = new FStructFallback(Ar, "PMTimelineEventExecutionProperties");
+        Properties = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("PMTimelineEventExecutionProperties"));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

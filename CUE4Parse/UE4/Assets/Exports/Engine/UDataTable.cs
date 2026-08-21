@@ -1,3 +1,4 @@
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -11,6 +12,7 @@ public class UDataTable : UObject
     
     public Dictionary<FName, FStructFallback> RowMap { get; protected set; }
     public string? RowStructName { get; protected set; } // Set by inheritor or during deserialization
+    protected string? RowStructIdentifier { get; set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -18,12 +20,19 @@ public class UDataTable : UObject
         // UObject Properties
 
         UStruct? rowStruct = null;
+        var rowStructIdentifier = RowStructIdentifier;
+        if (TypeMappings.IsFullTypeIdentifier(RowStructName))
+        {
+            rowStructIdentifier ??= RowStructName;
+            RowStructName = TypeMappings.GetShortTypeName(RowStructName!);
+        }
         if (string.IsNullOrEmpty(RowStructName))
         {
             var ptr = GetOrDefault<FPackageIndex?>("RowStruct");
             if (ptr != null)
             {
                 RowStructName = ptr.Name;
+                rowStructIdentifier = ptr.ResolvedObject?.GetPathName();
                 ptr.TryLoad<UStruct>(out rowStruct);
             }
             else
@@ -31,6 +40,11 @@ public class UDataTable : UObject
                 Log.Warning("Can't find or load RowStruct type to serialize DataTable");
                 return;
             }
+        }
+        else if (!TypeMappings.IsFullTypeIdentifier(rowStructIdentifier) &&
+                 Ar.Owner?.Mappings?.TryResolveUniqueTypeIdentifier(RowStructName, out var resolvedIdentifier) == true)
+        {
+            rowStructIdentifier = resolvedIdentifier;
         }
 
         if (Ar.Game is GAME_HonorofKingsWorld)
@@ -42,7 +56,9 @@ public class UDataTable : UObject
             for (var i = 0; i < numRows1; i++)
             {
                 var rowName = Ar.ReadFName();
-                RowMap[rowName] = rowStruct != null ? new FStructFallback(Ar, rowStruct) : new FStructFallback(Ar, RowStructName);
+                RowMap[rowName] = rowStruct != null
+                    ? new FStructFallback(Ar, rowStruct, rowStructIdentifier)
+                    : new FStructFallback(Ar, rowStructIdentifier ?? RowStructName);
             }
 
             return;
@@ -53,7 +69,9 @@ public class UDataTable : UObject
         for (var i = 0; i < numRows; i++)
         {
             var rowName = Ar.ReadFName();
-            RowMap[rowName] = rowStruct != null ? new FStructFallback(Ar, rowStruct) : new FStructFallback(Ar, RowStructName);
+            RowMap[rowName] = rowStruct != null
+                ? new FStructFallback(Ar, rowStruct, rowStructIdentifier)
+                : new FStructFallback(Ar, rowStructIdentifier ?? RowStructName);
         }
 
         if (Ar.Game == GAME_LostSoulAside)

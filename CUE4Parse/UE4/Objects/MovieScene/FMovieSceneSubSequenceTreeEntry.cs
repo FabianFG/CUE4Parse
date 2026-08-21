@@ -17,7 +17,7 @@ public struct FMovieSceneSubSequenceTreeEntry : IUStruct
         if (Ar.Game < GAME_UE5_5 && (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddedSubSequenceEntryWarpCounter ||
             FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.AddedSubSequenceEntryWarpCounter))
         {
-            RootToSequenceWarpCounter = new FStructFallback(Ar, "MovieSceneWarpCounter");
+            RootToSequenceWarpCounter = new FStructFallback(Ar, "/Script/MovieScene.MovieSceneWarpCounter");
         }
     }
 }

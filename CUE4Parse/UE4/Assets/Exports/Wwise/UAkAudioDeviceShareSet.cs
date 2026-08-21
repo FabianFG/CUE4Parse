@@ -14,7 +14,8 @@ public class UAkAudioDeviceShareSet : UAkAudioType
 
         if (Ar.Position >= validPos) return;
 
-        AudioDeviceShareSetCookedData = new FStructFallback(Ar, "WwiseAudioDeviceShareSetCookedData");
+        AudioDeviceShareSetCookedData = new FStructFallback(Ar,
+            Ar.ResolveTypeIdentifier("WwiseAudioDeviceShareSetCookedData"));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

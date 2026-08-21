@@ -68,7 +68,7 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
         DetailMode = Ar.Game is < GAME_UE5_8 and not GAME_GearsofWarEDay ? Ar.Read<EDetailMode>() : EDetailMode.Low;
         bHasCustomNavigableGeometry = Ar.Read<EHasCustomNavigableGeometry>();
         RuntimeVirtualTextures = Ar.ReadArray(Ar.ReadFPackageIndex);
-        BodyInstance = Ar.Game < GAME_UE5_8 && Ar.Game is not GAME_GearsofWarEDay? new FStructFallback(Ar, "BodyInstance") : null;
+        BodyInstance = Ar.Game < GAME_UE5_8 && Ar.Game is not GAME_GearsofWarEDay? new FStructFallback(Ar, "/Script/Engine.BodyInstance") : null;
         SceneProxyDesc = new FSceneProxyDesc(Ar);
         if (Ar.Game is GAME_GearsofWarEDay) Ar.Position += 41;
     }

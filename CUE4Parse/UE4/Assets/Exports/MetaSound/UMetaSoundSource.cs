@@ -18,7 +18,9 @@ public class UMetaSoundSource : USoundWaveProcedural
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        Settings = Ar.Game >= GAME_UE5_4 ? new FStructFallback(Ar, "MetaSoundQualitySettings") : null;
+        Settings = Ar.Game >= GAME_UE5_4
+            ? new FStructFallback(Ar, Ar.ResolveTypeIdentifier("MetaSoundQualitySettings"))
+            : null;
 
         RootMetasoundDocument = GetOrDefault<FMetasoundFrontendDocument>(nameof(RootMetasoundDocument));
         ReferencedAssetClassKeys = GetOrDefault<string[]>(nameof(ReferencedAssetClassKeys), []);

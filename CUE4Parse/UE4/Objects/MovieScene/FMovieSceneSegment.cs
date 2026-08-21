@@ -34,7 +34,7 @@ public readonly struct FMovieSceneSegment : IUStruct
         Impls = new FStructFallback[Ar.Read<int>()];
         for (var i = 0; i < Impls.Length; i++)
         {
-            Impls[i] = new FStructFallback(Ar, "SectionEvaluationData");
+            Impls[i] = new FStructFallback(Ar, "/Script/MovieScene.SectionEvaluationData");
         }
     }
 }

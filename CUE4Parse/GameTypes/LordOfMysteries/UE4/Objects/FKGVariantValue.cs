@@ -14,12 +14,16 @@ public class FKGVariantValue : FStructFallback
         var varianttype = Ar.Read<int>();
         var name = Ar.ReadFName();
         var strukt = new FPackageIndex(Ar);
-        var some = strukt.TryLoad<UStruct>(out var struc);
+        if (!strukt.TryLoad<UStruct>(out var struc))
+            return;
 
         var type = struc.Name;
         Struct? propMappings = null;
         if (struc is UScriptClass)
-            Ar.Owner!.Mappings?.Types.TryGetValue(type, out propMappings);
+            Ar.Owner!.Mappings?.TryGetType(
+                type,
+                strukt.ResolvedObject?.GetPathName() ?? (struc as UScriptClass)?.FullTypeIdentifier,
+                out propMappings!);
         else
             propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
 

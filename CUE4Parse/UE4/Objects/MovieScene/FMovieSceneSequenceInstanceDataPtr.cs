@@ -1,6 +1,5 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Objects.MovieScene;
 
@@ -18,7 +17,6 @@ public class FMovieSceneSequenceInstanceDataPtr : IUStruct
         TypeName = Ar.ReadFString();
         if (string.IsNullOrEmpty(TypeName)) return;
 
-        var type = TypeName.SubstringAfterLast('.');
-        Data = new FStructFallback(Ar, type);
+        Data = new FStructFallback(Ar, TypeName);
     }
 }

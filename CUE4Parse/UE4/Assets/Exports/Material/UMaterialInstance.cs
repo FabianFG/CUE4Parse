@@ -38,7 +38,7 @@ public class UMaterialInstance : UMaterialInterface
         var bSavedCachedData = FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.MaterialSavedCachedData && Ar.ReadBoolean();
         if (bSavedCachedData)
         {
-            CachedData = new FStructFallback(Ar, "MaterialInstanceCachedData");
+            CachedData = new FStructFallback(Ar, "/Script/Engine.MaterialInstanceCachedData");
         }
 
         if (bHasStaticPermutationResource && Ar.Ver >= EUnrealEngineObjectUE4Version.PURGED_FMATERIAL_COMPILE_OUTPUTS)
@@ -69,7 +69,8 @@ public class UMaterialInstance : UMaterialInterface
         }
 
         if (Ar.Game is GAME_DeadByDaylight && Ar.Position < validPos && Ar is { Owner.Provider.ReadShaderMaps: true })
-            CustomGameData = Ar.ReadArray(() => new FStructFallback(Ar, "BHVRVariantConfigurator", FRawHeader.FullRead, ReadType.RAW));
+            CustomGameData = Ar.ReadArray(() => new FStructFallback(
+                Ar, Ar.ResolveTypeIdentifier("BHVRVariantConfigurator"), FRawHeader.FullRead, ReadType.RAW));
         if (Ar.Game == GAME_Valorant && !bHasStaticPermutationResource)
             Ar.Position += 8; // 0.0f and 1.0f, for all
         if (Ar.Game is GAME_RocoKingdomWorld && bHasStaticPermutationResource)

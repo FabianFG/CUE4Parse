@@ -25,7 +25,16 @@ public abstract class JsonTypeMappingsProvider : AbstractTypeMappingsProvider
         {
             if (structToken == null) continue;
             var structEntry = ParseStruct(MappingsForGame, structToken);
-            MappingsForGame.Types[structEntry.Name] = structEntry;
+            if (TypeMappings.IsFullTypeIdentifier(structEntry.Name))
+            {
+                if (!MappingsForGame.Types.TryAdd(structEntry.Name, structEntry))
+                    throw new ArgumentException(
+                        $"JSON mappings contain duplicate full type identifier {structEntry.Name}");
+            }
+            else
+            {
+                MappingsForGame.Types[structEntry.Name] = structEntry;
+            }
         }
         return true;
     }
@@ -83,7 +92,17 @@ public abstract class JsonTypeMappingsProvider : AbstractTypeMappingsProvider
             if (entry == null) continue;
             var values = entry["values"]!.ToObject<string[]>()!;
             long i = 0;
-            MappingsForGame.Enums[entry["name"]!.ToObject<string>()!] = values.ToDictionary(it => i++);
+            var name = entry["name"]!.ToObject<string>()!;
+            var enumValues = values.ToDictionary(it => i++);
+            if (TypeMappings.IsFullTypeIdentifier(name))
+            {
+                if (!MappingsForGame.Enums.TryAdd(name, enumValues))
+                    throw new ArgumentException($"JSON mappings contain duplicate full enum identifier {name}");
+            }
+            else
+            {
+                MappingsForGame.Enums[name] = enumValues;
+            }
         }
     }
 }

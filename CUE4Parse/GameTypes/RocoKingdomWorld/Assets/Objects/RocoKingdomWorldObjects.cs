@@ -11,7 +11,7 @@ public class FNiagaraEventGeneratorProperties(FAssetArchive Ar) : IUStruct
 {
     public int MaxEventsPerFrame = Ar.Read<int>();
     public FName ID = Ar.ReadFName();
-    public FStructFallback DataSetCompiledData = new FStructFallback(Ar, "NiagaraDataSetCompiledData");
+    public FStructFallback DataSetCompiledData = new FStructFallback(Ar, "/Script/Niagara.NiagaraDataSetCompiledData");
 }
 
 public class FRKWStaticSwitchParameter : FStaticSwitchParameter

@@ -1,10 +1,12 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Animation;
+﻿using CUE4Parse.UE4.Assets;
+using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.GameTypes.FN.Assets.Exports.Animation;
 
+[ObjectType("/Script/NiagaraAnimNotifies.AnimNotifyState_TimedNiagaraEffect")]
 public class UAnimNotifyState_TimedNiagaraEffect : UAnimNotifyState
 {
     public FPackageIndex? Template;

@@ -1,4 +1,5 @@
 using CUE4Parse.GameTypes.AoC.Objects;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -46,9 +47,12 @@ public class EnumProperty : FPropertyTagType<FName>
 
     private static string IndexToEnum(FAssetArchive Ar, FPropertyTagData? tagData, long index)
     {
-        var enumName = tagData?.EnumName;
+        var enumName = tagData?.GetEnumTypeIdentifier();
         if (enumName == null)
             return index.ToString();
+
+        var mappings = Ar.Owner.Mappings;
+        enumName = Ar.ResolveEnumIdentifier(enumName);
 
         if (tagData?.Enum != null) // serialized
         {
@@ -59,8 +63,8 @@ public class EnumProperty : FPropertyTagType<FName>
             return string.Concat(enumName, "::", index);
         }
 
-        if (Ar.Owner.Mappings != null &&
-            Ar.Owner.Mappings.Enums.TryGetValue(enumName, out var values) &&
+        if (mappings != null &&
+            mappings.TryGetEnum(TypeMappings.GetShortTypeName(enumName), enumName, out var values) &&
             values.TryGetValue(index, out var member))
         {
             return string.Concat(enumName, "::", member);

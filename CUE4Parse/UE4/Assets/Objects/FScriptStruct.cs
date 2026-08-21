@@ -24,6 +24,7 @@ using CUE4Parse.GameTypes.SWJS.Objects;
 using CUE4Parse.GameTypes.TL.Objects;
 using CUE4Parse.GameTypes.TQ2.Objects;
 using CUE4Parse.GameTypes.TSW.Objects;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
 using CUE4Parse.UE4.Assets.Exports.Harmonix;
@@ -71,6 +72,38 @@ public class FScriptStruct
 
     public FScriptStruct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)
     {
+        var mappings = Ar.Owner?.Mappings;
+        var fullTypeIdentifier = TypeMappings.IsFullTypeIdentifier(structName)
+            ? structName
+            : struc is UScriptClass { FullTypeIdentifier: { } scriptIdentifier }
+                ? scriptIdentifier
+                : struc?.Outer != null ? struc.GetPathName() : null;
+        structName = structName != null ? TypeMappings.GetShortTypeName(structName) : null;
+        if (!TypeMappings.IsFullTypeIdentifier(fullTypeIdentifier) && structName != null &&
+            mappings?.TryResolveUniqueTypeIdentifier(structName, out var resolvedIdentifier) == true)
+            fullTypeIdentifier = resolvedIdentifier;
+        var fallbackIdentifier = fullTypeIdentifier ?? structName;
+
+        // Cooked and runtime-generated structs use their reflected schema.
+        // Only compiled-in /Script types may enter the short-name native
+        // serializer table below.
+        var gameSerializerCanOwnIdentifier = TypeMappings.IsFullTypeIdentifier(fullTypeIdentifier) &&
+                                             mappings?.IsTypeIdentifierLeafUnique(fullTypeIdentifier!) == true &&
+                                             Ar.Game is GAME_TitanQuest2 or GAME_DuneAwakening or
+                                                 GAME_MortalKombat1 or GAME_Borderlands4;
+        if ((!gameSerializerCanOwnIdentifier && UsesMappedSerializer(fullTypeIdentifier)) ||
+            (mappings?.UsesFullTypeIdentifiers == true && !TypeMappings.IsFullTypeIdentifier(fullTypeIdentifier)))
+        {
+            StructType = type switch
+            {
+                ReadType.ZERO => new FStructFallback(),
+                ReadType.RAW => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+                _ when struc != null => new FStructFallback(Ar, struc, fullTypeIdentifier),
+                _ => new FStructFallback(Ar, fallbackIdentifier)
+            };
+            return;
+        }
+
         StructType = structName switch
         {
             "Box" => type == ReadType.ZERO ? new FBox() : new FBox(Ar),
@@ -187,10 +220,10 @@ public class FScriptStruct
             "Vector4" => type == ReadType.ZERO ? new FVector4() : new FVector4(Ar),
             "Vector4f" => type == ReadType.ZERO ? new TIntVector4<float>() : Ar.Read<TIntVector4<float>>(),
             "Vector4d" => type == ReadType.ZERO ? new TIntVector4<double>() : Ar.Read<TIntVector4<double>>(),
-            "Vector_NetQuantize" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, "Vector_NetQuantize") : new FVector(Ar),
-            "Vector_NetQuantize10" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, "Vector_NetQuantize") : new FVector(Ar),
-            "Vector_NetQuantize100" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, "Vector_NetQuantize") : new FVector(Ar),
-            "Vector_NetQuantizeNormal" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, "Vector_NetQuantize") : new FVector(Ar),
+            "Vector_NetQuantize" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, fallbackIdentifier) : new FVector(Ar),
+            "Vector_NetQuantize10" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, fallbackIdentifier) : new FVector(Ar),
+            "Vector_NetQuantize100" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, fallbackIdentifier) : new FVector(Ar),
+            "Vector_NetQuantizeNormal" => type == ReadType.ZERO ? new FVector() : Ar.Versions["Vector_NetQuantize_AsStruct"] ? new FStructFallback(Ar, fallbackIdentifier) : new FVector(Ar),
             "ClothLODDataCommon" => type == ReadType.ZERO ? new FClothLODDataCommon() : new FClothLODDataCommon(Ar),
             "ClothLODData" => type == ReadType.ZERO ? new FClothLODData() : new FClothLODData(Ar),
             "ClothTetherData" => type == ReadType.ZERO ? new FClothTetherData() : new FClothTetherData(Ar),
@@ -206,7 +239,7 @@ public class FScriptStruct
             "ShaderValueTypeHandle" => new FShaderValueTypeHandle(Ar),
             "AnimationAttributeIdentifier" => new FAnimationAttributeIdentifier(Ar),
             "AttributeCurve" => new FAttributeCurve(Ar),
-            "PCGPoint" => FFortniteReleaseBranchCustomObjectVersion.Get(Ar) < FFortniteReleaseBranchCustomObjectVersion.Type.PCGPointStructuredSerializer ? new FStructFallback(Ar, "PCGPoint") : new FPCGPoint(Ar),
+            "PCGPoint" => FFortniteReleaseBranchCustomObjectVersion.Get(Ar) < FFortniteReleaseBranchCustomObjectVersion.Type.PCGPointStructuredSerializer ? new FStructFallback(Ar, "/Script/PCG.PCGPoint") : new FPCGPoint(Ar),
             "PCGDataPtrWrapper" => new FPCGDataPtrWrapper(Ar),
             "PCGPointArray" => new FPCGPointArray(Ar),
             "CacheEventTrack" => type == ReadType.ZERO ? new FStructFallback() : new FCacheEventTrack(Ar),
@@ -326,7 +359,7 @@ public class FScriptStruct
             "PMTimelineRelevancy" => new FPMTimelineRelevancy(Ar),
 
             // Lost Soul Aside
-            "LSAAudioSectionkey" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "LSAAudioSectionkey" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
 
             // 2XKO
             "FixedPoint" => new FFixedPoint(Ar),
@@ -335,23 +368,23 @@ public class FScriptStruct
             "TslSomeSKStruct" => new FTslSomeSKStruct(Ar),
 
             // Train Sim World 6
-            "PowerQuantity" or "ForceQuantity" or "TimeUnit" or "PressureQuantity" or "VolumeQuantity" => new FStructFallback(Ar, structName, FRawHeader.FullRead),
+            "PowerQuantity" or "ForceQuantity" or "TimeUnit" or "PressureQuantity" or "VolumeQuantity" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead),
 
             // Daimon Blades
-            "SOS_GDValue" => new FStructFallback(Ar, structName, new FRawHeader([(1, 1)]), ReadType.RAW),
+            "SOS_GDValue" => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(1, 1)]), ReadType.RAW),
 
-            "SoftEnumName" when Ar.Game is GAME_LittleNightmares3 => new FStructFallback(Ar, structName, new FRawHeader([(1, 1)]), ReadType.RAW),
-            "KosmosHangTraversalData" when Ar.Game is GAME_LittleNightmares3 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "SoftEnumName" when Ar.Game is GAME_LittleNightmares3 => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(1, 1)]), ReadType.RAW),
+            "KosmosHangTraversalData" when Ar.Game is GAME_LittleNightmares3 => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
 
-            "EnumName" when Ar.Game is GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(1, 1)]), ReadType.RAW),
-            "AbstractEnum" or "EnumName" or "JumpParams" when Ar.Game is GAME_Reanimal => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "ChalkboardSectionKey" when Ar.Game is GAME_Reanimal => new FStructFallback(Ar, structName, new FRawHeader([(0, 2), (2, 2)]), ReadType.RAW),
+            "EnumName" when Ar.Game is GAME_Reanimal => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(1, 1)]), ReadType.RAW),
+            "AbstractEnum" or "EnumName" or "JumpParams" when Ar.Game is GAME_Reanimal => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+            "ChalkboardSectionKey" when Ar.Game is GAME_Reanimal => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(0, 2), (2, 2)]), ReadType.RAW),
             "LedgeMetaData" when Ar.Game is GAME_Reanimal => new FFixedSizeStruct(Ar, 1),
 
-            "ItemDataContainer" when Ar.Game is GAME_VEIN => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "ItemDataContainer" when Ar.Game is GAME_VEIN => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
 
             //SpongeBob SquarePants: Titans of the Tide
-            "GG_CrowdGeneratorLocations" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "GG_CrowdGeneratorLocations" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
 
             "Linecode" when Ar.Game is GAME_Psychonauts2 => new FLinecode(Ar),
             "P2Attribute" when Ar.Game is GAME_Psychonauts2 => new FP2Attribute(Ar),
@@ -367,14 +400,14 @@ public class FScriptStruct
 
             "EncVector" when Ar.Game is GAME_DeltaForce => Ar.Read<FVector>(),
 
-            "MercunaUsageSpec" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "MercunaUsageSpec" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
             "MercunaUsageTypes" when Ar.Game is GAME_PUBGBlackBudget => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),
 
             // Palia
             "VAL_CharacterCustomizationVariantOptionsArray" => new FVAL_CharacterCustomizationVariantOptionsArray(Ar),
 
             // Steel Hunters
-            "ParamRegistryInfo" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "ParamRegistryInfo" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
 
             "GPRowName" when Ar.Game is GAME_AssaultFireFuture => new FGPRowName(Ar),
             "AnnotationPointData2" when Ar.Game is GAME_AssaultFireFuture => new FAnnotationPointData2(Ar),
@@ -387,27 +420,27 @@ public class FScriptStruct
                 GAME_DarkPicturesAnthologyLittleHope or GAME_DarkPicturesAnthologyTheDevilinMe or
                 GAME_TheQuarry or GAME_TheCastingofFrankStone or GAME_Directive8020 or < GAME_UE4_0 => new FActorReference(Ar),
 
-            "ParameterWrapperArray" when Ar.Game is GAME_NevernessToEverness => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
+            "ParameterWrapperArray" when Ar.Game is GAME_NevernessToEverness => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
 
-            "MercunaPawnUsageFlags" when Ar.Game is GAME_HighOnLife2 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "MercunaPawnUsageFlags" when Ar.Game is GAME_HighOnLife2 => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
             "MercunaNavUsageTypes" when Ar.Game is GAME_HighOnLife2 => Ar.Read<FRawUIntStruct>(),
             "MercunaUsageTypes" => Ar.Read<FRawUIntStruct>(),
 
             // Windrose
-            "R5CollisionApproximation" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "R5SoftAssetPath" => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
+            "R5CollisionApproximation" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+            "R5SoftAssetPath" => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(0, 1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
 
             // Armatus
-            "AnimMontageContainer" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "AnimMontageContainer" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
 
-            "BHVRVariantConfigurator" when Ar.Game is GAME_DeadByDaylight => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "BHVRVariantConfigurator" when Ar.Game is GAME_DeadByDaylight => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
             "BhvrBarkNodeTemplate" when Ar.Game is GAME_DeadByDaylight => type == ReadType.ZERO ? new FBhvrBarkNodeTemplate() : new FBhvrBarkNodeTemplate(Ar),
 
             "NiagaraEventGeneratorProperties" when Ar.Game is GAME_RocoKingdomWorld => new FNiagaraEventGeneratorProperties(Ar),
 
-            "RulesetActorCreationParams" when Ar.Game is GAME_Solasta2 => new FStructFallback(Ar, structName, new FRawHeader([(0, 6), (1, -1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
-            "HexOffsetCoord" when Ar.Game is GAME_Solasta2 => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "RulesetId" when Ar.Game is GAME_Solasta2 => new FStructFallback(Ar, structName, new FRawHeader([(0, 1), (1, 1)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
+            "RulesetActorCreationParams" when Ar.Game is GAME_Solasta2 => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(0, 6), (1, -1)], ERawHeaderFlags.RawProperties), ReadType.RAW),
+            "HexOffsetCoord" when Ar.Game is GAME_Solasta2 => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+            "RulesetId" when Ar.Game is GAME_Solasta2 => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(0, 1), (1, 1)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
             "HexCell" when Ar.Game is GAME_Solasta2 => Ar.Read<FRawStruct<ulong>>(),
 
             "MovieSceneTangentData" when Ar.Game is GAME_HonorofKingsWorld or GAME_TheDivisionResurgence => new FMovieSceneTangentData(Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<float>(), Ar.Read<ERichCurveTangentWeightMode>()),
@@ -415,20 +448,20 @@ public class FScriptStruct
             "BodyInstance" when Ar.Game is GAME_ConanExilesEnhanced => new FBodyInstance(Ar),
 
             // Cloudheim
-            "NamedGuid" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "NamedGuid" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
 
             "PackedNormal" when Ar.Game is GAME_TheDivisionResurgence => new FPackedNormal(Ar),
 
             "UWEWorldPopSpatialLayer" when Ar.Game is GAME_Subnautica2 => new FUWEWorldPopSpatialLayer(Ar),
 
-            "LegoConnectionPoint" when Ar.Game is GAME_Lego2KDrive => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "LegoConnectionPoint" when Ar.Game is GAME_Lego2KDrive => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
             "LegoPartLODGeometry" when Ar.Game is GAME_Lego2KDrive => new FLegoPartLODGeometry(Ar),
-            "LegoPartInstance" when Ar.Game is GAME_Lego2KDrive => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "LegoPartInstance" when Ar.Game is GAME_Lego2KDrive => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
             "PerPlatformUObject" or "PerPlatformSoftObjectPtr" when Ar.Game is GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformSoftObject() : new FPerPlatformSoftObject(Ar),
             "PerPlatformMediaSource" when Ar.Game is GAME_Lego2KDrive => type == ReadType.ZERO ? new FPerPlatformUObject() : new FPerPlatformUObject(Ar),
 
-            "TtScalableShadowFloat" or "TtScalableLightFloat" when Ar.Game is GAME_LEGOBatmanLegacyoftheDarkKnight => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-            "TtScalableShadowBool" when Ar.Game is GAME_LEGOBatmanLegacyoftheDarkKnight => new FStructFallback(Ar, structName, new FRawHeader([(0, 1)])),
+            "TtScalableShadowFloat" or "TtScalableLightFloat" when Ar.Game is GAME_LEGOBatmanLegacyoftheDarkKnight => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+            "TtScalableShadowBool" when Ar.Game is GAME_LEGOBatmanLegacyoftheDarkKnight => new FStructFallback(Ar, fallbackIdentifier, new FRawHeader([(0, 1)])),
 
             "ItemStack" when Ar.Game is GAME_Fatekeeper => new FFixedSizeStruct(Ar, 158),
 
@@ -437,10 +470,12 @@ public class FScriptStruct
 
             "KGVariantValue" when Ar.Game is GAME_LordOfMysteries => new FKGVariantValue(Ar),
 
-            "SPBattleGenericID" when Ar.Game is GAME_SilverPalace => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+            "SPBattleGenericID" when Ar.Game is GAME_SilverPalace => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
 
             "GameplayEffectVersion" when Ar.Game is GAME_ArcRaiders => Ar.Read<FRawStruct<byte>>(),
-            "AISensingStatusTransition" when Ar.Game is GAME_ArcRaiders => new FStructFallback(Ar, "AISensingStatusTransitionStruct"),//hack for struct/class with the same name
+            "AISensingStatusTransition" when Ar.Game is GAME_ArcRaiders &&
+                !TypeMappings.IsFullTypeIdentifier(fullTypeIdentifier) =>
+                new FStructFallback(Ar, Ar.ResolveTypeIdentifier("AISensingStatusTransitionStruct")),// legacy short-name mapping hack
 
             "TCPresentationCueNamedParam_Vector" or "TCPresentationCueNamedParam_Float" or "TCPresentationCueNamedParam_LinearColor"
                 or "TCGameplayBlackboardNamedParam_Float" or "TCGameplayBlackboardNamedParam_Vector" or "TCPresentationCueNamedParam_Bool"
@@ -449,13 +484,92 @@ public class FScriptStruct
 
             _ => Ar.Game switch
             {
-                GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
-                GAME_DuneAwakening => DAStructs.ParseDAStruct(Ar, structName, struc, type),
-                GAME_MortalKombat1 => MK1Structs.ParseMK1Struct(Ar, structName, struc, type),
-                GAME_Borderlands4 => Borderlands4Structs.ParseBl4Struct(Ar, structName, struc, type),
-                _ when type == ReadType.RAW => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
-                _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
+                GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, fullTypeIdentifier, struc, type),
+                GAME_DuneAwakening => DAStructs.ParseDAStruct(Ar, structName, fullTypeIdentifier, struc, type),
+                GAME_MortalKombat1 => MK1Structs.ParseMK1Struct(Ar, structName, fullTypeIdentifier, struc, type),
+                GAME_Borderlands4 => Borderlands4Structs.ParseBl4Struct(Ar, structName, fullTypeIdentifier, struc, type),
+                _ when type == ReadType.RAW => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+                _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc, fullTypeIdentifier) : new FStructFallback(Ar, fallbackIdentifier)
             },
+        };
+    }
+
+    private static bool UsesMappedSerializer(string? fullTypeIdentifier)
+    {
+        if (!TypeMappings.IsFullTypeIdentifier(fullTypeIdentifier))
+            return false;
+
+        // A complete identifier must never select a native serializer by its
+        // leaf FName, even when no mapping provider is installed. Only exact
+        // identities registered below may enter the legacy switch.
+        return !UsesNativeSerializer(fullTypeIdentifier!);
+    }
+
+    private static bool UsesNativeSerializer(string fullTypeIdentifier)
+    {
+        var separator = fullTypeIdentifier.LastIndexOf('.');
+        if (separator < 0)
+            return false;
+
+        var module = fullTypeIdentifier[..separator];
+        var name = fullTypeIdentifier[(separator + 1)..];
+        return module switch
+        {
+            "/Script/CoreUObject" => name is
+                "Box" or "Box2D" or "Box2f" or "Box3f" or "Color" or "DateTime" or "FrameNumber" or
+                "Guid" or "IntPoint" or "Int32Point" or "IntVector2" or "Int32Vector2" or "UintVector2" or
+                "Uint32Point" or "IntVector" or "UintVector" or "IntVector4" or "UintVector4" or
+                "Int64Vector2" or "Int64Point" or "UInt64Vector2" or "UInt64Point" or "Int64Vector" or
+                "UInt64Vector" or "Int64Vector4" or "UInt64Vector4" or "LinearColor" or "Matrix" or
+                "Matrix44f" or "PackedNormal" or "Plane" or "Plane4f" or "Plane4d" or "Quat" or "Quat4f" or
+                "Quat4d" or "Rotator" or "Rotator3f" or "Rotator3d" or "SoftClassPath" or "SoftObjectPath" or
+                "StringClassReference" or "StringAssetReference" or "Sphere" or "Sphere3f" or "Sphere3d" or
+                "Timespan" or "Transform3f" or "TwoVectors" or "Vector" or "Vector2D" or "Vector2f" or
+                "Vector3f" or "Vector3d" or "Vector4" or "Vector4f" or "Vector4d",
+            "/Script/Engine" => name is
+                "AnimationAttributeIdentifier" or "AttributeCurve" or "BodyInstance" or "ColorMaterialInput" or
+                "CompressedRichCurve" or "DataCacheDuplicatedObjectData" or "EdGraphPinType" or "ExpressionInput" or
+                "FontCharacter" or "KeyHandleMap" or "MaterialAttributesInput" or "MaterialLayersFunctionsTree" or
+                "MaterialOverrideNanite" or "MaterialTextureInfo" or "NameCurveKey" or "NavAgentSelector" or
+                "PannerDetails" or "PerPlatformBool" or "PerPlatformFloat" or "PerPlatformFrameRate" or
+                "PerPlatformFString" or "PerPlatformInt" or "PerQualityLevelFloat" or "PerQualityLevelInt" or
+                "RawAnimSequenceTrack" or "RichCurveKey" or "ScalarMaterialInput" or "ScalarParameterValue" or
+                "SimpleCurveKey" or "SkeletalMeshSamplingLODBuiltData" or "SkeletalMeshSamplingRegionBuiltData" or
+                "SmartName" or "Spline" or "StringCurveKey" or "TextureParameterValue" or "UniqueNetIdRepl" or
+                "Vector2MaterialInput" or "VectorMaterialInput" or "VectorParameterValue" or "Vector_NetQuantize" or
+                "Vector_NetQuantize10" or "Vector_NetQuantize100" or "Vector_NetQuantizeNormal",
+            "/Script/MovieScene" => name is
+                "MovieSceneDoubleChannel" or "MovieSceneDoubleValue" or "MovieSceneEvalTemplatePtr" or
+                "MovieSceneEvaluationFieldEntityTree" or "MovieSceneEvaluationKey" or "MovieSceneFloatChannel" or
+                "MovieSceneFloatValue" or "MovieSceneFrameRange" or "MovieSceneSegment" or
+                "MovieSceneSegmentIdentifier" or "MovieSceneSequenceID" or "MovieSceneSequenceInstanceDataPtr" or
+                "MovieSceneSubSectionFieldData" or "MovieSceneSubSequenceTree" or "MovieSceneTangentData" or
+                "MovieSceneTimeWarpVariant" or "MovieSceneTrackFieldData" or "MovieSceneTrackIdentifier" or
+                "MovieSceneTrackIdentifiers" or "MovieSceneTrackImplementationPtr" or "SectionEvaluationDataTree",
+            "/Script/Niagara" => name is
+                "NiagaraDataChannelVariable" or "NiagaraEventGeneratorProperties" or "NiagaraVariable" or
+                "NiagaraVariableBase" or "NiagaraVariableWithOffset",
+            "/Script/StructUtils" => name is
+                "InstancedOverridablePropertyBag" or "InstancedPropertyBag" or "InstancedStruct" or
+                "InstancedStructArray" or "InstancedStructContainer",
+            "/Script/ClothingSystemRuntimeCommon" => name is "ClothLODDataCommon" or "ClothTetherData",
+            "/Script/GameplayAbilities" => name is "GameplayEffectVersion",
+            "/Script/GameplayTags" => name is "GameplayTagContainer",
+            "/Script/JsonUtilities" => name is "JsonObjectWrapper",
+            "/Script/LevelSequence" => name is "LevelSequenceObjectReferenceMap",
+            "/Script/MovieSceneTracks" => name is "MovieSceneEventParameters",
+            "/Script/NiagaraShader" => name is "NiagaraDataInterfaceGPUParamInfo",
+            "/Script/SlateCore" => name is "DeprecateSlateVector2D" or "FontData",
+            "/Script/PhysicsCore" => name is "CapsuleShape",
+            "/Script/HarmonixMidi" => name is "MidiEvent",
+            "/Script/WorldConditions" => name is "WorldConditionQueryDefinition",
+            "/Script/UniversalObjectLocator" => name is "UniversalObjectLocatorFragment",
+            "/Script/ComputeFramework" => name is "ShaderValueTypeHandle",
+            "/Script/PCG" => name is "PCGDataPtrWrapper" or "PCGPoint" or "PCGPointArray",
+            "/Script/ChaosCaching" => name is "CacheEventTrack",
+            "/Script/StateTreeModule" => name is "StateTreeInstanceData",
+            "/Script/ControlRig" => name is "ControlRigOverrideContainer" or "RigVMPropertyBag",
+            _ => false
         };
     }
 
@@ -485,7 +599,7 @@ public class FScriptStruct
         FScriptStruct? result = null;
         try
         {
-            var structName = structType.ResolvedObject is { } obj ? obj.Name.ToString() : null;
+            var structName = structType.ResolvedObject?.GetPathName();
             if (structType.TryLoad<UStruct>(out var struc) || structName != null)
             {
                 result = new FScriptStruct(Ar, structName, struc, ReadType.NORMAL);
@@ -523,7 +637,7 @@ public class FScriptStruct
 
         try
         {
-            var structName = structType.ResolvedObject is { } obj ? obj.Name.ToString() : null;
+            var structName = structType.ResolvedObject?.GetPathName();
             if (structType.TryLoad<UStruct>(out var struc) || structName != null)
             {
                 result = new FScriptStruct(Ar, structName, struc, ReadType.NORMAL);

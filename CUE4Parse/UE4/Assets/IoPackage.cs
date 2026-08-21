@@ -576,7 +576,7 @@ public sealed class IoPackage : AbstractUePackage
         // This means we'll have UScriptStruct's shown as UClass which is wrong.
         // Unfortunately because the mappings format does not distinguish between classes and structs, there's no other way around :(
         public override ResolvedObject Class => new ResolvedLoadedObject(new UScriptClass("Class"));
-        public override Lazy<UObject> Object => new(() => new UScriptClass(Name.Text));
+        public override Lazy<UObject> Object => new(() => new UScriptClass(Name.Text, GetPathName()));
     }
 
     public static string GetIoPackageName(FArchive uasset)

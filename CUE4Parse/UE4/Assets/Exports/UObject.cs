@@ -132,11 +132,12 @@ public class UObject : AbstractPropertyHolder
             if (Class.Object?.Value is not UStruct struc)
                 throw new ParserException(Ar, "Found unversioned properties but object's class is not a struct");
 
-            DeserializePropertiesUnversioned(Properties = [], Ar, struc);
+            DeserializePropertiesUnversioned(Properties = [], Ar, struc, Class.GetPathName());
         }
         else
         {
-            DeserializePropertiesTagged(Properties = [], Ar, false);
+            DeserializePropertiesTagged(Properties = [], Ar, false,
+                Class?.Object?.Value as UStruct, Class?.GetPathName());
         }
 
         if (Ar.Game >= GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
@@ -261,22 +262,33 @@ public class UObject : AbstractPropertyHolder
 
     }
 
-    internal static void DeserializePropertiesUnversioned(List<FPropertyTag> properties, FAssetArchive Ar, UStruct struc)
+    internal static void DeserializePropertiesUnversioned(List<FPropertyTag> properties, FAssetArchive Ar,
+        UStruct struc, string? fullTypeIdentifier = null)
     {
         var header = new FUnversionedHeader(Ar);
         if (!header.HasValues)
             return;
-        var type = struc.Name;
+        var type = TypeMappings.GetShortTypeName(struc.Name);
+        fullTypeIdentifier ??= TypeMappings.IsFullTypeIdentifier(struc.Name)
+            ? struc.Name
+            : struc is UScriptClass { FullTypeIdentifier: { } scriptIdentifier }
+                ? scriptIdentifier
+                : struc.Outer != null ? struc.GetPathName() : null;
+
+        var mappings = Ar.Owner!.Mappings;
+        if (!TypeMappings.IsFullTypeIdentifier(fullTypeIdentifier) &&
+            mappings?.TryResolveUniqueTypeIdentifier(type, out var resolvedIdentifier) == true)
+            fullTypeIdentifier = resolvedIdentifier;
 
         Struct? propMappings = null;
         if (struc is UScriptClass)
-            Ar.Owner!.Mappings?.Types.TryGetValue(type, out propMappings);
+            mappings?.TryGetType(type, fullTypeIdentifier, out propMappings!);
         else
-            propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
+            propMappings = new SerializedStruct(mappings, struc);
 
         if (propMappings == null)
         {
-            throw new ParserException(Ar, "Missing prop mappings for type " + type);
+            throw new ParserException(Ar, "Missing prop mappings for type " + (fullTypeIdentifier ?? type));
         }
 
         using var it = new FIterator(header);
@@ -318,7 +330,8 @@ public class UObject : AbstractPropertyHolder
         } while (it.MoveNext());
     }
 
-    internal static void DeserializePropertiesTagged(List<FPropertyTag> properties, FAssetArchive Ar, bool isStruct)
+    internal static void DeserializePropertiesTagged(List<FPropertyTag> properties, FAssetArchive Ar, bool isStruct,
+        UStruct? struc = null, string? fullTypeIdentifier = null)
     {
         if (!isStruct && Ar.Ver >= EUnrealEngineObjectUE5Version.PROPERTY_TAG_EXTENSION_AND_OVERRIDABLE_SERIALIZATION)
         {
@@ -330,27 +343,58 @@ public class UObject : AbstractPropertyHolder
             }
         }
 
+        Struct? propMappings = null;
+        if (struc != null)
+        {
+            fullTypeIdentifier ??= struc is UScriptClass { FullTypeIdentifier: { } scriptIdentifier }
+                ? scriptIdentifier
+                : struc.Outer != null ? struc.GetPathName() : null;
+            if (struc is UScriptClass)
+            {
+                var type = TypeMappings.GetShortTypeName(struc.Name);
+                if (!TypeMappings.IsFullTypeIdentifier(fullTypeIdentifier) &&
+                    Ar.Owner?.Mappings?.TryResolveUniqueTypeIdentifier(type, out var resolvedIdentifier) == true)
+                    fullTypeIdentifier = resolvedIdentifier;
+                Ar.Owner?.Mappings?.TryGetType(type, fullTypeIdentifier, out propMappings!);
+            }
+            else
+            {
+                propMappings = new SerializedStruct(Ar.Owner?.Mappings, struc);
+            }
+        }
+
         while (true)
         {
-            var tag = new FPropertyTag(Ar, true);
+            var tag = new FPropertyTag(Ar, true, propMappings);
             if (tag.Name.IsNone)
                 break;
             properties.Add(tag);
         }
     }
 
-    internal static void DeserializeRawProperties(List<FPropertyTag> properties, FAssetArchive Ar, UStruct struc, FRawHeader? header, ReadType readType = ReadType.NORMAL)
+    internal static void DeserializeRawProperties(List<FPropertyTag> properties, FAssetArchive Ar, UStruct struc,
+        FRawHeader? header, ReadType readType = ReadType.NORMAL, string? fullTypeIdentifier = null)
     {
-        var type = struc.Name;
+        var type = TypeMappings.GetShortTypeName(struc.Name);
+        fullTypeIdentifier ??= TypeMappings.IsFullTypeIdentifier(struc.Name)
+            ? struc.Name
+            : struc is UScriptClass { FullTypeIdentifier: { } scriptIdentifier }
+                ? scriptIdentifier
+                : struc.Outer != null ? struc.GetPathName() : null;
+
+        var mappings = Ar.Owner!.Mappings;
+        if (!TypeMappings.IsFullTypeIdentifier(fullTypeIdentifier) &&
+            mappings?.TryResolveUniqueTypeIdentifier(type, out var resolvedIdentifier) == true)
+            fullTypeIdentifier = resolvedIdentifier;
         Struct? propMappings = null;
         if (struc is UScriptClass)
-            Ar.Owner!.Mappings?.Types.TryGetValue(type, out propMappings);
+            mappings?.TryGetType(type, fullTypeIdentifier, out propMappings!);
         else
-            propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
+            propMappings = new SerializedStruct(mappings, struc);
 
         if (propMappings is null)
         {
-            if (Ar.HasUnversionedProperties) throw new ParserException(Ar, "Missing prop mappings for type " + type);
+            if (Ar.HasUnversionedProperties) throw new ParserException(Ar, "Missing prop mappings for type " + (fullTypeIdentifier ?? type));
             Log.Warning("Couldn't find {type} struct definition", type);
             return;
         }

@@ -31,8 +31,9 @@ public class JmapParser
 
     private TypeMappings Read(byte[] data, StringComparer? comparer = null)
     {
-        var enums = new Dictionary<string, Dictionary<long, string>>(1024);
-        var structs = new Dictionary<string, Struct>(8192, comparer ?? StringComparer.OrdinalIgnoreCase);
+        var identifierComparer = comparer ?? StringComparer.OrdinalIgnoreCase;
+        var enums = new Dictionary<string, Dictionary<long, string>>(1024, identifierComparer);
+        var structs = new Dictionary<string, Struct>(8192, identifierComparer);
         var mappings = new TypeMappings(structs, enums);
 
         var reader = new Utf8JsonReader(data);
@@ -60,6 +61,7 @@ public class JmapParser
             }
         }
 
+        mappings.ValidateIdentifierMode();
         return mappings;
     }
 
@@ -114,7 +116,7 @@ public class JmapParser
                     enumValues = ReadEnumValues(ref reader);
                     break;
                 case "super_struct" when reader.TokenType == JsonTokenType.String:
-                    superType = reader.GetString()?.SubstringAfterLast('.');
+                    superType = NormalizeMappingIdentifier(reader.GetString());
                     break;
                 case "properties" when reader.TokenType == JsonTokenType.StartArray:
                     properties = ReadProperties(ref reader);
@@ -128,13 +130,14 @@ public class JmapParser
         switch (type)
         {
             case "Enum" when enumValues is not null:
-                mappings.Enums[name.SubstringAfterLast('.')] = enumValues;
+                AddMapping(mappings.Enums, NormalizeMappingIdentifier(name)!, enumValues, "enum");
                 break;
             case "Class":
             case "ScriptStruct":
                 properties ??= new Dictionary<int, PropertyInfo>();
-                var typeName = name.SubstringAfterLast('.');
-                mappings.Types[typeName] = new Struct(mappings, typeName, superType, properties, properties.Count);
+                var typeName = NormalizeMappingIdentifier(name)!;
+                AddMapping(mappings.Types, typeName,
+                    new Struct(mappings, typeName, superType, properties, properties.Count), "type");
                 break;
         }
     }
@@ -241,10 +244,10 @@ public class JmapParser
                     property.Type = reader.GetString();
                     break;
                 case "struct" when reader.TokenType == JsonTokenType.String:
-                    property.StructType = reader.GetString()?.SubstringAfterLast('.');
+                    property.StructType = NormalizeMappingIdentifier(reader.GetString());
                     break;
                 case "enum" when reader.TokenType == JsonTokenType.String:
-                    property.EnumName = reader.GetString()?.SubstringAfterLast('.');
+                    property.EnumName = NormalizeMappingIdentifier(reader.GetString());
                     break;
                 case "container" or "inner" or "key_prop" when reader.TokenType == JsonTokenType.StartObject:
                     property.InnerType = ReadProperty(ref reader);
@@ -289,6 +292,25 @@ public class JmapParser
         }
 
         return new PropertyType(type, property.StructType, innerType, valueType, property.EnumName);
+    }
+
+    private static string? NormalizeMappingIdentifier(string? identifier) =>
+        identifier is null || TypeMappings.IsFullTypeIdentifier(identifier)
+            ? identifier
+            : TypeMappings.GetShortTypeName(identifier);
+
+    private static void AddMapping<T>(IDictionary<string, T> mappings, string identifier, T value, string kind)
+    {
+        if (TypeMappings.IsFullTypeIdentifier(identifier))
+        {
+            if (mappings.ContainsKey(identifier))
+                throw new ArgumentException($"JMAP contains duplicate full {kind} identifier {identifier}");
+            mappings.Add(identifier, value);
+            return;
+        }
+
+        // Preserve the legacy JMAP last-wins behavior for short-name files.
+        mappings[identifier] = value;
     }
 
     private sealed class JmapProperty

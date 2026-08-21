@@ -229,7 +229,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (Ar.Game < GAME_UE4_22)
             {
-                CompressedCurveData = new FRawCurveTracks(new FStructFallback(Ar, "RawCurveTracks"));
+                CompressedCurveData = new FRawCurveTracks(new FStructFallback(Ar, "/Script/Engine.RawCurveTracks"));
             }
             else
             {

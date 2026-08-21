@@ -41,7 +41,7 @@ public class UUserDefinedStruct : UStruct
         if (FFrameworkObjectVersion.Get(Ar) < FFrameworkObjectVersion.Type.UserDefinedStructsStoreDefaultInstance) return;
         if (Ar.HasUnversionedProperties)
         {
-            DeserializePropertiesUnversioned(DefaultProperties = [], Ar, this);
+            DeserializePropertiesUnversioned(DefaultProperties = [], Ar, this, GetPathName());
         }
         else
         {

@@ -58,13 +58,20 @@ public class FControlRigOverrideValue
                 property.Hash = Ar.Read<uint>();
             }
 
-            if ((!bStoresOnlyPathAndLeafProperty && property.Property.ResolvedOwner!.TryLoad<UStruct>(out var struc))
+            var ownerIdentifier = bStoresOnlyPathAndLeafProperty
+                ? OwnerStructPath.ToString()
+                : property.Property.ResolvedOwner?.ResolvedObject?.GetPathName();
+            if ((!bStoresOnlyPathAndLeafProperty && property.Property.ResolvedOwner?.TryLoad<UStruct>(out var struc) == true)
                 || (bStoresOnlyPathAndLeafProperty && OwnerStructPath.TryLoad<UStruct>(out struc)))
             {
                 var type = struc.Name;
                 Struct? propMappings = null;
                 if (struc is UScriptClass)
-                    Ar.Owner!.Mappings?.Types.TryGetValue(type, out propMappings);
+                    Ar.Owner!.Mappings?.TryGetType(
+                        type,
+                        ownerIdentifier ?? (struc as UScriptClass)?.FullTypeIdentifier ??
+                        (struc.Outer != null ? struc.GetPathName() : null),
+                        out propMappings!);
                 else
                     propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
 
@@ -79,7 +86,10 @@ public class FControlRigOverrideValue
                     {
                         var inner = propInfo.Value.Value.MappingType;
                         if (inner.StructType is not null)
-                            Ar.Owner!.Mappings?.Types.TryGetValue(inner.StructType, out propMappings);
+                            Ar.Owner!.Mappings?.TryGetType(
+                                TypeMappings.GetShortTypeName(inner.StructType),
+                                inner.StructType,
+                                out propMappings!);
                         else if (inner.Struct is not null)
                             propMappings = new SerializedStruct(Ar.Owner!.Mappings, inner.Struct);
                         else

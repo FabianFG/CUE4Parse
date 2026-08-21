@@ -39,7 +39,7 @@ public class FFixedPoint : IUStruct
 
     public FFixedPoint(FAssetArchive Ar)
     {
-        var fb = new FStructFallback(Ar, "FixedPoint");
+        var fb = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("FixedPoint"));
         Value = new Fixed64(fb.GetOrDefault<long>("Bits"));
     }
 }

@@ -15,7 +15,8 @@ public class UAkAuxBus : UAkAudioType
 
         if (Ar.Position >= validPos) return;
 
-        AuxBusCookedData = new FWwiseLocalizedAuxBusCookedData(new FStructFallback(Ar, "WwiseLocalizedAuxBusCookedData"));
+        AuxBusCookedData = new FWwiseLocalizedAuxBusCookedData(new FStructFallback(
+            Ar, Ar.ResolveTypeIdentifier("WwiseLocalizedAuxBusCookedData")));
         AuxBusCookedData?.SerializeBulkData(Ar);
 
         MaxAttenuationRadius = Ar.Read<float>();

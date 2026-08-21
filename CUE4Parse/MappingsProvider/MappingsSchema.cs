@@ -5,33 +5,90 @@ namespace CUE4Parse.MappingsProvider;
 
 public class Struct
 {
-    public readonly TypeMappings? Context;
-    public string Name;
-    public string? SuperType;
-    public Lazy<Struct?> Super;
-    public Dictionary<int, PropertyInfo> Properties;
-    public int PropertyCount;
+    private Func<Struct?>? _superFactory;
+    private Action? _changed;
+    private string _name;
+    private string? _superType;
+    private int _propertyCount;
+    public TypeMappings? Context { get; private set; }
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            if (_name == value) return;
+            _name = value;
+            _changed?.Invoke();
+        }
+    }
+    public string? SuperType
+    {
+        get => _superType;
+        set
+        {
+            if (_superType == value) return;
+            _superType = value;
+            ResetSuperResolution();
+            _changed?.Invoke();
+        }
+    }
+    public Lazy<Struct?> Super { get; protected set; }
+    public TrackedDictionary<int, PropertyInfo> Properties { get; }
+    public int PropertyCount
+    {
+        get => _propertyCount;
+        set
+        {
+            if (_propertyCount == value) return;
+            _propertyCount = value;
+            _changed?.Invoke();
+        }
+    }
 
     public Struct(TypeMappings? context, string name, int propertyCount)
     {
         Context = context;
-        Name = name;
-        PropertyCount = propertyCount;
+        _name = name;
+        _propertyCount = propertyCount;
+        if (context != null)
+            _changed = context.Invalidate;
+        Properties = new TrackedDictionary<int, PropertyInfo>(null, NotifyChanged,
+            property => property.AttachChangeTracker(NotifyChanged));
+        Super = new Lazy<Struct?>(() => null);
     }
 
     public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount) : this(context, name, propertyCount)
     {
-        SuperType = superType;
-        Super = new Lazy<Struct?>(() =>
+        _superType = superType;
+        _superFactory = () =>
         {
-            if (SuperType != null && Context != null && Context.Types.TryGetValue(SuperType, out var superStruct))
+            if (SuperType != null && Context != null &&
+                Context.TryGetType(TypeMappings.GetShortTypeName(SuperType), SuperType, out var superStruct))
             {
                 return superStruct;
             }
 
             return null;
-        });
-        Properties = properties;
+        };
+        ResetSuperResolution();
+        foreach (var (index, property) in properties)
+            Properties.Add(index, property);
+    }
+
+    internal void AttachChangeTracker(TypeMappings context)
+    {
+        Context = context;
+        _changed = context.Invalidate;
+        foreach (var property in Properties.Values)
+            property.AttachChangeTracker(NotifyChanged);
+    }
+
+    private void NotifyChanged() => _changed?.Invoke();
+
+    internal void ResetSuperResolution()
+    {
+        if (_superFactory != null)
+            Super = new Lazy<Struct?>(_superFactory);
     }
 
     public bool TryGetValue(int i, out PropertyInfo info)
@@ -43,6 +100,36 @@ public class Struct
         }
 
         return true;
+    }
+
+    public bool TryGetValue(string propertyName, int arrayIndex, out PropertyInfo info)
+    {
+        PropertyInfo? matchingName = null;
+        foreach (var property in Properties.Values)
+        {
+            if (!property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (property.Index == arrayIndex &&
+                property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                info = property;
+                return true;
+            }
+            if (property.ArraySize is > 0 && arrayIndex < property.ArraySize)
+                matchingName = property;
+        }
+
+        if (matchingName != null)
+        {
+            info = matchingName;
+            return true;
+        }
+
+        if (Super.Value != null)
+            return Super.Value.TryGetValue(propertyName, arrayIndex, out info);
+
+        info = null!;
+        return false;
     }
 
     public int CountProperties(bool includeSuper)
@@ -73,7 +160,12 @@ public class SerializedStruct : Struct
             {
                 if (superStruct is UScriptClass)
                 {
-                    if (Context != null && Context.Types.TryGetValue(superStruct.Name, out var scriptStruct))
+                    if (Context != null && Context.TryGetType(
+                            superStruct.Name,
+                            struc.SuperStruct.ResolvedObject?.GetPathName() ??
+                            (superStruct as UScriptClass)?.FullTypeIdentifier ??
+                            superStruct.GetPathName(),
+                            out var scriptStruct))
                     {
                         return scriptStruct;
                     }
@@ -87,7 +179,6 @@ public class SerializedStruct : Struct
 
             return null;
         });
-        Properties = new Dictionary<int, PropertyInfo>();
         for (var i = 0; i < struc.ChildProperties.Length; i++)
         {
             var prop = (FProperty) struc.ChildProperties[i];
@@ -102,49 +193,80 @@ public class SerializedStruct : Struct
 
 public class PropertyInfo : ICloneable
 {
-    public int Index;
-    public string Name;
-    public int? ArraySize;
-    public PropertyType MappingType;
+    private Action? _changed;
+    private int _index;
+    private string _name;
+    private int? _arraySize;
+    private PropertyType _mappingType;
+    public int Index { get => _index; set { if (_index != value) { _index = value; _changed?.Invoke(); } } }
+    public string Name { get => _name; set { if (_name != value) { _name = value; _changed?.Invoke(); } } }
+    public int? ArraySize { get => _arraySize; set { if (_arraySize != value) { _arraySize = value; _changed?.Invoke(); } } }
+    public PropertyType MappingType
+    {
+        get => _mappingType;
+        set
+        {
+            if (ReferenceEquals(_mappingType, value)) return;
+            _mappingType = value;
+            _mappingType.AttachChangeTracker(NotifyChanged);
+            _changed?.Invoke();
+        }
+    }
 
     public PropertyInfo(int index, string name, PropertyType mappingType, int? arraySize = null)
     {
-        Index = index;
-        Name = name;
-        ArraySize = arraySize;
-        MappingType = mappingType;
+        _index = index;
+        _name = name;
+        _arraySize = arraySize;
+        _mappingType = mappingType;
     }
 
+    internal void AttachChangeTracker(Action changed)
+    {
+        _changed = changed;
+        _mappingType.AttachChangeTracker(NotifyChanged);
+    }
+
+    private void NotifyChanged() => _changed?.Invoke();
+
     public override string ToString() => $"{Index + 1}/{ArraySize} -> {Name}";
-    public object Clone() => MemberwiseClone();
+    public object Clone() => new PropertyInfo(Index, Name, MappingType, ArraySize);
 }
 
 public class PropertyType
 {
-    public string Type;
-    public string? StructType;
-    public PropertyType? InnerType;
-    public PropertyType? ValueType;
-    public string? EnumName;
-    public bool? IsEnumAsByte;
-    public bool? Bool;
+    private Action? _changed;
+    private string _type;
+    private string? _structType;
+    private PropertyType? _innerType;
+    private PropertyType? _valueType;
+    private string? _enumName;
+    private bool? _isEnumAsByte;
+    private bool? _bool;
+    public string Type { get => _type; set => Set(ref _type, value); }
+    public string? StructType { get => _structType; set => Set(ref _structType, value); }
+    public PropertyType? InnerType { get => _innerType; set => SetNested(ref _innerType, value); }
+    public PropertyType? ValueType { get => _valueType; set => SetNested(ref _valueType, value); }
+    public string? EnumName { get => _enumName; set => Set(ref _enumName, value); }
+    public bool? IsEnumAsByte { get => _isEnumAsByte; set => Set(ref _isEnumAsByte, value); }
+    public bool? Bool { get => _bool; set => Set(ref _bool, value); }
     public UStruct? Struct;
     public UEnum? Enum;
 
     public PropertyType(string type, string? structType = null, PropertyType? innerType = null, PropertyType? valueType = null, string? enumName = null, bool? isEnumAsByte = null, bool? b = null)
     {
-        Type = type;
-        StructType = structType;
-        InnerType = innerType;
-        ValueType = valueType;
-        EnumName = enumName;
-        IsEnumAsByte = isEnumAsByte;
-        Bool = b;
+        _type = type;
+        _structType = structType;
+        _innerType = innerType;
+        _valueType = valueType;
+        _enumName = enumName;
+        _isEnumAsByte = isEnumAsByte;
+        _bool = b;
     }
 
     public PropertyType(FProperty prop)
     {
-        Type = prop.GetType().Name[1..];
+        _type = prop.GetType().Name[1..];
         switch (prop)
         {
             case FArrayProperty array:
@@ -170,7 +292,7 @@ public class PropertyType
             case FStructProperty struc:
                 var structObj = struc.Struct.ResolvedObject;
                 Struct = structObj?.Object?.Value as UStruct;
-                StructType = structObj?.Name.Text;
+                StructType = structObj?.GetPathName();
                 break;
             case FOptionalProperty optional:
                 value = optional.ValueProperty;
@@ -179,12 +301,36 @@ public class PropertyType
         }
     }
 
+    internal void AttachChangeTracker(Action changed)
+    {
+        _changed = changed;
+        _innerType?.AttachChangeTracker(NotifyChanged);
+        _valueType?.AttachChangeTracker(NotifyChanged);
+    }
+
+    private void NotifyChanged() => _changed?.Invoke();
+
+    private void Set<T>(ref T field, T value)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return;
+        field = value;
+        _changed?.Invoke();
+    }
+
+    private void SetNested(ref PropertyType? field, PropertyType? value)
+    {
+        if (ReferenceEquals(field, value)) return;
+        field = value;
+        field?.AttachChangeTracker(NotifyChanged);
+        _changed?.Invoke();
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ApplyEnum(FProperty prop, FPackageIndex enumIndex)
     {
         var enumObj = enumIndex.ResolvedObject;
         Enum = enumObj?.Object?.Value as UEnum;
-        EnumName = enumObj?.Name.Text;
+        EnumName = enumObj?.GetPathName();
         InnerType = prop.ElementSize switch
         {
             4 => new PropertyType("IntProperty"),

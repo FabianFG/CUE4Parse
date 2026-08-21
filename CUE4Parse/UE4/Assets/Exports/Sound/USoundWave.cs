@@ -88,7 +88,7 @@ public class USoundWave : USoundBase
 
     protected virtual void SerializeCuePoints(FAssetArchive Ar)
     {
-        PlatformCuePoints = Ar.ReadArray(() => new FStructFallback(Ar, "SoundWaveCuePoint"));
+        PlatformCuePoints = Ar.ReadArray(() => new FStructFallback(Ar, "/Script/Engine.SoundWaveCuePoint"));
     }
 
     protected virtual void SerializeCookedPlatformData(FAssetArchive Ar)

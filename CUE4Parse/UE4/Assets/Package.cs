@@ -371,11 +371,11 @@ namespace CUE4Parse.UE4.Assets
             public override ResolvedObject Class => new ResolvedLoadedObject(new UScriptClass(_import.ClassName.Text));
             public override Lazy<UObject>? Object => _import.ClassName.Text switch
             {
-                "Class" => new(() => new UScriptClass(Name.Text)),
-                "SharpClass" => new(() => new USharpClass(Name.Text)),
-                "PythonClass" => new(() => new UPythonClass(Name.Text)),
-                "ASClass" => new(() => new UASClass(Name.Text)),
-                "ScriptStruct" => new(() => new UScriptClass(Name.Text)),
+                "Class" => new(() => new UScriptClass(Name.Text, GetPathName())),
+                "SharpClass" => new(() => new USharpClass(Name.Text, GetPathName())),
+                "PythonClass" => new(() => new UPythonClass(Name.Text, GetPathName())),
+                "ASClass" => new(() => new UASClass(Name.Text, GetPathName())),
+                "ScriptStruct" => new(() => new UScriptClass(Name.Text, GetPathName())),
                 _ => null
             };
         }

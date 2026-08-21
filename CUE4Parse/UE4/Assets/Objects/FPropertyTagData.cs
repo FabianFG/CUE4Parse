@@ -24,6 +24,41 @@ public class FPropertyTagData
     public UStruct? Struct;
     public UEnum? Enum;
 
+    public string? GetStructTypeIdentifier() =>
+        TypeMappings.QualifyTypeIdentifier(StructType, Module);
+
+    public string? GetEnumTypeIdentifier() =>
+        TypeMappings.QualifyTypeIdentifier(EnumName, Module);
+
+    internal void ApplyMappingIdentifiers(PropertyType mappingType)
+    {
+        if (!Type.Equals(mappingType.Type, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (mappingType.StructType is { } structType)
+            StructType = structType;
+        if (mappingType.EnumName is { } enumName)
+            EnumName = enumName;
+
+        if (mappingType.InnerType is { } innerType)
+        {
+            InnerType ??= innerType.Type;
+            if (InnerTypeData == null)
+                InnerTypeData = new FPropertyTagData(innerType);
+            else
+                InnerTypeData.ApplyMappingIdentifiers(innerType);
+        }
+
+        if (mappingType.ValueType is { } valueType)
+        {
+            ValueType ??= valueType.Type;
+            if (ValueTypeData == null)
+                ValueTypeData = new FPropertyTagData(valueType);
+            else
+                ValueTypeData.ApplyMappingIdentifiers(valueType);
+        }
+    }
+
     public FPropertyTagData() { }
     internal FPropertyTagData(FAssetArchive Ar, string type, string name = "")
     {
@@ -106,7 +141,7 @@ public class FPropertyTagData
                     InnerType = keyType.GetName();
                     InnerTypeData = InnerType != "None" && keyType[0].InnerCount != 0 ? new FPropertyTagData(keyType, InnerType) : null;
                     ValueType = valueType.GetName();
-                    ValueTypeData = InnerType != "None" && valueType[0].InnerCount != 0 ? new FPropertyTagData(valueType, ValueType) : null;
+                    ValueTypeData = ValueType != "None" && valueType[0].InnerCount != 0 ? new FPropertyTagData(valueType, ValueType) : null;
                 }
                 break;
         }

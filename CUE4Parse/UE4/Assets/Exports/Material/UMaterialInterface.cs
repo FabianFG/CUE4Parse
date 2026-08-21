@@ -41,7 +41,7 @@ public class UMaterialInterface : UUnrealMaterial
         var bSavedCachedExpressionData = FUE5ReleaseStreamObjectVersion.Get(Ar) >= FUE5ReleaseStreamObjectVersion.Type.MaterialInterfaceSavedCachedData && Ar.ReadBoolean();
         if (bSavedCachedExpressionData)
         {
-            CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");
+            CachedExpressionData = new FStructFallback(Ar, "/Script/Engine.MaterialCachedExpressionData");
         }
 
         if (Ar.Game == GAME_HogwartsLegacy) CustomGameData = new FSHAHash(Ar);

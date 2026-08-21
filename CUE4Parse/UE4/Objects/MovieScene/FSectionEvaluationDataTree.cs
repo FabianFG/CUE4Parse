@@ -10,6 +10,7 @@ public readonly struct FSectionEvaluationDataTree : IUStruct
 
     public FSectionEvaluationDataTree(FArchive Ar)
     {
-        Tree = new TMovieSceneEvaluationTree<FSectionEvaluationData>(Ar, () => new FSectionEvaluationData(new FStructFallback((FAssetArchive)Ar, "SectionEvaluationData")));
+        Tree = new TMovieSceneEvaluationTree<FSectionEvaluationData>(Ar, () => new FSectionEvaluationData(
+            new FStructFallback((FAssetArchive) Ar, "/Script/MovieScene.SectionEvaluationData")));
     }
 }

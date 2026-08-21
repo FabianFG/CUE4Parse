@@ -51,7 +51,7 @@ public class FVAL_CharacterCustomizationVariantOptionsArray : IUStruct
 
         try
         {
-            var structName = OptionStruct.ResolvedObject is { } obj ? obj.Name.ToString() : null;
+            var structName = OptionStruct.ResolvedObject?.GetPathName();
             if (OptionStruct.TryLoad<UStruct>(out var struc) || structName != null)
             {
                 Options = Ar.ReadArray(() => new FScriptStruct(Ar, structName, struc, ReadType.NORMAL).StructType);

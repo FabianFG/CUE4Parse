@@ -86,8 +86,9 @@ public class UsmapParser
             nameLut.Add(Encoding.UTF8.GetString(Ar.ReadBytes(nameLength)));
         }
 
+        var identifierComparer = comparer ?? StringComparer.OrdinalIgnoreCase;
         var enumCount = Ar.Read<uint>();
-        var enums = new Dictionary<string, Dictionary<long, string>>((int) enumCount);
+        var enums = new Dictionary<string, Dictionary<long, string>>((int) enumCount, identifierComparer);
         for (var i = 0; i < enumCount; i++)
         {
             var enumName = Ar.ReadName(nameLut)!;
@@ -113,19 +114,40 @@ public class UsmapParser
                 }
             }
 
-            // Some companies man... Their duplicated enums, even with different values, have to be ignored.
-            enums.TryAdd(enumName, enumNames);
+            // Preserve legacy behavior for short-name mappings.  A repeated
+            // complete object identifier, however, makes the custom format
+            // internally contradictory and must never be last-wins.
+            if (!enums.TryAdd(enumName, enumNames) && TypeMappings.IsFullTypeIdentifier(enumName))
+                throw new ParserException($"Usmap contains duplicate full enum identifier {enumName}");
         }
 
         var structCount = Ar.Read<uint>();
-        var structs = new Dictionary<string, Struct>(comparer ?? StringComparer.OrdinalIgnoreCase);
+        var structs = new Dictionary<string, Struct>(identifierComparer);
 
         var mappings = new TypeMappings(structs, enums);
 
         for (var i = 0; i < structCount; i++)
         {
             var s = UsmapProperties.ParseStruct(mappings, Ar, nameLut);
-            structs[s.Name] = s;
+            if (TypeMappings.IsFullTypeIdentifier(s.Name))
+            {
+                if (!mappings.Types.TryAdd(s.Name, s))
+                    throw new ParserException($"Usmap contains duplicate full type identifier {s.Name}");
+            }
+            else
+            {
+                // Keep standard short-name USMAP compatibility.
+                mappings.Types[s.Name] = s;
+            }
+        }
+
+        try
+        {
+            mappings.ValidateIdentifierMode();
+        }
+        catch (ArgumentException e)
+        {
+            throw new ParserException($"Usmap identifier mode is invalid: {e.Message}");
         }
 
         Mappings = mappings;

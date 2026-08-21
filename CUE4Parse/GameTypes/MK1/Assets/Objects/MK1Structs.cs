@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Engine;
@@ -14,50 +14,58 @@ namespace CUE4Parse.GameTypes.MK1.Assets.Objects;
 
 public static class MK1Structs
 {
-    private static ConcurrentDictionary<string, string?> _resolvedSuperStructs = new();
-
-    public static IUStruct ParseMK1Struct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)
+    public static IUStruct ParseMK1Struct(FAssetArchive Ar, string? structName, string? fullTypeIdentifier, UStruct? struc, ReadType? type)
     {
+        var fallbackIdentifier = fullTypeIdentifier ?? structName;
         if (structName is null)
             return type == ReadType.ZERO ? new FStructFallback() :
-                struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName);
+                struc != null ? new FStructFallback(Ar, struc, fullTypeIdentifier) : new FStructFallback(Ar, fallbackIdentifier);
 
-        var mappings = Ar.Owner?.Mappings?.Types;
-        var resolvedSuper = _resolvedSuperStructs.GetOrAdd(structName, s =>
-        {
-            var mappingType = mappings?.GetValueOrDefault(s);
-            string? superStructName = mappingType?.SuperType;
-            while (mappingType is not null)
-            {
-                var super = mappingType.Super.Value;
-                if (super is null)
-                    return superStructName;
-                superStructName = mappingType.SuperType;
-                mappingType = super;
-            }
-            return superStructName;
-        });
+        var resolvedSuper = ResolveRootMappedSuper(Ar.Owner?.Mappings, structName, fullTypeIdentifier);
 
-        return resolvedSuper switch
+        if (resolvedSuper != null)
         {
-            "GameParameterBase" => new FGameParameterBase(Ar),
-            "MKInventoryItemPtrBase" => new MKInventoryItemPtrBase(Ar),
-            "StructPtrBase" => new FStructPtrBase(Ar),
-            _ => structName switch
+            var mappings = Ar.Owner?.Mappings;
+            if (mappings?.MatchesResolvedTypeIdentifier(resolvedSuper, "GameParameterBase") == true ||
+                mappings == null && resolvedSuper.Equals("GameParameterBase", StringComparison.OrdinalIgnoreCase))
+                return new FGameParameterBase(Ar);
+            if (mappings?.MatchesResolvedTypeIdentifier(resolvedSuper, "MKInventoryItemPtrBase") == true ||
+                mappings == null && resolvedSuper.Equals("MKInventoryItemPtrBase", StringComparison.OrdinalIgnoreCase))
+                return new MKInventoryItemPtrBase(Ar);
+            if (mappings?.MatchesResolvedTypeIdentifier(resolvedSuper, "StructPtrBase") == true ||
+                mappings == null && resolvedSuper.Equals("StructPtrBase", StringComparison.OrdinalIgnoreCase))
+                return new FStructPtrBase(Ar);
+        }
+
+        return structName switch
             {
                 "CompressedFloatTrackData" => new FCompressedFloatTrackData(Ar),
                 "MovieSceneFieldEntry_ChildTemplate" or "MovieSceneEvaluationGroupLUTIndex" or "MovieSceneFieldEntry_EvaluationTrack"
                     or "MovieSceneOrderedEvaluationKey" or "MovieSceneEvaluationFieldTrackPtr" or "PathNodeInfo" or "TrackSetInfo"
-                    or "TrackConfigInfo" or "TimelineKeySampleData" or "MKInventoryItemSlots" or "PoseData" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
+                    or "TrackConfigInfo" or "TimelineKeySampleData" or "MKInventoryItemSlots" or "PoseData" => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
                 "CompiledTimelinePredicate" => new FCompiledTimelinePredicate(Ar),
                 "TimelinePredicateState" => new FTimelinePredicateState(Ar),
                 "MKLootDropItemPicker" => new FMKLootDropItemPicker(Ar),
                 "Transform" when type is ReadType.RAW => Ar.Read<FTransform>(),
                 "BuffPropertyModificationPtr" => new FStructFallback(),
 
-                _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
-            }
-        };
+                _ when type == ReadType.RAW => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+                _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc, fullTypeIdentifier) : new FStructFallback(Ar, fallbackIdentifier)
+            };
+    }
+
+    private static string? ResolveRootMappedSuper(TypeMappings? mappings, string shortName, string? fullTypeIdentifier)
+    {
+        if (mappings?.TryGetType(shortName, fullTypeIdentifier, out var mappingType) != true)
+            return null;
+
+        string? root = null;
+        while (mappingType.Super.Value is { } super)
+        {
+            root = super.Name;
+            mappingType = super;
+        }
+        return root ?? mappingType.SuperType;
     }
 }
 
@@ -139,7 +147,7 @@ public class MKInventoryItemPtrBase : IUStruct
 
     public MKInventoryItemPtrBase(FAssetArchive Ar)
     {
-        FallbackStruct = new FStructFallback(Ar, "MKInventoryItemPtrBase");
+        FallbackStruct = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("MKInventoryItemPtrBase"));
         NonConstStruct = FScriptStruct.ReadInstancedStructWithoutSerialSize(Ar);
     }
 }
@@ -150,13 +158,13 @@ public class FMKLootDropItemPicker : IUStruct
     public readonly FScriptStruct? NonConstStruct;
     public FMKLootDropItemPicker(FAssetArchive Ar)
     {
-        FallbackStruct = new FStructFallback(Ar, "MKLootDropItemPicker");
+        FallbackStruct = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("MKLootDropItemPicker"));
         var mLootStruct = FallbackStruct.GetOrDefault<FPackageIndex>("mLootStruct");
         NonConstStruct = FScriptStruct.ReadInstancedStructWithoutSerialSize(Ar, mLootStruct);
     }
 }
 public class FStructPtrBase(FAssetArchive Ar) : IUStruct
 {
-    public FStructFallback FallbackStruct = new(Ar, "StructPtrBase");
+    public FStructFallback FallbackStruct = new(Ar, Ar.ResolveTypeIdentifier("StructPtrBase"));
     public FScriptStruct? NonConstStruct = FScriptStruct.ReadInstancedStructWithoutSerialSize(Ar);
 }

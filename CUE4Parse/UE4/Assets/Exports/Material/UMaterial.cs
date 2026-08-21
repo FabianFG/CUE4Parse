@@ -80,7 +80,7 @@ public class UMaterial : UMaterialInterface
 
                         if (bLocalSavedCachedExpressionData_DEPRECATED)
                         {
-                            CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");
+                            CachedExpressionData = new FStructFallback(Ar, "/Script/Engine.MaterialCachedExpressionData");
                         }
                     }
                     if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.NaniteForceMaterialUsage)

@@ -1,6 +1,7 @@
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
+using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -10,23 +11,25 @@ namespace CUE4Parse.GameTypes.TQ2.Objects;
 
 public static class TQ2Structs
 {
-    public static IUStruct ParseTQ2Struct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)
+    public static IUStruct ParseTQ2Struct(FAssetArchive Ar, string? structName, string? fullTypeIdentifier, UStruct? struc, ReadType? type)
     {
-        if (structName is null) return type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName);
+        var fallbackIdentifier = fullTypeIdentifier ?? structName;
+        if (structName is null) return type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc, fullTypeIdentifier) : new FStructFallback(Ar, fallbackIdentifier);
         return structName switch
         {
             "GrimItemDescriptionPtr" or "GrimAbilityProjectileParametersPtr" or "SoftJsonDataAssetPtr" or
                 "GrimAbilitySummonDataPtr" or "JsonDataAssetPath" or "JsonDataAssetPtr" => new FSoftObjectPath(Ar),
             "GrimDialogueVariableValue" => new FGrimDialogueVariableValue(Ar),
-            "GrimArchetypeDeformationExpressionVector" => new FGrimUnrealExpression(Ar, structName, false, ETQ2ConstantType.Vector),
-            "GrimArchetypeCategoryExpression" => new FGrimUnrealExpression(Ar, structName, false, ETQ2ConstantType.Name),
-            "GrimItemValue" or "GrimDynamicsFormula" or "GrimAbilityDynamicsFormula" => new FGrimUnrealExpression(Ar, structName, true, ETQ2ConstantType.Float),
-            "GrimArchetypeMaterialExpressionFloat" or "GrimArchetypeDeformationExpressionFloat" => new FGrimUnrealExpression(Ar, structName, false, ETQ2ConstantType.Float),
+            "GrimArchetypeDeformationExpressionVector" => new FGrimUnrealExpression(Ar, fallbackIdentifier!, false, ETQ2ConstantType.Vector),
+            "GrimArchetypeCategoryExpression" => new FGrimUnrealExpression(Ar, fallbackIdentifier!, false, ETQ2ConstantType.Name),
+            "GrimItemValue" or "GrimDynamicsFormula" or "GrimAbilityDynamicsFormula" => new FGrimUnrealExpression(Ar, fallbackIdentifier!, true, ETQ2ConstantType.Float),
+            "GrimArchetypeMaterialExpressionFloat" or "GrimArchetypeDeformationExpressionFloat" => new FGrimUnrealExpression(Ar, fallbackIdentifier!, false, ETQ2ConstantType.Float),
             _ when structName.StartsWith("GrimDialogue") && structName.EndsWith("Ref") => new FArticyId(Ar),
             _ when structName.StartsWith("TQ2") && structName.EndsWith("Ptr") => new FSoftObjectPath(Ar),
             _ when structName.StartsWith("Grim") && structName.EndsWith("SoftPtr") => new FSoftObjectPath(Ar),
             _ when structName.StartsWith("Grim") && structName.EndsWith("Ptr") => new FGrimInstancedObjectPtr(Ar),
-            _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc) : new FStructFallback(Ar, structName)
+            _ when type == ReadType.RAW => new FStructFallback(Ar, fallbackIdentifier, FRawHeader.FullRead, ReadType.RAW),
+            _ => type == ReadType.ZERO ? new FStructFallback() : struc != null ? new FStructFallback(Ar, struc, fullTypeIdentifier) : new FStructFallback(Ar, fallbackIdentifier)
         };
     }
 }
@@ -245,7 +248,7 @@ public class FGrimInstancedObjectPtr : IUStruct
         }
         else if (StructType.ResolvedObject is { } obj)
         {
-            NonConstStruct = new FStructFallback(Ar, obj.Name.ToString());
+            NonConstStruct = new FStructFallback(Ar, obj.GetPathName());
         }
         else
         {

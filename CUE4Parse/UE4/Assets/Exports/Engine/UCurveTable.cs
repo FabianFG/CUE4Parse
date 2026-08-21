@@ -30,8 +30,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
                 var rowName = Ar.ReadFName();
                 string rowStruct = CurveTableMode switch
                 {
-                    ECurveTableMode.SimpleCurves => "SimpleCurve",
-                    ECurveTableMode.RichCurves => "RichCurve",
+                    ECurveTableMode.SimpleCurves => "/Script/Engine.SimpleCurve",
+                    ECurveTableMode.RichCurves => "/Script/Engine.RichCurve",
                     _ => ""
                 };
                 RowMap[rowName] = new FStructFallback(Ar, rowStruct);

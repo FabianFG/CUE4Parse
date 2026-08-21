@@ -14,7 +14,7 @@ public class UAkTrigger : UAkAudioType
 
         if (Ar.Position >= validPos) return;
 
-        TriggerCookedData = new FStructFallback(Ar, "WwiseTriggerCookedData");
+        TriggerCookedData = new FStructFallback(Ar, Ar.ResolveTypeIdentifier("WwiseTriggerCookedData"));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

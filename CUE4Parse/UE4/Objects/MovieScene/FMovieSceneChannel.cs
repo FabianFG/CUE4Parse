@@ -35,13 +35,13 @@ public readonly struct FMovieSceneChannel<T> : IUStruct
             bHasDefaultValue = false;
             TickResolution = default;
             bShowCurve = false;
-            StructFallback = new FStructFallback(Ar, "MovieSceneChannel");
+            StructFallback = new FStructFallback(Ar, "/Script/MovieScene.MovieSceneChannel");
             return;
         }
 
         if (Ar.Game == GAME_DeltaForce)
         {
-            StructFallback = new FStructFallback(Ar, "MovieSceneChannel");
+            StructFallback = new FStructFallback(Ar, "/Script/MovieScene.MovieSceneChannel");
             return;
         }
 

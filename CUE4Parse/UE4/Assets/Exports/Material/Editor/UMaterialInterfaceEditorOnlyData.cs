@@ -16,7 +16,7 @@ public class UMaterialInterfaceEditorOnlyData : UObject
 
         if (bSavedCachedExpressionData)
         {
-            CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionEditorOnlyData");
+            CachedExpressionData = new FStructFallback(Ar, "/Script/Engine.MaterialCachedExpressionEditorOnlyData");
         }
     }
 

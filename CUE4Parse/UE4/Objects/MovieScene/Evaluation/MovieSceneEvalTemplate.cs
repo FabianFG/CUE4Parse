@@ -1,13 +1,16 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.Utils;
+using CUE4Parse.MappingsProvider;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.MovieScene.Evaluation;
 
 public class FMovieSceneEvalTemplatePtr : IUStruct
 {
+    private const string LiveLinkTemplateIdentifier =
+        "/Script/LiveLinkMovieScene.MovieSceneLiveLinkSectionTemplate";
+
     public string TypeName;
     public FStructFallback? Data;
 
@@ -16,21 +19,21 @@ public class FMovieSceneEvalTemplatePtr : IUStruct
         TypeName = Ar.ReadFString();
         if (string.IsNullOrEmpty(TypeName)) return;
 
-        var type = TypeName.SubstringAfterLast('.');
-        Data = type switch
-        {
-            "MovieSceneLiveLinkSectionTemplate" => new FMovieSceneLiveLinkSectionTemplate(Ar),
-            _ => new FStructFallback(Ar, type),
-        };
+        var isLegacyLiveLinkName = !TypeMappings.IsFullTypeIdentifier(TypeName) &&
+                                   TypeName.Equals("MovieSceneLiveLinkSectionTemplate", StringComparison.OrdinalIgnoreCase);
+        Data = TypeName.Equals(LiveLinkTemplateIdentifier, StringComparison.OrdinalIgnoreCase) || isLegacyLiveLinkName
+            ? new FMovieSceneLiveLinkSectionTemplate(Ar)
+            : new FStructFallback(Ar, TypeName);
     }
 }
 
 public class FMovieSceneLiveLinkSectionTemplate : FStructFallback
 {
+    private const string TypeIdentifier = "/Script/LiveLinkMovieScene.MovieSceneLiveLinkSectionTemplate";
     public string? StaticDataTypeName;
     public FStructFallback? StaticData;
 
-    public FMovieSceneLiveLinkSectionTemplate(FAssetArchive Ar) : base(Ar, "MovieSceneLiveLinkSectionTemplate")
+    public FMovieSceneLiveLinkSectionTemplate(FAssetArchive Ar) : base(Ar, TypeIdentifier)
     {
         if (FLiveLinkCustomVersion.Get(Ar) >= FLiveLinkCustomVersion.Type.NewLiveLinkRoleSystem)
         {
@@ -40,8 +43,7 @@ public class FMovieSceneLiveLinkSectionTemplate : FStructFallback
                 if (string.IsNullOrEmpty(StaticDataTypeName))
                     return;
 
-                var type = StaticDataTypeName.SubstringAfterLast('.');
-                StaticData = new FStructFallback(Ar, type);
+                StaticData = new FStructFallback(Ar, StaticDataTypeName);
             }
         }
     }
@@ -63,8 +65,7 @@ public class UMovieSceneLiveLinkSection : Assets.Exports.UObject
                 if (string.IsNullOrEmpty(StaticDataTypeName))
                     return;
 
-                var type = StaticDataTypeName.SubstringAfterLast('.');
-                StaticData = new FStructFallback(Ar, type);
+                StaticData = new FStructFallback(Ar, StaticDataTypeName);
             }
         }
     }

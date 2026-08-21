@@ -14,7 +14,8 @@ public class UAkGroupValue : UAkAudioType
 
         if (Ar.Position >= validPos) return;
 
-        GroupValueCookedData = new FStructFallback(Ar, "WwiseGroupValueCookedData");
+        GroupValueCookedData = new FStructFallback(Ar,
+            Ar.ResolveTypeIdentifier("WwiseGroupValueCookedData"));
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

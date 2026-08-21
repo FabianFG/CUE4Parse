@@ -38,7 +38,7 @@ public readonly struct FMaterialOverrideNanite : IUStruct
         }
 
         // Serialized properties
-        var fallback = new FMaterialOverrideNanite(new FStructFallback(Ar, "MaterialOverrideNanite"));
+        var fallback = new FMaterialOverrideNanite(new FStructFallback(Ar, "/Script/Engine.MaterialOverrideNanite"));
         OverrideMaterialRef = fallback.OverrideMaterialRef;
         bEnableOverride = fallback.bEnableOverride;
     }
