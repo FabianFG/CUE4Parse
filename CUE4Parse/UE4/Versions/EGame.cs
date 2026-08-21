@@ -188,7 +188,7 @@ public enum EGame : uint
         GAME_Valorant = GAME_UE5_3 + 3,
         GAME_ArcRaiders = GAME_UE5_3 + 4,
         GAME_Aion2 = GAME_UE5_3 + 5,
-        GAME_TheFinals = GAME_UE5_3 + 6,
+        GAME_Placeholder6 = GAME_UE5_3 + 6,
         GAME_Avowed = GAME_UE5_3 + 7,
         GAME_MetalGearSolidDelta = GAME_UE5_3 + 8,
         GAME_Highguard = GAME_UE5_3 + 9,
@@ -248,6 +248,7 @@ public enum EGame : uint
         GAME_Empulse = GAME_UE5_7 + 3,
         GAME_LordOfMysteries = GAME_UE5_7 + 4,
         GAME_Wildgate = GAME_UE5_7 + 5,
+        GAME_TheFinals = GAME_UE5_7 + 6,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 
