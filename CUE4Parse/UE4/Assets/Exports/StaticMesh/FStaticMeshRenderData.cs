@@ -185,7 +185,7 @@ public class FStaticMeshRenderData
         }
 
         if (Ar.Game is GAME_DeltaForce or GAME_DeadzoneRogue) Ar.Position += 4;
-        if (Ar.Game is GAME_InfinityNikki) Ar.Position += 8;
+        if (Ar.Game is GAME_InfinityNikki or GAME_RogueCompany) Ar.Position += 8;
 
         var screenSizeLength = Ar.Game switch
         {
