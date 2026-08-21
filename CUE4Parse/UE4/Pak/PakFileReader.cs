@@ -37,6 +37,7 @@ namespace CUE4Parse.UE4.Pak;
 
 public partial class PakFileReader : AbstractAesVfsReader
 {
+    private const int FlatDirectoryIndexMagic = 0x50464451; // 'PFDQ'
 
     public readonly FArchive Ar;
     public readonly FPakInfo Info;
@@ -445,7 +446,9 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         var files = new Dictionary<string, GameFile>(fileCount, pathComparer);
 
-        if (Info.Version >= PakFile_Version_SortedDirectoryIndex)
+        if (Info.Version >= PakFile_Version_SortedDirectoryIndex &&
+            data.Length >= sizeof(int) &&
+            BinaryPrimitives.ReadInt32LittleEndian(data) == FlatDirectoryIndexMagic)
         {
             ReadFlatDirectoryIndex(directoryIndex, files, encodedPakEntries, NonEncodedEntries);
             Files = files;
@@ -509,8 +512,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         GenericBufferReader encodedPakEntries, FPakEntry[] nonEncodedEntries
     )
     {
-        const int flatMagic = 0x50464451; // 'PFDQ'
-        if (directoryIndex.Read<int>() != flatMagic)
+        if (directoryIndex.Read<int>() != FlatDirectoryIndexMagic)
             throw new ParserException("Corrupt pak FullDirectoryIndex (flat) detected");
 
         var numDirs = directoryIndex.Read<int>();
