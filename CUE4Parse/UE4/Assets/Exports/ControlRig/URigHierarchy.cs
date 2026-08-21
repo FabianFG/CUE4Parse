@@ -53,10 +53,17 @@ public class URigHierarchy : UObject
             archiveForElements = Ar;
         }
 
+        if (FControlRigObjectVersion.Get(archiveForElements) >= FControlRigObjectVersion.Type.RigHierarchyTopology)
+        {
+            var elementsInfo = new FRigHierarchyElementsInfo(archiveForElements);
+            var loadedContentHash = archiveForElements.Read<uint>();
+            var bHasLoadedContentHash = true;
+        }
+
+        var elementCount = archiveForElements.Read<int>();
         bool bAllocateStoragePerElement = FControlRigObjectVersion.Get(archiveForElements) < FControlRigObjectVersion.Type.RigHierarchyIndirectElementStorage;
         if (Ar.Game == GAME_Aion2) bAllocateStoragePerElement = false;
 
-        var elementCount = archiveForElements.Read<int>();
         Elements = new FRigBaseElement[elementCount];
         for (var elementIndex = 0; elementIndex < elementCount; elementIndex++)
         {

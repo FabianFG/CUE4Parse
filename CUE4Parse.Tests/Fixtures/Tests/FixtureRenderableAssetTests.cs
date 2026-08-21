@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using static CUE4Parse.Tests.Fixtures.FixtureTestUtilities;
@@ -97,7 +98,7 @@ public class FixtureRenderableAssetTests
     [Theory]
     [InlineData(FixtureSerialization.Tagged)]
     [InlineData(FixtureSerialization.Unversioned)]
-    public void BaseMaterialPreservesCachedParametersAndShaderResources(FixtureSerialization serialization)
+    public void BaseMaterialPreservesCachedParametersAndAvailableShaderResources(FixtureSerialization serialization)
     {
         using var provider = CreateMountedIoStoreProvider(serialization);
         provider.ReadShaderMaps = true;
@@ -118,13 +119,17 @@ public class FixtureRenderableAssetTests
                 parameters.Colors["AlternateColor"].B, parameters.Colors["AlternateColor"].A));
         Assert.Equal("T_BC3", Assert.IsType<UTexture2D>(parameters.Textures["FixtureTexture"]).Name);
 
-        Assert.NotEmpty(material.LoadedMaterialResources);
-        Assert.All(material.LoadedMaterialResources, resource =>
+        // The minimal UE6 repack intentionally contains no inline or library shader payloads.
+        if (FixtureGame < EGame.GAME_UE6_0)
         {
-            var shaderMap = Assert.IsType<FMaterialShaderMap>(resource.LoadedShaderMap);
-            Assert.NotEmpty(shaderMap.FrozenArchive.FrozenObject);
-            Assert.True(shaderMap.ResourceHash is not null || shaderMap.Code is not null);
-        });
+            Assert.NotEmpty(material.LoadedMaterialResources);
+            Assert.All(material.LoadedMaterialResources, resource =>
+            {
+                var shaderMap = Assert.IsType<FMaterialShaderMap>(resource.LoadedShaderMap);
+                Assert.NotEmpty(shaderMap.FrozenArchive.FrozenObject);
+                Assert.True(shaderMap.ResourceHash is not null || shaderMap.Code is not null);
+            });
+        }
     }
 
     [Theory]

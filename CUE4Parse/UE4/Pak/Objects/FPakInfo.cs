@@ -5,6 +5,7 @@ using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.RSA;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.Aes;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.RSA;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 
@@ -26,6 +27,7 @@ public enum EPakFileVersion
     PakFile_Version_Utf8PakDirectory = 12,
     PakFile_Version_SortedDirectoryIndex = 13, // FullDirectoryIndex stored as a flat FPakFlatDirectoryIndex.
     PakFile_Version_PakchunkIndex = 14, // PakchunkIndex stored in the trailer so it doesn't have to be derived from the filename.
+    PakFile_Version_EncryptionMethod = 15, // EncryptionMethod recorded in the trailer, plus the index IV. Older paks are AES-ECB by definition.
 
     PakFile_Version_Last,
     PakFile_Version_Invalid,
@@ -68,6 +70,11 @@ public partial class FPakInfo
     public readonly FGuid EncryptionKeyGuid;
     public readonly List<CompressionMethod> CompressionMethods;
     public readonly int PakchunkIndex = -1; // INDEX_NONE
+    public readonly EIoEncryptionMethod EncryptionMethod = EIoEncryptionMethod.AES;
+    public readonly FIoStoreEncryptionIV? IndexIv;
+    public readonly FIoStoreEncryptionIV? PathHasIndexIv;
+    public readonly FIoStoreEncryptionIV? FullDirectoryIndexIv;
+
     public byte[] CustomEncryptionData { get; private set; }
 
     private FPakInfo(FArchive Ar, OffsetsToTry offsetToTry)
@@ -484,6 +491,7 @@ public partial class FPakInfo
             var maxNumCompressionMethods = offsetToTry switch
             {
                 OffsetsToTry.Size8a => 5,
+                OffsetsToTry.Size10 => 5,
                 OffsetsToTry.SizeHotta => 5,
                 OffsetsToTry.SizeDbD => 5,
                 OffsetsToTry.SizeRennsport => 5,
@@ -533,6 +541,14 @@ public partial class FPakInfo
             PakchunkIndex = Ar.Read<int>();
         }
 
+        if (Version >= EPakFileVersion.PakFile_Version_EncryptionMethod)
+        {
+            EncryptionMethod = Ar.Read<EIoEncryptionMethod>();
+            IndexIv = new FIoStoreEncryptionIV(Ar);
+            PathHasIndexIv = new FIoStoreEncryptionIV(Ar);
+            FullDirectoryIndexIv = new FIoStoreEncryptionIV(Ar);
+        }
+
         // Reset new fields to their default states when seralizing older pak format.
         if (Version < EPakFileVersion.PakFile_Version_IndexEncryption)
         {
@@ -549,18 +565,22 @@ public partial class FPakInfo
     {
         Size = sizeof(int) * 2 + sizeof(long) * 2 + 20 + /* new fields */ 1 + 16, // sizeof(FGuid)
         // Just to be sure
-        SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
-        SizeOverhit = 53,
         Size8_1 = Size + 32,
         Size8_2 = Size8_1 + 32,
         Size8_3 = Size8_2 + 32,
         Size8 = Size8_3 + 32, // added size of CompressionMethods as char[32]
         Size8a = Size8 + 32, // UE4.23 - also has version 8 (like 4.22) but different pak file structure
-        Size9 = Size8a + 1, // UE4.25
-        Size9a = Size9 + 4, // UE6.0 - Added pakchunk index int32
+        Size9 = Size8a + 1, // UE4.25 - removed in later versions
         SizeB1 = Size9 + 1, // plus 1
+        Size9a = Size8a + 4, // UE6.0 - Added pakchunk index int32
+        Size10 = Size9a + 1 + 3 * 12, // UE6.0 - Custom Encryption
         //Size10 = Size8a
 
+        // ------- SizeLast is very important and should represent the max range we look for FPakInfo
+        SizeLast,
+        SizeMax = SizeLast - 1,
+
+        // ------- CUSTOM (order should not matter) -------
         SizeRacingMaster = Size8 + 4, // additional int
         SizeFTT = Size + 4, // additional int for extra magic
         SizeHotta = Size8a + 4, // additional int for custom pak version
@@ -571,8 +591,8 @@ public partial class FPakInfo
         SizeQQ = Size8a + 26,
         SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
 
-        SizeLast,
-        SizeMax = SizeLast - 1,
+        SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
+        SizeOverhit = 53,
         SizeBack4Blood = 222,
         SizeArenaBreakoutMobile = 205,
         SizeDuneAwakening = 261,
@@ -587,6 +607,7 @@ public partial class FPakInfo
         OffsetsToTry.Size,
         OffsetsToTry.Size9,
         OffsetsToTry.Size9a,
+        OffsetsToTry.Size10,
 
         OffsetsToTry.Size8_1,
         OffsetsToTry.Size8_2,

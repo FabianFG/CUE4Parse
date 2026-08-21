@@ -40,7 +40,7 @@ public class FOnDemandContainerEntry : IOnDemandContainerEntry
         TagSetIndicesCount = Ar.Read<uint>();
         UTocHash = new FSHAHash(Ar);
         ContainerFlags = Ar.Read<EOnDemandContainerEntryFlags>();
-        FileContainerFlags = Ar.Read<EIoContainerFlags>();
+        FileContainerFlags = (EIoContainerFlags)Ar.Read<uint>();
         PartitionCount = Ar.Read<uint>();
 
         Ar.Position += 32;

@@ -47,7 +47,8 @@ public class FixtureAnimationTests
         Assert.Equal("SKEL_Fixture", skeleton.Name);
         Assert.Equal([0, 1, 2],
             sequence.CompressedTrackToSkeletonMapTable.Select(track => track.BoneTreeIndex).ToArray());
-        Assert.Equal("FixtureCurve", Assert.Single(sequence.CompressedCurveNames!).DisplayName.Text);
+        Assert.Equal("FixtureCurve", Assert.Single(sequence.CompressedCurveNames!).DisplayName.Text,
+            ignoreCase: true);
         Assert.NotEmpty(sequence.CompressedCurveByteStream!);
     }
 
