@@ -412,18 +412,17 @@ namespace CUE4Parse.FileProvider.Vfs
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAesVfsReader GetArchive(string archiveName, StringComparison comparison = StringComparison.Ordinal)
-            => TryGetArchiveUnsafe(archiveName, out var archive, comparison)
+            => GetArchiveOrNull(archiveName, comparison) is IAesVfsReader archive
             ? archive
             : throw new KeyNotFoundException($"There is no archive file with the name \"{archiveName}\"");
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected bool TryGetArchiveUnsafe(string archiveName, [MaybeNullWhen(false)] out IAesVfsReader archive, StringComparison comparison = StringComparison.Ordinal)
+        public IAesVfsReader? GetArchiveOrNull(string archiveName, StringComparison comparison = StringComparison.Ordinal)
         {
-            var predicate = (IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
-            archive = MountedVfs.FirstOrDefault(predicate) ??
-                   UnloadedVfs.FirstOrDefault(predicate);
-            return archive != null;
+            bool Predicate(IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
+            return MountedVfs.FirstOrDefault(Predicate) ??
+                   UnloadedVfs.FirstOrDefault(Predicate);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -432,10 +431,10 @@ namespace CUE4Parse.FileProvider.Vfs
             archive = null;
             try
             {
-                return TryGetArchiveUnsafe(archiveName, out archive, comparison);
+                archive = GetArchiveOrNull(archiveName, comparison);
             }
             catch { }
-            return false;
+            return archive is not null;
         }
 
         public GameFile this[string path, string archiveName, StringComparison comparison = StringComparison.Ordinal] => this[path, GetArchive(archiveName, comparison)];
