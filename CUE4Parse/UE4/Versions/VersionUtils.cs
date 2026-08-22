@@ -18,7 +18,7 @@ public static class VersionUtils
                 return overrideCustomVersion; // Return only if override
         }
 
-        var packageSummary = (Ar as FAssetArchive)?.Owner.Summary;
+        var packageSummary = (Ar as FAssetArchive)?.Owner?.Summary;
         if (packageSummary is { bUnversioned: false, CustomVersionContainer: not null })
         {
             var packageCustomVersion = packageSummary.CustomVersionContainer.GetVersion(key);

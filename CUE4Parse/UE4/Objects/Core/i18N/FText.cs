@@ -293,7 +293,7 @@ public abstract class FTextHistory : IUStruct
         public readonly FFormatArgumentValue SourceValue;
         public readonly FNumberFormattingOptions? FormatOptions;
         public readonly string TargetCulture;
-        public override string Text => SourceValue.Value.ToString();
+        public override string Text => SourceValue.Value.ToString() ?? "None";
 
         public FormatNumber(FAssetArchive Ar, ETextHistoryType historyType)
         {

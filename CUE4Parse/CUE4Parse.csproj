@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>C# Parser for Unreal Engine packages &amp; assets</Description>
   </PropertyGroup>

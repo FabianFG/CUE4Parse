@@ -7,7 +7,7 @@ namespace CUE4Parse.GameTypes.NetEase.MAR.Assets.Exports.Animation;
 
 public class UAnimNotify_PlayNiagaraEffect : UAnimNotify
 {
-    public FPackageIndex? Template;
+    public FPackageIndex? NiagaraTemplate;
     public bool bUseCombineEffect;
     public FSoftObjectPath? TemplateCombineEffect;
     public FVector LocationOffset;
@@ -33,7 +33,7 @@ public class UAnimNotify_PlayNiagaraEffect : UAnimNotify
     {
         base.Deserialize(Ar, validPos);
 
-        Template = GetOrDefault<FPackageIndex?>(nameof(Template));
+        NiagaraTemplate = GetOrDefault<FPackageIndex?>(nameof(Template));
         bUseCombineEffect = GetOrDefault<bool>(nameof(bUseCombineEffect));
         TemplateCombineEffect = GetOrDefault<FSoftObjectPath?>(nameof(TemplateCombineEffect));
         LocationOffset = GetOrDefault<FVector>(nameof(LocationOffset));

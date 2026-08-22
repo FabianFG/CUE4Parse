@@ -104,7 +104,7 @@ public class UClass : UStruct
 
     public string DecompileBlueprintToPseudo(UClassCookedMetaData? cookedMetaData = null)
     {
-        BlueprintDecompilerUtils.Mappings = this.Owner.Mappings;
+        BlueprintDecompilerUtils.Mappings = Owner?.Mappings;
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";

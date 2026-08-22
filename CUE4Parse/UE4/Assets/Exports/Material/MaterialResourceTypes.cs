@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports.Niagara.NiagaraShader;
 using CUE4Parse.UE4.Objects.Core.Compression;
@@ -432,6 +433,12 @@ public class FShaderResourceParameterInfoConverter : JsonConverter<FShaderResour
 {
     public override void WriteJson(JsonWriter writer, FShaderResourceParameterInfo? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
         writer.WritePropertyName(nameof(value.BaseIndex));
         writer.WriteValue(value.BaseIndex);
@@ -482,6 +489,12 @@ public class FShaderUniformBufferParameterInfoConverter : JsonConverter<FShaderU
 {
     public override void WriteJson(JsonWriter writer, FShaderUniformBufferParameterInfo? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
         writer.WritePropertyName(nameof(value.BaseIndex));
         writer.WriteValue(value.BaseIndex);
@@ -1282,8 +1295,10 @@ public class FShaderCodeResource
         public int UncompressedSize = 0;		// full size of code array before compression
         public int ShaderCodeSize = 0;		// uncompressed size excluding optional data
         public EShaderFrequency Frequency = EShaderFrequency.SF_NumFrequencies;
+#pragma warning disable CS0414
         byte _Pad0 = 0;
         ushort _Pad1 = 0;
+#pragma warning restore CS0414
 
         public FHeader() { }
     };

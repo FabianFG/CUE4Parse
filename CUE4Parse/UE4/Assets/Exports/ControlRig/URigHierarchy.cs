@@ -57,7 +57,7 @@ public class URigHierarchy : UObject
         {
             var elementsInfo = new FRigHierarchyElementsInfo(archiveForElements);
             var loadedContentHash = archiveForElements.Read<uint>();
-            var bHasLoadedContentHash = true;
+            // var bHasLoadedContentHash = true;
         }
 
         var elementCount = archiveForElements.Read<int>();

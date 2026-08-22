@@ -19,6 +19,11 @@ public struct FCustomVersion
     public static bool operator ==(FCustomVersion one, FCustomVersion two) => one.Key == two.Key && one.Version == two.Version;
     public static bool operator !=(FCustomVersion one, FCustomVersion two) => one.Key != two.Key || one.Version != two.Version;
 
+    public override bool Equals(object? obj) => obj is FCustomVersion other && this == other;
+
+    public bool Equals(FCustomVersion other) => this == other;
+
+    public override int GetHashCode() => HashCode.Combine(Key, Version);
     public override string ToString() => $"{nameof(Key)}: {Key}, {nameof(Version)}: {Version}";
 
     public FCustomVersion(FGuid key, int version)

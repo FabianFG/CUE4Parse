@@ -136,17 +136,23 @@ public class FF7ArrayProperty : FPropertyTagType<FPropertyTagType[]>
 
 public class FF7ArrayPropertyConverter : JsonConverter<FF7ArrayProperty>
 {
-    public override void WriteJson(JsonWriter writer, FF7ArrayProperty value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FF7ArrayProperty? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartArray();
-        foreach (var prop in value.Value)
+        foreach (var prop in value.Value ?? [])
         {
             serializer.Serialize(writer, prop, prop.GetType());
         }
         writer.WriteEndArray();
     }
 
-    public override FF7ArrayProperty ReadJson(JsonReader reader, Type objectType, FF7ArrayProperty existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override FF7ArrayProperty ReadJson(JsonReader reader, Type objectType, FF7ArrayProperty? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
@@ -166,10 +172,16 @@ public class FF7StructProperty : FPropertyTagType<List<FPropertyTagType>>
 
 public class FF7StructPropertyConverter : JsonConverter<FF7StructProperty>
 {
-    public override void WriteJson(JsonWriter writer, FF7StructProperty value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FF7StructProperty? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
-        for (var i = 0; i < value.Value.Count; i++)
+        for (var i = 0; i < value?.Value?.Count; i++)
         {
             writer.WritePropertyName(value.StructDefinition[i].Name.Text);
             serializer.Serialize(writer, value.Value[i], value.Value[i].GetType());
@@ -177,7 +189,7 @@ public class FF7StructPropertyConverter : JsonConverter<FF7StructProperty>
         writer.WriteEndObject();
     }
 
-    public override FF7StructProperty ReadJson(JsonReader reader, Type objectType, FF7StructProperty existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override FF7StructProperty ReadJson(JsonReader reader, Type objectType, FF7StructProperty? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
@@ -198,8 +210,14 @@ public class FF7FPropertyTagTypeConverter : JsonConverter
         return objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(FF7FPropertyTagType<>);
     }
 
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         var type = value.GetType();
         var valueProperty = type.GetProperty("Value"); // Get the `Value` property
         var valueToSerialize = valueProperty?.GetValue(value);

@@ -44,17 +44,19 @@ public class FModelElement
     {
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
-            LegacyMapBuildData = new FMeshMapBuildData();
-            LegacyMapBuildData.LightMap = Ar.Read<ELightMapType>() switch
+            LegacyMapBuildData = new FMeshMapBuildData
             {
-                ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
-                ELightMapType.LMT_2D => new FLightMap2D(Ar),
-                _ => null
-            };
-            LegacyMapBuildData.ShadowMap = Ar.Read<EShadowMapType>() switch
-            {
-                EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
-                _ => null
+                LightMap = Ar.Read<ELightMapType>() switch
+                {
+                    ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                    ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                    _ => null
+                },
+                ShadowMap = Ar.Read<EShadowMapType>() switch
+                {
+                    EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
+                    _ => null
+                }
             };
         }
 
@@ -74,7 +76,7 @@ public class FModelElement
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
-            LegacyMapBuildData.IrrelevantLights = Ar.ReadArray<FGuid>();
+            LegacyMapBuildData!.IrrelevantLights = Ar.ReadArray<FGuid>();
         }
     }
 }

@@ -78,10 +78,10 @@ public static class SoundDecoder
         else if (soundWave.RunningPlatformData?.Chunks != null)
         {
             var offset = 0;
-            var ret = new byte[soundWave.RunningPlatformData.Chunks.Sum(x => x.AudioDataSize)];
+            var ret = new byte[soundWave.RunningPlatformData.Chunks.Where(x => x.BulkData.Data != null).Sum(x => x.AudioDataSize)];
             for (var i = 0; i < soundWave.RunningPlatformData.NumChunks; i++)
             {
-                Buffer.BlockCopy(soundWave.RunningPlatformData.Chunks[i].BulkData.Data, 0, ret, offset, soundWave.RunningPlatformData.Chunks[i].AudioDataSize);
+                Buffer.BlockCopy(soundWave.RunningPlatformData.Chunks[i].BulkData.Data!, 0, ret, offset, soundWave.RunningPlatformData.Chunks[i].AudioDataSize);
                 offset += soundWave.RunningPlatformData.Chunks[i].AudioDataSize;
             }
 
@@ -97,10 +97,10 @@ public static class SoundDecoder
         var offset = 0;
         audioFormat = "WEM";
 
-        var input = new byte[media.DataChunks.Where(x => !x.IsPrefetch).Sum(x => x.Data.Data.Length)];
+        var input = new byte[media.DataChunks.Where(x => !x.IsPrefetch).Sum(x => x.Data.Data?.Length ?? 0)];
         foreach (var dataChunk in media.DataChunks)
         {
-            if (dataChunk.IsPrefetch) continue;
+            if (dataChunk.IsPrefetch || dataChunk.Data.Data is null) continue;
             Buffer.BlockCopy(dataChunk.Data.Data, 0, input, offset, dataChunk.Data.Data.Length);
             offset += dataChunk.Data.Data.Length;
         }

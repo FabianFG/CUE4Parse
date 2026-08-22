@@ -39,6 +39,12 @@ public class FAoCFileConverter : JsonConverter<FAoCFile>
 
     public override void WriteJson(JsonWriter writer, FAoCFile? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
         if (value.Properties.Count > 0)
         {

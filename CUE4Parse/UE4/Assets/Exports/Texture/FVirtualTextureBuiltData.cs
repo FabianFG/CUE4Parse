@@ -78,9 +78,9 @@ public class FVirtualTextureBuiltData
     public readonly uint TileBorderSize; // A BorderSize pixel border will be added around all tiles
     public readonly EPixelFormat[] LayerTypes;
     public readonly FVirtualTextureDataChunk[] Chunks;
-    public readonly uint[]? TileIndexPerChunk;
-    public readonly uint[]? TileIndexPerMip;
-    public readonly uint[]? TileOffsetInChunk;
+    public readonly uint[] TileIndexPerChunk;
+    public readonly uint[] TileIndexPerMip;
+    public readonly uint[] TileOffsetInChunk;
     public readonly uint[]? ChunkIndexPerMip;
     public readonly uint[]? BaseOffsetPerMip;
     public readonly uint[]? TileDataOffsetPerLayer;

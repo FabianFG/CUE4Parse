@@ -8,7 +8,7 @@ public partial class USkeletalMesh : UObject
     public void PopulateMorphTargetVerticesDataMK1()
     {
         var maxLodLevel = -1;
-        for (int i = 0; i < LODModels.Length; i++)
+        for (int i = 0; i < LODModels?.Length; i++)
         {
             if (LODModels[i].AdditionalBuffer is not null)
             {

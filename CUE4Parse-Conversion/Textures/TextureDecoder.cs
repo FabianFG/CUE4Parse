@@ -29,8 +29,11 @@ public static class TextureDecoder
     {
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
             return DecodeVT(texture, vt);
-
-        if (mip is null) return null; // TODO: we should let it throw the exception
+        
+        if (mip is null)
+        {
+            throw new ParserException("mip is null");
+        }
 
         DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
         return new CTexture(sizeX, sizeY, colorType, data);
@@ -41,8 +44,7 @@ public static class TextureDecoder
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
             return DecodeVT(texture, vt, mipIndex);
 
-        var mip = texture.GetMip(mipIndex);
-        if (mip is null) return null; // TODO: we should let it throw the exception
+        var mip = texture.GetMip(mipIndex) ?? throw new ParserException($"Texture contains no mip level {mipIndex}");
 
         DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
         return new CTexture(sizeX, sizeY, colorType, data);
@@ -87,7 +89,7 @@ public static class TextureDecoder
                 // if we are here that means the mip is tiled and so the bitmap size must be lowered by one-fourth
                 // if texture is legacy we must always lower the bitmap size because GetXXXXInTiles gives the number of tiles in mip 0
                 // but that doesn't mean the mip is tiled in the first place
-                var baseLevel = vt.IsLegacyData() ? maxLevel : Math.Ceiling(Math.Log2(Math.Max(vt.TileOffsetData[0].Width, vt.TileOffsetData[0].Height)));
+                var baseLevel = vt.IsLegacyData() ? maxLevel : Math.Ceiling(Math.Log2(Math.Max(vt.TileOffsetData![0].Width, vt.TileOffsetData[0].Height)));
                 var factor = Convert.ToInt32(Math.Max(Math.Pow(2, vt.IsLegacyData() ? level : level - baseLevel), 1));
                 bitmapWidth /= factor;
                 bitmapHeight /= factor;
@@ -207,7 +209,10 @@ public static class TextureDecoder
     public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, int mipIndex, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeTextureArray(texture.GetMip(mipIndex), platform);
     public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
-        if (mip is null) return null; // TODO: we should let it throw the exception
+        if (mip is null)
+        {
+            throw new ParserException("mip is null");
+        }
 
         DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
 

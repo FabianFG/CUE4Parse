@@ -85,7 +85,7 @@ public class OpElement
             return true;
         }
 
-        outValue = default;
+        outValue = default!;
         return false;
     }
 }
