@@ -49,7 +49,7 @@ namespace CUE4Parse.FileProvider.Vfs
 {
     public abstract class AbstractVfsFileProvider : AbstractFileProvider, IVfsFileProvider
     {
-        
+
         protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs => (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
 
@@ -412,17 +412,14 @@ namespace CUE4Parse.FileProvider.Vfs
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAesVfsReader GetArchive(string archiveName, StringComparison comparison = StringComparison.Ordinal)
-            => GetArchiveOrNull(archiveName, comparison) is IAesVfsReader archive
-            ? archive
-            : throw new KeyNotFoundException($"There is no archive file with the name \"{archiveName}\"");
+            => GetArchiveOrNull(archiveName, comparison) ?? throw new KeyNotFoundException($"There is no archive file with the name \"{archiveName}\"");
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAesVfsReader? GetArchiveOrNull(string archiveName, StringComparison comparison = StringComparison.Ordinal)
         {
+            return MountedVfs.FirstOrDefault(Predicate) ?? UnloadedVfs.FirstOrDefault(Predicate);
             bool Predicate(IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
-            return MountedVfs.FirstOrDefault(Predicate) ??
-                   UnloadedVfs.FirstOrDefault(Predicate);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -442,9 +439,7 @@ namespace CUE4Parse.FileProvider.Vfs
         public bool TryGetGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal)
         {
             file = null;
-            if (!TryGetArchive(archiveName, out var archive, comparison))
-                return false;
-            return TryGetGameFile(path, archive.Files, out file);
+            return TryGetArchive(archiveName, out var archive, comparison) && TryGetGameFile(path, archive.Files, out file);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
