@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.Intrinsics;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using static CUE4Parse.UE4.Assets.Exports.Nanite.NaniteConstants;
@@ -306,6 +307,11 @@ public class FCluster
 
     public void Decode(FArchive Ar, FNaniteStreamableData? page, uint clusterIndex)
     {
+        if (page is null)
+        {
+            throw new ParserException("NanitePage is null");
+        }
+        
         FClusterDiskHeader clusterDiskHeader = page.ClusterDiskHeaders[clusterIndex];
         // read the material table
         if (ShouldUseMaterialTable())

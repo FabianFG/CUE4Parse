@@ -47,7 +47,7 @@ public class UScriptSet
                 GAME_AssaultFireFuture when tagData.Name is "PrimitiveBindingGuids" or "RefSets" or "OwnerActors" => new FPropertyTagData("Guid"),
                 GAME_ThroneAndLiberty when tagData.Name is "ExcludeMeshes" or "IncludeMeshes" => new FPropertyTagData("SoftObjectPath"),
                 GAME_MetroAwakening when tagData.Name is "SoundscapePaletteCollection" => new FPropertyTagData("SoftObjectPath"),
-                GAME_Avowed when tagData.Name.EndsWith("IDs") => new FPropertyTagData("Guid"),
+                GAME_Avowed when tagData.Name is { } name && name.EndsWith("IDs") => new FPropertyTagData("Guid"),
                 GAME_Farlight84 => new FPropertyTagData("SoftObjectPath"),
                 GAME_HonorofKingsWorld when tagData.Name is "WaterPhysicalMaterials" => new FPropertyTagData("SoftObjectPath"),
                 GAME_HonorofKingsWorld when tagData.Name is "InstanceIdsNotToHide" => new FPropertyTagData("Guid"),

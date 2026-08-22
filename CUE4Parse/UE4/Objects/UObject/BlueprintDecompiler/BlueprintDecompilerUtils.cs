@@ -1970,15 +1970,17 @@ public static class BlueprintDecompilerUtils
             {
 #if DEBUG
                 return "throw std::runtime_error(\"TracePoint hit\");";
-#endif
+#else
                 return "";
+#endif
             }
             case EX_Breakpoint:
             {
 #if DEBUG
                 return "breakpoint;";
-#endif
+#else
                 return "";
+#endif
             }
             case EX_Nothing:
             case EX_NothingInt32:

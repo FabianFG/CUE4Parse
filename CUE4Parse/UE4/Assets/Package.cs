@@ -472,7 +472,7 @@ namespace CUE4Parse.UE4.Assets
             private void FireDependencies(LoadPhase phase)
             {
                 EnsureDependencies();
-                foreach (var dependency in _dependencies)
+                foreach (var dependency in _dependencies ?? [])
                 {
                     if (dependency.FromPhase == phase)
                     {

@@ -302,6 +302,7 @@ public partial class PakFileReader
                             0x4f54544f => ".otf",
                             0x474e5089 => ".png",
                             2 => ".ushaderbytecode",
+                            _ => throw new ParserException($"Unknown CoA extension 0x{magic:X8}")
                         };
                         filepath = string.Concat(mountPoint, hash, extension);
                         break;
@@ -380,7 +381,7 @@ public partial class PakFileReader
                 ulong hash2 = 0;
                 foreach (var name in package.NameMap)
                 {
-                    if (!name.Name.StartsWith('/') || name.Name.Length <= 1 || name.Name.StartsWith("/Script"))
+                    if (name.Name is null || !name.Name.StartsWith('/') || name.Name.Length <= 1 || name.Name.StartsWith("/Script"))
                         continue;
                     packageName = FixCoAPackagePath(number == 0 ? name.Name : $"{name.Name}_{number - 1}", pathComparer);
                     hashpath = MountPoint == ""

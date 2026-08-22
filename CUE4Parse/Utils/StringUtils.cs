@@ -14,7 +14,7 @@ namespace CUE4Parse.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryParseAesKey(this string s, out FAesKey key)
+        public static bool TryParseAesKey(this string s, out FAesKey? key)
         {
             try
             {
