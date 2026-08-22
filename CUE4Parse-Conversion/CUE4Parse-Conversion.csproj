@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="AssetRipper.TextureDecoder" />
+    <PackageReference Include="Microsoft.Bcl.Memory" />
     <PackageReference Include="SharpGLTF.Core" />
     <PackageReference Include="SharpGLTF.Toolkit" />
     <PackageReference Include="SixLabors.ImageSharp" />
