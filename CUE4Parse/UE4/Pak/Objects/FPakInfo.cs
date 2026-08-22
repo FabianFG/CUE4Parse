@@ -536,12 +536,12 @@ public partial class FPakInfo
 
         // Written at the tail so the trailer for older versions remains byte-compatible. Paks authored before
         // this version leave PakchunkIndex at INDEX_NONE, and the reader falls back to deriving it from the filename.
-        if (Version >= EPakFileVersion.PakFile_Version_PakchunkIndex && Ar.Game >= GAME_UE5_9)
+        if (Version >= EPakFileVersion.PakFile_Version_PakchunkIndex && Ar.Game >= GAME_UE6_0)
         {
             PakchunkIndex = Ar.Read<int>();
         }
 
-        if (Version >= EPakFileVersion.PakFile_Version_EncryptionMethod)
+        if (Version >= EPakFileVersion.PakFile_Version_EncryptionMethod && Ar.Game >= GAME_UE6_0)
         {
             EncryptionMethod = Ar.Read<EIoEncryptionMethod>();
             IndexIv = new FIoStoreEncryptionIV(Ar);

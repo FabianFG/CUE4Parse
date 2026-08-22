@@ -56,8 +56,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         Info = FPakInfo.ReadFPakInfo(Ar);
         CompressionMethods = [.. Info.CompressionMethods];
 
-        var hasUnsupportedVersion = (Ar.Game < GAME_UE5_7 && Info.Version > PakFile_Version_Fnv64BugFix)
-                                    || (Ar.Game >= GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
+        var hasUnsupportedVersion = (Ar.Game < GAME_UE5_7 && Info.Version > PakFile_Version_Fnv64BugFix) || (Ar.Game >= GAME_UE5_7 && Info.Version > PakFile_Version_Latest);
         if (hasUnsupportedVersion && !UsingCustomPakVersion())
         {
             Log.Warning("Pak file \"{Name}\" has unsupported version {Version}", Name, (int) Info.Version);
@@ -74,7 +73,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 or GAME_TheDivisionResurgence or GAME_QQ or GAME_DreamStar
                 or GAME_EtheriaRestart or GAME_DeadByDaylight_Old or GAME_WorldofJadeDynasty
                 or GAME_EmbersofTheUncrowned or GAME_ValorantSource or GAME_PUBGMobile
-                or GAME_PUBGLite => true,
+                or GAME_PUBGLite or GAME_DragonSwordAwakening => true,
             _ => false
         };
     }
