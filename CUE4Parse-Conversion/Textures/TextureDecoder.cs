@@ -30,10 +30,7 @@ public static class TextureDecoder
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
             return DecodeVT(texture, vt);
         
-        if (mip is null)
-        {
-            throw new ParserException("mip is null");
-        }
+        if (mip is null) return null; // TODO: we should let it throw the exception
 
         DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
         return new CTexture(sizeX, sizeY, colorType, data);
@@ -44,7 +41,7 @@ public static class TextureDecoder
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
             return DecodeVT(texture, vt, mipIndex);
 
-        var mip = texture.GetMip(mipIndex) ?? throw new ParserException($"Texture contains no mip level {mipIndex}");
+        var mip = texture.GetMip(mipIndex);
 
         DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
         return new CTexture(sizeX, sizeY, colorType, data);
@@ -209,10 +206,7 @@ public static class TextureDecoder
     public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, int mipIndex, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeTextureArray(texture.GetMip(mipIndex), platform);
     public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
     {
-        if (mip is null)
-        {
-            throw new ParserException("mip is null");
-        }
+        if (mip is null) return null; // TODO: we should let it throw the exception
 
         DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
 
