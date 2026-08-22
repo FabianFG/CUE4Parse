@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
+using CUE4Parse.GameTypes.RL.Encryption.Aes;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
@@ -165,7 +166,7 @@ namespace CUE4Parse.FileProvider
                 !collection.TryGetValue(fixedPath.SubstringBeforeWithLast('.') + GameFile.UePackageExtensions[1], out file) && // umap
                 !collection.TryGetValue(path, out file)) // in case FixPath broke something
             {
-                if (Versions.Game >= EGame.GAME_UE4_0)
+                if (Versions.Game >= GAME_UE4_0)
                 {
                     file = null;
                 }
@@ -508,7 +509,7 @@ namespace CUE4Parse.FileProvider
             // This part is only for FSoftObjectPaths and not really needed anymore internally, but it's still in here for user input
             if (lastPart.Contains('.') && lastPart.SubstringBefore('.') == lastPart.SubstringAfter('.'))
                 path = string.Concat(path.SubstringBeforeWithLast('/'), lastPart.SubstringBefore('.'));
-            if (path[^1] != '/' && !lastPart.Contains('.') && Versions.Game >= EGame.GAME_UE4_0)
+            if (path[^1] != '/' && !lastPart.Contains('.') && Versions.Game >= GAME_UE4_0)
                 path += "." + GameFile.UePackageExtensions[0]; // uasset
 
             var ret = path;
@@ -693,6 +694,26 @@ namespace CUE4Parse.FileProvider
         public IReadOnlyDictionary<string, byte[]> SavePackage(string path) => SavePackage(this[path]);
         public IReadOnlyDictionary<string, byte[]> SavePackage(GameFile file)
         {
+            // decompress or decrypt the package before returning bytes
+            if (Versions.Game < GAME_UE4_0)
+            {
+                if (file.IsUePackage)
+                {
+                    using var upkAr = file.CreateReader();
+                    var dictdecrypted = new Dictionary<string, byte[]> { { file.Path, Package.GetDecryptedData(upkAr) } };
+                    return dictdecrypted;
+                }
+
+                if (file.Extension == "ewem")
+                {
+                    using var upkAr = file.CreateReader();
+                    var data = SaveAsset(file);
+                    RocketLeagueAes.Decrypt(data, 0, 0, false, out byte[] decryptedData);
+                    var dictdecrypted = new Dictionary<string, byte[]> { { file.Path, decryptedData } };
+                    return dictdecrypted;
+                }
+            }
+
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls, true);
 
             var dict = new Dictionary<string, byte[]> { { file.Path, file.Read() } };

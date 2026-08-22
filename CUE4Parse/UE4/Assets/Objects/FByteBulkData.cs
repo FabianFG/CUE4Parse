@@ -54,6 +54,12 @@ public sealed class FByteBulkData : TBulkData<byte>
         });
     }
 
+    /// <summary>
+    /// Creates a new FByteBulkData instance that reads payload from an external TFC file.
+    /// </summary>
+    public FByteBulkData(FAssetArchive Ar, string tfc) : base(Ar, tfc)
+    { }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetDataSize() => Header.ElementCount;
 

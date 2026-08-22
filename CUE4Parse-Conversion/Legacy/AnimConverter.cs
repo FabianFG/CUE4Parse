@@ -24,7 +24,7 @@ namespace CUE4Parse_Conversion.Animations
 
         public static CAnimSet ConvertAnims(this UAnimationAsset asset)
         {
-            if (!asset.Skeleton.TryLoad<USkeleton>(out var skeleton))
+            if (asset.Skeleton == null || !asset.Skeleton.TryLoad<USkeleton>(out var skeleton))
                 throw new ArgumentException("Failed to load skeleton for animation asset " + asset.Name);
 
             return asset switch
@@ -274,7 +274,7 @@ namespace CUE4Parse_Conversion.Animations
                     break;
                 default:
                 {
-                    var refPoseSkel = refPoseSeq?.Skeleton.Load<USkeleton>() ?? skeleton;
+                    var refPoseSkel = refPoseSeq?.Skeleton?.Load<USkeleton>() ?? skeleton;
                     refAnimSet = refPoseSkel.ConvertAnims(refPoseSeq);
 
                     referencePoses = refPoseType switch

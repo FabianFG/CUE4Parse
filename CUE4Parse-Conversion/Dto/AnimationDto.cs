@@ -15,7 +15,7 @@ public class AnimationDto : ObjectDto
 
     public AnimationDto(UAnimationAsset animation, float startTime = 0f, float playRate = 1f) : base(animation)
     {
-        if (!animation.Skeleton.TryLoad<USkeleton>(out var skeleton))
+        if (animation.Skeleton == null || !animation.Skeleton.TryLoad<USkeleton>(out var skeleton))
             throw new ArgumentNullException(nameof(animation), "Animation asset does not have a valid skeleton reference");
 
         Skeleton = new SkeletonDto(skeleton);

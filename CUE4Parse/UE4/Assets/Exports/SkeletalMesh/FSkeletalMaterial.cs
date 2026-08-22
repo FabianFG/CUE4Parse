@@ -16,6 +16,11 @@ public class FSkeletalMaterial
     public FMeshUVChannelInfo? UVChannelData;
     public FPackageIndex OverlayMaterialInterface;
 
+    public FSkeletalMaterial(FPackageIndex material)
+    {
+        Material = material;
+    }
+
     public FSkeletalMaterial(FAssetArchive Ar)
     {
         Material = new FPackageIndex(Ar);

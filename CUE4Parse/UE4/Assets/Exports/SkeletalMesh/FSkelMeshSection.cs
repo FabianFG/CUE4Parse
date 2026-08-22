@@ -70,6 +70,18 @@ public class FSkelMeshSection
 
         MaterialIndex = Ar.Read<short>();
 
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedOldLodformat)
+        {
+            BaseIndex = Ar.Read<short>();
+            Ar.Position += sizeof(short) * 6;
+            NumTriangles = Ar.Read<int>();
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecateSkelMeshArray)
+            {
+                Ar.SkipArray<short>();
+            }
+            return;
+        }
+
         if (skelMeshVer < FSkeletalMeshCustomVersion.Type.CombineSectionWithChunk)
         {
             var dummyChunkIndex = Ar.Read<ushort>();
@@ -84,6 +96,13 @@ public class FSkelMeshSection
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELETAL_MESH_SORTING_OPTIONS && skelMeshVer < FSkeletalMeshCustomVersion.Type.RemoveTriangleSorting)
         {
             var dummyTriangleSorting = Ar.Read<byte>(); // TEnumAsByte<ETriangleSortOption>
+        }
+
+        if (Ar.Game == GAME_LifeIsStrange && (int)Ar.LicenseeVer >= 17)
+        {
+            var bReadArray = Ar.ReadFlag();
+
+            if (bReadArray) Ar.SkipArray<byte>();
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH)

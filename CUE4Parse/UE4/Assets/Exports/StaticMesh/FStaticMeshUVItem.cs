@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
                 Color = Ar.Read<FColor>();
             }
             Normal = SerializeTangents(Ar, useHighPrecisionTangents);
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXCOLOR && Ar.Ver < EUnrealEngineObjectUE3Version.MESH_PAINT_SYSTEM)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXCOLOR && Ar.Ver < EUnrealEngineObjectUE3Version.MESH_PAINT_SYSTEM && Ar.Game != GAME_APBReloaded)
             {
                 Color = Ar.Read<FColor>();
             }

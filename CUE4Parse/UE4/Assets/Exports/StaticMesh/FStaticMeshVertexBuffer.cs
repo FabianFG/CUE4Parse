@@ -13,7 +13,7 @@ public class FStaticMeshVertexBuffer
     public int NumTexCoords;
     public int Strides;
     public int NumVertices;
-    public bool UseFullPrecisionUVs;
+    public bool UseFullPrecisionUVs = true;
     public bool UseHighPrecisionTangentBasis;
     [JsonIgnore] public FStaticMeshUVItem[] UV;  // TangentsData ?
 
