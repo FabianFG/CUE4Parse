@@ -166,7 +166,7 @@ public enum EGame : uint
         GAME_UE5_EA = GAME_UE5_0 + 3,
     GAME_UE5_1 = GameUtils.GameUe5Base + (1 << 16),
         GAME_3on3FreeStyleRebound = GAME_UE5_1 + 1,
-        GAME_Stalker2 = GAME_UE5_1 + 2,
+        GAME_Placeholder = GAME_UE5_1 + 2,
         GAME_TheCastingofFrankStone = GAME_UE5_1 + 3,
         GAME_SilentHill2Remake = GAME_UE5_1 + 4,
         GAME_Dauntless = GAME_UE5_1 + 5,
@@ -218,7 +218,7 @@ public enum EGame : uint
         GAME_Splitgate2 = GAME_UE5_5 + 2,
         GAME_DeadzoneRogue = GAME_UE5_5 + 3,
         GAME_Directive8020 = GAME_UE5_5 + 4,
-        GAME_Placeholder = GAME_UE5_5 + 5,
+        GAME_Stalker2 = GAME_UE5_5 + 5,
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
         GAME_NevernessToEverness_CBT2 = GAME_UE5_5 + 7, // keep for now, will be removed later
         GAME_FateTrigger = GAME_UE5_5 + 8,
