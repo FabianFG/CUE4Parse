@@ -292,6 +292,7 @@ public class FSkelMeshSection
             GAME_FateTrigger => 19,
             GAME_Strinova => 18,
             GAME_SuicideSquad => 11,
+            GAME_LordOfMysteries => 32,
             _ => 0,
         };
     }
