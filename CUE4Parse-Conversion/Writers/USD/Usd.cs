@@ -226,7 +226,11 @@ public sealed class UsdPrim(string typeName, string name, UsdPrimSpecifier speci
     public static UsdPrim Over(string typeName, string name) => new(typeName, name, UsdPrimSpecifier.Over);
     public static UsdPrim Class(string typeName, string name) => new(typeName, name, UsdPrimSpecifier.Class);
 
-    private static string SanitizeIdentifier(string name)
+    /// <summary>Coerces <paramref name="name"/> into a legal USD identifier, returning it
+    /// unchanged when it already is one.</summary>
+    /// <remarks>Also used for the joint paths in <c>UsdExtensions.ToSkelRoot</c>, which are
+    /// built from bone names rather than from prims but must satisfy the same grammar.</remarks>
+    internal static string SanitizeIdentifier(string name)
     {
         if (name.Length == 0) return "_unnamed";
 
