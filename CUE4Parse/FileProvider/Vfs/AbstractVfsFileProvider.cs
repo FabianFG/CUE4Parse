@@ -428,12 +428,7 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetArchive(string archiveName, [MaybeNullWhen(false)] out IAesVfsReader archive, StringComparison comparison = StringComparison.Ordinal)
         {
-            archive = null;
-            try
-            {
-                archive = GetArchiveOrNull(archiveName, comparison);
-            }
-            catch { }
+            archive = GetArchiveOrNull(archiveName, comparison);
             return archive is not null;
         }
 
@@ -447,14 +442,9 @@ namespace CUE4Parse.FileProvider.Vfs
         public bool TryGetGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal)
         {
             file = null;
-            try
-            {
-                if (!TryGetArchive(archiveName, out var archive, comparison))
-                    return false;
-                return TryGetGameFile(path, archive.Files, out file);
-            }
-            catch { }
-            return false;
+            if (!TryGetArchive(archiveName, out var archive, comparison))
+                return false;
+            return TryGetGameFile(path, archive.Files, out file);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
