@@ -63,6 +63,7 @@ public class FStaticMeshUVItem
     {
         var qTangent = useHighPrecisionTangents ? UnpackQTangent(Ar.Read<TIntVector4<short>>()) : UnpackQTangent(Ar.Read<TIntVector4<sbyte>>());
         var orientation = qTangent.W < 0.0f ? -1.0f : 1.0f;
+        qTangent.W = MathF.Abs(qTangent.W);
         qTangent.Normalize();
 
         var tangentX = qTangent * FVector.ForwardVector;
