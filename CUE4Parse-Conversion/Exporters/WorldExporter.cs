@@ -2,6 +2,7 @@
 using CUE4Parse_Conversion.Formats.World;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -89,7 +90,7 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
                     else if (paths.Assets.TryAdd(meshComp.MeshPtr, "") && meshComp.MeshPtr.Load<UObject>() is { } mesh)
                     {
                         paths.Assets[meshComp.MeshPtr] = Resolve(mesh, Extension);
-                        if (mesh is UStaticMesh or USkeletalMesh) Session.Add(mesh);
+                        if (mesh is UStaticMesh or USkeletalMesh or UGeometryCollection) Session.Add(mesh);
                     }
                 }
 

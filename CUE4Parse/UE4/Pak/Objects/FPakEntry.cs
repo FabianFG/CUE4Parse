@@ -3,6 +3,7 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.IO;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -28,6 +29,7 @@ public class FPakEntry : VfsEntry
     public override bool IsEncrypted => (Flags & Flag_Encrypted) == Flag_Encrypted;
     public bool IsDeleted => (Flags & Flag_Deleted) == Flag_Deleted;
     public readonly uint CompressionBlockSize;
+    public FIoStoreEncryptionIV? EncryptionIV { get; internal set; }
     public int CustomData;
 
     public readonly int StructSize; // computed value: size of FPakEntry prepended to each file
@@ -223,6 +225,10 @@ public class FPakEntry : VfsEntry
 
         Size = UncompressedSize;
 
+        var entryIsEncrypted = (bitfield & (1 << 22)) != 0;
+        if (reader.Info.EncryptionMethod == EIoEncryptionMethod.AES_CTR && entryIsEncrypted)
+            EncryptionIV = new FIoStoreEncryptionIV(Ar.ReadArray<byte>(FIoStoreEncryptionIV.Size));
+
         // Fill in the Size.
         if (CompressionMethod != CompressionMethod.None)
         {
@@ -237,7 +243,7 @@ public class FPakEntry : VfsEntry
         }
 
         // Filter the encrypted flag.
-        Flags |= (bitfield & (1 << 22)) != 0 ? 1u : 0u;
+        Flags |= entryIsEncrypted ? 1u : 0u;
 
         // This should clear out any excess CompressionBlocks that may be valid in the user's passed in entry.
         var compressionBlocksCount = (bitfield >> 6) & 0xffff;

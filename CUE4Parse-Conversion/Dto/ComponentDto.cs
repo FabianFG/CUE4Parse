@@ -234,24 +234,21 @@ public class SplineMeshComponentDto(FPackageIndex meshPtr, USplineMeshComponent 
     internal readonly USplineMeshComponent _component = component;
 }
 
-public class GeometryCollectionComponentDto : PrimitiveComponentDto // technically this is a mesh component
+public class GeometryCollectionComponentDto : MeshComponentDto
 {
-    public GeometryCollectionComponentDto(UGeometryCollectionComponent component, ActorDto owner) : base(component, owner)
+    public GeometryCollectionComponentDto(FPackageIndex meshPtr, UGeometryCollectionComponent component, ActorDto owner) : base(meshPtr, component, owner)
     {
-        var r = component.RestCollection?.Load<UGeometryCollection>();
-        if (r is not { AutoInstanceMeshes: { Length: > 0 } meshes, GeometryCollection: { } collection }) return;
+        if (!meshPtr.TryLoad<UGeometryCollection>(out var geometryCollection)) return;
+        if (geometryCollection is not { AutoInstanceMeshes: { Length: > 0 } meshes, GeometryCollection: { } collection }) return;
 
         // TODO: we should use the vertices group to create this component actual mesh data
         // stuff from other groups and especially AutoInstanceMeshes are just relation of this component but they don't define its geometry (at least for us)
         // we need an asset with actual vertices as an example, could not find any yet
+        // there's also some kind of bone relation that we fully ignore here but it might actually be important
 
         var group = new FName("Transform");
-
-        var meshIndices = collection.GetAttributeValue<int>("AutoInstanceMeshIndex", group);
-        if (meshIndices is not { Length: > 0 }) return;
-
-        var transforms = collection.GetAttributeValue<FTransform>("Transform", group);
-        if (transforms is not { Length: > 0 }) return;
+        if (!collection.TryGetAttributeValue<int>("AutoInstanceMeshIndex", group, out var meshIndices) ||
+            !collection.TryGetAttributeValue<FTransform>("Transform", group, out var transforms)) return;
 
         const int rigid = 1;
         var simulationTypes = collection.GetAttributeValue<int>("SimulationType", group);
@@ -271,8 +268,8 @@ public class GeometryCollectionComponentDto : PrimitiveComponentDto // technical
 
         for (var i = 0; i < meshes.Length; i++)
         {
-            if (placements[i] is not { Count: > 0 } instances || meshes[i].Mesh is not { } meshPtr) continue;
-            Children.Add(new InstancedStaticMeshComponentDto(meshPtr, instances.ToArray(), owner));
+            if (placements[i] is not { Count: > 0 } instances || meshes[i].Mesh is not { } ptr) continue;
+            Children.Add(new InstancedStaticMeshComponentDto(ptr, instances.ToArray(), owner));
         }
 
         FTransform ResolveTransform(int index)

@@ -306,7 +306,7 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SkipMultipleFixedArrays(int [] sizes)
+        public void SkipMultipleFixedArrays(int[] sizes)
         {
             foreach (var size in sizes)
             {

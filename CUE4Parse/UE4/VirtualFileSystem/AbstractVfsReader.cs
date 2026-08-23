@@ -49,6 +49,11 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         protected void ValidateMountPoint(ref string mountPoint)
         {
             var badMountPoint = !mountPoint.StartsWith("../../..");
+
+            // Hacky fix but works for now
+            if (badMountPoint && Game >= GAME_UE6_0)
+                return;
+
             mountPoint = mountPoint.SubstringAfter("../../..");
             if (mountPoint == "" || mountPoint[0] != '/' || ( (mountPoint.Length > 1) && (mountPoint[1] == '.') ))
                 badMountPoint = true;

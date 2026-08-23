@@ -26,7 +26,7 @@ public readonly struct MeshVertex : IMeshVertex, INaniteVertex<MeshVertex>
     public FVector4 Tangent { get; } = FVector4.ZeroVector;
     public FMeshUVFloat Uv { get; } = FMeshUVFloat.ZeroVector;
 
-    private MeshVertex(FVector position, FVector4 normal, FVector4 tangent, FMeshUVFloat uv)
+    public MeshVertex(FVector position, FVector4 normal, FVector4 tangent, FMeshUVFloat uv)
     {
         Position = position;
         Normal = normal;
@@ -39,7 +39,7 @@ public readonly struct MeshVertex : IMeshVertex, INaniteVertex<MeshVertex>
 
     }
 
-    private MeshVertex(FVector position, FNaniteVertexAttributes attributes, bool hasTangents) : this(position, new FVector4(attributes.Normal), hasTangents ? attributes.TangentXAndSign : FVector4.ZeroVector, new FMeshUVFloat(attributes.UVs[0].X, attributes.UVs[0].Y))
+    private MeshVertex(FVector position, FNaniteVertexAttributes attributes, bool hasTangents) : this(position, new FVector4(attributes.Normal), hasTangents ? attributes.TangentXAndSign : new FVector4(0, 0, 0, 1), new FMeshUVFloat(attributes.UVs[0].X, attributes.UVs[0].Y))
     {
 
     }
@@ -97,6 +97,16 @@ public readonly struct SkinnedMeshVertex : IMeshVertex, INaniteVertex<SkinnedMes
         }
 
         _influences = idx == count ? influences : influences[..idx];
+    }
+
+    public SkinnedMeshVertex(FVector position, FVector4 normal, FVector4 tangent, FMeshUVFloat uv, ushort bone) : this(position, normal, tangent, uv)
+    {
+        _influences = [new MeshBoneInfluenceDto(bone, ushort.MaxValue, 1f)];
+    }
+
+    public SkinnedMeshVertex(FVector position, FPackedNormal normal, FPackedNormal tangent, FMeshUVFloat uv, ushort bone) : this(position, (FVector4) normal, (FVector4) tangent, uv, bone)
+    {
+
     }
 
     private SkinnedMeshVertex(FVector position, FNaniteVertexAttributes attributes, bool hasTangents) : this(position, new FVector4(attributes.Normal), hasTangents ? attributes.TangentXAndSign : FVector4.ZeroVector, new FMeshUVFloat(attributes.UVs[0].X, attributes.UVs[0].Y))

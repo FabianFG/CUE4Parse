@@ -31,7 +31,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
         {
             CodecType = new EVirtualTextureCodec[numLayers];
             CodecPayloadOffset = new uint[numLayers];
-            if (Ar.Game >= GAME_UE5_0)
+            if (Ar.Game >= GAME_UE5_0 || Ar.Game == GAME_WutheringWaves)
                 Ar.Position += FSHAHash.SIZE; // var bulkDataHash = new FSHAHash(Ar);
 
             SizeInBytes = Ar.Read<uint>();

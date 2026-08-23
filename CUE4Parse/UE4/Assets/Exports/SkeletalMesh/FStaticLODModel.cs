@@ -349,6 +349,12 @@ public class FStaticLODModel
                 Sections[i].SerializeRenderItem(Ar);
             }
 
+            if (Ar.Game is GAME_LordOfMysteries)
+            {
+                Ar.Position += 4;
+                Ar.SkipArray<byte>();
+            }
+
             ActiveBoneIndices = Ar.ReadArray<short>();
 
             if (Ar.Game is GAME_KenaBridgeofSpirits)

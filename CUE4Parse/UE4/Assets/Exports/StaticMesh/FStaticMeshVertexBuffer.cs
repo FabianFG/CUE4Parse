@@ -15,7 +15,7 @@ public class FStaticMeshVertexBuffer
     public int NumVertices;
     public bool UseFullPrecisionUVs = true;
     public bool UseHighPrecisionTangentBasis;
-    public FStaticMeshUVItem[] UV;  // TangentsData ?
+    [JsonIgnore] public FStaticMeshUVItem[] UV;  // TangentsData ?
 
     public FStaticMeshVertexBuffer()
     {
@@ -54,8 +54,10 @@ public class FStaticMeshVertexBuffer
 
                 if (Ar.Game is GAME_HonorofKingsWorld)
                 {
-                    // packed normals, could be 4 or 8 bytes with UseHighPrecisionTangentBasis
-                    Ar.SkipBulkArrayData();
+                    tempTangents = Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeHonorOfKingsWorldQTangent(Ar, UseHighPrecisionTangentBasis));
+                    if (tempTangents.Length != NumVertices)
+                        throw new ParserException($"NumVertices={tempTangents.Length} != NumVertices={NumVertices}");
+
                     goto texture_coordinates;
                 }
 

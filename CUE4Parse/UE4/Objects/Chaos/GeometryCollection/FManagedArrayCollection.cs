@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
@@ -17,11 +18,27 @@ public class FManagedArrayCollection
         Map = Ar.ReadMap(() => new FKeyType(Ar), () => new FValueType(Ar));
     }
 
-    public T[]? GetAttributeValue<T>(string attribute, string group) => GetAttributeValue<T>(attribute, new FName(group));
-    public T[]? GetAttributeValue<T>(string attribute, FName group) => GetAttributeValue<T>(new FKeyType(attribute, group));
-    public T[]? GetAttributeValue<T>(FKeyType key)
+    public bool TryGetAttributeValue<T>(FName attribute, FName group, [NotNullWhen(true)] out T[]? value) => TryGetAttributeValue(new FKeyType(attribute, group), out value);
+    public bool TryGetAttributeValue<T>(FKeyType key, [NotNullWhen(true)] out T[]? value)
     {
-        return Map.TryGetValue(key, out var value) ? value.ManagedArray.Data as T[] : null;
+        value = FindAttributeValue<T>(key, out _);
+        return value != null;
+    }
+
+    public T[] GetAttributeValue<T>(FName attribute, FName group) => GetAttributeValue<T>(new FKeyType(attribute, group));
+    public T[] GetAttributeValue<T>(FKeyType key)
+    {
+        if (FindAttributeValue<T>(key, out var exists) is { } value) return value;
+
+        throw exists
+            ? new InvalidCastException($"Attribute {key.Name} in group {key.Group} is not of type {typeof(T).Name}[]")
+            : new KeyNotFoundException($"Attribute {key.Name} in group {key.Group} not found");
+    }
+
+    private T[]? FindAttributeValue<T>(FKeyType key, out bool exists)
+    {
+        exists = Map.TryGetValue(key, out var entry);
+        return exists ? entry.ManagedArray.Data as T[] : null;
     }
 }
 
@@ -47,7 +64,7 @@ public class FManagedArrayCollectionConverter : JsonConverter<FManagedArrayColle
         foreach (var kvp in value.Map)
         {
             writer.WritePropertyName(kvp.Key.ToString());
-            serializer.Serialize(writer, kvp.Value.ArrayType);
+            writer.WriteValue($"{kvp.Value.ArrayType}, Length: {kvp.Value.ManagedArray?.Data?.Length ?? 0}");
         }
         writer.WriteEndObject();
 

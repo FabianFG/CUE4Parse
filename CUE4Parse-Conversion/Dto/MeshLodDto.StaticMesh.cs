@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+﻿using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
