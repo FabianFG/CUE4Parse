@@ -15,12 +15,7 @@ public class FStaticMeshVertexBuffer
     public int NumVertices;
     public bool UseFullPrecisionUVs;
     public bool UseHighPrecisionTangentBasis;
-    [JsonIgnore] public FStaticMeshUVItem[] UV;  // TangentsData ?
-
-    public FStaticMeshVertexBuffer()
-    {
-        UV = [];
-    }
+    [JsonIgnore] public FStaticMeshUVItem[] UV = [];  // TangentsData ?
 
     public FStaticMeshVertexBuffer(FArchive Ar)
     {
@@ -52,9 +47,16 @@ public class FStaticMeshVertexBuffer
                     goto texture_coordinates;
                 }
 
-                if (Ar.Game is GAME_HonorofKingsWorld)
+                var customTangents = Ar.Game switch
                 {
-                    tempTangents = Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeHonorOfKingsWorldQTangent(Ar, UseHighPrecisionTangentBasis));
+                    GAME_HonorofKingsWorld => Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeHonorOfKingsWorldQTangent(Ar, UseHighPrecisionTangentBasis)),
+                    GAME_FinalFantasy7Rebirth => Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeTangentsFF7R(Ar)),
+                    _ => null,
+                };
+
+                if (customTangents is not null)
+                {
+                    tempTangents = customTangents;
                     if (tempTangents.Length != NumVertices)
                         throw new ParserException($"NumVertices={tempTangents.Length} != NumVertices={NumVertices}");
 
@@ -94,7 +96,7 @@ public class FStaticMeshVertexBuffer
                 UV = new FStaticMeshUVItem[NumVertices];
                 for (var i = 0; i < NumVertices; i++)
                 {
-                    if (Ar.Game is GAME_StarWarsJediFallenOrder or GAME_StarWarsJediSurvivor or GAME_HonorofKingsWorld && tempTangents.Length == 0)
+                    if (Ar.Game is GAME_StarWarsJediFallenOrder or GAME_StarWarsJediSurvivor && tempTangents.Length == 0)
                     {
                         UV[i] = new FStaticMeshUVItem([new FPackedNormal(0), new FPackedNormal(0), new FPackedNormal(0)], uv[i]);
                     }

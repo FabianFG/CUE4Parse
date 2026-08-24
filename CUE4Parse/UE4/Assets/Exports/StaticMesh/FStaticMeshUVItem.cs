@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 [JsonConverter(typeof(FStaticMeshUVItemConverter))]
-public class FStaticMeshUVItem
+public partial class FStaticMeshUVItem
 {
     public readonly FPackedNormal[] Normal;
     public readonly FMeshUVFloat[] UV;
@@ -58,26 +58,4 @@ public class FStaticMeshUVItem
         }
         return uvFloat;
     }
-
-    public static FPackedNormal[] SerializeHonorOfKingsWorldQTangent(FArchive Ar, bool useHighPrecisionTangents)
-    {
-        var qTangent = useHighPrecisionTangents ? UnpackQTangent(Ar.Read<TIntVector4<short>>()) : UnpackQTangent(Ar.Read<TIntVector4<sbyte>>());
-        var orientation = qTangent.W < 0.0f ? -1.0f : 1.0f;
-        qTangent.W = MathF.Abs(qTangent.W);
-        qTangent.Normalize();
-
-        var tangentX = qTangent * FVector.ForwardVector;
-        var normal = qTangent * FVector.UpVector;
-        var tangentZ = new FVector4(normal, orientation);
-
-        return [new FPackedNormal(tangentX), new FPackedNormal(0), new FPackedNormal(tangentZ)];
-    }
-
-    private static FQuat UnpackQTangent(TIntVector4<sbyte> packed) => new(
-        MathF.Max(packed.X / 127.0f, -1.0f), MathF.Max(packed.Y / 127.0f, -1.0f),
-        MathF.Max(packed.Z / 127.0f, -1.0f), MathF.Max(packed.W / 127.0f, -1.0f));
-
-    private static FQuat UnpackQTangent(TIntVector4<short> packed) => new(
-        MathF.Max(packed.X / 32767.0f, -1.0f), MathF.Max(packed.Y / 32767.0f, -1.0f),
-        MathF.Max(packed.Z / 32767.0f, -1.0f), MathF.Max(packed.W / 32767.0f, -1.0f));
 }

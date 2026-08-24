@@ -396,15 +396,16 @@ public class FStaticLODModel
             else
             {
                 var bulk = new FByteBulkData(Ar);
-                if (bulk.Header.ElementCount > 0 && bulk.Data != null)
+                var bulkData = bulk.Data;
+                if (bulk.Header.ElementCount > 0 && bulkData != null)
                 {
-                    if (Ar.Game == GAME_FinalFantasy7Rebirth)
+                    if (Ar.Game is GAME_FinalFantasy7Rebirth)
                     {
-                        FF7FStaticLodModel.ReadFStaticLodModel(Ar, bHasVertexColors, bulk, out Indices, out VertexBufferGPUSkin, out ColorVertexBuffer, out NumVertices, out NumTexCoords);
+                        FF7FStaticLodModel.ReadFStaticLodModel(Ar, bHasVertexColors, bulkData, out Indices, out VertexBufferGPUSkin, out ColorVertexBuffer, out NumVertices, out NumTexCoords);
                         return;
                     }
 
-                    using (var tempAr = new FByteArchive("LodReader", bulk.Data, Ar.Versions))
+                    using (var tempAr = new FByteArchive("LodReader", bulkData, Ar.Versions))
                     {
                         SerializeStreamedData(tempAr, bHasVertexColors);
                     }

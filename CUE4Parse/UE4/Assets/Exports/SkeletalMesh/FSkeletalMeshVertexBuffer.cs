@@ -23,6 +23,8 @@ public class FSkeletalMeshVertexBuffer
     {
         VertsHalf = [];
         VertsFloat = [];
+        VertsHalfPacked = [];
+        VertsFloatPacked = [];
     }
 
     public FSkeletalMeshVertexBuffer(FArchive Ar) : this()
