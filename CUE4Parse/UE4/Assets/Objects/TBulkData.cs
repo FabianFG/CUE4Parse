@@ -16,7 +16,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(TBulkDataConverter))]
 public abstract class TBulkData<T> where T: struct
 {
-    
+
     public FByteBulkDataHeader Header { get; init; }
     public EBulkDataFlags BulkDataFlags => Header.BulkDataFlags;
 
@@ -58,7 +58,7 @@ public abstract class TBulkData<T> where T: struct
         _dataPosition = Ar.Position;
         _savedAr = Ar;
 
-        if ((BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None && Ar.Game >= GAME_UE4_0))//
+        if (Ar.Game >= GAME_UE4_0 && (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None))
         {
             Ar.Position += Header.SizeOnDisk;
         }
