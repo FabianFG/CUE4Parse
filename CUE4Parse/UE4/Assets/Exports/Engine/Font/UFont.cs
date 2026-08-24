@@ -26,7 +26,7 @@ public class UFont : UObject
         {
             CharRemap = Ar.ReadMap(Ar.Read<ushort>, Ar.Read<ushort>);
 
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_FONTS_SERIALIZATION && Ar.Game < EGame.GAME_UE4_0)
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_FONTS_SERIALIZATION && Ar.Game < GAME_UE4_0)
             {
                 Ar.ReadBoolean(); // IsRemapped
             }
