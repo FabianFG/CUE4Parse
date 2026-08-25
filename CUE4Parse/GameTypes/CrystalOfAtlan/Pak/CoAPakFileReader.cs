@@ -302,7 +302,7 @@ public partial class PakFileReader
                             0x4f54544f => ".otf",
                             0x474e5089 => ".png",
                             2 => ".ushaderbytecode",
-                            _ => throw new ParserException($"Unknown CoA extension 0x{magic:X8}")
+                            _ => throw new UnreachableException($"Unknown CoA extension 0x{magic:X8}")
                         };
                         filepath = string.Concat(mountPoint, hash, extension);
                         break;
