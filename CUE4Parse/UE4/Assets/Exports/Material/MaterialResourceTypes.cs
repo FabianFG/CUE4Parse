@@ -233,6 +233,8 @@ public class FShaderParameterBindings
     public uint StructureLayoutHash = 0;
     public ushort RootParameterBufferIndex = 0xFFFF;
 
+    public FShaderParameterBindings() {}
+
     public FShaderParameterBindings(FMemoryImageArchive Ar)
     {
         Parameters = Ar.ReadArray<FParameter>();
@@ -358,6 +360,8 @@ public class FShaderParameterMapInfo
     public FShaderParameterInfo[] SRVs;
     public FShaderLooseParameterBufferInfo[] LooseParameterBuffers;
     public ulong Hash;
+
+    public FShaderParameterMapInfo() {}
 
     public FShaderParameterMapInfo(FMemoryImageArchive Ar)
     {

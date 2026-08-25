@@ -7,6 +7,20 @@ namespace CUE4Parse.UE4.Versions;
 public enum EGame : uint
 {
     // bytes: 04.NN.FF.XX : 04/05=UE4/5, NN=UE4 subversion, FF=Flags (curently not used), XX=game (0=base engine)
+    GAME_UE3_0 = GameUtils.GameUe3Base + (0 << 16),
+    GAME_RocketLeague = GAME_UE3_0 + 1,
+    GAME_SuddenAttack2 = GAME_UE3_0 + 2,
+    GAME_LifeIsStrange = GAME_UE3_0 + 3,
+    GAME_MortalRoyale = GAME_UE3_0 + 4,
+    GAME_AmericanArmy3 = GAME_UE3_0 + 5,
+    GAME_APBReloaded = GAME_UE3_0 + 6,
+    GAME_ScourgeOutbreak = GAME_UE3_0 + 7,
+    GAME_DirtyBomb = GAME_UE3_0 + 8,
+    GAME_Dishonored = GAME_UE3_0 + 9,
+    GAME_AvaGlobal = GAME_UE3_0 + 10,
+    GAME_LetItDie = GAME_UE3_0 + 11,
+    GAME_Paladins = GAME_UE3_0 + 12,
+
     GAME_UE4_0 = GameUtils.GameUe4Base + (0 << 16),
     GAME_UE4_1 = GameUtils.GameUe4Base + (1 << 16),
     GAME_UE4_2 = GameUtils.GameUe4Base + (2 << 16),
@@ -166,7 +180,7 @@ public enum EGame : uint
         GAME_UE5_EA = GAME_UE5_0 + 3,
     GAME_UE5_1 = GameUtils.GameUe5Base + (1 << 16),
         GAME_3on3FreeStyleRebound = GAME_UE5_1 + 1,
-        GAME_Stalker2 = GAME_UE5_1 + 2,
+        GAME_Placeholder = GAME_UE5_1 + 2,
         GAME_TheCastingofFrankStone = GAME_UE5_1 + 3,
         GAME_SilentHill2Remake = GAME_UE5_1 + 4,
         GAME_Dauntless = GAME_UE5_1 + 5,
@@ -218,7 +232,7 @@ public enum EGame : uint
         GAME_Splitgate2 = GAME_UE5_5 + 2,
         GAME_DeadzoneRogue = GAME_UE5_5 + 3,
         GAME_Directive8020 = GAME_UE5_5 + 4,
-        GAME_Placeholder = GAME_UE5_5 + 5,
+        GAME_Stalker2 = GAME_UE5_5 + 5,
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
         GAME_NevernessToEverness_CBT2 = GAME_UE5_5 + 7, // keep for now, will be removed later
         GAME_FateTrigger = GAME_UE5_5 + 8,
@@ -333,6 +347,8 @@ public static class GameUtils
 
         return FPackageFileVersion.CreateUE3Version(game switch
         {
+            GAME_DirtyBomb => 840,
+            GAME_LifeIsStrange => 832,
             _ => (int)EUnrealEngineObjectUE3Version.AUTOMATIC_VERSION
         });
     }

@@ -12,7 +12,7 @@ public class WorldSettingsDto : ActorDto
     {
         RootComponent = new SceneComponentDto(FTransform.Identity, "SceneComponent", this);
 
-        if (worldSettings.WorldPartition.TryLoad<UWorldPartition>(out var partition) &&
+        if (worldSettings.WorldPartition?.TryLoad<UWorldPartition>(out var partition) == true &&
             partition.RuntimeHash?.TryLoad<UWorldPartitionRuntimeHash>(out var runtimeHash) == true)
         {
             RootComponent.AttachedActors.Add(new RuntimeHashActorDto(runtimeHash));

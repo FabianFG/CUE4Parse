@@ -13,14 +13,9 @@ public class FStaticMeshVertexBuffer
     public int NumTexCoords;
     public int Strides;
     public int NumVertices;
-    public bool UseFullPrecisionUVs;
+    public bool UseFullPrecisionUVs = true;
     public bool UseHighPrecisionTangentBasis;
-    [JsonIgnore] public FStaticMeshUVItem[] UV;  // TangentsData ?
-
-    public FStaticMeshVertexBuffer()
-    {
-        UV = [];
-    }
+    [JsonIgnore] public FStaticMeshUVItem[] UV = [];  // TangentsData ?
 
     public FStaticMeshVertexBuffer(FArchive Ar)
     {
@@ -52,10 +47,19 @@ public class FStaticMeshVertexBuffer
                     goto texture_coordinates;
                 }
 
-                if (Ar.Game is GAME_HonorofKingsWorld)
+                var customTangents = Ar.Game switch
                 {
-                    // packed normals, could be 4 or 8 bytes with UseHighPrecisionTangentBasis
-                    Ar.SkipBulkArrayData();
+                    GAME_HonorofKingsWorld => Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeHonorOfKingsWorldQTangent(Ar, UseHighPrecisionTangentBasis)),
+                    GAME_FinalFantasy7Rebirth => Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeTangentsFF7R(Ar)),
+                    _ => null,
+                };
+
+                if (customTangents is not null)
+                {
+                    tempTangents = customTangents;
+                    if (tempTangents.Length != NumVertices)
+                        throw new ParserException($"NumVertices={tempTangents.Length} != NumVertices={NumVertices}");
+
                     goto texture_coordinates;
                 }
 
@@ -92,7 +96,7 @@ public class FStaticMeshVertexBuffer
                 UV = new FStaticMeshUVItem[NumVertices];
                 for (var i = 0; i < NumVertices; i++)
                 {
-                    if (Ar.Game is GAME_StarWarsJediFallenOrder or GAME_StarWarsJediSurvivor or GAME_HonorofKingsWorld && tempTangents.Length == 0)
+                    if (Ar.Game is GAME_StarWarsJediFallenOrder or GAME_StarWarsJediSurvivor && tempTangents.Length == 0)
                     {
                         UV[i] = new FStaticMeshUVItem([new FPackedNormal(0), new FPackedNormal(0), new FPackedNormal(0)], uv[i]);
                     }

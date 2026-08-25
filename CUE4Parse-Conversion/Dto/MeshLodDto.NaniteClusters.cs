@@ -37,7 +37,7 @@ public partial class MeshLodDto<TVertex>
         }
 
         var indices = new uint[triBufferWriteOffsets[^1] + sections[^1].NumFaces * 3];
-        var extraUvs = new FMeshUVFloat[numTexCoords - 1][];
+        var extraUvs = new FMeshUVFloat[Math.Max(0, numTexCoords - 1)][];
         var vertices = new TNaniteVertex[numVertices];
         var vertexColors = new FColor[vertices.Length];
 

@@ -387,6 +387,7 @@ public sealed class SkeletalMeshDto : SkeletonDto
     public SkeletalMeshDto(USkeletalMesh mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, bool exportMorphTarget = true) : base(mesh)
     {
         ArgumentNullException.ThrowIfNull(mesh.LODModels, "Mesh has no LOD data");
+        ArgumentNullException.ThrowIfNull(mesh.LODInfo, "Mesh has no LOD info");
 
         PhysicsAsset = mesh.PhysicsAsset;
         MorphTargets = mesh.MorphTargets;
@@ -414,7 +415,7 @@ public sealed class SkeletalMeshDto : SkeletonDto
     {
         foreach (var sourceLodIndex in quality.GetRange(mesh.LODModels!.Length, i => mesh.LODModels[i].SkipLod))
         {
-            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, sourceLodIndex, mesh.LODModels[sourceLodIndex], mesh.LODInfo[sourceLodIndex].ScreenSize.Value));
+            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, sourceLodIndex, mesh.LODModels[sourceLodIndex], mesh.LODInfo![sourceLodIndex].ScreenSize.Value));
         }
     }
 

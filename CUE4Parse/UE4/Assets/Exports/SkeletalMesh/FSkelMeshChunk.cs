@@ -18,6 +18,12 @@ public class FSkelMeshChunk
     public readonly int MaxBoneInfluences;
     public readonly bool HasClothData;
 
+    public FSkelMeshChunk(FRigidVertex[] rigidVertices, FSoftVertex[] softVertices)
+    {
+        RigidVertices = rigidVertices;
+        SoftVertices = softVertices;
+    }
+
     public FSkelMeshChunk(FArchive Ar)
     {
         var stripDataFlags = new FStripDataFlags(Ar);

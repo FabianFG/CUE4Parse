@@ -177,6 +177,15 @@ public class FPositionVertexBuffer
         if (Ar.Game == GAME_Gollum) Ar.Position += 25;
         if (Ar.Game is GAME_GearsofWarEDay && NumVertices == 0) return;
 
+        if (Ar.Game == GAME_LifeIsStrange && (int)Ar.LicenseeVer >= 18)
+        {
+            Ar.Position += sizeof(int) * 2; // int, bool
+        }
+        if (Ar.Game == GAME_LifeIsStrange && (int)Ar.LicenseeVer >= 20)
+        {
+            Ar.Position += sizeof(float) * 6; // FVector, FVector
+        }
+
         Verts = Ar.ReadBulkArray<FVector>();
     }
 }

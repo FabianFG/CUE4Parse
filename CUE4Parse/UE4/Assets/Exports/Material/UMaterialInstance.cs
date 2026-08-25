@@ -41,30 +41,53 @@ public class UMaterialInstance : UMaterialInterface
             CachedData = new FStructFallback(Ar, "MaterialInstanceCachedData");
         }
 
-        if (bHasStaticPermutationResource && Ar.Ver >= EUnrealEngineObjectUE4Version.PURGED_FMATERIAL_COMPILE_OUTPUTS)
+        if (bHasStaticPermutationResource)
         {
-            if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MaterialAttributeLayerParameters)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.PURGED_FMATERIAL_COMPILE_OUTPUTS)
             {
-                StaticParameters = new FStaticParameterSet(Ar);
-                bHasNonUPropertyStaticParameters = true;
-            }
-
-            if (Ar is { Game: >= GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
-            {
-                var saved = Ar.Position;
-                try
+                if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MaterialAttributeLayerParameters)
                 {
-                    DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
+                    StaticParameters = new FStaticParameterSet(Ar);
+                    bHasNonUPropertyStaticParameters = true;
                 }
-                catch (Exception e)
+
+                if (Ar is { Game: >= GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
                 {
-                    Log.Error(e, "Failed to deserialize inline shader maps.");
-                    Ar.Position = saved;
+                    var saved = Ar.Position;
+                    try
+                    {
+                        DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Failed to deserialize inline shader maps.");
+                        Ar.Position = saved;
+                    }
+                }
+                else
+                {
+                    Ar.Position = validPos;
                 }
             }
             else
             {
-                Ar.Position = validPos;
+                /*
+                var QualityMask = 1;
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MATERIAL_QUALITY_LEVEL)
+                {
+                    QualityMask = Ar.Read<int>();
+                }
+
+                for (int QualityIndex = 0; QualityIndex < (Ar.Ver > EUnrealEngineObjectUE3Version.FLASH_MERGE_TO_MAIN && Ar.Game < GAME_UE4_0 ? 2 : 1); QualityIndex++)
+                {
+                    if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MATERIAL_QUALITY_LEVEL && (QualityMask & (1 << QualityIndex)) == 0)
+                    {
+                        continue;
+                    }
+                }
+
+                //new FMaterialShaderMapId(Ar); // if PKG_ContainsInlinedShaders and specific ue3
+                */
             }
         }
 
@@ -119,7 +142,8 @@ public class FStaticParameterSet
 {
     public FStaticSwitchParameter[] StaticSwitchParameters;
     public FStaticComponentMaskParameter[] StaticComponentMaskParameters;
-    public FStaticTerrainLayerWeightParameter[] TerrainLayerWeightParameters;
+    public FNormalParameter[]? NormalParameters;
+    public FStaticTerrainLayerWeightParameter[]? TerrainLayerWeightParameters;
     public FStaticMaterialLayersParameter[]? MaterialLayersParameters;
 
     public FStaticParameterSet(FArchive Ar)
@@ -130,6 +154,10 @@ public class FStaticParameterSet
         }
         StaticSwitchParameters = Ar.ReadArray(() => new FStaticSwitchParameter(Ar));
         StaticComponentMaskParameters = Ar.ReadArray(() => new FStaticComponentMaskParameter(Ar));
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_NORMAL_PARAMETERS && Ar.Game < GAME_UE4_0)
+        {
+            NormalParameters = Ar.ReadArray(() => new FNormalParameter(Ar));
+        }
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_TERRAINLAYERWEIGHT_PARAMETERS)
         {
             TerrainLayerWeightParameters = Ar.ReadArray(() => new FStaticTerrainLayerWeightParameter(Ar));

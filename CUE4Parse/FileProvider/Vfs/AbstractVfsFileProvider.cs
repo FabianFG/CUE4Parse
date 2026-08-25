@@ -49,7 +49,7 @@ namespace CUE4Parse.FileProvider.Vfs
 {
     public abstract class AbstractVfsFileProvider : AbstractFileProvider, IVfsFileProvider
     {
-        
+
         protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs => (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
 
@@ -412,25 +412,21 @@ namespace CUE4Parse.FileProvider.Vfs
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IAesVfsReader GetArchive(string archiveName, StringComparison comparison = StringComparison.Ordinal)
+            => GetArchiveOrNull(archiveName, comparison) ?? throw new KeyNotFoundException($"There is no archive file with the name \"{archiveName}\"");
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IAesVfsReader? GetArchiveOrNull(string archiveName, StringComparison comparison = StringComparison.Ordinal)
         {
-            var predicate = (IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
-            return MountedVfs.FirstOrDefault(predicate) ??
-                   UnloadedVfs.FirstOrDefault(predicate) ??
-                   throw new KeyNotFoundException($"There is no archive file with the name \"{archiveName}\"");
+            return MountedVfs.FirstOrDefault(Predicate) ?? UnloadedVfs.FirstOrDefault(Predicate);
+            bool Predicate(IAesVfsReader x) => x.Name.Equals(archiveName, comparison);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetArchive(string archiveName, [MaybeNullWhen(false)] out IAesVfsReader archive, StringComparison comparison = StringComparison.Ordinal)
         {
-            try
-            {
-                archive = GetArchive(archiveName, comparison);
-            }
-            catch
-            {
-                archive = null;
-            }
-            return archive != null;
+            archive = GetArchiveOrNull(archiveName, comparison);
+            return archive is not null;
         }
 
         public GameFile this[string path, string archiveName, StringComparison comparison = StringComparison.Ordinal] => this[path, GetArchive(archiveName, comparison)];
@@ -442,15 +438,8 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetGameFile(string path, string archiveName, [MaybeNullWhen(false)] out GameFile file, StringComparison comparison = StringComparison.Ordinal)
         {
-            try
-            {
-                file = this[path, archiveName, comparison];
-            }
-            catch
-            {
-                file = null;
-            }
-            return file != null;
+            file = null;
+            return TryGetArchive(archiveName, out var archive, comparison) && TryGetGameFile(path, archive.Files, out file);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
