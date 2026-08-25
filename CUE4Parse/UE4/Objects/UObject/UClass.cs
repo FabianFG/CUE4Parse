@@ -299,7 +299,7 @@ public class UClass : UStruct
                 stringBuilder.CloseBlock("};");
                 return stringBuilder.ToString();
             }
-            var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
+            var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function?.Name, out var jumpList) ? jumpList : [];
             for (int i = 0; i < function.ScriptBytecode.Length; i++)
             {
                 var kismetExpression = function.ScriptBytecode[i];
