@@ -218,7 +218,7 @@ public enum EGame : uint
         GAME_TempestRising = GAME_UE5_4 + 8,
         GAME_MindsEye = GAME_UE5_4 + 9,
         GAME_DeadByDaylight_Old = GAME_UE5_4 + 10,
-        GAME_Placeholder1 = GAME_UE5_4 + 11,
+        GAME_FantasyLifeTheGirlWhoStealsTime = GAME_UE5_4 + 11,
         GAME_MafiaTheOldCountry = GAME_UE5_4 + 12,
         GAME_2XKO = GAME_UE5_4 + 13,
         GAME_Reanimal = GAME_UE5_4 + 14,

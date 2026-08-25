@@ -1,6 +1,8 @@
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 using Newtonsoft.Json;
+using SubstreamSharp;
 
 namespace CUE4Parse.UE4.CriWare.Readers;
 
@@ -25,13 +27,8 @@ public sealed class AwbReader : IDisposable
 
     private readonly List<Wave> _waves;
 
-    public AwbReader(Stream awbStream, bool isEmbedded) : this(awbStream, 0)
-    {
-        IsEmbedded = isEmbedded;
-    }
-
+    public AwbReader(FArchive awbArchive) : this(CriWareAwbDecryption.Wrap(awbArchive, awbArchive.Name, awbArchive.Game), 0) { }
     public AwbReader(Stream awbStream) : this(awbStream, 0) { }
-
     public AwbReader(Stream awbStream, long positionOffset)
     {
         _binaryReader = new BinaryReader(awbStream);
@@ -102,14 +99,10 @@ public sealed class AwbReader : IDisposable
 
     public ushort Subkey => _subkey;
 
-    public bool IsEmbedded { get; }
-
     public List<Wave> Waves => _waves;
 
     public Stream GetWaveSubfileStream(Wave wave)
-    {
-        return new SpliceStream(_binaryReader.BaseStream, _offset + wave.Offset, wave.Length);
-    }
+        => _binaryReader.BaseStream.Substream(_offset + wave.Offset, wave.Length);
 
     public void Dispose()
     {

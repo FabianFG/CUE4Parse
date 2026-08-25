@@ -1,9 +1,11 @@
 using static CUE4Parse.UE4.CriWare.Decoders.HCA.Constants;
-//using static ClHcaSharp.Header;
 using static CUE4Parse.UE4.CriWare.Decoders.HCA.Tables;
 
 namespace CUE4Parse.UE4.CriWare.Decoders.HCA;
 
+// This is a direct port of vgmstream's clHCA decoder:
+// https://github.com/vgmstream/vgmstream/blob/master/src/coding/libs/clhca.c
+// Copyright (c) 2008-2025 vgmstream contributors. Licensed under the ISC License.
 public class HcaDecoder
 {
     private readonly HcaContext _hca;
@@ -82,7 +84,6 @@ public class HcaDecoder
 
             if (status + 14 > bitsMax)
                 return -1;
-            //throw new Exception("BitReader error.");
 
             byteStart = (status / 8) + (status % 8 > 0 ? 0x01 : 0);
 
@@ -280,7 +281,6 @@ public class HcaDecoder
 
             if (csCount > SamplesPerSubframe)
                 return;
-            //throw new InvalidDataException("Invalid scale count.");
         }
 
         if (deltaBits >= 6)
@@ -307,7 +307,6 @@ public class HcaDecoder
                     int scaleFactorTest = value + (delta - (expectedDelta >> 1));
                     if (scaleFactorTest < 0 || scaleFactorTest >= 64)
                         return;
-                    //throw new InvalidDataException("Invalid scale factor.");
 
                     value = (byte) (value - (expectedDelta >> 1) + delta);
                     value = (byte) (value & 0x3F);
@@ -381,7 +380,6 @@ public class HcaDecoder
                                 value = (byte) (value - (bMax >> 1) + delta);
                                 if (value > 15)
                                     return;
-                                //throw new InvalidDataException("Intensity value out of range.");
                             }
 
                             channel.Intensity[i] = value;
