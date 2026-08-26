@@ -245,6 +245,9 @@ namespace CUE4Parse_Conversion.Animations
 
                     break;
                 }
+                // bForceRootLock check is for the case when AnimationSequence doesn't have any animation data, but we shouldn't throw
+                case null when animSequence.CompressedCurveData is { FloatCurves.Length: > 0 } || animSequence.GetOrDefault<bool>("bForceRootLock"):
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException("Unsupported compressed data type " + animSequence.CompressedDataStructure?.GetType().Name);
             }
