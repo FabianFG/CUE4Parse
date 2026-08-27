@@ -265,6 +265,7 @@ public enum EGame : uint
         GAME_Wildgate = GAME_UE5_7 + 5,
         GAME_TheFinals = GAME_UE5_7 + 6,
         GAME_DeadByDaylight = GAME_UE5_7 + 7,
+        GAME_Bringer = GAME_UE5_7 + 8,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 

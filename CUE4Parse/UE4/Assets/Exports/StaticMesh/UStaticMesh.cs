@@ -249,7 +249,7 @@ public class UStaticMesh : UObject
 
         switch (Ar.Game)
         {
-            case GAME_FateTrigger or GAME_GhostsofTabor or GAME_Aion2:
+            case GAME_FateTrigger or GAME_GhostsofTabor or GAME_Aion2 or GAME_Bringer:
                 Ar.Position += 4;
                 break;
             case GAME_TheFinals or GAME_ArcRaiders when Ar.ReadBoolean():

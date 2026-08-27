@@ -421,7 +421,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         var encodedPakEntriesData = primaryIndex.ReadBytes(encodedPakEntriesSize);
         using var encodedPakEntries = new GenericBufferReader(encodedPakEntriesData);
 
-        var FilesNum = primaryIndex.Read<int>();
+        var FilesNum = Ar.Game is not GAME_Bringer ? primaryIndex.Read<int>() : 0;
         if (FilesNum < 0)
             throw new ParserException("Corrupt pak PrimaryIndex detected");
 
