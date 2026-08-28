@@ -21,7 +21,6 @@ public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkData bu
 [JsonConverter(typeof(WwiseConverter))]
 public class WwiseReader
 {
-    
     public string Path;
     private readonly WwiseDataSource? _source;
 

@@ -19,7 +19,7 @@ public readonly struct FWwiseEventCookedData
 
     public FWwiseEventCookedData(FStructFallback fallback)
     {
-        EventId = (uint)fallback.GetOrDefault<int>(nameof(EventId));
+        EventId = (uint)fallback.GetOrDefault<int>(nameof(EventId), comparisonType: StringComparison.OrdinalIgnoreCase);
         SoundBanks = fallback.GetOrDefault<FWwiseSoundBankCookedData[]>(nameof(SoundBanks), []);
         Media = fallback.GetOrDefault<FWwiseMediaCookedData[]>(nameof(Media), []);
         ExternalSources = fallback.GetOrDefault<FWwiseExternalSourceCookedData[]>(nameof(ExternalSources), []);

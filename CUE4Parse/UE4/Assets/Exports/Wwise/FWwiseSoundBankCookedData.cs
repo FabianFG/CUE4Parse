@@ -19,7 +19,7 @@ public class FWwiseSoundBankCookedData
 
     public FWwiseSoundBankCookedData(FStructFallback fallback)
     {
-        SoundBankId = (uint)fallback.GetOrDefault<int>(nameof(SoundBankId));
+        SoundBankId = (uint)fallback.GetOrDefault<int>(nameof(SoundBankId), comparisonType: StringComparison.OrdinalIgnoreCase);
         SoundBankPathName = fallback.GetOrDefault<FName>(nameof(SoundBankPathName));
         MemoryAlignment = fallback.GetOrDefault<int>(nameof(MemoryAlignment));
         bDeviceMemory = fallback.GetOrDefault<bool>(nameof(bDeviceMemory));

@@ -18,7 +18,6 @@ namespace CUE4Parse.UE4.Wwise;
 
 public class WwisePlugin
 {
-    
     public static IAkPluginParam? TryParsePluginParams(FWwiseArchive Ar, AkPlugin plugin, bool always = false)
     {
         var pluginId = plugin.PluginId;

@@ -34,4 +34,3 @@ public readonly struct FWwiseLocalizedShareSetCookedData
         }
     }
 }
-
