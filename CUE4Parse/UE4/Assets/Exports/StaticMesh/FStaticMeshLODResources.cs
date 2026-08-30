@@ -1,4 +1,5 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
+using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -160,6 +161,7 @@ public class FStaticMeshLODResources
                     GAME_TheFinals => 12 + 6 * 4,
                     >= GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
                     GAME_ArenaBreakoutMobile => 44,
+                    GAME_GangstarMirageCity => 44,
                     GAME_NeedForSpeedMobile => 32,
                     GAME_SuicideSquad => 29,
                     GAME_ArenaBreakoutInfinite => 16,
@@ -313,7 +315,7 @@ public class FStaticMeshLODResources
     {
         var stripDataFlags = new FStripDataFlags(Ar);
 
-        PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+        PositionVertexBuffer = Ar.Game is GAME_GangstarMirageCity ? new FGangstarPositionVertexBuffer(Ar) : new FPositionVertexBuffer(Ar);
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);
         ColorVertexBuffer = new FColorVertexBuffer(Ar);
 

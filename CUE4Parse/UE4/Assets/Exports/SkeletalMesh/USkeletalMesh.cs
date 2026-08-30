@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -160,16 +161,33 @@ public partial class USkeletalMesh : UObject
                     LODModels = LODModels.Concat(fallbackLODModels).ToArray();
                 }
 
-                if (Ar.Game is GAME_RocoKingdomWorld)
+                switch (Ar.Game)
                 {
-                    foreach (var lod in LODModels)
-                    {
-                        for (int i = 0; i < lod.VertexBufferGPUSkin.VertsFloat.Length; i++)
+                    case GAME_GangstarMirageCity:
+                        foreach (var lod in LODModels)
                         {
-                            var vert = lod.VertexBufferGPUSkin.VertsFloat[i];
-                            vert.Pos = ImportedBounds.BoxExtent * vert.Pos + ImportedBounds.Origin;
+                            if (lod.AdditionalBuffer is not FGangstarPositionVertexBuffer positions || lod.VertexBufferGPUSkin?.VertsFloat == null)
+                                continue;
+
+                            positions.Decode(ImportedBounds);
+                            for (var i = 0; i < lod.VertexBufferGPUSkin.VertsFloat.Length; i++)
+                            {
+                                lod.VertexBufferGPUSkin.VertsFloat[i].Pos = positions.Verts[i];
+                            }
                         }
-                    }
+                        break;
+                    case GAME_RocoKingdomWorld:
+                        foreach (var lod in LODModels)
+                        {
+                            if (lod.VertexBufferGPUSkin?.VertsFloat == null)
+                                continue;
+                            for (var i = 0; i < lod.VertexBufferGPUSkin.VertsFloat.Length; i++)
+                            {
+                                var vert = lod.VertexBufferGPUSkin.VertsFloat[i];
+                                vert.Pos = ImportedBounds.BoxExtent * vert.Pos + ImportedBounds.Origin;
+                            }
+                        }
+                        break;
                 }
 
                 if (Ar.Game >= GAME_UE5_5 || Ar.Game is GAME_SilverPalace)

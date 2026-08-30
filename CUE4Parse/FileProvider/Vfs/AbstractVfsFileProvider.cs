@@ -28,6 +28,7 @@ using CUE4Parse.GameTypes.SD.Encryption.Aes;
 using CUE4Parse.GameTypes.SilverPalace.Encryption;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
 using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
+using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Encryption;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.Aes;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.Aes;
 using CUE4Parse.GameTypes.THPS.Encryption.Aes;
@@ -107,6 +108,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_SilverPalace => SilverPalaceAes.SilverPalaceDecrypt,
                 GAME_ValorantSource => ValorantSourceAes.ValorantSourceDecrypt,
                 GAME_PUBGMobile or GAME_PUBGLite => PUBGMobileAes.PUBGMobileDecrypt,
+                GAME_GangstarMirageCity => GangstarMirageCityAes.GangstarMirageCityDecrypt,
                 _ => null
             };
         }

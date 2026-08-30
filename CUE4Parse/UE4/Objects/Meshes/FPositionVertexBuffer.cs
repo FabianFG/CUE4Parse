@@ -9,9 +9,9 @@ namespace CUE4Parse.UE4.Objects.Meshes;
 [JsonConverter(typeof(FPositionVertexBufferConverter))]
 public class FPositionVertexBuffer
 {
-    [JsonIgnore] public readonly FVector[] Verts;
-    public readonly int Stride;
-    public readonly int NumVertices;
+    [JsonIgnore] public FVector[] Verts { get; protected set; }
+    public int Stride { get; protected set; }
+    public int NumVertices { get; protected set; }
 
     public FPositionVertexBuffer()
     {

@@ -210,6 +210,7 @@ public class UStaticMesh : UObject
                 {
                     case GAME_CrystalOfAtlan:
                     case GAME_FragPunk:
+                    case GAME_GangstarMirageCity:
                     case GAME_RocoKingdomWorld:
                         if (Ar.Game is GAME_FragPunk && !Ar.ReadBoolean()) break;
                         Ar.SkipMultipleBulkArrayData(3);
@@ -308,6 +309,7 @@ public class UStaticMesh : UObject
             GAME_OutlastTrials => 1,
             GAME_Farlight84 or GAME_DuneAwakening => 4,
             GAME_DaysGone => Ar.Read<int>() * 4 + 4,
+            GAME_GangstarMirageCity => 44,
             _ => 0
         };
     }

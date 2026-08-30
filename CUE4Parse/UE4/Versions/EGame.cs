@@ -168,6 +168,7 @@ public enum EGame : uint
         GAME_eBaseballProSpirit = GAME_UE4_27 + 36,
         GAME_TheFirstBerserkerKhazan = GAME_UE4_27 + 37,
         GAME_AliensFireteamElite2 = GAME_UE4_27 + 38,
+        GAME_GangstarMirageCity = GAME_UE4_27 + 39,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,

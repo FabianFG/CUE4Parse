@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -145,19 +146,35 @@ public class FStaticMeshRenderData
         }
 
         Bounds = new FBoxSphereBounds(Ar);
-
-        if (Ar.Game == GAME_RocoKingdomWorld)
+        switch (Ar.Game)
         {
-            foreach (var lod in LODs)
+            case GAME_GangstarMirageCity:
             {
-                if (lod.PositionVertexBuffer != null && lod.PositionVertexBuffer.Stride != 8) continue;
-                if (lod.PositionVertexBuffer?.Verts == null) continue;
-
-                var verts = lod.PositionVertexBuffer.Verts;
-                for (var i = 0; i < verts.Length; i++)
+                foreach (var lod in LODs)
                 {
-                    verts[i] =  verts[i] * Bounds.BoxExtent + Bounds.Origin;
+                    if (lod.PositionVertexBuffer is FGangstarPositionVertexBuffer positions)
+                    {
+                        positions.Decode(Bounds);
+                    }
                 }
+                break;
+            }
+            case GAME_RocoKingdomWorld:
+            {
+                foreach (var lod in LODs)
+                {
+                    if (lod.PositionVertexBuffer != null && lod.PositionVertexBuffer.Stride != 8)
+                        continue;
+                    if (lod.PositionVertexBuffer?.Verts == null)
+                        continue;
+
+                    var verts = lod.PositionVertexBuffer.Verts;
+                    for (var i = 0; i < verts.Length; i++)
+                    {
+                        verts[i] = verts[i] * Bounds.BoxExtent + Bounds.Origin;
+                    }
+                }
+                break;
             }
         }
 

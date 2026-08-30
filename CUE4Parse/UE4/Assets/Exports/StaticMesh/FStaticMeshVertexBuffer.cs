@@ -43,14 +43,13 @@ public class FStaticMeshVertexBuffer
             {
                 var tempTangents = Array.Empty<FPackedNormal[]>();
                 if (Ar.Game is GAME_StarWarsJediFallenOrder or GAME_StarWarsJediSurvivor && Ar.ReadBoolean()) // bDropNormals
-                {
                     goto texture_coordinates;
-                }
 
                 var customTangents = Ar.Game switch
                 {
                     GAME_HonorofKingsWorld => Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeHonorOfKingsWorldQTangent(Ar, UseHighPrecisionTangentBasis)),
                     GAME_FinalFantasy7Rebirth => Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeTangentsFF7R(Ar)),
+                    GAME_GangstarMirageCity => FStaticMeshUVItem.SerializeTangentsGangstar(Ar),
                     _ => null,
                 };
 

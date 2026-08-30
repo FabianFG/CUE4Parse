@@ -1,9 +1,11 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.GameTypes.MK1.Assets.Objects;
+using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.UObject;
@@ -423,6 +425,10 @@ public class FStaticLODModel
 
                     SerializeAvailabilityInfo(Ar, !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData));
                 }
+                else if (Ar.Game is GAME_GangstarMirageCity)
+                {
+                    SerializeAvailabilityInfo(Ar, !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData));
+                }
             }
         }
 
@@ -497,12 +503,13 @@ public class FStaticLODModel
         Indices = new FMultisizeIndexContainer(Ar);
         VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer { bUseFullPrecisionUVs = true };
 
-        var positionVertexBuffer = new FPositionVertexBuffer(Ar);
+        var positionVertexBuffer = Ar.Game is GAME_GangstarMirageCity ? new FGangstarPositionVertexBuffer(Ar) : new FPositionVertexBuffer(Ar);
         var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
         var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
 
-        if (Ar.Game == GAME_EvilWest) Ar.Position += 22;
+        if (Ar.Game is GAME_EvilWest) Ar.Position += 22;
         if (Ar.Game is GAME_GearsofWarEDay && Ar.Peek<int>() == 0) bHasVertexColors = false;
+        if (Ar.Game is GAME_GangstarMirageCity) AdditionalBuffer = positionVertexBuffer;
 
         if (bHasVertexColors)
         {
@@ -596,8 +603,9 @@ public class FStaticLODModel
 
         Ar.Position += bytesToSkip;
 
-        if (Ar.Game == GAME_StarWarsJediSurvivor) Ar.Position += 4;
-        if (Ar.Game == GAME_NeedForSpeedMobile) Ar.Position += 32;
+        if (Ar.Game is GAME_StarWarsJediSurvivor) Ar.Position += 4;
+        if (Ar.Game is GAME_NeedForSpeedMobile) Ar.Position += 32;
+        if (Ar.Game is GAME_GangstarMirageCity) Ar.Position += 38 + 6; // Position and tangent compression metadata
         if (HasClothData())
         {
             // FSkeletalMeshVertexClothBuffer::SerializeMetaData
