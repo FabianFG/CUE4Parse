@@ -160,7 +160,7 @@ public class FStaticMeshLODResources
                 {
                     GAME_TheFinals => 12 + 6 * 4,
                     >= GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
-                    GAME_ArenaBreakoutMobile or EGame.GAME_GangstarMirageCity => 44,
+                    GAME_ArenaBreakoutMobile or GAME_GangstarMirageCity => 44,
                     GAME_NeedForSpeedMobile => 32,
                     GAME_SuicideSquad => 29,
                     GAME_ArenaBreakoutInfinite => 16,
