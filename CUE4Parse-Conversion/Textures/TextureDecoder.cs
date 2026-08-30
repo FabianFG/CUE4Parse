@@ -42,6 +42,7 @@ public static class TextureDecoder
             return DecodeVT(texture, vt, mipIndex);
 
         var mip = texture.GetMip(mipIndex);
+        if (mip is null) return null; // TODO: we should let it throw the exception
 
         DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
         return new CTexture(sizeX, sizeY, colorType, data);
