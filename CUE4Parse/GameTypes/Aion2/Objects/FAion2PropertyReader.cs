@@ -2,6 +2,7 @@ using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
@@ -29,11 +30,30 @@ public static class FAion2PropertyReader
             "MapProperty" => new MapProperty(ReadMap(Ar, mappings, tagData)),
             "StrProperty" => new StrProperty(Ar.ReadUnencryptedFString()),
             "StructProperty" => new StructProperty(ReadStruct(Ar, mappings, tagData?.StructType)),
+            "TextProperty" => ReadText(Ar),
             "UInt16Property" => new UInt16Property(Ar.Read<ushort>()),
             "UInt32Property" => new UInt32Property(Ar.Read<uint>()),
             "UInt64Property" => new UInt64Property(Ar.Read<ulong>()),
             _ => null,
         };
+
+        TextProperty ReadText(FAion2DatFileArchive Ar)
+        {
+            _ = Ar.Read<ETextFlag>();
+            var historyType = Ar.Read<ETextHistoryType>();
+            return historyType switch
+            {
+                ETextHistoryType.None => new TextProperty(ReadCultureInvariantText(Ar)),
+                ETextHistoryType.Base => new TextProperty(new FText(
+                    Ar.ReadFString(), Ar.ReadFString(), Ar.ReadFString())),
+                _ => throw new ParserException(Ar, $"Unsupported AION2 text history type '{historyType}'")
+            };
+        }
+
+        FText ReadCultureInvariantText(FAion2DatFileArchive Ar)
+        {
+            return Ar.ReadBoolean() ? new FText(Ar.ReadFString()) : new FText(string.Empty);
+        }
 
         void SkipStructTag(FAion2DatFileArchive Ar)
         {
@@ -102,6 +122,7 @@ public static class FAion2PropertyReader
 
             var propCount = propMappings.CountProperties(true);
             var properties = new List<FPropertyTag>(propCount);
+            var previousProperty = "none";
 
             foreach (var index in Enumerable.Range(0, propCount))
             {
@@ -126,13 +147,18 @@ public static class FAion2PropertyReader
                 }
                 catch (ParserException e)
                 {
-                    throw new ParserException($"Failed to read FPropertyTagType {tag.TagData?.ToString() ?? tag.PropertyType.Text} {tag.Name.Text}", e);
+                    throw new ParserException(
+                        $"Failed to read FPropertyTagType {tag.TagData?.ToString() ?? tag.PropertyType.Text} " +
+                        $"{tag.Name.Text} at {pos}; previous {previousProperty}", e);
                 }
 
                 tag.Size = (int) (Ar.Position - pos);
 
                 if (tag.Tag != null)
+                {
                     properties.Add(tag);
+                    previousProperty = $"{tag.Name.Text}@{pos}+{tag.Size}";
+                }
                 else
                     throw new ParserException(Ar, $"Failed to serialize property {info.MappingType.Type} {info.Name}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
 
