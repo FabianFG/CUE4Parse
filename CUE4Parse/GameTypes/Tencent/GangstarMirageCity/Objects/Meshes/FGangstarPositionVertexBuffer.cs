@@ -26,11 +26,15 @@ public sealed class FGangstarPositionVertexBuffer : FPositionVertexBuffer
 
         var isCompressed = Ar.Read<byte>() != 0 | Ar.Read<byte>() != 0;
         _ = Ar.Read<FVector>(); // Position compression offset
-        _componentBits = Ar.Read<FIntVector>();
-        _componentMin = Ar.Read<FIntVector>();
-
-        if (!isCompressed)
+        if (isCompressed)
         {
+            _componentBits = Ar.Read<FIntVector>();
+            _componentMin = Ar.Read<FIntVector>();
+        }
+        else
+        {
+            _ = Ar.Read<FVector>(); // ?
+            _ = Ar.Read<byte>(); // ?
             Verts = Ar.ReadBulkArray<FVector>();
             if (Verts.Length != NumVertices)
                 throw new ParserException(Ar, $"NumVertices={Verts.Length} != NumVertices={NumVertices}");
