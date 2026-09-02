@@ -2,14 +2,13 @@ using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.GameTypes.Aion2.Objects;
 
 public static class FAion2PropertyReader
 {
-    public static FPropertyTagType? ReadPropertyTagType(FAion2DatFileArchive Ar, TypeMappings mappings, string? propertyType, FPropertyTagData? tagData, bool readtag = true,  ReadType type = ReadType.NORMAL)
+    public static FPropertyTagType? ReadPropertyTagType(FAion2DatFileArchive Ar, TypeMappings mappings, string? propertyType, FPropertyTagData? tagData, bool readtag = true, ReadType type = ReadType.NORMAL)
     {
         return propertyType switch
         {
@@ -30,30 +29,12 @@ public static class FAion2PropertyReader
             "MapProperty" => new MapProperty(ReadMap(Ar, mappings, tagData)),
             "StrProperty" => new StrProperty(Ar.ReadUnencryptedFString()),
             "StructProperty" => new StructProperty(ReadStruct(Ar, mappings, tagData?.StructType)),
-            "TextProperty" => ReadText(Ar),
+            "TextProperty" => new TextProperty(new FAion2AssetArchive(Ar), type),
             "UInt16Property" => new UInt16Property(Ar.Read<ushort>()),
             "UInt32Property" => new UInt32Property(Ar.Read<uint>()),
             "UInt64Property" => new UInt64Property(Ar.Read<ulong>()),
             _ => null,
         };
-
-        TextProperty ReadText(FAion2DatFileArchive Ar)
-        {
-            _ = Ar.Read<ETextFlag>();
-            var historyType = Ar.Read<ETextHistoryType>();
-            return historyType switch
-            {
-                ETextHistoryType.None => new TextProperty(ReadCultureInvariantText(Ar)),
-                ETextHistoryType.Base => new TextProperty(new FText(
-                    Ar.ReadFString(), Ar.ReadFString(), Ar.ReadFString())),
-                _ => throw new ParserException(Ar, $"Unsupported AION2 text history type '{historyType}'")
-            };
-        }
-
-        FText ReadCultureInvariantText(FAion2DatFileArchive Ar)
-        {
-            return Ar.ReadBoolean() ? new FText(Ar.ReadFString()) : new FText(string.Empty);
-        }
 
         void SkipStructTag(FAion2DatFileArchive Ar)
         {

@@ -1,4 +1,5 @@
 using System.Text;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -52,4 +53,11 @@ public sealed class FAion2DatFileArchive(byte[] data, VersionContainer versions)
     public string ReadL10NString() => ReadAion2String(_xorKeyShort);
     public override string ReadFString() => ReadAion2String();
     public override FName ReadFName() => ReadFString();
+}
+
+public sealed class FAion2AssetArchive(FAion2DatFileArchive Ar) : FAssetArchive(Ar, null)
+{
+    private readonly FAion2DatFileArchive _aionAr = Ar;
+
+    public override FName ReadFName() => _aionAr.ReadFName();
 }
