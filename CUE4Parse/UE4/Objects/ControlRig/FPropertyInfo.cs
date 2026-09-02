@@ -35,6 +35,12 @@ public class FPropertyInfoJsonConverter : JsonConverter<FPropertyInfo>
 
     public override void WriteJson(JsonWriter writer, FPropertyInfo? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
 
         writer.WritePropertyName(nameof(value.Owner));

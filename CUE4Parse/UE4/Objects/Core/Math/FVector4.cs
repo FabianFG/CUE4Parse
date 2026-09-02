@@ -61,6 +61,10 @@ public struct FVector4 : IUStruct, IEquatable<FVector4>
     public static ref FVector AsFVector(ref FVector4 v) => ref Unsafe.As<FVector4, FVector>(ref v);
 
     public bool Equals(FVector4 other) => this == other;
+    
+    public override bool Equals(object? obj) => obj is FVector4 other && this == other;
+    
+    public override int GetHashCode() => HashCode.Combine(X, Y, Z, W);
 
     public override string ToString() => $"X={X,3:F3} Y={Y,3:F3} Z={Z,3:F3} W={W,3:F3}";
 }

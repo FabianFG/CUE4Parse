@@ -517,6 +517,11 @@ namespace CUE4Parse_Conversion.Animations
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ReadPerTrackData(FArchive reader, UAnimSequence animSequence, CAnimTrack track, int trackIndex)
         {
+            if (animSequence?.CompressedDataStructure is null)
+            {
+                throw new Exception("CompressedDataStructure must not be null.");
+            }
+
             var compressedData = (FUECompressedAnimData) animSequence.CompressedDataStructure;
 
             // this format uses different key storage
@@ -564,6 +569,11 @@ namespace CUE4Parse_Conversion.Animations
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ReadKeyLerpData(FArchive reader, UAnimSequence animSequence, CAnimTrack track, int trackIndex, bool hasTimeTracks)
         {
+            if (animSequence?.CompressedDataStructure is null)
+            {
+                throw new Exception("CompressedDataStructure must not be null.");
+            }
+            
             var compressedData = (FUECompressedAnimData) animSequence.CompressedDataStructure;
             var transOffset = compressedData.CompressedTrackOffsets[trackIndex * 4];
             var transKeys = compressedData.CompressedTrackOffsets[trackIndex * 4 + 1];

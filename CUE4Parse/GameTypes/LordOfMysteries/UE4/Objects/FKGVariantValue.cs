@@ -8,7 +8,7 @@ namespace CUE4Parse.GameTypes.LordOfMysteries.UE4.Objects;
 
 public class FKGVariantValue : FStructFallback
 {
-    public FKGVariantValue(FAssetArchive Ar) : base()
+    public FKGVariantValue(FAssetArchive Ar)
     {
         // maybe count, could be FFieldPath
         var varianttype = Ar.Read<int>();

@@ -76,7 +76,7 @@ public class FPCGMetadataAttribute<T> : FPCGMetadataAttributeBase
 {
     [JsonIgnore]
     public T[] Values = [];
-    public T DefaultValue = default;
+    public T DefaultValue;
 
     public FPCGMetadataAttribute(FAssetArchive Ar, Func<T> getter) : base(Ar)
     {

@@ -282,7 +282,7 @@ namespace CUE4Parse.UE4.Assets
 
                 var buffer = new byte[totalSize];
                 uassetAr.Position = 0;
-                uassetAr.Read(buffer, 0, (int) uassetAr.Length);
+                uassetAr.ReadExactly(buffer, 0, (int) uassetAr.Length);
 
                 foreach (var chunk in Summary.CompressedChunks)
                 {
@@ -556,7 +556,7 @@ namespace CUE4Parse.UE4.Assets
             private void FireDependencies(LoadPhase phase)
             {
                 EnsureDependencies();
-                foreach (var dependency in _dependencies)
+                foreach (var dependency in _dependencies ?? [])
                 {
                     if (dependency.FromPhase == phase)
                     {
