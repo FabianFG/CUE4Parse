@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CUE4Parse_Conversion.Dto;
@@ -70,34 +69,23 @@ public class ActorXMesh
     private void ExportCommonMeshLod<TVertex>(MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
     {
         var numInfluences = 0;
-        var share = new CVertexShare();
-        share.Prepare(lod.Vertices);
         foreach (var vert in lod.Vertices)
         {
             if (vert is SkinnedMeshVertex sv)
             {
-                var extraInfo = (uint) StructuralComparisons.StructuralEqualityComparer.GetHashCode(sv.Influences);
-                var newPoint = share.AddVertex(vert.Position, vert.Normal, extraInfo);
-                if (newPoint)
-                {
-                    numInfluences += sv.Influences.Length;
-                }
-            }
-            else
-            {
-                share.AddVertex(vert.Position, vert.Normal);
+                numInfluences += sv.Influences.Length;
             }
         }
 
-        ExportCommonMeshData(lod, share);
+        ExportCommonMeshData(lod);
 
         var infHdr = new VChunkHeader { DataCount = numInfluences, DataSize = 12 };
         Ar.SerializeChunkHeader(infHdr, "RAWWEIGHTS");
         if (infHdr.DataCount > 0)
         {
-            for (var i = 0; i < share.Points.Count; i++)
+            for (var i = 0; i < lod.Vertices.Length; i++)
             {
-                if (lod.Vertices[share.VertToWedge.Value[i]] is not SkinnedMeshVertex v) continue;
+                if (lod.Vertices[i] is not SkinnedMeshVertex v) continue;
 
                 foreach (var influence in v.Influences)
                 {
@@ -116,29 +104,18 @@ public class ActorXMesh
 
         if (Options.ExportMorphTargets && lod.Owner is SkeletalMeshDto { MorphTargets: { Length: > 0 } morphTargets })
         {
-            ExportMorphTargets(morphTargets, lod, share);
+            ExportMorphTargets(morphTargets, lod);
         }
     }
 
-    private void ExportCommonMeshData<TVertex>(MeshLodDto<TVertex> lod, CVertexShare share) where TVertex : struct, IMeshVertex
+    private void ExportCommonMeshData<TVertex>(MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
     {
-        var mainHdr = new VChunkHeader();
-        var ptsHdr = new VChunkHeader();
-        var wedgHdr = new VChunkHeader();
-        var facesHdr = new VChunkHeader();
-        var matrHdr = new VChunkHeader();
-        var normHdr = new VChunkHeader();
-
-        mainHdr.TypeFlag = Constants.PSK_VERSION;
-        Ar.SerializeChunkHeader(mainHdr, "ACTRHEAD");
-
-        var numPoints = share.Points.Count;
-        ptsHdr.DataCount = numPoints;
-        ptsHdr.DataSize = 12;
+        var numPoints = lod.Vertices.Length;
+        var ptsHdr = new VChunkHeader { DataCount = numPoints, DataSize = 12 };
         Ar.SerializeChunkHeader(ptsHdr, "PNTS0000");
         for (var i = 0; i < numPoints; i++)
         {
-            var point = share.Points[i];
+            var point = lod.Vertices[i].Position;
             point.Y = -point.Y; // MIRROR_MESH
             point.Serialize(Ar);
         }
@@ -157,12 +134,11 @@ public class ActorXMesh
             }
         }
 
-        wedgHdr.DataCount = numVerts;
-        wedgHdr.DataSize = 16;
+        var wedgHdr = new VChunkHeader {DataCount = numVerts, DataSize = 16};
         Ar.SerializeChunkHeader(wedgHdr, "VTXW0000");
         for (var i = 0; i < numVerts; i++)
         {
-            Ar.Write(share.WedgeToVert[i]);
+            Ar.Write(i);
             Ar.Write(lod.Vertices[i].Uv.U);
             Ar.Write(lod.Vertices[i].Uv.V);
             Ar.Write((byte) wedgeMat[i]);
@@ -170,27 +146,28 @@ public class ActorXMesh
             Ar.Write((short) 0);
         }
 
-        facesHdr.DataCount = numFaces;
+        var facesHdr = new VChunkHeader { DataCount = numFaces };
         if (numVerts <= 65536)
         {
             facesHdr.DataSize = 12;
             Ar.SerializeChunkHeader(facesHdr, "FACE0000");
+            Span<ushort> wedgeIndex = stackalloc ushort[3];
             for (var i = 0; i < numSections; i++)
             {
-                for (var j = 0; j < lod.Sections[i].NumFaces; j++)
+                var section = (ushort) (i & 0xFF);
+                var index = lod.Sections[i].FirstIndex;
+                for (var j = 0; j < lod.Sections[i].NumFaces; j++, index += 3)
                 {
-                    var wedgeIndex = new ushort[3];
                     for (var k = 0; k < wedgeIndex.Length; k++)
                     {
-                        wedgeIndex[k] = (ushort) lod.Indices[lod.Sections[i].FirstIndex + j * 3 + k];
+                        wedgeIndex[k] = (ushort) lod.Indices[index + k];
                     }
 
                     Ar.Write(wedgeIndex[1]); // MIRROR_MESH
                     Ar.Write(wedgeIndex[0]); // MIRROR_MESH
                     Ar.Write(wedgeIndex[2]);
-                    Ar.Write((byte) i);
-                    Ar.Write((byte) 0);
-                    Ar.Write((uint) 1);
+                    Ar.Write(section);
+                    Ar.Write(1);
                 }
             }
         }
@@ -198,28 +175,28 @@ public class ActorXMesh
         {
             facesHdr.DataSize = 18;
             Ar.SerializeChunkHeader(facesHdr, "FACE3200");
+            Span<uint> wedgeIndex = stackalloc uint[3];
             for (var i = 0; i < numSections; i++)
             {
-                for (var j = 0; j < lod.Sections[i].NumFaces; j++)
+                var section = (ushort) (i & 0xFF);
+                var index = lod.Sections[i].FirstIndex;
+                for (var j = 0; j < lod.Sections[i].NumFaces; j++, index += 3)
                 {
-                    var wedgeIndex = new uint[3];
                     for (var k = 0; k < wedgeIndex.Length; k++)
                     {
-                        wedgeIndex[k] = lod.Indices[lod.Sections[i].FirstIndex + j * 3 + k];
+                        wedgeIndex[k] = lod.Indices[index + k];
                     }
 
                     Ar.Write(wedgeIndex[1]); // MIRROR_MESH
                     Ar.Write(wedgeIndex[0]); // MIRROR_MESH
                     Ar.Write(wedgeIndex[2]);
-                    Ar.Write((byte) i);
-                    Ar.Write((byte) 0);
-                    Ar.Write((uint) 1);
+                    Ar.Write(section);
+                    Ar.Write(1);
                 }
             }
         }
 
-        matrHdr.DataCount = numSections;
-        matrHdr.DataSize = 88;
+        var matrHdr = new VChunkHeader { DataCount = numSections, DataSize = 88};
         Ar.SerializeChunkHeader(matrHdr, "MATT0000");
         for (var i = 0; i < numSections; i++)
         {
@@ -227,13 +204,12 @@ public class ActorXMesh
             new VMaterial(materialName, i, 0u, 0, 0u, 0, 0).Serialize(Ar);
         }
 
-        var numNormals = share.Normals.Count;
-        normHdr.DataCount = numNormals;
-        normHdr.DataSize = 12;
+        var numNormals = lod.Vertices.Length;
+        var normHdr = new VChunkHeader {DataCount = numNormals,  DataSize = 12};
         Ar.SerializeChunkHeader(normHdr, "VTXNORMS");
         for (var i = 0; i < numNormals; i++)
         {
-            var normal = (FVector)share.Normals[i];
+            var normal = (FVector) lod.Vertices[i].Normal;
 
             // Normalize
             normal /= MathF.Sqrt(normal | normal);
@@ -245,11 +221,8 @@ public class ActorXMesh
 
     private void ExportSkeletonData(MeshBoneDto[] bones)
     {
-        var boneHdr = new VChunkHeader();
-
         var numBones = bones.Length;
-        boneHdr.DataCount = numBones;
-        boneHdr.DataSize = 120;
+        var boneHdr = new VChunkHeader {DataCount = numBones, DataSize = 120};
         Ar.SerializeChunkHeader(boneHdr, "REFSKELT");
         for (var i = 0; i < numBones; i++)
         {
@@ -302,7 +275,7 @@ public class ActorXMesh
         }
     }
 
-    private void ExportMorphTargets<TVertex>(FPackageIndex[] morphTargets, MeshLodDto<TVertex> lod, CVertexShare share) where TVertex : struct, IMeshVertex
+    private void ExportMorphTargets<TVertex>(FPackageIndex[] morphTargets, MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
     {
         var morphInfoHdr = new VChunkHeader { DataCount = morphTargets.Length, DataSize = 64 + sizeof(int) };
         Ar.SerializeChunkHeader(morphInfoHdr, "MRPHINFO");
@@ -311,31 +284,28 @@ public class ActorXMesh
         for (var i = 0; i < morphTargets.Length; i++)
         {
             var morphTarget = morphTargets[i].Load<UMorphTarget>();
-            if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lod.SourceLodIndex || morphTarget.MorphLODModels[lod.SourceLodIndex].Vertices.Length == 0)
+            if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lod.SourceLodIndex ||
+                morphTarget.MorphLODModels[lod.SourceLodIndex].Vertices.Length == 0)
+            {
+                var emptyMorphInfo = new VMorphInfo(morphTarget?.Name ?? $"UnknownMorph_{i}", 0);
+                emptyMorphInfo.Serialize(Ar);
                 continue;
+            }
 
             var morphModel = morphTarget.MorphLODModels[lod.SourceLodIndex];
-            var morphVertCount = 0;
-            var localMorphDeltas = new List<VMorphData>();
+            var localMorphDeltas = new List<VMorphData>(morphModel.Vertices.Length);
             for (var j = 0; j < morphModel.Vertices.Length; j++)
             {
                 var delta = morphModel.Vertices[j];
                 if (delta.SourceIdx >= lod.Vertices.Length) continue;
 
-                var vertex = lod.Vertices[delta.SourceIdx];
-
-                var index = FindVertex(vertex.Position, share.Points);
-                if (index == -1) continue;
-                if (localMorphDeltas.Any(x => x.PointIdx == index)) continue;
-
-                var morphData = new VMorphData(delta.PositionDelta, delta.TangentZDelta, index);
+                var morphData = new VMorphData(delta.PositionDelta, delta.TangentZDelta, (int) delta.SourceIdx);
                 localMorphDeltas.Add(morphData);
-                morphVertCount++;
             }
 
             morphDeltas.AddRange(localMorphDeltas);
 
-            var morphInfo = new VMorphInfo(morphTarget.Name, morphVertCount);
+            var morphInfo = new VMorphInfo(morphTarget.Name, localMorphDeltas.Count);
             morphInfo.Serialize(Ar);
         }
 
@@ -355,16 +325,24 @@ public class ActorXMesh
         {
             case ESocketFormat.Socket:
             {
-                var socketInfoHdr = new VChunkHeader { DataCount = sockets.Length, DataSize = Constants.VSocket_SIZE };
-                Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
-
+                var validSockets = new List<VSocket>(sockets.Length);
                 for (var i = 0; i < sockets.Length; i++)
                 {
                     var socket = sockets[i].Load<USkeletalMeshSocket>();
                     if (socket is null) continue;
 
                     var pskSocket = new VSocket(socket.SocketName.Text, socket.BoneName.Text, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
-                    pskSocket.Serialize(Ar);
+                    validSockets.Add(pskSocket);
+                }
+
+                if (validSockets.Count > 0)
+                {
+                    var socketInfoHdr = new VChunkHeader { DataCount = validSockets.Count, DataSize = Constants.VSocket_SIZE };
+                    Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
+                    foreach (var socket in validSockets)
+                    {
+                        socket.Serialize(Ar);
+                    }
                 }
 
                 return [];
@@ -403,16 +381,24 @@ public class ActorXMesh
         {
             case ESocketFormat.Socket:
             {
-                var socketInfoHdr = new VChunkHeader { DataCount = sockets.Length, DataSize = Constants.VSocket_SIZE };
-                Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
-
+                var validSockets = new List<VSocket>(sockets.Length);
                 for (var i = 0; i < sockets.Length; i++)
                 {
                     var socket = sockets[i].Load<UStaticMeshSocket>();
                     if (socket is null) continue;
 
                     var pskSocket = new VSocket(socket.SocketName.Text, string.Empty, socket.RelativeLocation, socket.RelativeRotation, socket.RelativeScale);
-                    pskSocket.Serialize(Ar);
+                    validSockets.Add(pskSocket);
+                }
+
+                if (validSockets.Count > 0)
+                {
+                    var socketInfoHdr = new VChunkHeader { DataCount = validSockets.Count, DataSize = Constants.VSocket_SIZE };
+                    Ar.SerializeChunkHeader(socketInfoHdr, "SKELSOCK");
+                    foreach (var socket in validSockets)
+                    {
+                        socket.Serialize(Ar);
+                    }
                 }
 
                 break;
@@ -430,16 +416,5 @@ public class ActorXMesh
                 break;
             }
         }
-    }
-
-    private int FindVertex(FVector a, IReadOnlyList<FVector> vertices)
-    {
-        for (var i = 0; i < vertices.Count; i++)
-        {
-            if (vertices[i].Equals(a))
-                return i;
-        }
-
-        return -1;
     }
 }
