@@ -15,8 +15,11 @@ public class UDecalComponent : USceneComponent {
         base.Deserialize(Ar, validPos);
         
         if (Ar.Ver < EUnrealEngineObjectUE4Version.DECAL_SIZE)
+        {
             DecalSize = FVector.OneVector;
-        DecalMaterial = GetOrDefault<FPackageIndex>(nameof(DecalMaterial), new FPackageIndex());
+        }
+
+        DecalMaterial = GetOrDefault(nameof(DecalMaterial), new FPackageIndex());
         DecalSize = GetOrDefault<FVector>(nameof(DecalSize));
     }
 

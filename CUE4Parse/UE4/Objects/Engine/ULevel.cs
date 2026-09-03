@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Component;
+using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -139,12 +140,15 @@ public class ULevel : Assets.Exports.UObject, IAssetUserData
         URL = new FURL(Ar);
         Model = new FPackageIndex(Ar);
         ModelComponents = Ar.ReadArray(() => new FPackageIndex(Ar));
-        LevelScriptActor = new FPackageIndex(Ar);
+        if (Ar.Game >= GAME_UE4_0)
+        {
+            LevelScriptActor = new FPackageIndex(Ar);
+        }
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.RemovedTextureStreamingLevelData) return;
         NavListStart = new FPackageIndex(Ar);
         NavListEnd = new FPackageIndex(Ar);
         if (Ar.Game == GAME_MetroAwakening && GetOrDefault<bool>("bIsLightingScenario")) return;
-        if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.GI_CHARACTER_LIGHTING && FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
             _ = new FPrecomputedLightVolumeData(Ar, false);
         }
@@ -156,9 +160,26 @@ public class ULevel : Assets.Exports.UObject, IAssetUserData
         if (Ar.Game is GAME_LordOfMysteries) Ar.Position += 8;
         if (Ar.Game is GAME_ValorantSource) Ar.Position += 28;
         if (Ar.Game is GAME_TamasShadowveil) return;
-        PrecomputedVisibilityHandler = new FPrecomputedVisibilityHandler(Ar);
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.NONUNIFORM_PRECOMPUTED_VISIBILITY)
+        {
+            PrecomputedVisibilityHandler = new FPrecomputedVisibilityHandler(Ar);
+        }
+        else if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRECOMPUTED_VISIBILITY)
+        {
+            new FBox(Ar); // LegacyPrecomputedVisibilityVolume
+            Ar.Read<float>(); // LegacyPrecomputedVisibilityCellSize
+            Ar.ReadArray(() => Ar.ReadArray<byte>()); // LegacyPrecomputedVisibilityData
+        }
         if (Ar.Game is GAME_AssaultFireFuture && Ar.Read<int>() != 0) return;
-        PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.IMAGE_REFLECTION_SHADOWING)
+        {
+            PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.WORLD_LEVEL_INFO && Ar.Ver < EUnrealEngineObjectUE4Version.WORLD_LEVEL_INFO_UPDATED)
+        {
+            new FWorldTileInfo(Ar);
+        }
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

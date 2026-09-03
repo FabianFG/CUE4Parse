@@ -294,13 +294,9 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.BSP_UNDO_FIX)
             {
-                var surfsOwner = new FPackageIndex(Ar);
-                Surfs = Ar.ReadArray(() => new FBspSurf(Ar));
+                Ar.Position += sizeof(int); // surfsOwner - PackageIndex
             }
-            else
-            {
-                Surfs = Ar.ReadArray(() => new FBspSurf(Ar));
-            }
+            Surfs = Ar.ReadArray(() => new FBspSurf(Ar));
             Verts = Ar.ReadBulkArray<FVert>();
 
             NumSharedSides = Ar.Read<int>();

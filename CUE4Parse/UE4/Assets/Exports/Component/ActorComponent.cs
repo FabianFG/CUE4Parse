@@ -73,7 +73,7 @@ public class UCableComponent : UMeshComponent;
 public class UCameraComponent : USceneComponent;
 public class UCameraShakeSourceComponent : USceneComponent;
 public class UCapsuleComponent : UShapeComponent;
-public class UCylinderComponent : UPrimitiveComponent;
+public class UCylinderComponent : UShapeComponent;
 public class UChaosDebugDrawComponent : UActorComponent;
 public class UChaosDestructionListener : USceneComponent;
 public class UChaosEventListenerComponent : UActorComponent;
