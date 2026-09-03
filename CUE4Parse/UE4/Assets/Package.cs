@@ -2,6 +2,7 @@ using System.Diagnostics;
 using CUE4Parse.Compression;
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.ACE7.Encryption;
+using CUE4Parse.GameTypes.Mars.Encryption;
 using CUE4Parse.GameTypes.RL.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
@@ -75,6 +76,10 @@ namespace CUE4Parse.UE4.Assets
             {
                 decryptor = new ACE7Decrypt();
                 uassetAr = new FAssetArchive(decryptor.DecryptUassetArchive(uasset, out xorKey), this);
+            }
+            else if (uasset.Game == GAME_Mars)
+            {
+                uassetAr = new FAssetArchive(new MarsDecrypt().DecryptUassetArchive(uasset), this);
             }
             else uassetAr = new FAssetArchive(uasset, this);
 
@@ -308,6 +313,12 @@ namespace CUE4Parse.UE4.Assets
         {
             uasset.Versions = (VersionContainer) uasset.Versions.Clone();
             var uassetAr = new FAssetArchive(uasset, null);
+
+            if (uasset.Game == GAME_Mars)
+            {
+                uassetAr = new FAssetArchive(new MarsDecrypt().DecryptUassetArchive(uasset), null);
+            }
+
             var Summary = new FPackageFileSummary(uassetAr);
 
             DecryptAndDecompress(uassetAr, Summary);

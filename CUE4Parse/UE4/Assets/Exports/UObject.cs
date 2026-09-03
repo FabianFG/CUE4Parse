@@ -213,6 +213,7 @@ public class UObject : AbstractPropertyHolder
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
             {
+                if (Ar.Game == GAME_Mars) Ar.Position += sizeof(int); // unknown
                 var NetIndex = Ar.Read<int>();
 
                 if (Ar.Game == GAME_Paladins && NetIndex == -1)
