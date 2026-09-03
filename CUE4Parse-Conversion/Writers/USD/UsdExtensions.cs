@@ -72,6 +72,8 @@ public static class UsdExtensions
         var root = UsdPrim.Def("SkelRoot", dto.Name);
         var skeletonPrim = UsdPrim.Def("Skeleton", dto.SkeletonName ?? root.Name);
 
+        var names = ResolveJointNames(dto.Bones);
+
         var joints = new UsdValue[dto.Bones.Length];
         var rest = new UsdValue[joints.Length];
         var bind = new Matrix4x4[joints.Length]; // world-space accumulated
@@ -79,7 +81,7 @@ public static class UsdExtensions
         {
             var bone = dto.Bones[i];
 
-            var path = bone.ParentIndex >= 0 ? $"{joints[bone.ParentIndex].RawValue}/{bone.Name}" : bone.Name;
+            var path = bone.ParentIndex >= 0 ? $"{joints[bone.ParentIndex].RawValue}/{names[i]}" : names[i];
             joints[i] = UsdValue.Token(path);
 
             var local = bone.Transform.ToMatrix4x4();
@@ -92,8 +94,87 @@ public static class UsdExtensions
         skeletonPrim.Add(UsdAttribute.Uniform("matrix4d[]", "restTransforms", UsdValue.Array(rest)));
         skeletonPrim.Add(UsdAttribute.Uniform("matrix4d[]", "bindTransforms", UsdValue.Array(bind.Select(x => UsdValue.From(x)))));
 
+        // Renaming is lossy — Bip001-L-Clavicle and Bip001_L_Clavicle collapse to the same
+        // identifier — so keep the engine's own spelling when it had to be changed. Only
+        // emitted for skeletons that were actually renamed; the overwhelming majority are not.
+        for (var i = 0; i < names.Length; i++)
+        {
+            if (names[i] == dto.Bones[i].Name) continue;
+            skeletonPrim.Add(UsdAttribute.CustomUniform("string[]", "unrealJointNames",
+                UsdValue.Array(dto.Bones.Select(b => UsdValue.String(b.Name)))));
+            break;
+        }
+
         root.Add(skeletonPrim);
         return root;
+    }
+
+    /// <summary>
+    /// Maps UE bone names onto names that are legal as USD prim identifiers, i.e.
+    /// <c>[A-Za-z_][A-Za-z0-9_]*</c>.
+    /// </summary>
+    /// <remarks>
+    /// UE puts no such restriction on bone names, and skeletons authored in 3ds Max Biped
+    /// routinely look like <c>Bip001-L-Clavicle</c>. Writing that into the joints array does not
+    /// produce a slightly odd name, it produces an <em>ill-formed SdfPath</em>, and consumers
+    /// reject the whole skeleton over it: Blender logs
+    /// <c>joint order array contains invalid or duplicated paths</c> and imports the mesh with no
+    /// armature and no animation. Nothing fails loudly — the rig is just missing.
+    /// <para>
+    /// Substitution alone is not enough, because it can manufacture the other half of that same
+    /// error message. Real skeletons carry <c>steering-wheel</c> and <c>steering_wheel</c> as
+    /// siblings; mapping both to <c>steering_wheel</c> yields duplicate paths and the same
+    /// rejection. So names are disambiguated within their sibling group, which is exactly the
+    /// scope USD requires uniqueness in.
+    /// </para>
+    /// <para>
+    /// Names that are already legal are reserved first, before any substitution is assigned.
+    /// Otherwise a bone that was perfectly fine could be pushed to <c>name_1</c> merely because a
+    /// sibling was malformed, and a fix for 16 files would churn the names in thousands.
+    /// </para>
+    /// </remarks>
+    private static string[] ResolveJointNames(MeshBoneDto[] bones)
+    {
+        var names = new string[bones.Length];
+        var taken = new Dictionary<int, HashSet<string>>();
+
+        HashSet<string> Siblings(int parentIndex)
+        {
+            if (!taken.TryGetValue(parentIndex, out var set))
+                taken[parentIndex] = set = new HashSet<string>(StringComparer.Ordinal);
+            return set;
+        }
+
+        // Pass 1 — claim the names that need no help. SanitizeIdentifier returns its input
+        // unchanged exactly when the name is already valid, so this needs no second predicate.
+        // A name that is legal but already claimed by a sibling is left for pass 2: a duplicate
+        // path is rejected on exactly the same grounds as a malformed one, so it cannot be
+        // waved through just because both spellings happen to be legal.
+        for (var i = 0; i < bones.Length; i++)
+        {
+            var name = bones[i].Name;
+            if (UsdPrim.SanitizeIdentifier(name) != name) continue;
+            if (!Siblings(bones[i].ParentIndex).Add(name)) continue;
+            names[i] = name;
+        }
+
+        // Pass 2 — everything left over, disambiguated against the claims from pass 1 and
+        // against each other.
+        for (var i = 0; i < bones.Length; i++)
+        {
+            if (names[i] is not null) continue;
+
+            var siblings = Siblings(bones[i].ParentIndex);
+            var sanitized = UsdPrim.SanitizeIdentifier(bones[i].Name);
+
+            var candidate = sanitized;
+            for (var counter = 1; !siblings.Add(candidate); counter++)
+                candidate = $"{sanitized}_{counter}";
+
+            names[i] = candidate;
+        }
+
+        return names;
     }
 
     public static UsdPrim ToMeshPrim(this BrushComponentDto brush)
