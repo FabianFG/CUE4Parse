@@ -1,11 +1,13 @@
 ﻿using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Engine;
 
 public class FPoly
 {
+    public int VertexCount;
     public FVector Base;
     public FVector Normal;
     public FVector TextureU;
@@ -23,11 +25,22 @@ public class FPoly
     
     public FPoly(FAssetArchive Ar)
     {
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.FPOLYVERTEXARRAY)
+        {
+            VertexCount = Ar.Read<int>();
+        }
         Base = Ar.Read<FVector>();
         Normal = Ar.Read<FVector>();
         TextureU = Ar.Read<FVector>();
         TextureV = Ar.Read<FVector>();
-        Vertices = Ar.ReadArray<FVector>();
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.FPOLYVERTEXARRAY)
+        {
+            Vertices = Ar.ReadArray<FVector>(VertexCount);
+        }
+        else
+        {
+            Vertices = Ar.ReadArray<FVector>();
+        }
         PolyFlags = Ar.Read<uint>();
         Actor = new FPackageIndex(Ar);
         ItemName = Ar.ReadFName();
@@ -35,7 +48,19 @@ public class FPoly
         iLink = Ar.Read<int>();
         iBrushPoly = Ar.Read<int>();
         LightMapScale = Ar.Read<float>();
-        LightmassSettings = new FLightmassPrimitiveSettings(Ar);
-        RulesetVariation = Ar.ReadFName();
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.INTEGRATED_LIGHTMASS)
+        {
+            LightmassSettings = new FLightmassPrimitiveSettings(Ar);
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_FPOLY_PBRULESET_POINTER && Ar.Ver < EUnrealEngineObjectUE3Version.FPOLY_RULESET_VARIATIONNAME)
+        {
+            new FPackageIndex(Ar); // Ruleset
+        }
+        else
+        {
+            RulesetVariation = Ar.ReadFName();
+        }
     }
 }

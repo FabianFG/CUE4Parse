@@ -599,6 +599,17 @@ namespace CUE4Parse.UE4.Readers
             return Encoding.Latin1.GetString(ReadSpan(length));
         }
 
+        public string ReadNullAnsiString()
+        {
+            var bytes = new List<byte>();
+            byte b;
+            while ((b = Read<byte>()) != 0)
+            {
+                bytes.Add(b);
+            }
+            return Encoding.Latin1.GetString(bytes.ToArray());
+        }
+
         public float ReadFReal() => Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES ? (float)Read<double>() : Read<float>();
 
         public virtual FName ReadFName() => new(ReadFString());
