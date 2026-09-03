@@ -64,6 +64,97 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
     }
 
+    public class UMaterialExpressionMultiply : UMaterialExpression
+    {
+        public FExpressionInput? A { get; private set; }
+        public FExpressionInput? B { get; private set; }
+
+        public override void Deserialize(FAssetArchive Ar, long validPos)
+        {
+            base.Deserialize(Ar, validPos);
+
+            A = GetOrDefault<FExpressionInput>(nameof(A));
+            B = GetOrDefault<FExpressionInput>(nameof(B));
+        }
+    }
+
+    public class UMaterialExpressionAdd : UMaterialExpression
+    {
+        public FExpressionInput? A { get; private set; }
+        public FExpressionInput? B { get; private set; }
+
+        public override void Deserialize(FAssetArchive Ar, long validPos)
+        {
+            base.Deserialize(Ar, validPos);
+
+            A = GetOrDefault<FExpressionInput>(nameof(A));
+            B = GetOrDefault<FExpressionInput>(nameof(B));
+        }
+    }
+
+    public class UMaterialExpressionDepthBiasedAlpha : UMaterialExpression
+    {
+        public FExpressionInput? Alpha { get; private set; }
+        public FExpressionInput? Bias { get; private set; }
+
+        public override void Deserialize(FAssetArchive Ar, long validPos)
+        {
+            base.Deserialize(Ar, validPos);
+
+            Alpha = GetOrDefault<FExpressionInput>(nameof(Alpha));
+            Bias = GetOrDefault<FExpressionInput>(nameof(Bias));
+        }
+    }
+
+    public class UMaterialExpressionPower : UMaterialExpression
+    {
+        public FExpressionInput? Base { get; private set; }
+        public FExpressionInput? Exponent { get; private set; }
+
+        public override void Deserialize(FAssetArchive Ar, long validPos)
+        {
+            base.Deserialize(Ar, validPos);
+
+            Base = GetOrDefault<FExpressionInput>(nameof(Base));
+            Exponent = GetOrDefault<FExpressionInput>(nameof(Exponent));
+        }
+    }
+
+    public class UMaterialExpressionConstantClamp : UMaterialExpressionOneMinus;
+    public class UMaterialExpressionOneMinus : UMaterialExpression
+    {
+        public FExpressionInput? Input { get; private set; }
+
+        public override void Deserialize(FAssetArchive Ar, long validPos)
+        {
+            base.Deserialize(Ar, validPos);
+
+            Input = GetOrDefault<FExpressionInput>(nameof(Input));
+        }
+    }
+
+    public class FMaterialExpressionTextureBase : IUStruct
+    {
+        public FPackageIndex? Texture { get; private set; }
+
+        public FMaterialExpressionTextureBase(FAssetArchive Ar)
+        {
+            if (Ar.Game < GAME_UE4_0)
+            {
+                // if less than EUnrealEngineObjectUE3Version.UNIFORM_EXPRESSIONS_IN_SHADER_CACHE it's a "TextureIndex"
+                Texture = new FPackageIndex(Ar);
+            }
+        }
+    }
+
+    public class FMaterialUniformExpressionFlipBookTextureParameter : FMaterialExpressionTextureBase
+    {
+        public FMaterialUniformExpressionFlipBookTextureParameter(FAssetArchive Ar)
+            : base(Ar)
+        {
+        }
+    }
+
     public class UMaterialExpressionTextureSample : UMaterialExpressionTextureBase
     {
         public FExpressionInput? Coordinates { get; private set; }

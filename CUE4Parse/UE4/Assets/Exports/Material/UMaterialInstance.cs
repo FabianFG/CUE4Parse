@@ -17,7 +17,7 @@ public class UMaterialInstanceTimeVarying : UMaterialInstance;
 
 public class UMaterialInstance : UMaterialInterface
 {
-    
+
     private ResolvedObject? _parent;
     private bool bHasNonUPropertyStaticParameters = false;
     public UUnrealMaterial? Parent => _parent?.Load<UUnrealMaterial>();
@@ -69,9 +69,8 @@ public class UMaterialInstance : UMaterialInterface
                     Ar.Position = validPos;
                 }
             }
-            else
+            else if (Ar.Game < GAME_UE4_0) // test UE4 then remove
             {
-                /*
                 var QualityMask = 1;
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MATERIAL_QUALITY_LEVEL)
                 {
@@ -84,10 +83,26 @@ public class UMaterialInstance : UMaterialInterface
                     {
                         continue;
                     }
+
+                    var loadedResource = new FMaterialResource();
+                    loadedResource.Deserialize(Ar);
+
+                    StaticParameters = new FStaticParameterSet(Ar);
+                    bHasNonUPropertyStaticParameters = true;
                 }
 
-                //new FMaterialShaderMapId(Ar); // if PKG_ContainsInlinedShaders and specific ue3
-                */
+                //new FMaterialShaderMapId(Ar); // if PKG_ContainsInlinedShaders and specific ue3 ver
+
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADER_MODEL_2)
+                {
+                    var loadedResource = new FMaterialResource();
+                    loadedResource.Deserialize(Ar);
+                    StaticParameters = new FStaticParameterSet(Ar);
+                }
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.MATERIAL_INSTANCE_BASE_PROPERTY_OVERRIDES)
+                {
+                    new FMaterialInstanceBasePropertyOverrides(Ar);
+                }
             }
         }
 
