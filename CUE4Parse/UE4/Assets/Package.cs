@@ -91,7 +91,37 @@ namespace CUE4Parse.UE4.Assets
             {
                 uassetAr = new FAssetArchive(new FArchiveBigEndian(uasset), this);
             }
-            uassetAr.Position -= 4;
+            if (uassetAr.Game < GAME_UE4_0)
+            {
+                var possibleTag = uassetAr.Read<uint>();
+                uassetAr.Position -= 4;
+                if (possibleTag == FPackageFileSummary.PACKAGE_FILE_TAG || possibleTag == 0x20000 || possibleTag == 0x10000)
+                {
+                    uassetAr.Position = 0;
+
+                    var packageFileTag = new FArchive.FCompressedChunkInfo(uassetAr);
+                    var bWasByteSwapped = packageFileTag.CompressedSize == FPackageFileSummary.PACKAGE_FILE_TAG_SWAPPED || packageFileTag.CompressedSize == (long) FArchive.BYTESWAP_ORDER64(FPackageFileSummary.PACKAGE_FILE_TAG);
+
+                    var summary = new FArchive.FCompressedChunkInfo(uassetAr);
+                    if (bWasByteSwapped)
+                    {
+                        summary.UncompressedSize = (long) FArchive.BYTESWAP_ORDER64((ulong) summary.UncompressedSize);
+                    }
+
+                    uassetAr.Position = 0;
+                    var decompressedData = new byte[summary.UncompressedSize];
+                    uassetAr.SerializeCompressedNew(decompressedData, (int) summary.UncompressedSize, CompressionMethod.Zlib.ToString(), ECompressionFlags.COMPRESS_None, false, out _);
+
+                    uassetAr.SetBaseArchive(new FByteArchive("Decompressed Package", decompressedData, uassetAr.Versions));
+                }
+                else
+                {
+                    uassetAr.Position -= 4;
+                }
+            }
+            else
+            {
+                uassetAr.Position -= 4;
 
             Summary = new FPackageFileSummary(uassetAr);
 
