@@ -150,12 +150,12 @@ public class UObject : AbstractPropertyHolder
                     new FStateFrame(Ar);
                 }
 
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.REMOVE_SIZE_VJOINTPOS && !FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject))
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.REMOVE_SIZE_VJOINTPOS && !FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject) || IsComponent(Class.Name.Text, Ar))
                 {
                     if (this is UComponent)
                     {
                         Ar.Position += sizeof(int); // FPackageIndex
-                        if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_COMPONENT_TEMPLATES)
+                        if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_COMPONENT_TEMPLATES || IsPropertiesObject())
                         {
                             Ar.SkipFName();
                         }
@@ -566,6 +566,46 @@ public class UObject : AbstractPropertyHolder
     {
         return IsFullNameStableForNetworking();
     }
+
+    // checks if the current object or outers are PropertiesObject.
+    public bool IsPropertiesObject()
+    {
+        if (FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject))
+            return true;
+
+        var current = Outer;
+
+        while (current?.TryLoad(out var outer) == true)
+        {
+            if (outer.FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject))
+                return true;
+
+            current = outer.Outer;
+        }
+
+        return false;
+    }
+
+    // checks if a type is a component with mappings.
+    public bool IsComponent(string type, FAssetArchive Ar)
+    {
+        var currentType = type;
+
+        while (currentType != null)
+        {
+            if (currentType == "Component")
+                return true;
+
+            if (Ar.Owner?.Mappings?.Types == null ||
+                !Ar.Owner.Mappings.Types.TryGetValue(currentType, out var mappings))
+                break;
+
+            currentType = mappings.SuperType;
+        }
+
+        return false;
+    }
+
 
     public override string ToString() => Name;
 }

@@ -215,12 +215,14 @@ namespace CUE4Parse.UE4.Assets
                     ExportsLazy[i] = new Lazy<UObject>(() =>
                     {
                         // Create
-                        var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex), this, (EObjectFlags) export.ObjectFlags);
+                        var classObj = (!export?.ObjectName.IsNone ?? false) && export.ClassIndex.IsNull ? new ResolvedLoadedObject(new UScriptClass("Class")) : ResolvePackageIndex(export.ClassIndex);
+                        var obj = ConstructObject(classObj, this, (EObjectFlags) export.ObjectFlags);
                         obj.Name = export.ObjectName.Text;
                         obj.Outer = ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject;
                         obj.Outer ??= new ResolvedPackageObject(this);
                         obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
                         obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
+                        obj.FlagsLegacy |= (EObjectFlagsLegacy) export.ObjectFlagsLegacy;
                         obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
 
                         // Serialize
@@ -377,6 +379,13 @@ namespace CUE4Parse.UE4.Assets
         private ResolvedObject? ResolveImport(FPackageIndex importIndex)
         {
             var import = ImportMap[-importIndex.Index - 1];
+            var className = import.ClassName.Text;
+
+            if (className is "Class" or "SharpClass" or "PythonClass" or "ASClass" or "ScriptStruct")
+            {
+                return new ResolvedImportObject(import, this);
+            }
+
             var outerMostIndex = importIndex;
             FObjectImport outerMostImport;
             while (true)
@@ -423,6 +432,10 @@ namespace CUE4Parse.UE4.Assets
             }
             if (importPackage == null)
             {
+                if (import.ClassName.IsNone)
+                {
+                    return new ResolvedImportObject(import, this);
+                }
 #if DEBUG
                 Log.Error("Missing native package ({0}) for import of {1} in {2}.", outerMostImport.ObjectName, import.ObjectName, Name);
 #endif
@@ -470,7 +483,7 @@ namespace CUE4Parse.UE4.Assets
 
             public override FName Name => _export?.ObjectName ?? "None";
             public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedPackageObject(Package);
-            public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
+            public override ResolvedObject? Class => (!_export?.ObjectName.IsNone ?? false) && _export.ClassIndex.IsNull ? new ResolvedLoadedObject(new UScriptClass("Class")) : Package.ResolvePackageIndex(_export.ClassIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
         }
 
@@ -603,7 +616,10 @@ namespace CUE4Parse.UE4.Assets
             {
                 Trace.Assert(_phase == LoadPhase.Create);
                 _phase = LoadPhase.Serialize;
-                _object = _package.ConstructObject(_package.ResolvePackageIndex(_export.ClassIndex), _package, (EObjectFlags) _export.ObjectFlags);
+                var classObj = (!_export?.ObjectName.IsNone ?? false) && _export.ClassIndex.IsNull
+                    ? new ResolvedLoadedObject(new UScriptClass("Class"))
+                    : _package.ResolvePackageIndex(_export.ClassIndex);
+                _object = _package.ConstructObject(classObj, _package, (EObjectFlags) _export.ObjectFlags);
                 _object.Name = _export.ObjectName.Text;
                 _object.Outer = _package.ResolvePackageIndex(_export.OuterIndex) as ResolvedExportObject;
                 _object.Outer ??= new ResolvedPackageObject(_package);

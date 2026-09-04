@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports.Niagara.NiagaraShader;
+using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Compression;
@@ -39,6 +40,7 @@ public class FMaterialResource : FMaterial
 public class FMaterial
 {
     public FMaterialShaderMap? LoadedShaderMap;
+    public List<UTexture>? ReferencedTextures { get; set; } = [];
 
     public void Deserialize(FAssetArchive Ar)
     {
@@ -83,7 +85,7 @@ public class FMaterial
             }
             else
             {
-                Ar.ReadArray(() => new FPackageIndex(Ar)); // UniformExpressionTextures
+                ReferencedTextures = Ar.ReadArray(() => new FPackageIndex(Ar)).Select(i => i.TryLoad(out UTexture t) ? t : null).OfType<UTexture>().ToList(); // UniformExpressionTextures (ugly code)
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.RENDERING_REFACTOR)

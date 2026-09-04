@@ -5,6 +5,14 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Objects.Engine;
 
+public struct FLightingChannelContainer
+{
+    public byte Initialized;
+    public byte BSP;
+    public byte Static;
+    public byte Dynamic;
+}
+
 public class FPoly
 {
     public int VertexCount;
@@ -43,11 +51,38 @@ public class FPoly
         }
         PolyFlags = Ar.Read<uint>();
         Actor = new FPackageIndex(Ar);
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.TextureDeprecatedFromPoly)
+        {
+            Material = new FPackageIndex(Ar);
+        }
         ItemName = Ar.ReadFName();
-        Material = new FPackageIndex(Ar);
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.TextureDeprecatedFromPoly)
+        {
+            Material = new FPackageIndex(Ar);
+        }
         iLink = Ar.Read<int>();
         iBrushPoly = Ar.Read<int>();
-        LightMapScale = Ar.Read<float>();
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.PanUVRemovedFromPoly)
+        {
+            Ar.Read<short>(); // PanU
+            Ar.Read<short>(); // PanV
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.LightMapScaleAddedToPoly && Ar.Ver < EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS)
+        {
+            LightMapScale = Ar.Read<float>();
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS && Ar.Game < GAME_UE4_0)
+        {
+            Ar.Read<float>(); // ShadowMapScale
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.BSP_LIGHTING_CHANNEL_SUPPORT && Ar.Game < GAME_UE4_0)
+        {
+            Ar.Read<FLightingChannelContainer>(); // LightingChannels
+        }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.INTEGRATED_LIGHTMASS)
         {

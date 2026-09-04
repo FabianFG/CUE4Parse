@@ -111,6 +111,37 @@ namespace CUE4Parse.UE4.Objects.Engine
         /**4  Leaf in back and front, INDEX_NONE=not a leaf.*/
         public readonly int iLeaf0;
         public readonly int iLeaf1;
+
+        public FBspNode(FAssetArchive Ar)
+        {
+            Plane = new FPlane(Ar);
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_ZONEMASK)
+            {
+                Ar.Read<FZoneSet>(); // zonemask
+            }
+
+            iVertPool = Ar.Read<int>();
+            iSurf = Ar.Read<int>();
+            iVertexIndex = Ar.Read<int>();
+            ComponentIndex = Ar.Read<ushort>();
+            ComponentNodeIndex = Ar.Read<ushort>();
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_COMPONENT_ELEMENT_INDEX)
+            {
+                ComponentElementIndex = Ar.Read<int>();
+            }
+
+            iBack = Ar.Read<int>();
+            iFront = Ar.Read<int>();
+            iPlane = Ar.Read<int>();
+            iCollisionBound = Ar.Read<int>();
+            iZone0 = Ar.Read<byte>();
+            iZone1 = Ar.Read<byte>();
+            NumVertices = Ar.Read<byte>();
+            NodeFlags = Ar.Read<EBspNodeFlags>();
+            iLeaf0 = Ar.Read<int>();
+            iLeaf1 = Ar.Read<int>();
+        }
     }
 
     public readonly struct FZoneSet : IUStruct
@@ -286,11 +317,27 @@ namespace CUE4Parse.UE4.Objects.Engine
             const int StripVertexBufferFlag = 1;
             var stripData = new FStripDataFlags(Ar);
 
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release61)
+            {
+                new FPackageIndex(Ar); // Vectors
+                new FPackageIndex(Ar); // Points
+                new FPackageIndex(Ar); // Nodes
+                new FPackageIndex(Ar); // Surfs
+                new FPackageIndex(Ar); // Verts
+                new FPackageIndex(Ar); // Polys
+                return;
+            }
+
             Bounds = new FBoxSphereBounds(Ar);
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedPointer)
+            {
+                new FPackageIndex(Ar); // BodySetup
+            }
 
             Vectors = Ar.ReadBulkArray<FVector>();
             Points = Ar.ReadBulkArray<FVector>();
-            Nodes = Ar.ReadBulkArray<FBspNode>();
+            Nodes = Ar.ReadBulkArray(() => new FBspNode(Ar));
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.BSP_UNDO_FIX)
             {
@@ -309,8 +356,12 @@ namespace CUE4Parse.UE4.Objects.Engine
             if (bHasEditorOnlyData)
             {
                 var dummyPolys = new FPackageIndex(Ar);
-                Ar.SkipBulkArrayData(); // DummyLeafHulls
-                Ar.SkipBulkArrayData(); // DummyLeaves
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedPointer)
+                {
+                    Ar.ReadArray((() => new FBoxSphereBounds(Ar))); // Bounds
+                }
+                Ar.ReadBulkArray<int>(); // DummyLeafHulls
+                Ar.ReadBulkArray<int>(); // DummyLeaves
             }
 
             RootOutside = Ar.ReadBoolean();
@@ -321,11 +372,19 @@ namespace CUE4Parse.UE4.Objects.Engine
                 Ar.ReadBulkArray<int>(); // PortalNodes
             }
 
-            NumUniqueVertices = Ar.Read<uint>();
-
-            if (!stripData.IsEditorDataStripped() || !stripData.IsClassDataStripped(StripVertexBufferFlag))
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
-                VertexBuffer = new FModelVertexBuffer(Ar);
+                Ar.SkipArray(() => Ar.ReadBytes(16)); // Edges
+            }
+
+            if (Ar.Ver > EUnrealEngineObjectUE3Version.USE_UMA_RESOURCE_ARRAY_MESH_DATA)
+            {
+                NumUniqueVertices = Ar.Read<uint>();
+
+                if (!stripData.IsEditorDataStripped() || !stripData.IsClassDataStripped(StripVertexBufferFlag))
+                {
+                    VertexBuffer = new FModelVertexBuffer(Ar);
+                }
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.INTEGRATED_LIGHTMASS)

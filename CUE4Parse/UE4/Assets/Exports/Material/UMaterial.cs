@@ -11,7 +11,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public class UMaterial : UMaterialInterface
 {
-    
     public bool TwoSided { get; private set; }
     public bool bDisableDepthTest { get; private set; }
     public bool bIsMasked { get; private set; }
@@ -117,6 +116,9 @@ public class UMaterial : UMaterialInterface
 
                 var loadedResource = new FMaterialResource();
                 loadedResource.Deserialize(Ar);
+
+                if (loadedResource.ReferencedTextures is not null)
+                    ReferencedTextures.AddRange(loadedResource.ReferencedTextures);
             }
 
             //new FMaterialShaderMapId(Ar); // if PKG_ContainsInlinedShaders and specific ue3 ver
