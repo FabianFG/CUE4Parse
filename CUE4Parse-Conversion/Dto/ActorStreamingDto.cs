@@ -18,6 +18,8 @@ public class WorldSettingsDto : ActorDto
             RootComponent.AttachedActors.Add(new RuntimeHashActorDto(runtimeHash));
         }
 
+        StreamingLevels = [];
+
         foreach (var ptr in worldSettings?.StreamingLevels ?? [])
         {
             if (ptr.Load() is not ULevelStreaming { WorldAsset: { } } || ptr.Load() is not ULevelStreaming streamedlevel)

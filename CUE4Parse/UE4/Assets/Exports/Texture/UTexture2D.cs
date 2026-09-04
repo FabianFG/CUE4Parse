@@ -1,7 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -10,7 +9,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public class UTexture2D : UTexture
 {
-
     public FIntPoint ImportedSize { get; private set; }
     public TextureAddress AddressX { get; private set; }
     public TextureAddress AddressY { get; private set; }
