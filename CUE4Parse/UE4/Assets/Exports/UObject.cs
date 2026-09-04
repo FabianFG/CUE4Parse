@@ -105,6 +105,7 @@ public class UObject : AbstractPropertyHolder
     public ResolvedObject? Template;
     public FGuid? ObjectGuid { get; private set; }
     public EObjectFlags Flags;
+    public EObjectFlagsLegacy FlagsLegacy;
     public UStruct? SerializedSparseClassDataStruct;
     public FStructFallback? SerializedSparseClassData;
     // field for any custom data
@@ -137,24 +138,27 @@ public class UObject : AbstractPropertyHolder
         }
         else
         {
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release40)
+            if (Ar.Game < GAME_UE4_0)
             {
-                Ar.Position += sizeof(int) * 2; // int - TempNum, TempMax
-            }
-
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release47)
-            {
-                new FStateFrame(Ar);
-            }
-
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.REMOVE_SIZE_VJOINTPOS && Ar.Game < GAME_UE4_0)
-            {
-                if (this is UComponent)
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.Release40)
                 {
-                    Ar.Position += sizeof(int); // FPackageIndex
-                    if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_COMPONENT_TEMPLATES)
+                    Ar.Position += sizeof(int) * 2; // int - TempNum, TempMax
+                }
+
+                if (FlagsLegacy.HasFlag(EObjectFlagsLegacy.HasStack) || Ar.Ver < EUnrealEngineObjectUE3Version.Release47 && !FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject))
+                {
+                    new FStateFrame(Ar);
+                }
+
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.REMOVE_SIZE_VJOINTPOS && !FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject))
+                {
+                    if (this is UComponent)
                     {
-                        Ar.SkipFName();
+                        Ar.Position += sizeof(int); // FPackageIndex
+                        if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_COMPONENT_TEMPLATES)
+                        {
+                            Ar.SkipFName();
+                        }
                     }
                 }
             }
@@ -446,8 +450,16 @@ public class UObject : AbstractPropertyHolder
         writer.WritePropertyName(nameof(Name)); // ctrl click depends on the name, we always need it
         writer.WriteValue(Name);
 
-        writer.WritePropertyName(nameof(Flags));
-        writer.WriteValue(Flags.ToStringBitfield());
+        if (FlagsLegacy > 0)
+        {
+            writer.WritePropertyName(nameof(FlagsLegacy));
+            writer.WriteValue(FlagsLegacy.ToStringBitfield());
+        }
+        else
+        {
+            writer.WritePropertyName(nameof(Flags));
+            writer.WriteValue(Flags.ToStringBitfield());
+        }
 
         if (Class is { Object.Value: { } clas })
         {
