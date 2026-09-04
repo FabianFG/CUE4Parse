@@ -57,11 +57,6 @@ public class UsdAnimFormat : IAnimExportFormat
                     break;
                 }
 
-                if (bone.ParentIndex < 0)
-                {
-                    scale = FVector.OneVector; // root bone should not be scaled
-                }
-
                 // MIRROR_MESH
                 tSamples[globalFrame][b] = UsdValue.Tuple(pos.X, -pos.Y, pos.Z);
                 rSamples[globalFrame][b] = UsdValue.Tuple(quat.W, -quat.X, quat.Y, -quat.Z);

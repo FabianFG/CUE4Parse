@@ -79,11 +79,12 @@ public sealed class UEModel : UEFormatExport
         {
             attrs.AddAttribute("METADATA", attr => attr.WriteFString(skeleton.SkeletonPathName ?? "Skeleton"));
 
-            attrs.AddAttribute("BONES", attr => attr.WriteArray(skeleton.Bones, (writer, bone) =>
+            var parentScales = skeleton.Bones.GetParentScales(); // the Blender importer has no rest scale
+            attrs.AddAttribute("BONES", attr => attr.WriteArray(skeleton.Bones, (writer, bone, i) =>
             {
                 writer.WriteFString(bone.Name);
                 writer.Write(bone.ParentIndex);
-                bone.Transform.Translation.Serialize(writer);
+                (bone.Transform.Translation * parentScales[i]).Serialize(writer);
                 bone.Transform.Rotation.Serialize(writer);
                 bone.Transform.Scale3D.Serialize(writer);
             }));
@@ -146,7 +147,7 @@ public sealed class UEModel : UEFormatExport
         attrs.AddAttribute("TEXCOORDS", attr =>
         {
             var mainUvs = lod.Vertices.Select(v => v.Uv).ToArray();
-            
+
             var uvSets = new List<(string Name, FMeshUVFloat[] Uvs)>(1 + lod.ExtraUvs.Length) { ("UV0", mainUvs) };
             uvSets.AddRange(lod.ExtraUvs.Select((t, i) => ($"UV{i + 1}", t)));
 
@@ -195,7 +196,7 @@ public sealed class UEModel : UEFormatExport
                 writer.Write(weight.Weight);
             }));
         }
-        
+
         var morphList = new List<FMorphTarget>();
         foreach (var morphTarget in morphTargets ?? [])
         {
@@ -212,7 +213,7 @@ public sealed class UEModel : UEFormatExport
         {
             attrs.AddAttribute("MORPHTARGETS", attr => attr.WriteArray(morphList));
         }
-        
+
     }
 
     private static List<MeshLodDto<TVertex>> FilterLods<TVertex>(
