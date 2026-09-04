@@ -31,7 +31,9 @@ public class FAion2DataTableFile : FAion2DataFile
         {
             "AgitDecoItemTableItem" => "PersonalAgitDecoItemTableItem",
             "AgitDecoSlotTableItem" => "PersonalAgitDecoSlotTableItem",
+            "ClientSliderSettingsTableItem" => "SliderSettingsTableItem",
             "EnvObjDataTableItem" => "EnvObjTableItem",
+            "FieldEventPlatformerDilemmaTableItem" => "FieldEventDilemmaTableItem",
             "KiskDataTableItem" => "KiskTableItem",
             "MonsterPartsDataTableItem" => "PartsDataTableItem",
             "PeriodItemCollectionTableItem" => "PeriodCollectionTableItem",
@@ -51,6 +53,7 @@ public class FAion2DataTableFile : FAion2DataFile
             "SkillProjectileTableItem" => "ProjectileTableItem",
             "StringTableItem" => "AionStringTableItem",
             "ServerMessageTableItem" => "ServerBroadcastDataTableItem",
+            "SeasonRankingRewardTableItem" => "SeasonRankingRewardCommonTableItem",
             "VehicleListTableItem" => "VehicleDataTableItem",
             "WaveStepDataTableItem" => "WaveStepTableItem",
             "CVResource_StartUpTableItem" => "CVResourceTableItem",
