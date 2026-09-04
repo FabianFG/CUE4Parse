@@ -70,6 +70,7 @@ public sealed class UEAnim : UEFormatExport
         UAnimSequence original,
         FReferenceSkeleton refSkeleton)
     {
+        var parentScales = refSkeleton.GetParentScales(sequence); // the Blender importer has no rest scale, see BoneScaleExtensions
         root.AddAttribute("TRACKS", attr =>
         {
             attr.WriteArray(sequence.Tracks, (writer, track, i) =>
@@ -79,6 +80,7 @@ public sealed class UEAnim : UEFormatExport
                 var (positions, rotations, scales) = SampleTrackKeys(
                     track,
                     refSkeleton.FinalRefBonePose[i],
+                    parentScales[i],
                     sequence,
                     original,
                     i);
@@ -105,6 +107,7 @@ public sealed class UEAnim : UEFormatExport
     private static (List<FVectorKey> Positions, List<FQuatKey> Rotations, List<FVectorKey> Scales) SampleTrackKeys(
         CAnimTrack track,
         FTransform boneTransform,
+        FVector parentScale,
         CAnimSequence sequence,
         UAnimSequence original,
         int boneIndex)
@@ -126,6 +129,9 @@ public sealed class UEAnim : UEFormatExport
             var scale = boneTransform.Scale3D;
             if (hasTrack)
                 track.GetBoneTransform(frame, sequence.NumFrames, ref rotation, ref translation, ref scale);
+
+            translation.Scale(parentScale);
+            scale = scale.RelativeTo(boneTransform.Scale3D);
 
             if (constant)
             {

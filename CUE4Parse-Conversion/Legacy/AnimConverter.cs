@@ -254,7 +254,6 @@ namespace CUE4Parse_Conversion.Animations
 
             // ok?
             if (animSequence.IsValidAdditive()) animSeq = animSeq.ConvertAdditive(skeleton);
-            AdjustSequenceBySkeleton(skeleton.ReferenceSkeleton, animSeq.RetargetBasePose ?? skeleton.ReferenceSkeleton.FinalRefBonePose, animSeq);
             return animSeq;
         }
 
@@ -326,30 +325,6 @@ namespace CUE4Parse_Conversion.Animations
             if (refAnimSet != null) // for FindTrackForBoneIndex
                 animSeq.OriginalSequence = refAnimSet.Sequences[0].OriginalSequence;
             return animSeq;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void AdjustSequenceBySkeleton(FReferenceSkeleton skeleton, FTransform[] transforms, CAnimSequence anim)
-        {
-            if (skeleton.FinalRefBoneInfo.Length == 0 ||
-                skeleton.FinalRefBoneInfo.Length != transforms.Length)
-                return;
-
-            for (var boneIndex = 0; boneIndex < transforms.Length; boneIndex++)
-            {
-                var boneScale = skeleton.GetBoneScale(transforms, boneIndex);
-                if (Math.Abs(boneScale.X - 1.0f) > 0.001f ||
-                    Math.Abs(boneScale.Y - 1.0f) > 0.001f ||
-                    Math.Abs(boneScale.Z - 1.0f) > 0.001f)
-                {
-                    var track = anim.Tracks[boneIndex]; // tracks are bone indexed
-                    for (int keyIndex = 0; keyIndex < track.KeyPos.Length; keyIndex++)
-                    {
-                        // Scale translation by accumulated bone scale value
-                        track.KeyPos[keyIndex].Scale(boneScale);
-                    }
-                }
-            }
         }
 
         private static void ReadTimeArray(FArchive Ar, int numKeys, out float[] times, int numFrames)
