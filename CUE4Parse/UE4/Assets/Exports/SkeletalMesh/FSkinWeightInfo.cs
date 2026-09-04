@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
@@ -9,7 +10,7 @@ public class FSkinWeightInfo
 
     public readonly ushort[] BoneIndex;
     public readonly ushort[] BoneWeight;
-    public readonly bool bUse16BitBoneWeight = false;
+    public readonly bool bUse16BitBoneWeight;
 
     public FSkinWeightInfo()
     {
@@ -23,7 +24,19 @@ public class FSkinWeightInfo
         var numSkelInfluences = bExtraBoneInfluences ? MAX_TOTAL_INFLUENCES_UE4 : NUM_INFLUENCES_UE4;
         if (length > 0) numSkelInfluences = length;
 
-        BoneIndex = bUse16BitBoneIndex ? Ar.ReadArray<ushort>(numSkelInfluences) : Ar.ReadArray(numSkelInfluences, () => (ushort)Ar.Read<byte>());
-        BoneWeight = bUse16BitBoneWeight ? Ar.ReadArray<ushort>(numSkelInfluences) : Ar.ReadArray(numSkelInfluences, () => (ushort) Ar.Read<byte>());
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.USE_UMA_RESOURCE_ARRAY_MESH_DATA)
+        {
+            BoneIndex = bUse16BitBoneIndex ? Ar.ReadArray<ushort>(numSkelInfluences) : Ar.ReadArray(numSkelInfluences, () => (ushort) Ar.Read<byte>());
+            BoneWeight = bUse16BitBoneWeight ? Ar.ReadArray<ushort>(numSkelInfluences) : Ar.ReadArray(numSkelInfluences, () => (ushort) Ar.Read<byte>());
+        }
+        else
+        {
+            var BoneArray = Ar.ReadArray<short>(NUM_INFLUENCES_UE4);
+            for (int i = 0; i < NUM_INFLUENCES_UE4; i++)
+            {
+                BoneIndex![i] = (ushort) (BoneArray[i] & 0xFF);
+                BoneWeight![i] = (ushort) ((BoneArray[i] >> 8) & 0xFF);
+            }
+        }
     }
 }
