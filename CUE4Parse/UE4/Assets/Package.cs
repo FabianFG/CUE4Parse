@@ -122,6 +122,7 @@ namespace CUE4Parse.UE4.Assets
             else
             {
                 uassetAr.Position -= 4;
+            }
 
             Summary = new FPackageFileSummary(uassetAr);
 
