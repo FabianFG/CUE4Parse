@@ -17,6 +17,20 @@ public class WorldSettingsDto : ActorDto
         {
             RootComponent.AttachedActors.Add(new RuntimeHashActorDto(runtimeHash));
         }
+
+        foreach (var ptr in worldSettings?.StreamingLevels ?? [])
+        {
+            if (ptr.Load() is not ULevelStreaming { WorldAsset: { } } || ptr.Load() is not ULevelStreaming streamedlevel)
+                continue;
+
+            // only used in UE3 so can be hardcoded.
+            var world = ptr.Owner.Provider.LoadPackageObject<UWorld>(streamedlevel.PackageName + ".TheWorld");
+
+            if (world == null)
+                continue;
+
+            StreamingLevels.Add(new StreamingLevel(world, streamedlevel));
+        }
     }
 }
 

@@ -47,6 +47,13 @@ public class UClass : UStruct
     {
         base.Deserialize(Ar, validPos);
 
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release62)
+        {
+            Ar.Read<int>(); // classRecordSize
+        }
+
+        if (Ar.Game < GAME_UE4_0) return; // needs stuff
+
         if (Ar.Game == GAME_AWayOut) Ar.Position += 4;
 
         FuncMap = Ar.ReadMap(Ar.ReadFName, () => new FPackageIndex(Ar));
