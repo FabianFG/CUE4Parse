@@ -349,7 +349,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             NumSharedSides = Ar.Read<int>();
             if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_ZONES_FROM_MODEL)
             {
-                var dummyZones = Ar.ReadArray<FZoneProperties>();
+                var dummyZones = Ar.ReadArray(() => new FZoneProperties(Ar));
             }
 
             var bHasEditorOnlyData = !Ar.IsFilterEditorOnly || Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_UNUSED_UPOLYS_FROM_UMODEL;
