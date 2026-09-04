@@ -17,7 +17,9 @@ public class UScriptStruct : UStruct
 
         if (Ar.Game < GAME_UE4_0)
         {
+            Ar.StructTypeStack.Push(Class?.Super?.Name.Text ?? Class?.Name.Text);
             DeserializePropertiesTagged(Properties, Ar, false);
+            Ar.StructTypeStack.Pop();
         }
     }
 }

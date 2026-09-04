@@ -42,7 +42,9 @@ public class FStaticLODModel
     public FMultisizeIndexContainer AdjacencyIndexBuffer;
     public FSkeletalMeshVertexClothBuffer ClothVertexBuffer;
     public FSkeletalMeshHalfEdgeBuffer HalfEdgeBuffer;
+
     public bool SkipLod => Indices?.Buffer == null || Indices.Buffer.Length < 1;
+
     // Game specific data
     public object? AdditionalBuffer;
 
@@ -173,10 +175,20 @@ public class FStaticLODModel
             var RigidVertices = Ar.ReadArray(() => new FRigidVertex(Ar));
             var SoftVertices = Ar.ReadArray(() => new FSoftVertex(Ar));
 
-            Chunks = Ar.ReadArray(() => new FSkelMeshChunk(RigidVertices, SoftVertices));
+            Chunks = [new FSkelMeshChunk(RigidVertices, SoftVertices)];
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
+        {
+            Ar.ReadArray<short>(); // ShadowIndices
         }
 
         ActiveBoneIndices = Ar.ReadArray<short>();
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
+        {
+            Ar.SkipArray<byte>(); // ShadowTriangleDoubleSided
+        }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.DeprecatedOldLodformat)
         {
@@ -309,7 +321,7 @@ public class FStaticLODModel
                     return;
                 }
 
-                if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData) && Ar.Ver >= EUnrealEngineObjectUE3Version.CRACK_FREE_DISPLACEMENT_SUPPORT)
                     AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
 
                 if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH && HasClothData())
@@ -320,6 +332,7 @@ public class FStaticLODModel
                     _ = new FMultisizeIndexContainer(Ar);
                     Ar.Position += 12;
                 }
+
                 if (Ar.Game == GAME_StateOfDecay2) Ar.Position += 8;
             }
         }
