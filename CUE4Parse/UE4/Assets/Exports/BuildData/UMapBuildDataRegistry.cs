@@ -229,7 +229,13 @@ public class FVolumeLightingSample
                 Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(order * order));
             return;
         }
-        if (Ar.Ver >= EUnrealEngineObjectUE4Version.CHANGED_VOLUME_SAMPLE_FORMAT)
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.CHANGED_VOLUME_SAMPLE_FORMAT)
+        {
+            Ar.Position += 4; // four bytes
+            Ar.Position += 12; // three FColors
+            Ar.Position += 1;
+        }
+        else
         {
             Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(order*order));
         }
