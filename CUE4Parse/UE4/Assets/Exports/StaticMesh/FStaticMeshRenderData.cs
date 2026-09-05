@@ -180,7 +180,7 @@ public class FStaticMeshRenderData
 
         if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
         {
-            if (Ar.Game is >= GAME_UE5_6 or GAME_GrayZoneWarfare or GAME_HighOnLife2 or GAME_Gothic1Remake)
+            if (Ar.Game is >= GAME_UE5_6 or GAME_GrayZoneWarfare or GAME_HighOnLife2 or GAME_Gothic1Remake or GAME_TheBloodofDawnwalker)
             {
                 var bRenderDataFlags = Ar.Read<byte>();
                 bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;
@@ -229,6 +229,7 @@ public class FStaticMeshRenderData
         {
             GAME_FragPunk or GAME_RocoKingdomWorld => 16,
             GAME_Stalker2 => 14,
+            GAME_TheBloodofDawnwalker => 2,
             >= GAME_UE4_9 => MAX_STATIC_LODS_UE4,
             _ => 4
         };

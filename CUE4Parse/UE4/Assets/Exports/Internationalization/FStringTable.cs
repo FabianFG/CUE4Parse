@@ -19,8 +19,8 @@ public class FStringTable
         {
             if (Ar.Game is GAME_CodeVein2) return CodeVein2StringEncryption.CodeVein2EncryptedFString(Ar, ECV2DecryptionMode.StringTable);
             var value = Ar.ReadFString();
-            if (Ar.Game == GAME_MarvelRivals) Ar.SkipFString();
-            if (Ar.Game == GAME_LostRecordsBloomAndRage)
+            if (Ar.Game is GAME_MarvelRivals or GAME_TheBloodofDawnwalker) Ar.SkipFString();
+            if (Ar.Game is GAME_LostRecordsBloomAndRage)
             {
                 Ar.SkipFString();
                 var length = int.TryParse(Ar.ReadFString(), out var len) ? len : 0;
