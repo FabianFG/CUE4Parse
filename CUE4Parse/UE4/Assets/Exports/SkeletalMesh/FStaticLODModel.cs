@@ -592,6 +592,25 @@ public class FStaticLODModel
 
     private void SerializeAvailabilityInfo(FArchive Ar, bool bAdjacencyData)
     {
+        if (Ar.Game is GAME_GangstarMirageCity)
+        {
+            Ar.Position += bAdjacencyData ? 27 : 22;
+            Ar.Position += Ar.Peek<byte>() != 0 ? 13 : 9;
+            Ar.Position += Ar.Peek<ushort>() switch
+            {
+                0 => 47,
+                1 => 35,
+                256 => 58,
+            };
+            if (HasClothData() || Ar.Peek<int>() == 0)
+            {
+                Ar.SkipArray<ulong>();
+                Ar.Position += 2 * 4;
+            }
+            Ar.Position += 16;
+            return;
+        }
+
         var bytesToSkip = 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
         if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemovingTessellation && bAdjacencyData)
             bytesToSkip += 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
@@ -605,7 +624,6 @@ public class FStaticLODModel
 
         if (Ar.Game is GAME_StarWarsJediSurvivor) Ar.Position += 4;
         if (Ar.Game is GAME_NeedForSpeedMobile) Ar.Position += 32;
-        if (Ar.Game is GAME_GangstarMirageCity) Ar.Position += 38 + 6; // Position and tangent compression metadata
         if (HasClothData())
         {
             // FSkeletalMeshVertexClothBuffer::SerializeMetaData

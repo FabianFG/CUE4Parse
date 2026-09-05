@@ -304,12 +304,18 @@ public class UStaticMesh : UObject
             Materials[i] = StaticMaterials[i].MaterialInterface;
         }
 
+        if (Ar.Game is GAME_GangstarMirageCity)
+        {
+            var idk = Ar.Read<int>();
+            Ar.SkipMultipleFixedArrays([4, 28, 4, 4, 2]);
+        }
+
         Ar.Position += Ar.Game switch
         {
             GAME_OutlastTrials => 1,
             GAME_Farlight84 or GAME_DuneAwakening => 4,
             GAME_DaysGone => Ar.Read<int>() * 4 + 4,
-            GAME_GangstarMirageCity => 44,
+            GAME_GangstarMirageCity => 20,
             _ => 0
         };
     }

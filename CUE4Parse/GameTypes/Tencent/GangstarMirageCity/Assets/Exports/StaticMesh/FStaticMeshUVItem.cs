@@ -5,6 +5,8 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
+public class URailsStaticMesh : UStaticMesh;
+
 public partial class FStaticMeshUVItem
 {
     private enum ETangentPrecision : byte
@@ -17,11 +19,9 @@ public partial class FStaticMeshUVItem
 
     public static FPackedNormal[][] SerializeTangentsGangstar(FArchive Ar)
     {
-        var compressionMethod = Ar.Read<byte>();
+        var unknown = Ar.Read<byte>();
         var tangentPrecision = Ar.Read<ETangentPrecision>();
         _ = tangentPrecision != ETangentPrecision.PackedNormal ? Ar.Read<float>() : 0; // Tangent compression scale
-        if (compressionMethod != 0)
-            throw new ParserException(Ar, $"Unsupported Gangstar tangent compression method {compressionMethod}");
 
         return tangentPrecision switch
         {

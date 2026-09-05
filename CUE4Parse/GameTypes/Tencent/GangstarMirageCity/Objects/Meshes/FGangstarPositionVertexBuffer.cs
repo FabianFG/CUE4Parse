@@ -24,17 +24,17 @@ public sealed class FGangstarPositionVertexBuffer : FPositionVertexBuffer
             return;
         }
 
-        var isCompressed = Ar.Read<byte>() != 0 | Ar.Read<byte>() != 0;
-        _ = Ar.Read<FVector>(); // Position compression offset
+        var unknown = Ar.Read<byte>();
+        var isCompressed = Ar.Read<byte>() != 0;
         if (isCompressed)
         {
+            var vector = Ar.Read<FVector>(); // Position compression offset
             _componentBits = Ar.Read<FIntVector>();
             _componentMin = Ar.Read<FIntVector>();
         }
         else
         {
-            _ = Ar.Read<FVector>(); // ?
-            _ = Ar.Read<byte>(); // ?
+            var box = new FBox(Ar);
             Verts = Ar.ReadBulkArray<FVector>();
             if (Verts.Length != NumVertices)
                 throw new ParserException(Ar, $"NumVertices={Verts.Length} != NumVertices={NumVertices}");
