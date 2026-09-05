@@ -94,7 +94,7 @@ public enum EGame : uint
         GAME_ThePathless = GAME_UE4_25 + 10,
         GAME_SuicideSquad = GAME_UE4_25 + 11,
         GAME_HellLetLoose = GAME_UE4_25 + 12,
-        GAME_AliensFireteamElite = GAME_UE4_25 + 13,
+        GAME_Placeholder3 = GAME_UE4_25 + 13,
         GAME_Back4Blood = GAME_UE4_25 + 14,
         GAME_NiNoKuniCrossWorlds = GAME_UE4_25 + 15,
     GAME_UE4_26 = GameUtils.GameUe4Base + (26 << 16),

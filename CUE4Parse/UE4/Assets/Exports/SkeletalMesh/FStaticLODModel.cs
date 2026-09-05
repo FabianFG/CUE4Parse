@@ -432,8 +432,6 @@ public class FStaticLODModel
             }
         }
 
-        if (Ar.Game is GAME_ReadyOrNot or GAME_HellLetLoose or GAME_DarkPicturesAnthologyManofMedan or
-            GAME_DarkPicturesAnthologyTheDevilinMe or GAME_AliensFireteamElite or GAME_Back4Blood) Ar.Position += 4;
         if (Ar.Game is GAME_DarkPicturesAnthologyLittleHope && !bIsLODCookedOut) Ar.Position += 4;
     }
 
