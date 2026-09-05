@@ -331,7 +331,7 @@ public class FStaticLODModel
     }
 
     // UE ref https://github.com/EpicGames/UnrealEngine/blob/26450a5a59ef65d212cf9ce525615c8bd673f42a/Engine/Source/Runtime/Engine/Private/SkeletalMeshLODRenderData.cpp#L710
-    public void SerializeRenderItem(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
+    public void SerializeRenderItem(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels = 0)
     {
         var stripDataFlags = new FStripDataFlags(Ar);
         var bIsLODCookedOut = false;

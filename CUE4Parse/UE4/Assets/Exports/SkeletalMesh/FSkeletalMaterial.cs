@@ -1,4 +1,6 @@
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.GameplayTags;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.UObject;
@@ -7,23 +9,24 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
+[StructFallback]
 [JsonConverter(typeof(FSkeletalMaterialConverter))]
 public class FSkeletalMaterial
 {
-    public FPackageIndex? Material; // UMaterialInterface
+    public FPackageIndex? MaterialInterface; // UMaterialInterface
     public FName MaterialSlotName;
     public FName? ImportedMaterialSlotName;
     public FMeshUVChannelInfo? UVChannelData;
-    public FPackageIndex OverlayMaterialInterface;
+    public FPackageIndex? OverlayMaterialInterface;
 
-    public FSkeletalMaterial(FPackageIndex material)
+    public FSkeletalMaterial(FPackageIndex materialInterface)
     {
-        Material = material;
+        MaterialInterface = materialInterface;
     }
 
     public FSkeletalMaterial(FAssetArchive Ar)
     {
-        Material = new FPackageIndex(Ar);
+        MaterialInterface = new FPackageIndex(Ar);
         if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
         {
             MaterialSlotName = Ar.ReadFName();
@@ -66,5 +69,12 @@ public class FSkeletalMaterial
                 Ar.Position += 8;
                 break;
         }
+    }
+
+    public FSkeletalMaterial(FStructFallback fallback)
+    {
+        MaterialInterface = fallback.GetOrDefault(nameof(MaterialInterface), new FPackageIndex());
+        MaterialSlotName = fallback.GetOrDefault<FName>(nameof(MaterialSlotName), "None");
+        UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo>(nameof(UVChannelData), null);
     }
 }

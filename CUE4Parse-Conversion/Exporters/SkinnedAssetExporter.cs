@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+using CUE4Parse.UE4.Assets.Exports.Engine;
+using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Formats.Meshes;
-using CUE4Parse.UE4.Assets.Exports.Rig;
-using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
 namespace CUE4Parse_Conversion.Exporters;
 
-public sealed class SkeletalMeshExporter(USkeletalMesh originalMesh) : MeshExporter<USkeletalMesh>(originalMesh)
+public sealed class SkinnedAssetExporter(USkinnedAsset originalMesh) : MeshExporter<USkinnedAsset>(originalMesh)
 {
-    protected override IReadOnlyList<ExportFile> BuildFiles(USkeletalMesh originalMesh, IMeshExportFormat format)
+    protected override IReadOnlyList<ExportFile> BuildFiles(USkinnedAsset originalMesh, IMeshExportFormat format)
     {
         if (Session.Options.ExportMorphTargets)
         {

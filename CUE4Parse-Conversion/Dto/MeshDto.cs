@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
-using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -13,6 +13,7 @@ using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse_Conversion.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
@@ -56,7 +57,7 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         }
     }
 
-    protected MeshDto(USkeletalMesh mesh) : base(mesh)
+    protected MeshDto(USkinnedAsset mesh) : base(mesh)
     {
         Materials = new MeshMaterialDto[mesh.SkeletalMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
@@ -330,10 +331,8 @@ public class SkeletonDto : MeshDto<SkinnedMeshVertex>
     public string? SkeletonPathName { get; private set; }
     public FVirtualBone[]? VirtualBones { get; private set; }
 
-    protected SkeletonDto(USkeletalMesh mesh) : base(mesh)
+    protected SkeletonDto(USkinnedAsset mesh) : base(mesh)
     {
-        Bounds = mesh.ImportedBounds.GetBox();
-
         var refSkeleton = mesh.ReferenceSkeleton;
         Bones = new MeshBoneDto[refSkeleton.FinalRefBonePose.Length];
         for (var i = 0; i < Bones.Length; i++)
@@ -384,11 +383,12 @@ public sealed class SkeletalMeshDto : SkeletonDto
     public FPackageIndex[]? MorphTargets { get; private set; }
     public FPackageIndex[]? AssetUserData { get; private set; }
 
-    public SkeletalMeshDto(USkeletalMesh mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, bool exportMorphTarget = true) : base(mesh)
+    public SkeletalMeshDto(USkinnedAsset mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, bool exportMorphTarget = true) : base(mesh)
     {
         ArgumentNullException.ThrowIfNull(mesh.LODModels, "Mesh has no LOD data");
         ArgumentNullException.ThrowIfNull(mesh.LODInfo, "Mesh has no LOD info");
 
+        FBox? bounds = mesh.Bounds?.GetBox();
         PhysicsAsset = mesh.PhysicsAsset;
         MorphTargets = mesh.MorphTargets;
         AssetUserData = mesh.AssetUserData;
@@ -398,20 +398,25 @@ public sealed class SkeletalMeshDto : SkeletonDto
             ParseMeshRenderData(mesh, quality);
         }
 
-        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite && MorphTargets is { Length: > 0} && exportMorphTarget || LODs.Count == 0;
+        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite && MorphTargets is { Length: > 0 } && exportMorphTarget || LODs.Count == 0;
         if (shouldParseNanite && mesh.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
         {
             ParseNaniteResources(this, nanite, naniteFormat);
+            if (nanite.MeshBounds is { } meshBounds)
+                bounds ??= meshBounds.GetBox();
         }
         else if (LODs.Count == 0) // in case someone put NaniteOnly but there was no nanite to parse
         {
             ParseMeshRenderData(mesh, quality);
         }
 
+        bounds ??= LODs.FirstOrDefault()?.CalculateLodBounds();
+        Bounds = bounds ?? new FBox(FVector.ZeroVector, FVector.OneVector);
+
         SetLodSuffixes();
     }
 
-    private void ParseMeshRenderData(USkeletalMesh mesh, EMeshQuality quality)
+    private void ParseMeshRenderData(USkinnedAsset mesh, EMeshQuality quality)
     {
         foreach (var sourceLodIndex in quality.GetRange(mesh.LODModels!.Length, i => mesh.LODModels[i].SkipLod))
         {

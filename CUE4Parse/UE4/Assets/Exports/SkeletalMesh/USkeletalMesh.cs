@@ -9,34 +9,23 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
+using CUE4Parse.UE4.Assets.Exports.Engine;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
-public partial class USkeletalMesh : UObject
+public partial class USkeletalMesh : USkinnedAsset
 {
     public FBoxSphereBounds ImportedBounds { get; private set; }
-    public FSkeletalMaterial[] SkeletalMaterials { get; private set; }
-    public FReferenceSkeleton ReferenceSkeleton { get; private set; }
-    public FSkeletalMeshLODGroupSettings[]? LODInfo { get; private set; }
-    public FStaticLODModel[]? LODModels { get; private set; }
-    public bool bHasVertexColors { get; private set; }
     public byte NumVertexColorChannels { get; private set; }
-    public FPackageIndex[] MorphTargets { get; private set; }
-    public FPackageIndex[] Sockets { get; private set; }
-    public FPackageIndex Skeleton { get; private set; }
-    public FPackageIndex?[] Materials { get; private set; } = []; // UMaterialInterface[]
     public bool bEnablePerPolyCollision { get; private set; }
-    public FPackageIndex PhysicsAsset { get; private set; }
-    public FPackageIndex[]? AssetUserData { get; private set; }
-    public FNaniteResources? NaniteResources;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 8;
         base.Deserialize(Ar, validPos);
-        LODInfo = GetOrDefault<FSkeletalMeshLODGroupSettings[]?>(nameof(LODInfo)) ?? GetOrDefault<FSkeletalMeshLODGroupSettings[]>("SourceModels");
 
+        LODInfo = GetOrDefault<FSkeletalMeshLODGroupSettings[]?>(nameof(LODInfo)) ?? GetOrDefault<FSkeletalMeshLODGroupSettings[]>("SourceModels");
         bHasVertexColors = GetOrDefault<bool>(nameof(bHasVertexColors));
         NumVertexColorChannels = GetOrDefault<byte>(nameof(NumVertexColorChannels));
         MorphTargets = GetOrDefault(nameof(MorphTargets), Array.Empty<FPackageIndex>());
@@ -56,6 +45,7 @@ public partial class USkeletalMesh : UObject
         }
 
         ImportedBounds = new FBoxSphereBounds(Ar);
+        Bounds = ImportedBounds;
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedPointer)
         {
@@ -85,7 +75,7 @@ public partial class USkeletalMesh : UObject
             Materials = new FPackageIndex?[SkeletalMaterials.Length];
             for (var i = 0; i < Materials.Length; i++)
             {
-                Materials[i] = SkeletalMaterials[i].Material;
+                Materials[i] = SkeletalMaterials[i].MaterialInterface;
             }
         }
 
@@ -105,7 +95,7 @@ public partial class USkeletalMesh : UObject
                 _ => Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors)),
             };
         }
-        else
+        else // this part is actually FSkeletalMeshRenderData::Serialize
         {
             if (!stripDataFlags.IsEditorDataStripped())
             {
@@ -319,7 +309,7 @@ public partial class USkeletalMesh : UObject
         }
     }
 
-    public void PopulateMorphTargetVerticesData()
+    public sealed override void PopulateMorphTargetVerticesData()
     {
         if (LODModels is null || MorphTargets.Length == 0) return;
 
