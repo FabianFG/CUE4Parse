@@ -28,7 +28,9 @@ public class FStaticMeshLODResources
     public FRawStaticIndexBuffer? ReversedDepthOnlyIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? WireframeIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? AdjacencyIndexBuffer { get; private set; }
-    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null || PositionVertexBuffer == null;
+
+    public bool bisPositionBufferNormal;
+    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null || bisPositionBufferNormal && PositionVertexBuffer == null;
 
     public enum EClassDataStripFlag : byte
     {
@@ -200,6 +202,7 @@ public class FStaticMeshLODResources
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS)
             {
                 PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+                bisPositionBufferNormal = true;
             }
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
             if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS || Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS && Ar.Ver < EUnrealEngineObjectUE3Version.MovedColorFromUVItem) goto skipStreams;

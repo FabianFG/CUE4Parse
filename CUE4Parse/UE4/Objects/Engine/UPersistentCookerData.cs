@@ -231,14 +231,14 @@ namespace CUE4Parse.UE4.Objects.Engine
             CookedBulkDataInfoMap = Ar.ReadMap(Ar.ReadFString, () => new FCookedBulkDataInfo(Ar));
             FilenameToTimeMap = Ar.ReadMap(Ar.ReadFString, Ar.Read<double>);
             TextureFileCacheWaste = Ar.Read<long>();
-            if (Ar.Ver <= EUnrealEngineObjectUE3Version.ADDDED_EXPLICIT_EMISSIVE_LIGHT_RADIUS) Ar.Position += 8; // unknown
+            if (Ar.Ver <= EUnrealEngineObjectUE3Version.ADDED_FOLIAGE_PARAMETERS) Ar.Position += 8; // unknown
             FilenameToCookedVersion = Ar.ReadMap(Ar.ReadFString, Ar.Read<int>);
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_FILECACHE_GUIDS)
             {
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.IPHONE_STEREO_ADPCM_COMPRRESION_BUG_FIX) Ar.Position += 4; // unknown
                 CookedTextureFileCacheInfoMap = Ar.ReadMap(Ar.ReadFString, () => new FCookedTextureFileCacheInfo(Ar));
 
-                if (Ar.Ver > EUnrealEngineObjectUE3Version.CONVERT_KISMET_OBJECTS)
+                if (Ar.Ver > EUnrealEngineObjectUE3Version.FREE_GPUSKIN_SHADER_CONSTANT)
                 {
                     if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_USAGE_INFO)
                     {

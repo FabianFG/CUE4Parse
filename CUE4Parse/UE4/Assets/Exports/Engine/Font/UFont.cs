@@ -6,12 +6,20 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine.Font;
 
 public class UFont : UObject
 {
+    private FFontPage[]? Pages;
+    private int? CharactersPerPage;
     public Dictionary<ushort, ushort> CharRemap;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_FONTS_SERIALIZATION)
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release122)
+        {
+            Pages = Ar.ReadArray(() => new FFontPage(Ar));
+            CharactersPerPage = Ar.Read<int>();
+        }
+        else if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_FONTS_SERIALIZATION)
         {
             Ar.ReadArray(() => new FFontCharacter(Ar)); // Characters
             Ar.ReadArray(() => new FPackageIndex(Ar)); // Textures
@@ -30,6 +38,12 @@ public class UFont : UObject
             {
                 Ar.ReadBoolean(); // IsRemapped
             }
+        }
+
+        if (Pages?.Length == 0 && CharactersPerPage == 0)
+        {
+            Ar.ReadFString(); // FontName
+            Ar.Read<int>(); // FontHeight
         }
     }
 }

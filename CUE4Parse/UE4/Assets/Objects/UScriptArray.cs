@@ -2,6 +2,7 @@ using CUE4Parse.GameTypes.DaysGone.Assets;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -31,7 +32,7 @@ public class UScriptArray
 
     public UScriptArray(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type, int size)
     {
-        InnerType = tagData?.InnerType ?? throw new ParserException(Ar, "UScriptArray needs inner type");
+        InnerType = tagData?.InnerType;
         var elementCount = Ar.Read<int>();
 
         if (elementCount > Ar.Length - Ar.Position)
@@ -40,7 +41,28 @@ public class UScriptArray
                 $"ArrayProperty element count {elementCount} is larger than the remaining archive size {Ar.Length - Ar.Position}");
         }
 
-        if (Ar.HasUnversionedProperties || type is ReadType.RAW || Ar.Game < GAME_UE4_0)
+        if (Ar.Game < GAME_UE4_0)
+        {
+            if (!Ar.HasUnversionedProperties &&
+                tagData?.Name is not null &&
+                Ar.Owner?.Provider?.MappingsForGame?.Types is { } mappingTypes &&
+                TryGetArrayInnerType(
+                    mappingTypes,
+                    Ar.StructTypeStack.Peek(),
+                    tagData.Name,
+                    out var innerType,
+                    out var innerTagData))
+            {
+                InnerType = innerType;
+                InnerTagData = innerTagData;
+            }
+
+            if (InnerType == null)
+            {
+                InnerType = "StructProperty";
+            }
+        }
+        else if (Ar.HasUnversionedProperties || type is ReadType.RAW)
         {
             InnerTagData = tagData.InnerTypeData;
         }
@@ -63,6 +85,8 @@ public class UScriptArray
                 InnerTagData = DaysGoneProperties.GetArrayStructType(tagData.Name, elemsize);
             }
         }
+
+        if (InnerType == null) throw new ParserException(Ar, "UScriptArray needs inner type");
 
         Properties = new List<FPropertyTagType>(elementCount);
         if (elementCount == 0) return;
@@ -92,6 +116,46 @@ public class UScriptArray
             else
                 Log.Debug("Failed to read array property of type {InnerType} at {Position}, index {Index}", InnerType, Ar.Position, i);
         }
+    }
+
+    private static bool TryGetArrayInnerType(
+        IDictionary<string, MappingsProvider.Struct> mappingTypes,
+        string structName,
+        FName propertyName,
+        out string? innerType,
+        out FPropertyTagData? innerTagData)
+    {
+        innerType = null;
+        innerTagData = null;
+
+        var currentStructName = structName;
+        while (mappingTypes.TryGetValue(currentStructName, out var mappingStruct))
+        {
+            var property = mappingStruct.Properties.Values.FirstOrDefault(p => p.Name == propertyName);
+
+            if (property?.MappingType is { Type: "ArrayProperty" } mapType)
+            {
+                var inner = mapType.InnerType;
+                if (inner?.Type == "StructProperty")
+                {
+                    innerType = "StructProperty";
+                    innerTagData = new FPropertyTagData { Type = "StructProperty", StructType = inner.StructType, Name = inner.StructType };
+                }
+                else
+                {
+                    innerType = inner?.Type;
+                }
+
+                return true;
+            }
+
+            if (mappingStruct.SuperType is null)
+                return false;
+
+            currentStructName = mappingStruct.SuperType;
+        }
+
+        return false;
     }
 
     public override string ToString() => $"{InnerType}[{Properties.Count}]";

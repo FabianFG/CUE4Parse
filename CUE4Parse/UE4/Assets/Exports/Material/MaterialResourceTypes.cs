@@ -1,5 +1,8 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports.Niagara.NiagaraShader;
+using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Compression;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -14,12 +17,125 @@ using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
-public class FMaterialResource : FMaterial;
+public class FMaterialResource : FMaterial
+{
+    [JsonConverter(typeof(StringEnumConverter))]
+    public EBlendMode BlendModeOverrideValue;
+    public bool bIsBlendModeOverrided;
+    public bool bIsMaskedOverrideValue;
+
+    public void Deserialize(FAssetArchive Ar)
+    {
+        base.Deserialize(Ar);
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.MATERIAL_BLEND_OVERRIDE && Ar.Ver <= EUnrealEngineObjectUE4Version.MATERIAL_BLEND_OVERRIDE)
+        {
+            BlendModeOverrideValue = (EBlendMode)Ar.Read<int>();
+            bIsBlendModeOverrided = Ar.ReadBoolean();
+            bIsMaskedOverrideValue = Ar.ReadBoolean();
+        }
+    }
+};
 
 public class FMaterial
 {
-
     public FMaterialShaderMap? LoadedShaderMap;
+    public List<UTexture>? ReferencedTextures { get; set; } = [];
+
+    public void Deserialize(FAssetArchive Ar)
+    {
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.PURGED_FMATERIAL_COMPILE_OUTPUTS)
+        {
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.FMATERIAL_COMPILATION_ERRORS)
+            {
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.MATERIAL_ERROR_RESAVE)
+                {
+                    Ar.SkipArray(Ar.SkipFString); // CompileErrors
+                }
+                else
+                {
+                    Ar.ReadMap(() => new FPackageIndex(Ar), Ar.ReadFString); // LegacyCompileErrors
+                }
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.MATERIAL_TEXTUREDEPENDENCYLENGTH)
+            {
+                Ar.ReadMap(() => new FPackageIndex(Ar), () => Ar.Read<int>()); // TextureDependencyLengthMap
+                Ar.Read<int>(); // MaxTextureDependencyLength
+            }
+
+            Ar.Read<FGuid>(); // Id
+
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVED_FMATERIAL_COMPILE_OUTPUTS)
+            {
+                Ar.Read<int>(); // NumUserTexCoords;
+            }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.UNIFORM_EXPRESSIONS_IN_SHADER_CACHE)
+            {
+                Ar.ReadArray(() => new FMaterialUniformExpression(Ar)); // UniformVectorExpressions
+                Ar.ReadArray(() => new FMaterialUniformExpression(Ar)); // UniformScalarExpressions
+                Ar.ReadArray(() => new FMaterialUniformExpression(Ar)); // Uniform2DTextureExpressions
+                Ar.ReadArray(() => new FMaterialUniformExpression(Ar)); // UniformCubeTextureExpressions
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.MATERIAL_EDITOR_VERTEX_SHADER)
+                {
+                    Ar.ReadArray(() => new FMaterialUniformExpression(Ar)); // UniformVectorExpressions
+                    Ar.ReadArray(() => new FMaterialUniformExpression(Ar)); // UniformScalarExpressions
+                }
+            }
+            else
+            {
+                ReferencedTextures = Ar.ReadArray(() => new FPackageIndex(Ar)).Select(i => i.TryLoad(out UTexture t) ? t : null).OfType<UTexture>().ToList(); // UniformExpressionTextures (ugly code)
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.RENDERING_REFACTOR)
+            {
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.MATERIAL_USES_SCENECOLOR_FLAG)
+                {
+                    Ar.ReadBoolean(); // bUsesSceneColor
+                }
+
+                Ar.ReadBoolean(); // bUsesSceneDepth
+                if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVED_FMATERIAL_COMPILE_OUTPUTS)
+                {
+                    if (Ar.Ver >= EUnrealEngineObjectUE3Version.DYNAMICPARAMETERS_ADDED)
+                    {
+                        Ar.ReadBoolean(); // bUsesDynamicParameter
+                    }
+
+                    if (Ar.Ver >= EUnrealEngineObjectUE3Version.MATEXP_LIGHTMAPUVS_ADDED)
+                    {
+                        Ar.ReadBoolean(); // bUsesLightmapUVs
+                    }
+
+                    if (Ar.Ver >= EUnrealEngineObjectUE3Version.MATERIAL_EDITOR_VERTEX_SHADER)
+                    {
+                        Ar.ReadBoolean(); // bUsesMaterialVertexPositionOffset
+                    }
+                }
+
+                Ar.Read<int>(); // UsingTransforms (ECoordTransformUsage)
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.TEXTUREDENSITY)
+            {
+                Ar.ReadArray(() => new FTextureLookup(Ar));
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.FALLBACK_DROPPED_COMPONENTS_TRACKING)
+            {
+                Ar.Position += sizeof(int); // DummyDroppedFallbackComponents
+            }
+        }
+        else
+        {
+            FMaterialResourceProxyReader resourceAr;
+            var ShaderMaps = new FByteBulkData(Ar);
+            using var ShaderMapsAr = new FByteArchive("ShaderMaps", ShaderMaps.Data, Ar.Versions);
+            resourceAr = new FMaterialResourceProxyReader(ShaderMapsAr);
+            DeserializeInlineShaderMap(resourceAr);
+        }
+    }
 
     public void DeserializeInlineShaderMap(FMaterialResourceProxyReader Ar)
     {

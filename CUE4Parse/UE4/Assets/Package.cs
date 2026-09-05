@@ -2,6 +2,7 @@ using System.Diagnostics;
 using CUE4Parse.Compression;
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.ACE7.Encryption;
+using CUE4Parse.GameTypes.Mars.Encryption;
 using CUE4Parse.GameTypes.RL.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
@@ -9,6 +10,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -76,6 +78,10 @@ namespace CUE4Parse.UE4.Assets
                 decryptor = new ACE7Decrypt();
                 uassetAr = new FAssetArchive(decryptor.DecryptUassetArchive(uasset, out xorKey), this);
             }
+            else if (uasset.Game == GAME_Mars)
+            {
+                uassetAr = new FAssetArchive(new MarsDecrypt().DecryptUassetArchive(uasset), this);
+            }
             else uassetAr = new FAssetArchive(uasset, this);
 
             // The package has been stored in a separate endianness than the linker expected so we need to force
@@ -85,7 +91,38 @@ namespace CUE4Parse.UE4.Assets
             {
                 uassetAr = new FAssetArchive(new FArchiveBigEndian(uasset), this);
             }
-            uassetAr.Position -= 4;
+            if (uassetAr.Game < GAME_UE4_0)
+            {
+                var possibleTag = uassetAr.Read<uint>();
+                uassetAr.Position -= 4;
+                if (possibleTag == FPackageFileSummary.PACKAGE_FILE_TAG || possibleTag == 0x20000 || possibleTag == 0x10000)
+                {
+                    uassetAr.Position = 0;
+
+                    var packageFileTag = new FArchive.FCompressedChunkInfo(uassetAr);
+                    var bWasByteSwapped = packageFileTag.CompressedSize == FPackageFileSummary.PACKAGE_FILE_TAG_SWAPPED || packageFileTag.CompressedSize == (long) FArchive.BYTESWAP_ORDER64(FPackageFileSummary.PACKAGE_FILE_TAG);
+
+                    var summary = new FArchive.FCompressedChunkInfo(uassetAr);
+                    if (bWasByteSwapped)
+                    {
+                        summary.UncompressedSize = (long) FArchive.BYTESWAP_ORDER64((ulong) summary.UncompressedSize);
+                    }
+
+                    uassetAr.Position = 0;
+                    var decompressedData = new byte[summary.UncompressedSize];
+                    uassetAr.SerializeCompressedNew(decompressedData, (int) summary.UncompressedSize, CompressionMethod.Zlib.ToString(), ECompressionFlags.COMPRESS_None, false, out _);
+
+                    uassetAr.SetBaseArchive(new FByteArchive("Decompressed Package", decompressedData, uassetAr.Versions));
+                }
+                else
+                {
+                    uassetAr.Position -= 4;
+                }
+            }
+            else
+            {
+                uassetAr.Position -= 4;
+            }
 
             Summary = new FPackageFileSummary(uassetAr);
 
@@ -108,26 +145,27 @@ namespace CUE4Parse.UE4.Assets
             if (Summary.ThumbnailTableOffset > 0)
             {
                 EditorThumbnails = new List<byte[]>();
+
                 uassetAr.SeekAbsolute(Summary.ThumbnailTableOffset, SeekOrigin.Begin);
                 var count = uassetAr.Read<int>();
 
-                var thumbnailOffsets = new List<int>(count);
+                var thumbnailOffsets = new int[count];
 
                 for (int i = 0; i < count; i++)
                 {
-                    uassetAr.SkipFString(); // objectShortClassName
-                    uassetAr.SkipFString(); // objectPathWithoutPackageName
-                    var thumbnailOffset = uassetAr.Read<int>();
-                    thumbnailOffsets.Add(thumbnailOffset);
+                    var thumbnail = new FThumbnailTableItem(uasset);
+                    thumbnailOffsets[i] = thumbnail.ThumbnailOffset;
                 }
 
                 foreach (var offset in thumbnailOffsets)
                 {
                     uassetAr.SeekAbsolute(offset + 8, SeekOrigin.Begin);
+
                     var totalBytes = uassetAr.Read<int>();
-                    if (totalBytes == 0) continue;
-                    var rawImage = uassetAr.ReadBytes(totalBytes);
-                    EditorThumbnails.Add(rawImage);
+                    if (totalBytes <= 0)
+                        continue;
+
+                    EditorThumbnails.Add(uassetAr.ReadBytes(totalBytes));
                 }
             }
 
@@ -208,12 +246,14 @@ namespace CUE4Parse.UE4.Assets
                     ExportsLazy[i] = new Lazy<UObject>(() =>
                     {
                         // Create
-                        var obj = ConstructObject(ResolvePackageIndex(export.ClassIndex), this, (EObjectFlags) export.ObjectFlags);
+                        var classObj = (!export?.ObjectName.IsNone ?? false) && export.ClassIndex.IsNull ? new ResolvedLoadedObject(new UScriptClass("Class")) : ResolvePackageIndex(export.ClassIndex);
+                        var obj = ConstructObject(classObj, this, (EObjectFlags) export.ObjectFlags);
                         obj.Name = export.ObjectName.Text;
                         obj.Outer = ResolvePackageIndex(export.OuterIndex) as ResolvedExportObject;
                         obj.Outer ??= new ResolvedPackageObject(this);
                         obj.Super = ResolvePackageIndex(export.SuperIndex) as ResolvedExportObject;
                         obj.Template = ResolvePackageIndex(export.TemplateIndex) as ResolvedExportObject;
+                        obj.FlagsLegacy |= (EObjectFlagsLegacy) export.ObjectFlagsLegacy;
                         obj.Flags |= (EObjectFlags) export.ObjectFlags; // We give loaded objects the RF_WasLoaded flag in ConstructObject, so don't remove it again in here
 
                         // Serialize
@@ -248,6 +288,12 @@ namespace CUE4Parse.UE4.Assets
 
                 if (Summary.CompressionFlags != ECompressionFlags.COMPRESS_None)
                 {
+                    byte[] nonce = [];
+                    if ((Summary.PackageFlags & EPackageFlags.PKG_NotExternallyReferenceable) != 0)
+                    {
+                        nonce = uassetAr.ReadBytes(12);
+                    }
+
                     var headerEnd = uassetAr.Position;
                     var checkSumDataOffset = (int) (Summary.TotalHeaderSize - headerEnd - checkSumDataSize);
 
@@ -258,7 +304,15 @@ namespace CUE4Parse.UE4.Assets
                     if (uassetAr.Game == GAME_RocketLeague && (int)uassetAr.LicenseeVer >= 33) encryptedSize -= encryptedSize % 16;
                     var encryptedData = uassetAr.ReadBytes(encryptedSize);
 
-                    RocketLeagueAes.Decrypt(encryptedData, checkSumDataOffset, lastBlockSize, true, out var decryptedData);
+                    byte[] decryptedData;
+                    if ((Summary.PackageFlags & EPackageFlags.PKG_NotExternallyReferenceable) != 0)
+                    {
+                        RocketLeagueAes.DecryptCTR(encryptedData, checkSumDataOffset, checkSumDataSize, nonce, out decryptedData);
+                    }
+                    else
+                    {
+                        RocketLeagueAes.Decrypt(encryptedData, checkSumDataOffset, checkSumDataSize, true, out decryptedData);
+                    }
 
                     var after = uassetAr.ReadBytes((int) (uassetAr.Length - uassetAr.Position));
 
@@ -282,14 +336,21 @@ namespace CUE4Parse.UE4.Assets
 
                 var buffer = new byte[totalSize];
                 uassetAr.Position = 0;
-                uassetAr.Read(buffer, 0, (int) uassetAr.Length);
+                uassetAr.ReadExactly(buffer, 0, (int) uassetAr.Length);
 
                 foreach (var chunk in Summary.CompressedChunks)
                 {
                     uassetAr.Position = chunk.CompressedOffset;
+                    var compressedData = uassetAr.ReadBytes(chunk.CompressedSize);
+
+                    if ((Summary.PackageFlags & EPackageFlags.PKG_NotExternallyReferenceable) != 0)
+                    {
+                        RocketLeagueAes.DecryptCTRWithLastKey(compressedData, chunk.Nonce, out compressedData);
+                    }
                     var decompressedData = new byte[chunk.UncompressedSize];
 
-                    uassetAr.SerializeCompressedNew(decompressedData, chunk.UncompressedSize,
+                    using var tempAr = new FByteArchive($"CompressedChunk", compressedData, uassetAr.Versions);
+                    tempAr.SerializeCompressedNew(decompressedData, chunk.UncompressedSize,
                         Summary.CompressionFlags.HasFlag(ECompressionFlags.COMPRESS_ZLIB)
                             ? CompressionMethod.Zlib.ToString()
                             : CompressionMethod.LZO.ToString(),
@@ -308,6 +369,12 @@ namespace CUE4Parse.UE4.Assets
         {
             uasset.Versions = (VersionContainer) uasset.Versions.Clone();
             var uassetAr = new FAssetArchive(uasset, null);
+
+            if (uasset.Game == GAME_Mars)
+            {
+                uassetAr = new FAssetArchive(new MarsDecrypt().DecryptUassetArchive(uasset), null);
+            }
+
             var Summary = new FPackageFileSummary(uassetAr);
 
             DecryptAndDecompress(uassetAr, Summary);
@@ -343,6 +410,13 @@ namespace CUE4Parse.UE4.Assets
         private ResolvedObject? ResolveImport(FPackageIndex importIndex)
         {
             var import = ImportMap[-importIndex.Index - 1];
+            var className = import.ClassName.Text;
+
+            if (className is "Class" or "SharpClass" or "PythonClass" or "ASClass" or "ScriptStruct")
+            {
+                return new ResolvedImportObject(import, this);
+            }
+
             var outerMostIndex = importIndex;
             FObjectImport outerMostImport;
             while (true)
@@ -389,6 +463,10 @@ namespace CUE4Parse.UE4.Assets
             }
             if (importPackage == null)
             {
+                if (import.ClassName.IsNone)
+                {
+                    return new ResolvedImportObject(import, this);
+                }
 #if DEBUG
                 Log.Error("Missing native package ({0}) for import of {1} in {2}.", outerMostImport.ObjectName, import.ObjectName, Name);
 #endif
@@ -436,7 +514,7 @@ namespace CUE4Parse.UE4.Assets
 
             public override FName Name => _export?.ObjectName ?? "None";
             public override ResolvedObject Outer => Package.ResolvePackageIndex(_export.OuterIndex) ?? new ResolvedPackageObject(Package);
-            public override ResolvedObject? Class => Package.ResolvePackageIndex(_export.ClassIndex);
+            public override ResolvedObject? Class => (!_export?.ObjectName.IsNone ?? false) && _export.ClassIndex.IsNull ? new ResolvedLoadedObject(new UScriptClass("Class")) : Package.ResolvePackageIndex(_export.ClassIndex);
             public override ResolvedObject? Super => Package.ResolvePackageIndex(_export.SuperIndex);
         }
 
@@ -569,7 +647,10 @@ namespace CUE4Parse.UE4.Assets
             {
                 Trace.Assert(_phase == LoadPhase.Create);
                 _phase = LoadPhase.Serialize;
-                _object = _package.ConstructObject(_package.ResolvePackageIndex(_export.ClassIndex), _package, (EObjectFlags) _export.ObjectFlags);
+                var classObj = (!_export?.ObjectName.IsNone ?? false) && _export.ClassIndex.IsNull
+                    ? new ResolvedLoadedObject(new UScriptClass("Class"))
+                    : _package.ResolvePackageIndex(_export.ClassIndex);
+                _object = _package.ConstructObject(classObj, _package, (EObjectFlags) _export.ObjectFlags);
                 _object.Name = _export.ObjectName.Text;
                 _object.Outer = _package.ResolvePackageIndex(_export.OuterIndex) as ResolvedExportObject;
                 _object.Outer ??= new ResolvedPackageObject(_package);

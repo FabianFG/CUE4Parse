@@ -62,11 +62,11 @@ public class ULightComponent : ULightComponentBase
             }
         }
 
-        /*if (Ar.Ver > EUnrealEngineObjectUE3Version.ADDED_LIGHT_VOLUME_SUPPORT && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVE_UNUSED_LIGHTING_PROPERTIES)
+        if (Ar.Ver > EUnrealEngineObjectUE3Version.ADDED_LIGHT_VOLUME_SUPPORT && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVE_UNUSED_LIGHTING_PROPERTIES)
         {
             Ar.ReadArray(() => new FConvexVolume(Ar)); // InclusionConvexVolumes
             Ar.ReadArray(() => new FConvexVolume(Ar)); // ExclusionConvexVolumes
-        }*/
+        }
 
         if (Ar.Game == GAME_Valorant) Ar.Position += 24; // Zero FVector, 1.0f, -1 int, 1.0f
     }

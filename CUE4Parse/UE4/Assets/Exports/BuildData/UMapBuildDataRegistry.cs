@@ -229,7 +229,13 @@ public class FVolumeLightingSample
                 Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(order * order));
             return;
         }
-        if (Ar.Ver >= EUnrealEngineObjectUE4Version.CHANGED_VOLUME_SAMPLE_FORMAT)
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.CHANGED_VOLUME_SAMPLE_FORMAT)
+        {
+            Ar.Position += 4; // four bytes
+            Ar.Position += 12; // three FColors
+            Ar.Position += 1;
+        }
+        else
         {
             Lighting = Ar.ReadArray(3, () => Ar.ReadArray<float>(order*order));
         }
@@ -514,7 +520,28 @@ public class FLightMap2D : FLightMap
         VirtualTextures = new FPackageIndex[2];
         ScaleVectors = new FVector4[NUM_STORED_LIGHTMAP_COEF];
         AddVectors = new FVector4[NUM_STORED_LIGHTMAP_COEF];
-        if (Ar.Ver <= EUnrealEngineObjectUE4Version.LOW_QUALITY_DIRECTIONAL_LIGHTMAPS)
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.MAXCOMPONENT_LIGHTMAP_ENCODING)
+        {
+            for (int elementIndex = 0; elementIndex < 4; elementIndex++)
+            {
+                Ar.Position += 16;
+            }
+        }
+        else if (Ar.Ver <= EUnrealEngineObjectUE4Version.SH_LIGHTMAPS)
+        {
+            for (var CoefficientIndex = 0; CoefficientIndex < 3; CoefficientIndex++)
+            {
+                Ar.Position += 16;
+            }
+        }
+        else if (Ar.Ver <= EUnrealEngineObjectUE4Version.LIGHTMAP_COMPRESSION)
+        {
+            for (var CoefficientIndex = 0; CoefficientIndex < 5; CoefficientIndex++)
+            {
+                Ar.Position += 28;
+            }
+        }
+        else if (Ar.Ver <= EUnrealEngineObjectUE4Version.LOW_QUALITY_DIRECTIONAL_LIGHTMAPS)
         {
             for (var CoefficientIndex = 0; CoefficientIndex < 3; CoefficientIndex++)
             {

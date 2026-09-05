@@ -49,7 +49,7 @@ public abstract class TBulkData<T> where T: struct
     protected TBulkData(FAssetArchive Ar)
     {
         Header = new FByteBulkDataHeader(Ar);
-        if (Header.SizeOnDisk == 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
+        if (Header.SizeOnDisk == 0 || Header.ElementCount <= 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
         {
             _data = new Lazy<T[]?>(() => []);
             return;
@@ -58,7 +58,7 @@ public abstract class TBulkData<T> where T: struct
         _dataPosition = Ar.Position;
         _savedAr = Ar;
 
-        if (Ar.Game >= GAME_UE4_0 && (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None))
+        if (Ar.Game >= GAME_UE4_0 ? BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None : !BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
         {
             Ar.Position += Header.SizeOnDisk;
         }

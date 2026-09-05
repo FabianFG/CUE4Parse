@@ -40,7 +40,7 @@ public class SceneComponentDto : ComponentDto
     public readonly List<SceneComponentDto> Children = []; // same actor components only
     public readonly List<ActorDto> AttachedActors = []; // actors whose root is attached here
 
-    public readonly FTransform Transform;
+    public FTransform Transform;
     public readonly string? AttachSocketName; // TODO: use it
 
     internal void AddChildComponent(SceneComponentDto child)
