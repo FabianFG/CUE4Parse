@@ -170,11 +170,12 @@ public class CriWareProvider
             var cueTable = acb.AtomCueSheetData["Cue"];
             var cueNameTable = acb.AtomCueSheetData["CueName"];
 
-            foreach (var cueRow in cueTable)
+            for (var cueIndex = 0; cueIndex < cueTable.Count; cueIndex++)
             {
-                int cueId = Convert.ToInt32(cueRow["CueId"]);
+                var cueRow = cueTable[cueIndex];
+                var cueId = Convert.ToInt32(cueRow["CueId"]);
                 var waveforms = acb.GetWaveformsFromCueId(cueId);
-                var cueNameRow = cueNameTable.FirstOrDefault(cue => Convert.ToInt32(cue["CueIndex"]) == cueId);
+                var cueNameRow = cueNameTable.FirstOrDefault(cue => Convert.ToInt32(cue["CueIndex"]) == cueIndex);
                 var name = cueNameRow != null && cueNameRow["CueName"] is string cueName
                     ? cueName
                     : $"{Path.GetFileNameWithoutExtension(baseName)}_{cueId:D4}";
@@ -203,7 +204,7 @@ public class CriWareProvider
                 }
             }
 
-            int waveformsCount = memoryAwb?.Waves.Count ?? 0 + streamingAwb?.Waves.Count ?? 0;
+            int waveformsCount = (memoryAwb?.Waves.Count ?? 0) + (streamingAwb?.Waves.Count ?? 0);
             if (visitedWaveforms.Count < waveformsCount)
             {
                 Log.Warning("Not all waveforms were extracted from ACB '{AcbName}'. Extracted {ExtractedCount} out of {WaveformCount}.", baseName, visitedWaveforms.Count, waveformsCount);
@@ -266,9 +267,20 @@ public class CriWareProvider
         if (reader == null)
             return null;
 
-        var wave = reader.Waves.FirstOrDefault(w => w.WaveId == waveId);
-        using var waveStream = reader.GetWaveSubfileStream(wave);
+        var waveIndex = reader.Waves.FindIndex(w => w.WaveId == waveId);
+        if (waveIndex < 0)
+            return null;
 
+        var wave = reader.Waves[waveIndex];
+        if (wave.Length == 0)
+        {
+#if DEBUG
+            Log.Debug("Waveform {WaveId} was empty", waveId);
+#endif
+            return null;
+        }
+
+        using var waveStream = reader.GetWaveSubfileStream(wave);
         return waveStream.EmbedSubKey(reader.Subkey);
     }
 
