@@ -431,8 +431,6 @@ public class FStaticLODModel
                 }
             }
         }
-
-        if (Ar.Game is GAME_DarkPicturesAnthologyLittleHope && !bIsLODCookedOut) Ar.Position += 4;
     }
 
     public void SerializeRenderItem_Legacy(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels)
@@ -549,7 +547,8 @@ public class FStaticLODModel
             }
             else
             {
-                Ar.SkipFixedArray(1);
+                // Important: this was also included in intermediate versions 4.25/4.26 Plus
+                Ar.SkipFixedArray(1); // RayTracingData
             }
         }
 
