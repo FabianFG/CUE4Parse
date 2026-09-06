@@ -117,6 +117,7 @@ public class FCluster
     public FUVRange[] UVRanges = [];
     public FBoneInfluenceHeader BoneInfluenceHeader;
     public uint[] ClusterBoneInfluences = [];
+    //public FBrick[] Bricks = [];
 
     public FCluster(FArchive Ar, int stride)
     {
@@ -235,15 +236,14 @@ public class FCluster
             var BrickDataOfsset_Num = Ar.Read<uint>();
             BrickDataOffset = GetBits(BrickDataOfsset_Num, 22, 0);
             BrickDataNum = GetBits(BrickDataOfsset_Num, 10, 22);
-            bVoxel = false;
+
             if (Ar.Game >= GAME_UE5_8)
             {
                 var curveZ = Ar.Read<uint>();
                 NumCurves = GetBits(curveZ, 8, 0);
                 NumPointsPerCurve = GetBits(curveZ, 8, 8);
 
-                //bCurve				= ClusterType == NANITE_CLUSTER_TYPE_CURVES ? true : (Cluster.NumCurves > 0) && NANITE_CURVE_DATA;
-                //CompileTimeCouldBeCurve = ClusterType == NANITE_CLUSTER_TYPE_UNKNOWN || ClusterType == NANITE_CLUSTER_TYPE_CURVES;
+                bCurve = NumCurves > 0;
 
                 CurveRadiusScale	= Unpack10F(GetBits(curveZ, 10, 16));
                 CurveRadiusBits		= GetBits(curveZ, 4, 26);
@@ -256,6 +256,7 @@ public class FCluster
             }
             else
                 Ar.Position += 8;
+            bVoxel = NumTris == 0 && NumCurves == 0;
         }
 
         if (materialEncoding < 0xFE000000u)
