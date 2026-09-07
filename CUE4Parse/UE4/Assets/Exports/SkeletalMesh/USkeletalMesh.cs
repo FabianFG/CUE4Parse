@@ -1,15 +1,16 @@
+using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
-using CUE4Parse.UE4.Assets.Exports.Engine;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -99,7 +100,38 @@ public partial class USkeletalMesh : USkinnedAsset
         {
             if (!stripDataFlags.IsEditorDataStripped())
             {
+                bool bIsEditorDataStripped = false;
+                if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.AllowSkeletalMeshToReduceTheBaseLOD)
+                {
+                    var _stripflags = new FStripDataFlags(Ar);
+                    bIsEditorDataStripped = _stripflags.IsEditorDataStripped();
+                }
                 LODModels = Ar.ReadArray(() => new FStaticLODModel(Ar, bHasVertexColors));
+
+                if (FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.SplitModelAndRenderData)
+                {
+                    //GenerateGUIDFromHash(Owner);
+                }
+                else
+                {
+                    var SkeletalMeshModelGUID = Ar.Read<FGuid>();
+                    var bGuidIsHash = Ar.ReadBoolean();
+                }
+
+                if (!bIsEditorDataStripped)
+                {
+                    if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.AllowSkeletalMeshToReduceTheBaseLOD
+                        && FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.ConvertReductionBaseSkeletalMeshBulkDataToInlineReductionCacheData)
+                    {
+                        // actually it should be FReductionBaseSkeletalMeshBulkData, but it's serialized as bulk data
+                        var OriginalReductionSourceMeshData_DEPRECATED = Ar.ReadArray(() => new FByteBulkData(Ar));
+                    }
+
+                    if (FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.ConvertReductionBaseSkeletalMeshBulkDataToInlineReductionCacheData)
+                    {
+                        Ar.SkipArray<FInlineReductionCacheData>(); //InlineReductionCacheDatas
+                    }
+                }
             }
 
             var bCooked = Ar.ReadBoolean();

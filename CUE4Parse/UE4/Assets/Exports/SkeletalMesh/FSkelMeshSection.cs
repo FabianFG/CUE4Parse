@@ -209,12 +209,7 @@ public class FSkelMeshSection
 
             if (FOverlappingVerticesCustomVersion.Get(Ar) >= FOverlappingVerticesCustomVersion.Type.DetectOVerlappingVertices)
             {
-                var size = Ar.Read<int>();
-                OverlappingVertices = new Dictionary<int, int[]>(size);
-                for (var i = 0; i < size; i++)
-                {
-                    OverlappingVertices[Ar.Read<int>()] = Ar.ReadArray<int>();
-                }
+                OverlappingVertices = Ar.ReadMap(Ar.Read<int>, Ar.ReadArray<int>);
             }
 
             if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddSkeletalMeshSectionDisable)

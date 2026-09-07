@@ -30,7 +30,7 @@ public class FSkeletalMaterial
         if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
         {
             MaterialSlotName = Ar.ReadFName();
-            var bSerializeImportedMaterialSlotName = !Ar.Owner.HasFlags(EPackageFlags.PKG_FilterEditorOnly);
+            var bSerializeImportedMaterialSlotName = !Ar.IsFilterEditorOnly;
             if (FCoreObjectVersion.Get(Ar) >= FCoreObjectVersion.Type.SkeletalMaterialEditorDataStripping)
             {
                 bSerializeImportedMaterialSlotName = Ar.ReadBoolean();
@@ -51,6 +51,7 @@ public class FSkeletalMaterial
                 var bRecomputeTangent = Ar.ReadBoolean();
             }
         }
+
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             UVChannelData = new FMeshUVChannelInfo(Ar);
 
