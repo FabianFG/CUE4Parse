@@ -1,15 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
+using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse.UE4.Assets.Exports.Actor;
-using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
-using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using SixLabors.ImageSharp;
 using SkiaSharp;
 using Log = Serilog.Log;
@@ -68,7 +66,7 @@ public static class MeshConverter
     }
 
     [Obsolete("This method is deprecated. Please use SkeletalMeshDto constructor directly and handle exceptions as needed.")]
-    public static bool TryConvert(this USkeletalMesh originalMesh, [MaybeNullWhen(false)] out SkeletalMeshDto convertedMesh, EMeshQuality quality = EMeshQuality.All)
+    public static bool TryConvert(this USkinnedAsset originalMesh, [MaybeNullWhen(false)] out SkeletalMeshDto convertedMesh, EMeshQuality quality = EMeshQuality.All)
     {
         try
         {

@@ -14,7 +14,7 @@ public readonly struct MeshMaterialDto(string? slotName, FPackageIndex? material
 
     }
 
-    public MeshMaterialDto(FSkeletalMaterial material) : this(material.ImportedMaterialSlotName?.Text ?? material.MaterialSlotName.Text, material.Material)
+    public MeshMaterialDto(FSkeletalMaterial material) : this(material.ImportedMaterialSlotName?.Text ?? material.MaterialSlotName.Text, material.MaterialInterface)
     {
 
     }
