@@ -26,7 +26,7 @@ public static class FCustomizableCrypto
         [
             new FCustomizableCryptoAlgorithmAes(),
             new FCustomizableCryptoAlgorithmNotImplemented("SM4"),
-            new FCustomizableCryptoAlgorithmNotImplemented("MLE"),
+            new FCustomizableCryptoAlgorithmMLE(),
             new FCustomizableCryptoAlgorithmNotImplemented("RC5"),
             new FCustomizableCryptoAlgorithmNotImplemented("XTEA"),
             new FCustomizableCryptoAlgorithmNotImplemented("Speck"),
@@ -78,7 +78,7 @@ public static class FCustomizableCrypto
 
     private sealed class FCustomizableCryptoAlgorithmNotImplemented(string name) : ICustomizableCryptoAlgorithm
     {
-        public int KeySize => 0;
+        public int MaximumKeySize => 0;
         public byte[] Decrypt(byte[] ciphertext, ReadOnlyMemory<byte> key)
         {
             throw new NotImplementedException($"Algorithm {name} not yet implemented");
