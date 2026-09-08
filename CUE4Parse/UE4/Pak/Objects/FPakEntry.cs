@@ -247,6 +247,13 @@ public class FPakEntry : VfsEntry
 
         // This should clear out any excess CompressionBlocks that may be valid in the user's passed in entry.
         var compressionBlocksCount = (bitfield >> 6) & 0xffff;
+        if (reader.Ar.Game == GAME_RocoKingdomWorld)
+        {
+            var strategyIndex = compressionBlocksCount >> 8;
+            compressionBlocksCount &= 0xFF;
+            CustomData = (int)strategyIndex;
+        }
+
         CompressionBlocks = compressionBlocksCount > 0 ? new FPakCompressedBlock[compressionBlocksCount] : [];
         CompressionBlockSize = compressionBlocksCount switch
         {
