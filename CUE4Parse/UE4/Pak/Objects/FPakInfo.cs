@@ -534,6 +534,13 @@ public partial class FPakInfo
             }
         }
 
+        if (Ar.Game == GAME_RocoKingdomWorld)
+        {
+            CustomEncryptionData = offsetToTry != OffsetsToTry.Size8a
+                ? Ar.ReadBytes(1)
+                : [0];
+        }
+
         // Written at the tail so the trailer for older versions remains byte-compatible. Paks authored before
         // this version leave PakchunkIndex at INDEX_NONE, and the reader falls back to deriving it from the filename.
         if (Version >= EPakFileVersion.PakFile_Version_PakchunkIndex && Ar.Game >= GAME_UE6_0)
@@ -599,6 +606,7 @@ public partial class FPakInfo
         SizeDuneAwakening = 261,
         SizeValorantSource = 286, // For older versions it was 282
         SizeKartRiderDrift = 397, // don't let this be SizeMax, it's way above average and cause issues
+        SizeRocoKingdomWorld = Size8a + 1 // extra strategy id byte
     }
 
     private static readonly OffsetsToTry[] _offsetsToTry =
@@ -668,6 +676,7 @@ public partial class FPakInfo
                 GAME_ValorantSource => [OffsetsToTry.SizeValorantSource],
                 GAME_Overhit => [OffsetsToTry.SizeOverhit],
                 GAME_GangstarMirageCity => [OffsetsToTry.SizeGangstar],
+                GAME_RocoKingdomWorld => [OffsetsToTry.SizeRocoKingdomWorld, OffsetsToTry.Size8a],
                 _ => _offsetsToTry
             };
 

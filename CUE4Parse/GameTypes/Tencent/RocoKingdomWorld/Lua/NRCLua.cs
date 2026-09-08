@@ -4,7 +4,7 @@ using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
 
-namespace CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
+namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Lua;
 
 public static class NRCLua
 {

@@ -14,9 +14,9 @@ using CUE4Parse.GameTypes.NFS.Mobile.Lua;
 using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.GameTypes.PUBG.UE4.Lua;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
-using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
 using CUE4Parse.GameTypes.Strinova.Lua;
+using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Lua;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Lua;
 using CUE4Parse.GameTypes.UDWN.Lua;
 using CUE4Parse.UE4.Assets.Objects;
@@ -96,6 +96,9 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         if (Game is GAME_PUBGMobile or GAME_PUBGLite) // There's so many changes I'll just leave it here
             return PUBGMobileExtract(reader, pakEntry, header);
+
+        if (Game is GAME_RocoKingdomWorld)
+            return NRCExtract(reader, pakEntry, header);
 
         long offset = 0;
         var requestedSize = (int) pakEntry.UncompressedSize;

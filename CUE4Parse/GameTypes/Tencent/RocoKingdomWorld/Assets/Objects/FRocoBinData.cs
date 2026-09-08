@@ -2,7 +2,7 @@ using System.Text;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 
-namespace CUE4Parse.GameTypes.RocoKingdomWorld.Assets.Objects;
+namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Assets.Objects;
 
 public enum ERocoBinDataType : uint
 {

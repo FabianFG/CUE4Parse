@@ -3,7 +3,7 @@ using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
+namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Lua;
 
 public class FNRCLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLua54Archive(name, data, versions)
 {
