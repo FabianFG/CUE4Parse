@@ -249,8 +249,8 @@ public class FPakEntry : VfsEntry
         var compressionBlocksCount = (bitfield >> 6) & 0xffff;
         if (reader.Ar.Game == GAME_RocoKingdomWorld)
         {
-            var strategyIndex = compressionBlocksCount >> 8;
-            compressionBlocksCount &= 0xFF;
+            var strategyIndex = compressionBlocksCount >> 10;
+            compressionBlocksCount &= 0x3FF;
             CustomData = (int)strategyIndex;
         }
 

@@ -4,7 +4,7 @@ namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption.Algorithms;
 
 public class FCustomizableCryptoAlgorithmAes : ICustomizableCryptoAlgorithm
 {
-    public int KeySize => 32;
+    public int MaximumKeySize => 32;
 
     private static byte PermuteCiphertextByte(byte value)
     {
