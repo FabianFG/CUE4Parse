@@ -41,7 +41,7 @@ public class UScriptArray
                 $"ArrayProperty element count {elementCount} is larger than the remaining archive size {Ar.Length - Ar.Position}");
         }
 
-        if (Ar.Game < GAME_UE4_0)
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.ARRAY_PROPERTY_INNER_TAGS)
         {
             if (!Ar.HasUnversionedProperties &&
                 tagData?.Name is not null &&
@@ -53,7 +53,7 @@ public class UScriptArray
                     out var innerType,
                     out var innerTagData))
             {
-                InnerType = innerType;
+                InnerType = innerType!;
                 InnerTagData = innerTagData;
             }
 
