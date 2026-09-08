@@ -156,15 +156,14 @@ public class FStaticMeshLODResources
                     Ar.Position += 2 * 4; // AdjacencyIndexBuffer
                 }
 
-                Ar.Position += Ar.Game switch
+                var rawDataHeaderSize = Ar.Game >= GAME_UE5_6 ? 6 * 4 : 0; // RawDataHeader = 6x uint32
+                Ar.Position += rawDataHeaderSize + Ar.Game switch
                 {
-                    GAME_TheFinals => 12 + 6 * 4,
-                    >= GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
+                    GAME_TheFinals or GAME_ArcRaiders => 12,
                     GAME_ArenaBreakoutMobile or GAME_GangstarMirageCity => 44,
                     GAME_NeedForSpeedMobile => 32,
                     GAME_SuicideSquad => 29,
                     GAME_ArenaBreakoutInfinite => 16,
-                    GAME_ArcRaiders => 12,
                     GAME_StarWarsJediSurvivor or GAME_DeltaForce => 4, // bDropNormals
                     GAME_FateTrigger => 5,
                     _ => 0

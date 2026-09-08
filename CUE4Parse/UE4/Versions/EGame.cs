@@ -202,7 +202,7 @@ public enum EGame : uint
         GAME_MarvelRivals = GAME_UE5_3 + 1,
         GAME_BlackStigma = GAME_UE5_3 + 2,
         GAME_Valorant = GAME_UE5_3 + 3,
-        GAME_ArcRaiders = GAME_UE5_3 + 4,
+        GAME_Placeholder7 = GAME_UE5_3 + 4,
         GAME_Aion2 = GAME_UE5_3 + 5,
         GAME_Placeholder6 = GAME_UE5_3 + 6,
         GAME_Avowed = GAME_UE5_3 + 7,
@@ -269,6 +269,7 @@ public enum EGame : uint
         GAME_TheFinals = GAME_UE5_7 + 6,
         GAME_DeadByDaylight = GAME_UE5_7 + 7,
         GAME_Bringer = GAME_UE5_7 + 8,
+        GAME_ArcRaiders = GAME_UE5_7 + 9,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 
