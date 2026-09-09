@@ -521,39 +521,24 @@ public class FLightMap2D : FLightMap
         ScaleVectors = new FVector4[NUM_STORED_LIGHTMAP_COEF];
         AddVectors = new FVector4[NUM_STORED_LIGHTMAP_COEF];
         if (Ar.Ver < EUnrealEngineObjectUE3Version.MAXCOMPONENT_LIGHTMAP_ENCODING)
-        {
-            for (int elementIndex = 0; elementIndex < 4; elementIndex++)
-            {
-                Ar.Position += 16;
-            }
+        {   
+            Ar.Position += 16 *4;
         }
         else if (Ar.Ver <= EUnrealEngineObjectUE4Version.SH_LIGHTMAPS)
         {
-            for (var CoefficientIndex = 0; CoefficientIndex < 3; CoefficientIndex++)
-            {
-                Ar.Position += 16;
-            }
+            Ar.Position += 16 * 3;
         }
         else if (Ar.Ver <= EUnrealEngineObjectUE4Version.LIGHTMAP_COMPRESSION)
         {
-            for (var CoefficientIndex = 0; CoefficientIndex < 5; CoefficientIndex++)
-            {
-                Ar.Position += 28;
-            }
+            Ar.Position += 28 * 5;
         }
         else if (Ar.Ver <= EUnrealEngineObjectUE4Version.LOW_QUALITY_DIRECTIONAL_LIGHTMAPS)
         {
-            for (var CoefficientIndex = 0; CoefficientIndex < 3; CoefficientIndex++)
-            {
-                Ar.Position += 36;
-            }
+            Ar.Position += 36 *3;
         }
         else if (Ar.Ver <= EUnrealEngineObjectUE4Version.COMBINED_LIGHTMAP_TEXTURES)
         {
-            for (var CoefficientIndex = 0; CoefficientIndex < 4; CoefficientIndex++)
-            {
-                Ar.Position += 36;
-            }
+            Ar.Position += 36 * 4;
         }
         else
         {

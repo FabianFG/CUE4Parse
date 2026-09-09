@@ -5,129 +5,68 @@ namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public class FMaterialUniformExpressionAbs : FMaterialUniformExpressionPeriodic
 {
-    public FMaterialUniformExpressionAbs(FAssetArchive Ar)
-        : base(Ar)
-    {
-    }
+    public FMaterialUniformExpressionAbs(FAssetArchive Ar) : base(Ar) { }
 }
 
 public class FMaterialUniformExpressionCeil : FMaterialUniformExpressionPeriodic
 {
-    public FMaterialUniformExpressionCeil(FAssetArchive Ar)
-        : base(Ar)
-    {
-    }
+    public FMaterialUniformExpressionCeil(FAssetArchive Ar) : base(Ar) { }
 }
 public class FMaterialUniformExpressionSquareRoot : FMaterialUniformExpressionPeriodic
 {
-    public FMaterialUniformExpressionSquareRoot(FAssetArchive Ar)
-        : base(Ar)
-    {
-    }
+    public FMaterialUniformExpressionSquareRoot(FAssetArchive Ar) : base(Ar) { }
 }
 
-public class FMaterialUniformExpressionPeriodic : IUStruct
+public class FMaterialUniformExpressionPeriodic(FAssetArchive Ar) : IUStruct
 {
-    public FMaterialUniformExpression x { get; private set; }
-
-    public FMaterialUniformExpressionPeriodic(FAssetArchive Ar)
-    {
-        x = new FMaterialUniformExpression(Ar);
-    }
+    public FMaterialUniformExpression x { get; private set; } = new FMaterialUniformExpression(Ar);
 }
 
-public class FMaterialUniformExpressionSine : IUStruct
+public class FMaterialUniformExpressionSine(FAssetArchive Ar) : IUStruct
 {
-    public FMaterialUniformExpression x { get; private set; }
-    public bool bIsCosine { get; private set; }
-
-    public FMaterialUniformExpressionSine(FAssetArchive Ar)
-    {
-        x = new FMaterialUniformExpression(Ar);
-        bIsCosine = Ar.ReadBoolean();
-    }
+    public FMaterialUniformExpression x { get; private set; } = new FMaterialUniformExpression(Ar);
+    public bool bIsCosine { get; private set; } = Ar.ReadBoolean();
 }
 
-public class FMaterialUniformExpressionClamp : IUStruct
+public class FMaterialUniformExpressionClamp(FAssetArchive Ar) : IUStruct
 {
-    public FMaterialUniformExpression Input { get; private set; }
-    public FMaterialUniformExpression Min { get; private set; }
-    public FMaterialUniformExpression Max { get; private set; }
-
-    public FMaterialUniformExpressionClamp(FAssetArchive Ar)
-    {
-        Input = new FMaterialUniformExpression(Ar);
-        Min = new FMaterialUniformExpression(Ar);
-        Max = new FMaterialUniformExpression(Ar);
-    }
+    public FMaterialUniformExpression Input { get; private set; } = new FMaterialUniformExpression(Ar);
+    public FMaterialUniformExpression Min { get; private set; } = new FMaterialUniformExpression(Ar);
+    public FMaterialUniformExpression Max { get; private set; } = new FMaterialUniformExpression(Ar);
 }
 
-public class FMaterialUniformExpressionFrac : IUStruct
+public class FMaterialUniformExpressionFrac(FAssetArchive Ar) : IUStruct
 {
-    public FMaterialUniformExpression X { get; private set; }
-
-    public FMaterialUniformExpressionFrac(FAssetArchive Ar)
-    {
-        X = new FMaterialUniformExpression(Ar);
-    }
+    public FMaterialUniformExpression X { get; private set; } = new FMaterialUniformExpression(Ar);
 }
 
-public class FMaterialUniformExpressionFoldedMath : IUStruct
+public class FMaterialUniformExpressionFoldedMath(FAssetArchive Ar) : IUStruct
 {
-    public FMaterialUniformExpression A { get; private set; }
-    public FMaterialUniformExpression B { get; private set; }
-    public byte Op { get; private set; }
-
-    public FMaterialUniformExpressionFoldedMath(FAssetArchive Ar)
-    {
-        A = new FMaterialUniformExpression(Ar);
-        B = new FMaterialUniformExpression(Ar);
-        Op = Ar.Read<byte>();
-    }
+    public FMaterialUniformExpression A { get; private set; } = new FMaterialUniformExpression(Ar);
+    public FMaterialUniformExpression B { get; private set; } = new FMaterialUniformExpression(Ar);
+    public byte Op { get; private set; } = Ar.Read<byte>();
 }
 
 public class FMaterialUniformExpressionMin : FMaterialUniformExpressionMax
 {
-    public FMaterialUniformExpressionMin(FAssetArchive Ar)
-        : base(Ar)
-    {
-    }
+    public FMaterialUniformExpressionMin(FAssetArchive Ar) : base(Ar) { }
 }
 
-public class FMaterialUniformExpressionMax : IUStruct
+public class FMaterialUniformExpressionMax(FAssetArchive Ar) : IUStruct
 {
-    public FMaterialUniformExpression A { get; private set; }
-    public FMaterialUniformExpression B { get; private set; }
-
-    public FMaterialUniformExpressionMax(FAssetArchive Ar)
-    {
-        A = new FMaterialUniformExpression(Ar);
-        B = new FMaterialUniformExpression(Ar);
-    }
+    public FMaterialUniformExpression A { get; private set; } = new FMaterialUniformExpression(Ar);
+    public FMaterialUniformExpression B { get; private set; } = new FMaterialUniformExpression(Ar);
 }
 
-public class FMaterialUniformExpressionAppendVector : IUStruct
+public class FMaterialUniformExpressionAppendVector(FAssetArchive Ar) : IUStruct
 {
-    public FMaterialUniformExpression A { get; private set; }
-    public FMaterialUniformExpression B { get; private set; }
-    public int NumComponentsA { get; private set; }
-
-    public FMaterialUniformExpressionAppendVector(FAssetArchive Ar)
-    {
-        A = new FMaterialUniformExpression(Ar);
-        B = new FMaterialUniformExpression(Ar);
-        NumComponentsA = Ar.Read<int>();
-    }
+    public FMaterialUniformExpression A { get; private set; } = new FMaterialUniformExpression(Ar);
+    public FMaterialUniformExpression B { get; private set; } = new FMaterialUniformExpression(Ar);
+    public int NumComponentsA { get; private set; } = Ar.Read<int>();
 }
 
-public class FMaterialUniformExpressionConstant : IUStruct
+public class FMaterialUniformExpressionConstant(FAssetArchive Ar) : IUStruct
 {
-    public FLinearColor Value { get; private set; }
-    public byte ValueType { get; private set; }
-
-    public FMaterialUniformExpressionConstant(FAssetArchive Ar)
-    {
-        Value = Ar.Read<FLinearColor>();
-        ValueType = Ar.Read<byte>();
-    }
+    public FLinearColor Value { get; private set; } = Ar.Read<FLinearColor>();
+    public byte ValueType { get; private set; } = Ar.Read<byte>();
 }

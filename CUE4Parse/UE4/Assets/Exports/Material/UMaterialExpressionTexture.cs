@@ -149,10 +149,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class FMaterialUniformExpressionFlipBookTextureParameter : FMaterialExpressionTextureBase
     {
-        public FMaterialUniformExpressionFlipBookTextureParameter(FAssetArchive Ar)
-            : base(Ar)
-        {
-        }
+        public FMaterialUniformExpressionFlipBookTextureParameter(FAssetArchive Ar) : base(Ar) { }
     }
 
     public class UMaterialExpressionTextureSample : UMaterialExpressionTextureBase

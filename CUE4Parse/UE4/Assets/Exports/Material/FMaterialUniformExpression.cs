@@ -17,7 +17,7 @@ public class FMaterialUniformExpression
             "FMaterialUniformExpressionConstant"                 => new FMaterialUniformExpressionConstant(Ar),
             "FMaterialUniformExpressionScalarParameter"          => new FMaterialExpressionScalarParameter(Ar),
             "FMaterialUniformExpressionClamp"                    => new FMaterialUniformExpressionClamp(Ar),
-            "FMaterialUniformExpressionFrac"                    => new FMaterialUniformExpressionFrac(Ar),
+            "FMaterialUniformExpressionFrac"                     => new FMaterialUniformExpressionFrac(Ar),
             "FMaterialUniformExpressionFoldedMath"               => new FMaterialUniformExpressionFoldedMath(Ar),
             "FMaterialUniformExpressionAppendVector"             => new FMaterialUniformExpressionAppendVector(Ar),
             "FMaterialUniformExpressionAbs"                      => new FMaterialUniformExpressionAbs(Ar),

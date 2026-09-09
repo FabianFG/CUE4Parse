@@ -374,7 +374,7 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
-                Ar.SkipArray(() => Ar.ReadBytes(16)); // Edges
+                Ar.SkipFixedArray(16); // Edges
             }
 
             if (Ar.Ver > EUnrealEngineObjectUE3Version.USE_UMA_RESOURCE_ARRAY_MESH_DATA)

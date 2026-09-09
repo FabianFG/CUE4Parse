@@ -33,6 +33,10 @@ public class UScriptArray
     public UScriptArray(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type, int size)
     {
         InnerType = tagData?.InnerType;
+        if (Ar.Game >= GAME_UE4_0 && InnerType == null)
+        {
+            throw new ParserException(Ar, "UScriptArray needs inner type");
+        }
         var elementCount = Ar.Read<int>();
 
         if (elementCount > Ar.Length - Ar.Position)

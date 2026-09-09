@@ -321,7 +321,7 @@ public class ULevel : Assets.Exports.UObject, IAssetUserData
         {
             new FBox(Ar); // LegacyPrecomputedVisibilityVolume
             Ar.Read<float>(); // LegacyPrecomputedVisibilityCellSize
-            Ar.ReadArray(() => Ar.ReadArray<byte>()); // LegacyPrecomputedVisibilityData
+            Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 1); // LegacyPrecomputedVisibilityData
         }
         if (Ar.Game is GAME_AssaultFireFuture && Ar.Read<int>() != 0) return;
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.IMAGE_REFLECTION_SHADOWING)

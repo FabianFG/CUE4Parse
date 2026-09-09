@@ -36,28 +36,16 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
     }
 
-    public class FMaterialExpressionVectorParameter : IUStruct
+    public class FMaterialExpressionVectorParameter(FAssetArchive Ar) : IUStruct
     {
-        public FName ParameterName { get; private set; }
-        public FLinearColor DefaultValue { get; private set; }
-
-        public FMaterialExpressionVectorParameter(FAssetArchive Ar)
-        {
-            ParameterName = Ar.ReadFName();
-            DefaultValue = Ar.Read<FLinearColor>();
-        }
+        public FName ParameterName { get; private set; } = Ar.ReadFName();
+        public FLinearColor DefaultValue { get; private set; } = Ar.Read<FLinearColor>();
     }
 
-    public class FMaterialUniformExpressionTextureParameter : IUStruct
+    public class FMaterialUniformExpressionTextureParameter(FAssetArchive Ar) : IUStruct
     {
-        public FName ParameterName { get; private set; }
-        public FPackageIndex? Texture { get; private set; }
-
-        public FMaterialUniformExpressionTextureParameter(FAssetArchive Ar)
-        {
-            ParameterName = Ar.ReadFName();
-            Texture = new FPackageIndex(Ar);
-        }
+        public FName ParameterName { get; private set; } = Ar.ReadFName();
+        public FPackageIndex? Texture { get; private set; } = new FPackageIndex(Ar);
     }
 
     public class UMaterialExpressionScalarParameter : UMaterialExpressionParameter
@@ -76,16 +64,10 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
     }
 
-    public class FMaterialExpressionScalarParameter : IUStruct
+    public class FMaterialExpressionScalarParameter(FAssetArchive Ar) : IUStruct
     {
-        public FName ParameterName { get; private set; }
-        public int DefaultValue { get; private set; }
-
-        public FMaterialExpressionScalarParameter(FAssetArchive Ar)
-        {
-            ParameterName = Ar.ReadFName();
-            DefaultValue = Ar.Read<int>();
-        }
+        public FName ParameterName { get; private set; } = Ar.ReadFName();
+        public int DefaultValue { get; private set; } = Ar.Read<int>();
     }
 
     public class UMaterialExpressionStaticBoolParameter : UMaterialExpressionParameter
