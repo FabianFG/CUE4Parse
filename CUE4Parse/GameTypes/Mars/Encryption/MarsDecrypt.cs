@@ -5,11 +5,11 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.GameTypes.Mars.Encryption;
 
-public class MarsDecrypt
+public static class MarsDecrypt
 {
-    private readonly RSA _rsa;
+    private static readonly RSA _rsa;
 
-    public MarsDecrypt()
+    static MarsDecrypt()
     {
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CUE4Parse.Resources.MarsKey.bin");
         if (stream == null)
@@ -24,56 +24,27 @@ public class MarsDecrypt
         _rsa.ImportPkcs8PrivateKey(derBytes, out _);
     }
 
-    public FArchive DecryptUassetArchive(FArchive Ar)
+    public static FArchive DecryptUassetArchive(FArchive Ar)
     {
-        var originalBytes = Ar.ReadBytes((int)Ar.Length);
+        if (Ar.Peek<uint>() != 0x34B8D695)
+            return Ar;
 
-        var tag = BitConverter.ToUInt32(originalBytes, 0);
-        if (tag != 0x34B8D695)
-        {
-            // normal package, no encryption.
-            return new FByteArchive(Ar.Name, originalBytes, Ar.Versions);
-        }
+        Ar.Position += sizeof(uint);
+        var blockCount = Ar.Read<int>();
 
-        int pos = 4;
-        int blockCount = BitConverter.ToInt32(originalBytes, pos);
-        pos += 4;
-
-        var decryptedParts = new byte[blockCount][];
-        int totalDecryptedLength = 0;
-
+        using var ms = new MemoryStream();
         for (int i = 0; i < blockCount; i++)
         {
-            if (pos + 4 > originalBytes.Length)
-                throw new InvalidDataException("truncated block size.");
-
-            int blockSize = BitConverter.ToInt32(originalBytes, pos);
-            pos += 4;
-
-            if (pos + blockSize > originalBytes.Length)
-                throw new InvalidDataException("truncated ciphertext.");
-
-            byte[] ciphertext = new byte[blockSize];
-            Array.Copy(originalBytes, pos, ciphertext, 0, blockSize);
-            pos += blockSize;
-
-            byte[] plaintext = _rsa.Decrypt(ciphertext, RSAEncryptionPadding.Pkcs1);
-            decryptedParts[i] = plaintext;
-            totalDecryptedLength += plaintext.Length;
+            var blockSize = Ar.Read<int>();
+            var decrypted = _rsa.Decrypt(Ar.ReadSpan(blockSize), RSAEncryptionPadding.Pkcs1);
+            ms.Write(decrypted, 0, decrypted.Length);
         }
 
-        var decryptedSummary = new byte[totalDecryptedLength];
-        int offset = 0;
-        foreach (var part in decryptedParts)
-        {
-            Array.Copy(part, 0, decryptedSummary, offset, part.Length);
-            offset += part.Length;
-        }
+        Ar.Position = 0;
+        var bytes = Ar.ReadBytes((int)Ar.Length);
+        ms.Position = 0;
+        ms.GetBuffer().AsSpan()[..(int)ms.Length].CopyTo(bytes.AsSpan());
 
-        var fullDecrypted = new byte[originalBytes.Length];
-        Array.Copy(originalBytes, fullDecrypted, originalBytes.Length);
-        Array.Copy(decryptedSummary, 0, fullDecrypted, 0, decryptedSummary.Length);
-
-        return new FByteArchive(Ar.Name, fullDecrypted, Ar.Versions);
+        return new FByteArchive(Ar.Name, bytes, Ar.Versions);
     }
 }
