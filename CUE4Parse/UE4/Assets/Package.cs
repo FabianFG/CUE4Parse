@@ -80,7 +80,7 @@ namespace CUE4Parse.UE4.Assets
             }
             else if (uasset.Game == GAME_Mars)
             {
-                uassetAr = new FAssetArchive(new MarsDecrypt().DecryptUassetArchive(uasset), this);
+                uassetAr = new FAssetArchive(MarsDecrypt.DecryptUassetArchive(uasset), this);
             }
             else uassetAr = new FAssetArchive(uasset, this);
 
@@ -352,8 +352,8 @@ namespace CUE4Parse.UE4.Assets
                     using var tempAr = new FByteArchive($"CompressedChunk", compressedData, uassetAr.Versions);
                     tempAr.SerializeCompressedNew(decompressedData, chunk.UncompressedSize,
                         Summary.CompressionFlags.HasFlag(ECompressionFlags.COMPRESS_ZLIB)
-                            ? CompressionMethod.Zlib.ToString()
-                            : CompressionMethod.LZO.ToString(),
+                            ? nameof(CompressionMethod.Zlib)
+                            : nameof(CompressionMethod.LZO),
                         ECompressionFlags.COMPRESS_None, false, out _);
 
                     Array.Copy(decompressedData, 0, buffer, chunk.UncompressedOffset, decompressedData.Length);
@@ -372,12 +372,11 @@ namespace CUE4Parse.UE4.Assets
 
             if (uasset.Game == GAME_Mars)
             {
-                uassetAr = new FAssetArchive(new MarsDecrypt().DecryptUassetArchive(uasset), null);
+                uassetAr = new FAssetArchive(MarsDecrypt.DecryptUassetArchive(uasset), null);
             }
 
-            var Summary = new FPackageFileSummary(uassetAr);
-
-            DecryptAndDecompress(uassetAr, Summary);
+            var summary = new FPackageFileSummary(uassetAr);
+            DecryptAndDecompress(uassetAr, summary);
 
             uassetAr.Position = 0;
             return uassetAr.ReadBytes((int) uassetAr.Length);

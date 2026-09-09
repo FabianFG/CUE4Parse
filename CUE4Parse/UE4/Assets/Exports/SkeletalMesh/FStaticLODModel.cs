@@ -218,7 +218,7 @@ public class FStaticLODModel
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
-                Ar.ReadArray<short>(); // ShadowIndices
+                Ar.SkipArray<short>(); // ShadowIndices
             }
 
             ActiveBoneIndices = Ar.ReadArray<short>();
@@ -248,7 +248,7 @@ public class FStaticLODModel
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
         {
-            Ar.ReadArray(() => Ar.ReadBytes(16)); // Edges
+            Ar.SkipFixedArray(16); // Edges
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.BonesAsBytes && Ar.Game < GAME_UE4_0)
@@ -770,12 +770,12 @@ public class FStaticLODModel
     public class FVertexInfluence
     {
         public int Weights;
-        public int Boned;
+        public int BoneId;
 
         public FVertexInfluence(FArchive Ar)
         {
             Weights = Ar.Read<int>();
-            Boned = Ar.Read<int>();
+            BoneId = Ar.Read<int>();
         }
     }
 
