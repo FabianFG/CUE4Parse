@@ -110,7 +110,7 @@ namespace CUE4Parse.UE4.Assets
 
                     uassetAr.Position = 0;
                     var decompressedData = new byte[summary.UncompressedSize];
-                    uassetAr.SerializeCompressedNew(decompressedData, (int) summary.UncompressedSize, CompressionMethod.Zlib.ToString(), ECompressionFlags.COMPRESS_None, false, out _);
+                    uassetAr.SerializeCompressedNew(decompressedData, (int) summary.UncompressedSize, nameof(CompressionMethod.Zlib), ECompressionFlags.COMPRESS_None, false, out _);
 
                     uassetAr.SetBaseArchive(new FByteArchive("Decompressed Package", decompressedData, uassetAr.Versions));
                 }
