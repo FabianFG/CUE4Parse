@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption;
+using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Lua;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
@@ -117,9 +118,8 @@ public partial class PakFileReader
             data = FConfigurableCrypto.Decrypt(encrypted, (byte) cryptoHeader.StrategyIndex, AesKey, pakEntry.Name)[..cryptoHeader.DecryptedSize];
         }
 
-        // TODO: This needs to be adjusted for new encryption
-        //if (pakEntry.Extension == "luac")
-        //    return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
+        if (pakEntry.Extension == "luac")
+            return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
 
         return data;
     }
