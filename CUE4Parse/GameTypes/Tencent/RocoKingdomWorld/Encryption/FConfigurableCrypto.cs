@@ -2,79 +2,88 @@ using System.Security.Cryptography;
 using System.Text;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption.Algorithms;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption;
 
 public static class FConfigurableCrypto
 {
-    private readonly record struct CryptoStrategy(byte KeyId, byte AlgorithmId)
+    private readonly record struct FCryptoStrategy(byte KeyId, byte AlgorithmId)
     {
         private const byte FileBasedKeyId = 0x80;
 
         public bool IsFileBasedKey => KeyId == FileBasedKeyId;
         public bool IsDefaultAesKey => KeyId == 0;
-    }
 
-    private static readonly List<IConfigurableCryptoAlgorithm> _algorithms;
-    private static readonly List<byte[]> _keyMaterial;
-    private static readonly List<CryptoStrategy> _strategies;
-    private static ReadOnlySpan<byte> DerivationSeed => "NRC_CRYPTO_OBFUSCATION_SEED2026\x07"u8;
-
-    static FConfigurableCrypto()
-    {
-        _algorithms =
-        [
-            new FConfigurableCryptoAlgorithmAES(),
-            new FConfigurableCryptoAlgorithmNotImplemented("SM4"),
-            new FConfigurableCryptoAlgorithmMLE(),
-            new FConfigurableCryptoAlgorithmNotImplemented("RC5"),
-            new FConfigurableCryptoAlgorithmNotImplemented("XTEA"),
-            new FConfigurableCryptoAlgorithmNotImplemented("Speck"),
-            new FConfigurableCryptoAlgorithmNotImplemented("Salsa20"),
-            new FConfigurableCryptoAlgorithmNotImplemented("Simon"),
-            new FConfigurableCryptoAlgorithmNotImplemented("ChaCha20")
-        ];
-
-        _keyMaterial =
-        [
-            [],
-            [
-                0xdf, 0x1b, 0x06, 0x73, 0xb2, 0xf4, 0x1a, 0x73, 0x5b, 0xc4, 0xce, 0x06, 0x84, 0xdc, 0x6f, 0x15, 0xad,
-                0x4f, 0xc6, 0x84, 0xf6, 0x88, 0xb4, 0x74, 0x54, 0x32, 0x19, 0x34, 0xea, 0xb3, 0x7a, 0xff
-            ],
-            [
-                0x7c, 0xe3, 0x61, 0x9c, 0xc9, 0x04, 0xe1, 0xfe, 0xe2, 0xee, 0x03, 0x77, 0xbb, 0xde, 0xc0, 0xe5, 0xbc,
-                0xb7, 0x61, 0xe8, 0xfc, 0xcf, 0x8e, 0x81, 0x62, 0x03, 0x21, 0x55, 0x4a, 0x96, 0x41, 0xf7
-            ],
-            [
-                0xe0, 0x8e, 0x51, 0x6e, 0xb7, 0xa3, 0x88, 0x8e, 0xad, 0x93, 0x8c, 0xd6, 0xaa, 0x9c, 0x82, 0x8a, 0x25,
-                0x85, 0x87, 0x7e, 0xab, 0x46, 0xc9, 0x69, 0x4a, 0x62, 0x5d, 0x1b, 0xa2, 0xff, 0x05, 0x9f
-            ],
-            [
-                0x60, 0xd2, 0xf9, 0x57, 0x8a, 0x03, 0x22, 0xed, 0x62, 0x31, 0xed, 0xc8, 0xd7, 0x5d, 0x03, 0x2e, 0x80,
-                0x54, 0x33, 0x9d, 0x37, 0x13, 0x2f, 0x6f, 0x52, 0xba, 0xab, 0xa6, 0xfe, 0xea, 0x11, 0x55
-            ],
-            [
-                0x23, 0x68, 0xf2, 0x14, 0xed, 0xd0, 0xf1, 0x8b, 0xc0, 0x10, 0x34, 0xcf, 0x99, 0x62, 0x0f, 0x5d, 0x64,
-                0x0d, 0x60, 0x23, 0x48, 0x0a, 0x90, 0x87, 0x19, 0xd4, 0x9f, 0x5e, 0xc5, 0xc4, 0x7c, 0xa3
-            ]
-        ];
-
-        _strategies =
-        [
-            new CryptoStrategy(0, 0)
-        ];
-
-        for (byte i = 0; i < _algorithms.Count; i++)
+        public static FCryptoStrategy[] CreateTable(int algorithmCount, int keyCount)
         {
-            for (byte j = 1; j < _keyMaterial.Count - 1; j++) // the last key is not used??
+            // Default AES + static keys + file-based key per algorithm
+            var strategies = new FCryptoStrategy[1 + algorithmCount * keyCount];
+
+            var index = 0;
+            strategies[index++] = new(0, 0); // Default AES
+            for (byte algorithmId = 0; algorithmId < algorithmCount; algorithmId++)
             {
-                _strategies.Add(new CryptoStrategy(j, i));
+                for (byte keyId = 1; keyId < keyCount; keyId++) // the last key is not used??
+                {
+                    strategies[index++] = new(keyId, algorithmId);
+                }
+
+                strategies[index++] = new(FileBasedKeyId, algorithmId);
             }
 
-            _strategies.Add(new CryptoStrategy(0x80, i));
+            return strategies;
         }
     }
+
+    private static readonly IConfigurableCryptoAlgorithm[] _algorithms =
+    [
+        new FConfigurableCryptoAlgorithmAES(),
+        new FConfigurableCryptoAlgorithmNotImplemented("SM4"),
+        new FConfigurableCryptoAlgorithmMLE(),
+        new FConfigurableCryptoAlgorithmNotImplemented("RC5"),
+        new FConfigurableCryptoAlgorithmNotImplemented("XTEA"),
+        new FConfigurableCryptoAlgorithmNotImplemented("Speck"),
+        new FConfigurableCryptoAlgorithmNotImplemented("Salsa20"),
+        new FConfigurableCryptoAlgorithmNotImplemented("Simon"),
+        new FConfigurableCryptoAlgorithmNotImplemented("ChaCha20")
+    ];
+
+    private static readonly byte[][] _keyMaterial =
+    [
+        [
+            0xDF, 0x1B, 0x06, 0x73, 0xB2, 0xF4, 0x1A, 0x73,
+            0x5B, 0xC4, 0xCE, 0x06, 0x84, 0xDC, 0x6F, 0x15,
+            0xAD, 0x4F, 0xC6, 0x84, 0xF6, 0x88, 0xB4, 0x74,
+            0x54, 0x32, 0x19, 0x34, 0xEA, 0xB3, 0x7A, 0xFF
+        ],
+        [
+            0x7C, 0xE3, 0x61, 0x9C, 0xC9, 0x04, 0xE1, 0xFE,
+            0xE2, 0xEE, 0x03, 0x77, 0xBB, 0xDE, 0xC0, 0xE5,
+            0xBC, 0xB7, 0x61, 0xE8, 0xFC, 0xCF, 0x8E, 0x81,
+            0x62, 0x03, 0x21, 0x55, 0x4A, 0x96, 0x41, 0xF7
+        ],
+        [
+            0xE0, 0x8E, 0x51, 0x6E, 0xB7, 0xA3, 0x88, 0x8E,
+            0xAD, 0x93, 0x8C, 0xD6, 0xAA, 0x9C, 0x82, 0x8A,
+            0x25, 0x85, 0x87, 0x7E, 0xAB, 0x46, 0xC9, 0x69,
+            0x4A, 0x62, 0x5D, 0x1B, 0xA2, 0xFF, 0x05, 0x9F
+        ],
+        [
+            0x60, 0xD2, 0xF9, 0x57, 0x8A, 0x03, 0x22, 0xED,
+            0x62, 0x31, 0xED, 0xC8, 0xD7, 0x5D, 0x03, 0x2E,
+            0x80, 0x54, 0x33, 0x9D, 0x37, 0x13, 0x2F, 0x6F,
+            0x52, 0xBA, 0xAB, 0xA6, 0xFE, 0xEA, 0x11, 0x55
+        ],
+        [
+            0x23, 0x68, 0xF2, 0x14, 0xED, 0xD0, 0xF1, 0x8B,
+            0xC0, 0x10, 0x34, 0xCF, 0x99, 0x62, 0x0F, 0x5D,
+            0x64, 0x0D, 0x60, 0x23, 0x48, 0x0A, 0x90, 0x87,
+            0x19, 0xD4, 0x9F, 0x5E, 0xC5, 0xC4, 0x7C, 0xA3
+        ]
+    ];
+    private static readonly FCryptoStrategy[] _strategies = FCryptoStrategy.CreateTable(_algorithms.Length, _keyMaterial.Length);
+    private static ReadOnlySpan<byte> DerivationSeed => "NRC_CRYPTO_OBFUSCATION_SEED2026\x07"u8;
 
     private sealed class FConfigurableCryptoAlgorithmNotImplemented(string name) : IConfigurableCryptoAlgorithm
     {
@@ -86,7 +95,7 @@ public static class FConfigurableCrypto
 
     private static byte[] DeriveFileNameKey(string fileName)
     {
-        var name = Path.GetFileNameWithoutExtension(fileName).ToLower();
+        var name = Path.GetFileNameWithoutExtension(fileName).ToLowerInvariant();
         var encoded = Encoding.Unicode.GetBytes(name);
 
         using var sha1 = IncrementalHash.CreateHash(HashAlgorithmName.SHA1);
@@ -102,10 +111,7 @@ public static class FConfigurableCrypto
         var xorKey = md5.GetCurrentHash();
 
         var outputKey = new byte[32];
-        for (int i = 0; i < 16; i++)
-        {
-            outputKey[i] = (byte)(xorKey[i] ^ DerivationSeed[i]);
-        }
+        TensorUtils.Xor(xorKey.AsSpan()[..16], DerivationSeed[..16], outputKey.AsSpan(0, 16));
 
         for (int i = 0; i < 16; i++)
         {
@@ -141,39 +147,34 @@ public static class FConfigurableCrypto
         return outputKey;
     }
 
-    private static byte[] GetKeyForStrategy(in CryptoStrategy strategy, FAesKey? masterKey, string? fileName)
+    private static byte[] GetKeyForStrategy(in FCryptoStrategy strategy, FAesKey? masterKey, string? fileName)
     {
-        if (strategy.IsDefaultAesKey)
+        return strategy switch
         {
-            if (masterKey == null)
-                throw new ArgumentNullException(nameof(masterKey));
+            { IsDefaultAesKey: true } => masterKey?.Key ?? throw new ArgumentNullException(nameof(masterKey)),
+            { IsFileBasedKey: true } => fileName is not null ? DeriveFileNameKey(fileName) : throw new ArgumentNullException(nameof(fileName)),
+            _ => DeriveKey(_keyMaterial[strategy.KeyId - 1])
+        };
+    }
 
-            return masterKey.Key;
-        }
+    private static (IConfigurableCryptoAlgorithm Algorithm, byte[] Key) ResolveCryptoConfig(byte strategyIndex, FAesKey? masterKey, string? fileName)
+    {
+        if (strategyIndex >= _strategies.Length)
+            throw new ArgumentOutOfRangeException(nameof(strategyIndex), strategyIndex, "Invalid crypto strategy index");
 
-        if (strategy.IsFileBasedKey)
-        {
-            if (fileName == null)
-                throw new ArgumentNullException(nameof(fileName));
-
-            return DeriveFileNameKey(fileName);
-        }
-
-        var keyMaterial = _keyMaterial[strategy.KeyId];
-        return DeriveKey(keyMaterial);
+        var strategy = _strategies[strategyIndex];
+        return (_algorithms[strategy.AlgorithmId], GetKeyForStrategy(strategy, masterKey, fileName));
     }
 
     public static byte[] Decrypt(byte[] ciphertext, byte strategyIndex, FAesKey? masterKey, string? fileName)
     {
-        CryptoStrategy strategy = _strategies[strategyIndex];
-        var key = GetKeyForStrategy(strategy, masterKey, fileName);
-        return _algorithms[strategy.AlgorithmId].Decrypt(ciphertext, key);
+        var (algorithm, key) = ResolveCryptoConfig(strategyIndex, masterKey, fileName);
+        return algorithm.Decrypt(ciphertext, key);
     }
 
     public static byte[] DecryptChunked(byte[] ciphertext, byte strategyIndex, FAesKey? masterKey, string? fileName)
     {
-        CryptoStrategy strategy = _strategies[strategyIndex];
-        var key = GetKeyForStrategy(strategy, masterKey, fileName);
-        return _algorithms[strategy.AlgorithmId].DecryptChunked(ciphertext, key);
+        var (algorithm, key) = ResolveCryptoConfig(strategyIndex, masterKey, fileName);
+        return algorithm.DecryptChunked(ciphertext, key);
     }
 }
