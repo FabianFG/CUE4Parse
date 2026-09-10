@@ -2,10 +2,8 @@ using CUE4Parse.Encryption.Aes;
 
 namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption.Algorithms;
 
-public class FCustomizableCryptoAlgorithmAes : ICustomizableCryptoAlgorithm
+public class FConfigurableCryptoAlgorithmAES : IConfigurableCryptoAlgorithm
 {
-    public int MaximumKeySize => 32;
-
     private static byte PermuteCiphertextByte(byte value)
     {
         var stage1 = (byte) (((value & 0xD5) << 1) | ((value >> 1) & 0x55));

@@ -5,7 +5,7 @@ using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption.Algorithms;
 
 namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption;
 
-public static class FCustomizableCrypto
+public static class FConfigurableCrypto
 {
     private readonly record struct CryptoStrategy(byte KeyId, byte AlgorithmId)
     {
@@ -15,24 +15,24 @@ public static class FCustomizableCrypto
         public bool IsDefaultAesKey => KeyId == 0;
     }
 
-    private static readonly List<ICustomizableCryptoAlgorithm> _algorithms;
+    private static readonly List<IConfigurableCryptoAlgorithm> _algorithms;
     private static readonly List<byte[]> _keyMaterial;
     private static readonly List<CryptoStrategy> _strategies;
     private static ReadOnlySpan<byte> DerivationSeed => "NRC_CRYPTO_OBFUSCATION_SEED2026\x07"u8;
 
-    static FCustomizableCrypto()
+    static FConfigurableCrypto()
     {
         _algorithms =
         [
-            new FCustomizableCryptoAlgorithmAes(),
-            new FCustomizableCryptoAlgorithmNotImplemented("SM4"),
-            new FCustomizableCryptoAlgorithmMLE(),
-            new FCustomizableCryptoAlgorithmNotImplemented("RC5"),
-            new FCustomizableCryptoAlgorithmNotImplemented("XTEA"),
-            new FCustomizableCryptoAlgorithmNotImplemented("Speck"),
-            new FCustomizableCryptoAlgorithmNotImplemented("Salsa20"),
-            new FCustomizableCryptoAlgorithmNotImplemented("Simon"),
-            new FCustomizableCryptoAlgorithmNotImplemented("ChaCha20")
+            new FConfigurableCryptoAlgorithmAES(),
+            new FConfigurableCryptoAlgorithmNotImplemented("SM4"),
+            new FConfigurableCryptoAlgorithmMLE(),
+            new FConfigurableCryptoAlgorithmNotImplemented("RC5"),
+            new FConfigurableCryptoAlgorithmNotImplemented("XTEA"),
+            new FConfigurableCryptoAlgorithmNotImplemented("Speck"),
+            new FConfigurableCryptoAlgorithmNotImplemented("Salsa20"),
+            new FConfigurableCryptoAlgorithmNotImplemented("Simon"),
+            new FConfigurableCryptoAlgorithmNotImplemented("ChaCha20")
         ];
 
         _keyMaterial =
@@ -76,9 +76,8 @@ public static class FCustomizableCrypto
         }
     }
 
-    private sealed class FCustomizableCryptoAlgorithmNotImplemented(string name) : ICustomizableCryptoAlgorithm
+    private sealed class FConfigurableCryptoAlgorithmNotImplemented(string name) : IConfigurableCryptoAlgorithm
     {
-        public int MaximumKeySize => 0;
         public byte[] Decrypt(byte[] ciphertext, ReadOnlyMemory<byte> key)
         {
             throw new NotImplementedException($"Algorithm {name} not yet implemented");
@@ -166,8 +165,15 @@ public static class FCustomizableCrypto
 
     public static byte[] Decrypt(byte[] ciphertext, byte strategyIndex, FAesKey? masterKey, string? fileName)
     {
-        var strategy = _strategies[strategyIndex];
+        CryptoStrategy strategy = _strategies[strategyIndex];
         var key = GetKeyForStrategy(strategy, masterKey, fileName);
         return _algorithms[strategy.AlgorithmId].Decrypt(ciphertext, key);
+    }
+
+    public static byte[] DecryptChunked(byte[] ciphertext, byte strategyIndex, FAesKey? masterKey, string? fileName)
+    {
+        CryptoStrategy strategy = _strategies[strategyIndex];
+        var key = GetKeyForStrategy(strategy, masterKey, fileName);
+        return _algorithms[strategy.AlgorithmId].DecryptChunked(ciphertext, key);
     }
 }

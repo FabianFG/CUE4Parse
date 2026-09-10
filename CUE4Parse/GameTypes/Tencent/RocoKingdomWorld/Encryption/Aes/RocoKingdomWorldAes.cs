@@ -17,6 +17,6 @@ public static class RocoKingdomWorldAes
         var ciphertext = new byte[count];
         Buffer.BlockCopy(bytes, beginOffset, ciphertext, 0, count);
 
-        return FCustomizableCrypto.Decrypt(ciphertext, (reader as PakFileReader)?.Info.CustomEncryptionData[0] ?? 0, reader.AesKey, reader.Name);
+        return FConfigurableCrypto.Decrypt(ciphertext, (reader as PakFileReader)?.Info.CustomEncryptionData[0] ?? 0, reader.AesKey, reader.Name);
     }
 }
