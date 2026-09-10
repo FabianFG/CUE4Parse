@@ -6,14 +6,14 @@ namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption.Algorithms;
 
 public class FConfigurableCryptoAlgorithmMLE : IConfigurableCryptoAlgorithm
 {
-    private static void ComputeBlockIndices(Span<int> indices, long keySeed, ReadOnlySpan<byte> key)
+    private static void ComputeBlockIndices(Span<int> indices, ulong keySeed, ReadOnlySpan<byte> key)
     {
         for (int i = 0; i < indices.Length; i++)
         {
             indices[i] = i;
         }
 
-        var indicesKey = XxHash3.HashToUInt64(key, keySeed);
+        var indicesKey = XxHash3.HashToUInt64(key, (long)keySeed);
         if (indicesKey == 0)
             indicesKey = 0x9E3779B97F4A7C15;
 
@@ -29,13 +29,20 @@ public class FConfigurableCryptoAlgorithmMLE : IConfigurableCryptoAlgorithm
 
     private static void DecryptSlice(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> key, Span<byte> plaintext)
     {
-        var keySeed = (long) XxHash3.HashToUInt64(key);
+        var keySeed = XxHash3.HashToUInt64(key);
 
-        var calculatedBlockSize = (int) BitOperations.RoundUpToPowerOf2((uint)Math.Ceiling(Math.Sqrt(ciphertext.Length))) << 1;
+        var calculatedBlockSize = (int) BitOperations.RoundUpToPowerOf2((uint) Math.Ceiling(Math.Sqrt(ciphertext.Length))) << 1;
         calculatedBlockSize = Math.Min(calculatedBlockSize, 0x1000 << 1);
 
         var minimumBlockSize = Math.Max(0x10, calculatedBlockSize);
         var blockSize = Math.Min(0x1000, minimumBlockSize);
+
+        DecryptSlice(ciphertext, key, plaintext, blockSize, keySeed);
+    }
+
+    public static void DecryptSlice(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> key, Span<byte> plaintext,
+        int blockSize, ulong keySeed)
+    {
         var blockHashPartSize = Math.Min(0x40, blockSize);
 
         var totalSize = ciphertext.Length + blockSize - 1;
@@ -50,7 +57,7 @@ public class FConfigurableCryptoAlgorithmMLE : IConfigurableCryptoAlgorithm
             var xxh = new XxHash3();
 
             xxh.Append(key);
-            xxh.Append(MemoryMarshal.Cast<long, byte>(new ReadOnlySpan<long>(ref keySeed)));
+            xxh.Append(MemoryMarshal.Cast<ulong, byte>(new ReadOnlySpan<ulong>(ref keySeed)));
 
             keys[0] = xxh.GetCurrentHashAsUInt64();
         }
