@@ -536,9 +536,7 @@ public partial class FPakInfo
 
         if (Ar.Game == GAME_RocoKingdomWorld)
         {
-            CustomEncryptionData = offsetToTry != OffsetsToTry.Size8a
-                ? Ar.ReadBytes(1)
-                : [0];
+            CustomEncryptionData = offsetToTry != OffsetsToTry.Size8a ? Ar.ReadBytes(1) : [0];
         }
 
         // Written at the tail so the trailer for older versions remains byte-compatible. Paks authored before

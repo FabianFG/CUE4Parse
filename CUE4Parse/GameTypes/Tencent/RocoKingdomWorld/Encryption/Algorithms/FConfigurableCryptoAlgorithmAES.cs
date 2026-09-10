@@ -14,7 +14,7 @@ public class FConfigurableCryptoAlgorithmAES : IConfigurableCryptoAlgorithm
     private static byte[] MutateGameKey(ReadOnlySpan<byte> input)
     {
         if (input.Length == 0)
-            return Array.Empty<byte>();
+            return [];
 
         var output = new byte[input.Length];
         for (var i = 0; i < input.Length - 1; i++)

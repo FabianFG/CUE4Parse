@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption;
-using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Lua;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
@@ -13,6 +12,14 @@ namespace CUE4Parse.UE4.Pak;
 
 public partial class PakFileReader
 {
+    [StructLayout(LayoutKind.Sequential)]
+    private struct FConfigurableCryptoInfoHeader
+    {
+        public ulong Magic;
+        public uint StrategyIndex;
+        public int DecryptedSize;
+    }
+
     private byte[] NRCExtractEntry(FArchive reader, FPakEntry pakEntry, FByteBulkDataHeader? header = null)
     {
         var alignment = pakEntry.IsEncrypted ? Aes.ALIGN : 1;
@@ -110,18 +117,10 @@ public partial class PakFileReader
             data = FConfigurableCrypto.Decrypt(encrypted, (byte) cryptoHeader.StrategyIndex, AesKey, pakEntry.Name)[..cryptoHeader.DecryptedSize];
         }
 
-        // note that this has not been adjusted for the new crypto
-        if (pakEntry.Extension == "luac")
-            return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
+        // TODO: This needs to be adjusted for new encryption
+        //if (pakEntry.Extension == "luac")
+        //    return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
 
         return data;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct FConfigurableCryptoInfoHeader
-    {
-        public ulong Magic;
-        public uint StrategyIndex;
-        public int DecryptedSize;
     }
 }

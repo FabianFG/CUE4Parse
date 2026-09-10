@@ -16,7 +16,6 @@ using CUE4Parse.GameTypes.PUBG.UE4.Lua;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
 using CUE4Parse.GameTypes.Strinova.Lua;
-using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Lua;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Lua;
 using CUE4Parse.GameTypes.UDWN.Lua;
 using CUE4Parse.UE4.Assets.Objects;
@@ -94,11 +93,13 @@ public partial class PakFileReader : AbstractAesVfsReader
         var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
         var alignment = pakEntry.IsEncrypted ? Aes.ALIGN : 1;
 
-        if (Game is GAME_PUBGMobile or GAME_PUBGLite) // There's so many changes I'll just leave it here
-            return PUBGMobileExtract(reader, pakEntry, header);
-
-        if (Game is GAME_RocoKingdomWorld)
-            return NRCExtract(reader, pakEntry, header);
+        switch (Game)
+        {
+            case GAME_PUBGMobile or GAME_PUBGLite:
+                return PUBGMobileExtract(reader, pakEntry, header);
+            case GAME_RocoKingdomWorld:
+                return NRCExtract(reader, pakEntry, header);
+        }
 
         long offset = 0;
         var requestedSize = (int) pakEntry.UncompressedSize;
@@ -173,8 +174,6 @@ public partial class PakFileReader : AbstractAesVfsReader
 
             switch (Ar.Game)
             {
-                case GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
-                    return NRCLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
                 case GAME_NevernessToEverness when pakEntry.Extension is "ini":
                     return NevernessToEvernessIniEncryption.DecryptIni(uncompressed, requestedSize);
                 case GAME_Snowbreak when pakEntry.Extension is "lua":
@@ -233,8 +232,6 @@ public partial class PakFileReader : AbstractAesVfsReader
 
         switch (Ar.Game)
         {
-            case GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
-                return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
             case GAME_NevernessToEverness when pakEntry.Extension is "ini":
                 return NevernessToEvernessIniEncryption.DecryptIni(data, requestedSize);
             case GAME_Snowbreak when pakEntry.Extension is "lua":
