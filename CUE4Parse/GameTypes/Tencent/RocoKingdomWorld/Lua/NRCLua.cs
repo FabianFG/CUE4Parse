@@ -12,6 +12,16 @@ public static class NRCLua
 {
     // Password found in NRC/Plugins/NRCCrypto/Config/Crypto.ini
     private static ReadOnlySpan<byte> Password => "UhpQKQT4xj+VZCY74SQd7klOeZDtW3d1YN6MAZLDgcc="u8;
+
+    private static ReadOnlySpan<byte> MLEKey =>
+    [
+        0x3b, 0x28, 0x4c, 0x60, 0xba, 0x38, 0x91, 0x46, 0x34, 0x2c, 0x51, 0xac, 0x6b, 0x8d, 0xc6, 0xb1, 0xde, 0x36,
+        0xee, 0xaf, 0xa7, 0x53, 0xa9, 0xfb, 0xad, 0x0d, 0x06, 0x53, 0x40, 0x8a, 0xc3, 0xb2
+    ];
+
+    private static ReadOnlySpan<byte> MLEMagic => "\x1BMLE"u8;
+    private static ReadOnlySpan<byte> AESMagic => [0xFA, 0xE5, 0xC0];
+
     private static readonly byte[] _key = DeriveKey();
     private static readonly byte[] _iv = DeriveIV();
 
@@ -52,30 +62,23 @@ public static class NRCLua
         public ulong KeySeed;
     }
 
-    private static byte[] DecryptLuaData(string name, byte[] encryptedData)
+    private static byte[] DecryptLuaData(byte[] encryptedData)
     {
         Span<byte> encryptedSpan = encryptedData.AsSpan();
-        if (encryptedSpan.Length > 4 && encryptedSpan[..4].SequenceEqual("\x1BMLE"u8))
+        if (encryptedSpan.Length > Unsafe.SizeOf<LuaMLEHeader>() && encryptedSpan[..4].SequenceEqual(MLEMagic))
         {
             LuaMLEHeader header = MemoryMarshal.Read<LuaMLEHeader>(encryptedSpan);
-            ReadOnlySpan<ulong> key =
-            [
-                0x469138BA604C283B,
-                0xB1C68D6BAC512C34,
-                0xFBA953A7AFEE36DE,
-                0xB2C38A4053060DAD
-            ];
 
-            var plaintext = new byte[header.BlockCount * header.BlockSize + header.LastBlockSize];
+            var plaintext = new byte[Math.Max(0, header.BlockCount - 1) * header.BlockSize + header.LastBlockSize];
             FConfigurableCryptoAlgorithmMLE.DecryptSlice(
                 encryptedSpan[Unsafe.SizeOf<LuaMLEHeader>()..],
-                MemoryMarshal.AsBytes(key), plaintext,
+                MLEKey, plaintext,
                 header.BlockSize, header.KeySeed);
 
             return plaintext;
         }
 
-        if (encryptedSpan.Length > 8 && encryptedSpan[..3].SequenceEqual("\xFA\xE5\xC0"u8))
+        if (encryptedSpan.Length > 8 && encryptedSpan[..3].SequenceEqual(AESMagic))
         {
             return encryptedData.Decrypt(7);
         }
@@ -85,7 +88,7 @@ public static class NRCLua
 
     public static byte[] DecryptLuaBytecode(string name, byte[] encryptedData)
     {
-        var decryptedData = DecryptLuaData(name, encryptedData);
+        var decryptedData = DecryptLuaData(encryptedData);
         return decryptedData;
 
         if (!FLuaReader.IsValidLuaMagic(decryptedData))
