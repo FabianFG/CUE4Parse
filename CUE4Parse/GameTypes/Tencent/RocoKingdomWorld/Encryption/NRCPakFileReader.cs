@@ -1,27 +1,18 @@
+using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.Encryption.Aes;
-using CUE4Parse.GameTypes.ABI.Encryption.SM4;
-using CUE4Parse.GameTypes.LordOfMysteries.UE4.Lua;
-using CUE4Parse.GameTypes.Netmarble.NiNoKuni.UE4.Encryption;
-using CUE4Parse.GameTypes.NFS.Mobile.Lua;
-using CUE4Parse.GameTypes.NTE.Encryption;
-using CUE4Parse.GameTypes.PUBG.UE4.Lua;
-using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
-using CUE4Parse.GameTypes.Strinova.Lua;
 using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption;
-using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Lua;
-using CUE4Parse.GameTypes.Tencent.ValorantSource.Lua;
-using CUE4Parse.GameTypes.UDWN.Lua;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
-using Serilog.Parsing;
 
 namespace CUE4Parse.UE4.Pak;
 
 public partial class PakFileReader
 {
-    public byte[] NRCExtract(FArchive reader, FPakEntry pakEntry, FByteBulkDataHeader? header = null)
+    private byte[] NRCExtractEntry(FArchive reader, FPakEntry pakEntry, FByteBulkDataHeader? header = null)
     {
         var alignment = pakEntry.IsEncrypted ? Aes.ALIGN : 1;
 
@@ -68,7 +59,7 @@ public partial class PakFileReader
                 reader.ReadAt(block.CompressedStart, compressedBuffer, 0, srcSize);
 
                 var compressed = pakEntry.IsEncrypted
-                    ? FCustomizableCrypto.Decrypt(compressedBuffer, (byte) pakEntry.CustomData, AesKey, pakEntry.Name)
+                    ? FConfigurableCrypto.DecryptChunked(compressedBuffer, (byte) pakEntry.CustomData, AesKey, pakEntry.Name)
                     : compressedBuffer;
 
                 // Calculate the uncompressed size,
@@ -78,9 +69,6 @@ public partial class PakFileReader
                 Compression.Compression.Decompress(compressed, 0, blockSize, uncompressed, uncompressedOff, uncompressedSize, pakEntry.CompressionMethod);
                 uncompressedOff += uncompressedSize;
             }
-
-            if (pakEntry.Extension is "luac")
-                return NRCLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
 
             var offsetInFirstBlock = offset - firstBlockIndex * compressionBlockSize;
             if (offsetInFirstBlock == 0 && requestedSize == bufferSize)
@@ -101,10 +89,7 @@ public partial class PakFileReader
 
         var data = reader.ReadBytesAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize);
         if (pakEntry.IsEncrypted)
-            data = FCustomizableCrypto.Decrypt(data, (byte) pakEntry.CustomData, AesKey, pakEntry.Name);
-
-        if (pakEntry.Extension is "luac")
-            return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
+            data = FConfigurableCrypto.DecryptChunked(data, (byte) pakEntry.CustomData, AesKey, pakEntry.Name);
 
         if (dataOffset == 0 && requestedSize == data.Length)
             return data;
@@ -112,5 +97,26 @@ public partial class PakFileReader
         var chunk = new byte[requestedSize];
         Array.Copy(data, dataOffset, chunk, 0, requestedSize);
         return chunk;
+    }
+
+    public byte[] NRCExtract(FArchive reader, FPakEntry pakEntry, FByteBulkDataHeader? header = null)
+    {
+        var data = NRCExtractEntry(reader, pakEntry, header);
+        if (data.Length > 8 && BinaryPrimitives.ReadUInt64LittleEndian(data) == 0x7C3F9A215E8B4D26)
+        {
+            FConfigurableCryptoInfoHeader cryptoHeader = MemoryMarshal.Read<FConfigurableCryptoInfoHeader>(data);
+            var encrypted = data[Unsafe.SizeOf<FConfigurableCryptoInfoHeader>()..];
+            return FConfigurableCrypto.Decrypt(encrypted, (byte) cryptoHeader.StrategyIndex, AesKey, pakEntry.Name)[..cryptoHeader.DecryptedSize];
+        }
+
+        return data;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct FConfigurableCryptoInfoHeader
+    {
+        public ulong Magic;
+        public uint StrategyIndex;
+        public int DecryptedSize;
     }
 }

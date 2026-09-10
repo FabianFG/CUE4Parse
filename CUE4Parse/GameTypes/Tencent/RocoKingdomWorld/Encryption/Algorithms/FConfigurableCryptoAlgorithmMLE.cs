@@ -1,13 +1,11 @@
-using System.Buffers.Binary;
 using System.IO.Hashing;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption.Algorithms;
 
-public class FCustomizableCryptoAlgorithmMLE : ICustomizableCryptoAlgorithm
+public class FConfigurableCryptoAlgorithmMLE : IConfigurableCryptoAlgorithm
 {
-    public int MaximumKeySize => 64;
-
     private static void ComputeBlockIndices(Span<int> indices, long keySeed, ReadOnlySpan<byte> key)
     {
         for (int i = 0; i < indices.Length; i++)
@@ -29,33 +27,29 @@ public class FCustomizableCryptoAlgorithmMLE : ICustomizableCryptoAlgorithm
         }
     }
 
-    public byte[] Decrypt(byte[] ciphertext, ReadOnlyMemory<byte> key)
+    private static void DecryptSlice(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> key, Span<byte> plaintext)
     {
-        ReadOnlySpan<byte> keySpan = key.Span;
-        Span<byte> ciphertextSpan = ciphertext.AsSpan();
+        var keySeed = (long) XxHash3.HashToUInt64(key);
 
-        var decryptedData = new byte[ciphertextSpan.Length];
-        Span<byte> decryptedSpan = decryptedData.AsSpan();
-
-        var keySeed = (long)XxHash3.HashToUInt64(keySpan);
-        var calculatedBlockSize = 1 << (int) (Math.Log2(Math.Sqrt(ciphertextSpan.Length)) + 2);
+        var calculatedBlockSize = (int) BitOperations.RoundUpToPowerOf2((uint)Math.Ceiling(Math.Sqrt(ciphertext.Length))) << 1;
+        calculatedBlockSize = Math.Min(calculatedBlockSize, 0x1000 << 1);
 
         var minimumBlockSize = Math.Max(0x10, calculatedBlockSize);
         var blockSize = Math.Min(0x1000, minimumBlockSize);
         var blockHashPartSize = Math.Min(0x40, blockSize);
 
-        var totalSize = ciphertextSpan.Length + blockSize - 1;
+        var totalSize = ciphertext.Length + blockSize - 1;
         var totalBlockCount = totalSize / blockSize;
         var fullBlockCount = totalBlockCount - 1;
 
         var blockIndices = new int[fullBlockCount];
-        ComputeBlockIndices(blockIndices, keySeed, keySpan);
+        ComputeBlockIndices(blockIndices, keySeed, key);
 
         var keys = new ulong[totalBlockCount];
         {
             var xxh = new XxHash3();
 
-            xxh.Append(keySpan);
+            xxh.Append(key);
             xxh.Append(MemoryMarshal.Cast<long, byte>(new ReadOnlySpan<long>(ref keySeed)));
 
             keys[0] = xxh.GetCurrentHashAsUInt64();
@@ -68,7 +62,7 @@ public class FCustomizableCryptoAlgorithmMLE : ICustomizableCryptoAlgorithm
                 : blockIndices[i];
 
             var offset = blockSize * index;
-            keys[i + 1] = XxHash3.HashToUInt64(ciphertextSpan.Slice(offset, blockHashPartSize));
+            keys[i + 1] = XxHash3.HashToUInt64(ciphertext.Slice(offset, blockHashPartSize));
         }
 
         for (int i = 0; i < totalBlockCount; i++)
@@ -78,7 +72,7 @@ public class FCustomizableCryptoAlgorithmMLE : ICustomizableCryptoAlgorithm
 
             if (i == fullBlockCount)
             {
-                currentBlockSize = ciphertextSpan.Length - fullBlockCount * blockSize;
+                currentBlockSize = ciphertext.Length - fullBlockCount * blockSize;
                 blockIndex = fullBlockCount;
             }
             else
@@ -91,8 +85,8 @@ public class FCustomizableCryptoAlgorithmMLE : ICustomizableCryptoAlgorithm
             if (blockKey == 0)
                 blockKey = 0x9E3779B97F4A7C15;
 
-            Span<byte> encryptedBlockData = ciphertextSpan.Slice(blockIndex * blockSize, currentBlockSize);
-            Span<byte> decryptedBlockData = decryptedSpan.Slice(i * blockSize, currentBlockSize);
+            ReadOnlySpan<byte> encryptedBlockData = ciphertext.Slice(blockIndex * blockSize, currentBlockSize);
+            Span<byte> decryptedBlockData = plaintext.Slice(i * blockSize, currentBlockSize);
 
             for (int blockOffset = 0; blockOffset < currentBlockSize; blockOffset += 8)
             {
@@ -107,6 +101,41 @@ public class FCustomizableCryptoAlgorithmMLE : ICustomizableCryptoAlgorithm
                     decryptedBlockData[blockOffset + chunkOffset] = currentByte;
                 }
             }
+        }
+    }
+
+    public byte[] Decrypt(byte[] ciphertext, ReadOnlyMemory<byte> key)
+    {
+        Span<byte> ciphertextSpan = ciphertext.AsSpan();
+        ReadOnlySpan<byte> keySpan = key.Span;
+
+        var decryptedData = new byte[ciphertextSpan.Length];
+        Span<byte> decryptedSpan = decryptedData.AsSpan();
+
+        DecryptSlice(ciphertextSpan, keySpan, decryptedSpan);
+        return decryptedData;
+    }
+
+    public byte[] DecryptChunked(byte[] ciphertext, ReadOnlyMemory<byte> key)
+    {
+        const int encryptionBlockSize = 0x1000;
+
+        Span<byte> ciphertextSpan = ciphertext.AsSpan();
+        ReadOnlySpan<byte> keySpan = key.Span;
+
+        var decryptedData = new byte[ciphertextSpan.Length];
+        Span<byte> decryptedSpan = decryptedData.AsSpan();
+
+        var currentOffset = 0;
+        while (currentOffset != ciphertextSpan.Length)
+        {
+            var currentBlockSize = Math.Min(ciphertext.Length - currentOffset, encryptionBlockSize);
+
+            Span<byte> currentEncrypted = ciphertextSpan.Slice(currentOffset, currentBlockSize);
+            Span<byte> currentDecrypted = decryptedSpan.Slice(currentOffset, currentBlockSize);
+            DecryptSlice(currentEncrypted, keySpan, currentDecrypted);
+
+            currentOffset += currentBlockSize;
         }
 
         return decryptedData;
