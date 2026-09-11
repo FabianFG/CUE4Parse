@@ -76,14 +76,8 @@ public static class ABILuaReader
 
     public static byte[] DecryptLuaBytecode(byte[] bytes, bool isMobile)
     {
-        var Ar = new FABILua54Archive("ABILua", bytes, isMobile);
-
-        using var msOut = new MemoryStream();
-        using var writer = new FLua54ArchiveWriter(msOut);
-        FLuaWriter54.Write(writer, ReadLuaBytecode(Ar));
-
-        writer.Flush();
-        return msOut.ToArray();
+        using var Ar = new FABILua54Archive("ABILua", bytes, isMobile);
+        return new FLuaWriter54(ReadLuaBytecode(Ar)).GetBuffer();
     }
 
     private static LuaBytecode ReadLuaBytecode(FABILua54Archive Ar) => new()

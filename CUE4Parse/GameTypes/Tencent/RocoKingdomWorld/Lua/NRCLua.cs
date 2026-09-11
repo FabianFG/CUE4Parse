@@ -12,11 +12,12 @@ public static class NRCLua
 {
     // Password found in NRC/Plugins/NRCCrypto/Config/Crypto.ini
     private static ReadOnlySpan<byte> Password => "UhpQKQT4xj+VZCY74SQd7klOeZDtW3d1YN6MAZLDgcc="u8;
-
     private static ReadOnlySpan<byte> MLEKey =>
     [
-        0x3b, 0x28, 0x4c, 0x60, 0xba, 0x38, 0x91, 0x46, 0x34, 0x2c, 0x51, 0xac, 0x6b, 0x8d, 0xc6, 0xb1, 0xde, 0x36,
-        0xee, 0xaf, 0xa7, 0x53, 0xa9, 0xfb, 0xad, 0x0d, 0x06, 0x53, 0x40, 0x8a, 0xc3, 0xb2
+        0x3B, 0x28, 0x4C, 0x60, 0xBA, 0x38, 0x91, 0x46,
+        0x34, 0x2C, 0x51, 0xAC, 0x6B, 0x8D, 0xC6, 0xB1,
+        0xDE, 0x36, 0xEE, 0xAF, 0xA7, 0x53, 0xA9, 0xFB,
+        0xAD, 0x0D, 0x06, 0x53, 0x40, 0x8A, 0xC3, 0xB2
     ];
 
     private static ReadOnlySpan<byte> MLEMagic => "\x1BMLE"u8;
@@ -70,10 +71,7 @@ public static class NRCLua
             LuaMLEHeader header = MemoryMarshal.Read<LuaMLEHeader>(encryptedSpan);
 
             var plaintext = new byte[Math.Max(0, header.BlockCount - 1) * header.BlockSize + header.LastBlockSize];
-            FConfigurableCryptoAlgorithmMLE.DecryptSlice(
-                encryptedSpan[Unsafe.SizeOf<LuaMLEHeader>()..],
-                MLEKey, plaintext,
-                header.BlockSize, header.KeySeed);
+            FConfigurableCryptoAlgorithmMLE.DecryptSlice(encryptedSpan[Unsafe.SizeOf<LuaMLEHeader>()..], MLEKey, plaintext, header.BlockSize, header.KeySeed);
 
             usesNewHeader = true;
             return plaintext;
@@ -82,9 +80,7 @@ public static class NRCLua
         usesNewHeader = false;
 
         if (encryptedSpan.Length > 8 && encryptedSpan[..3].SequenceEqual(AESMagic))
-        {
             return encryptedData.Decrypt(7);
-        }
 
         return encryptedData.Decrypt();
     }
@@ -99,13 +95,6 @@ public static class NRCLua
         using var Ar = new FNRCLuaArchive(name, decryptedData);
         var lua = NRCLuaReader.ReadBytecode(Ar, usesNewHeader);
 
-        using var msOut = new MemoryStream();
-        using (var writer = new FLua54ArchiveWriter(msOut))
-        {
-            FLuaWriter54.Write(writer, lua);
-            writer.Flush();
-        }
-
-        return msOut.ToArray();
+        return new FLuaWriter54(lua).GetBuffer();
     }
 }

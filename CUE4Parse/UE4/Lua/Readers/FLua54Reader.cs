@@ -7,15 +7,15 @@ public static class FLua54Reader
 {
     public static readonly LuaHeader DefaultHeader = new()
     {
-        Signature = [.. "\x1BLua"u8],
+        Signature = FLuaReader.LUA_SIGNATURE,
         Version = 0x54,
-        Format = 0,
-        LuacData = [0x19, 0x93, 0xd, 0xa, 0x1a, 0xa],
+        Format = FLuaReader.LUAC_FORMAT,
+        LuacData = FLuaReader.LUAC_DATA,
         InstructionSize = 4,
         IntegerSize = 8,
         NumberSize = 8,
-        LuacInt = [.. "xV\0\0\0\0\0\0"u8], // 0x5678
-        LuacNum = [.. "\0\0\0\0\0\0(w"u8], // 370.5
+        LuacInt = FLuaReader.LUAC_INT,
+        LuacNum = FLuaReader.LUAC_NUM,
         Closure = 1
     };
 

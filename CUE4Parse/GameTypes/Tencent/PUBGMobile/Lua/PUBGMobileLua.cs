@@ -8,7 +8,7 @@ namespace CUE4Parse.GameTypes.Tencent.PUBGMobile.Lua;
 
 public static class PUBGMobileLua
 {
-    public class FPUBGMobileLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLua53Archive(name, data, versions)
+    public class FPUBGMobileLuaArchive(string name, byte[] data) : FLua53Archive(name, data)
     {
         private static readonly byte[] _stringKey =
         [
@@ -76,31 +76,24 @@ public static class PUBGMobileLua
         if (!FLuaReader.IsValidLuaMagic(encryptedData))
             return encryptedData;
 
+        LuaBytecode lua;
         if (game is GAME_PUBGLite)
         {
-            using var liteAr = new FLua53Archive(name, encryptedData);
-            using var msOutLite = new MemoryStream();
-            using var writerLite = new FLua53ArchiveWriter(msOutLite);
-            FLuaWriter53.Write(writerLite, FLua53Reader.ReadLuaBytecode(liteAr, _opcodeMapping));
-            writerLite.Flush();
-
-            return msOutLite.ToArray();
+            using var Ar = new FLua53Archive(name, encryptedData);
+            lua = FLua53Reader.ReadLuaBytecode(Ar, _opcodeMapping);
+        }
+        else
+        {
+            using var Ar = new FPUBGMobileLuaArchive(name, encryptedData);
+            lua = new LuaBytecode
+            {
+                Header = FLua53Reader.ReadHeader(Ar),
+                SizeUpvalues = Ar.Read<byte>(),
+                MainFunc = ReadFunction(Ar, null)
+            };
         }
 
-        using var Ar = new FPUBGMobileLuaArchive(name, encryptedData);
-        var lua = new LuaBytecode
-        {
-            Header = FLua53Reader.ReadHeader(Ar),
-            SizeUpvalues = Ar.Read<byte>(),
-            MainFunc = ReadFunction(Ar, null)
-        };
-
-        using var msOut = new MemoryStream();
-        using var writer = new FLua53ArchiveWriter(msOut);
-        FLuaWriter53.Write(writer, lua);
-        writer.Flush();
-
-        return msOut.ToArray();
+        return new FLuaWriter53(lua).GetBuffer();
     }
 
     private static LuaFunction ReadFunction(FPUBGMobileLuaArchive Ar, string? parentSource)
