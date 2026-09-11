@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse_Conversion.Writers.ActorX;
 using CUE4Parse_Conversion.Writers.ActorX.Structs;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -277,18 +273,16 @@ public class ActorXMesh
 
     private void ExportMorphTargets<TVertex>(FPackageIndex[] morphTargets, MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
     {
-        var morphInfoHdr = new VChunkHeader { DataCount = morphTargets.Length, DataSize = 64 + sizeof(int) };
-        Ar.SerializeChunkHeader(morphInfoHdr, "MRPHINFO");
-
         var morphDeltas = new List<VMorphData>();
+        var morphs = new List<VMorphInfo>();
         for (var i = 0; i < morphTargets.Length; i++)
         {
             var morphTarget = morphTargets[i].Load<UMorphTarget>();
             if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length <= lod.SourceLodIndex ||
                 morphTarget.MorphLODModels[lod.SourceLodIndex].Vertices.Length == 0)
             {
-                var emptyMorphInfo = new VMorphInfo(morphTarget?.Name ?? $"UnknownMorph_{i}", 0);
-                emptyMorphInfo.Serialize(Ar);
+                // add empty morphs for nanite lod
+                if (lod.SourceLodIndex == uint.MaxValue) morphs.Add( new VMorphInfo(morphTarget?.Name ?? $"UnknownMorph_{i}", 0));
                 continue;
             }
 
@@ -304,8 +298,13 @@ public class ActorXMesh
             }
 
             morphDeltas.AddRange(localMorphDeltas);
+            morphs.Add(new VMorphInfo(morphTarget.Name, localMorphDeltas.Count));
+        }
 
-            var morphInfo = new VMorphInfo(morphTarget.Name, localMorphDeltas.Count);
+        var morphInfoHdr = new VChunkHeader { DataCount = morphs.Count, DataSize = 64 + sizeof(int) };
+        Ar.SerializeChunkHeader(morphInfoHdr, "MRPHINFO");
+        foreach (var morphInfo in morphs)
+        {
             morphInfo.Serialize(Ar);
         }
 
