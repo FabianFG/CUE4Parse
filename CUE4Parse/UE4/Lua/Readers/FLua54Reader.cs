@@ -5,6 +5,20 @@ namespace CUE4Parse.UE4.Lua.Readers;
 // Standard Lua 5.4 bytecode reader
 public static class FLua54Reader
 {
+    public static readonly LuaHeader DefaultHeader = new()
+    {
+        Signature = [.. "\x1BLua"u8],
+        Version = 0x54,
+        Format = 0,
+        LuacData = [0x19, 0x93, 0xd, 0xa, 0x1a, 0xa],
+        InstructionSize = 4,
+        IntegerSize = 8,
+        NumberSize = 8,
+        LuacInt = [.. "xV\0\0\0\0\0\0"u8], // 0x5678
+        LuacNum = [.. "\0\0\0\0\0\0(w"u8], // 370.5
+        Closure = 1
+    };
+
     public static LuaBytecode ReadLuaBytecode(FLua54Archive Ar, Dictionary<byte, byte>? opcodeMapping = null) => new()
     {
         Header = ReadHeader(Ar),

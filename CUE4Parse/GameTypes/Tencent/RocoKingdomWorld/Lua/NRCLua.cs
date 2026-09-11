@@ -62,7 +62,7 @@ public static class NRCLua
         public ulong KeySeed;
     }
 
-    private static byte[] DecryptLuaData(byte[] encryptedData)
+    private static byte[] DecryptLuaData(byte[] encryptedData, out bool usesNewHeader)
     {
         Span<byte> encryptedSpan = encryptedData.AsSpan();
         if (encryptedSpan.Length > Unsafe.SizeOf<LuaMLEHeader>() && encryptedSpan[..4].SequenceEqual(MLEMagic))
@@ -75,8 +75,11 @@ public static class NRCLua
                 MLEKey, plaintext,
                 header.BlockSize, header.KeySeed);
 
+            usesNewHeader = true;
             return plaintext;
         }
+
+        usesNewHeader = false;
 
         if (encryptedSpan.Length > 8 && encryptedSpan[..3].SequenceEqual(AESMagic))
         {
@@ -88,14 +91,13 @@ public static class NRCLua
 
     public static byte[] DecryptLuaBytecode(string name, byte[] encryptedData)
     {
-        var decryptedData = DecryptLuaData(encryptedData);
-        return decryptedData;
+        var decryptedData = DecryptLuaData(encryptedData, out var usesNewHeader);
 
-        if (!FLuaReader.IsValidLuaMagic(decryptedData))
+        if (!usesNewHeader && !FLuaReader.IsValidLuaMagic(decryptedData))
             throw new InvalidDataException("Failed to decrypt. Expected Lua magic");
 
-        using var Ar = new FNRCLuaArchive(name, decryptedData, null);
-        var lua = NRCLuaReader.ReadBytecode(Ar);
+        using var Ar = new FNRCLuaArchive(name, decryptedData);
+        var lua = NRCLuaReader.ReadBytecode(Ar, usesNewHeader);
 
         using var msOut = new MemoryStream();
         using (var writer = new FLua54ArchiveWriter(msOut))
