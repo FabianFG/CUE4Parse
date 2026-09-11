@@ -4,119 +4,121 @@ using CUE4Parse.UE4.Lua.Readers;
 namespace CUE4Parse.UE4.Lua.Writers;
 
 // Standard Lua 5.3 bytecode writer
-public static class FLuaWriter53
+public sealed class FLuaWriter53
 {
-    public static void Write(FLua53ArchiveWriter writer, LuaBytecode l)
+    private readonly FLua53ArchiveWriter Ar = new();
+
+    public FLuaWriter53(LuaBytecode bytecode)
     {
-        WriteHeader(writer, l.Header);
-        writer.Write(l.SizeUpvalues);
-        WriteFunction(writer, l.MainFunc);
+        WriteHeader(bytecode.Header);
+        Ar.Write(bytecode.SizeUpvalues);
+        WriteFunction(bytecode.MainFunc);
     }
 
-    private static void WriteHeader(FLua53ArchiveWriter writer, LuaHeader h)
+    public byte[] GetBuffer() => Ar.GetBuffer();
+
+    private void WriteHeader(LuaHeader header)
     {
-        writer.Write(h.Signature);
-        writer.Write(h.Version);
-        writer.Write(h.Format);
-        writer.Write(h.LuacData);
+        Ar.Write(header.Signature);
+        Ar.Write(header.Version);
+        Ar.Write(header.Format);
+        Ar.Write(header.LuacData);
 
-        writer.Write(h.CintSize);
-        writer.Write(h.SizeTSize);
+        Ar.Write(header.CintSize);
+        Ar.Write(header.SizeTSize);
 
-        writer.Write(h.InstructionSize);
-        writer.Write(h.IntegerSize);
-        writer.Write(h.NumberSize);
+        Ar.Write(header.InstructionSize);
+        Ar.Write(header.IntegerSize);
+        Ar.Write(header.NumberSize);
 
-        writer.Write(h.LuacInt);
-        writer.Write(h.LuacNum);
+        Ar.Write(header.LuacInt);
+        Ar.Write(header.LuacNum);
     }
 
-    private static void WriteFunction(FLua53ArchiveWriter writer, LuaFunction f)
+    private void WriteFunction(LuaFunction function)
     {
-        writer.WriteLuaString(f.SourceName);
+        Ar.WriteLuaString(function.SourceName);
 
-        writer.Write((uint) f.LineDefined);
-        writer.Write((uint) f.LastLineDefined);
+        Ar.Write((uint) function.LineDefined);
+        Ar.Write((uint) function.LastLineDefined);
 
-        writer.Write(f.NumParams);
-        writer.Write(f.IsVarArg);
-        writer.Write(f.MaxStackSize);
+        Ar.Write(function.NumParams);
+        Ar.Write(function.IsVarArg);
+        Ar.Write(function.MaxStackSize);
 
-        WriteCode(writer, f);
-        WriteConstants(writer, f);
-        WriteUpvalues(writer, f);
-        WriteProtos(writer, f);
-        WriteDebug(writer, f.Debug);
+        WriteCode(function);
+        WriteConstants(function);
+        WriteUpvalues(function);
+        WriteProtos(function);
+        WriteDebug(function.Debug);
     }
 
-    private static void WriteCode(FLua53ArchiveWriter writer, LuaFunction f)
+    private void WriteCode(LuaFunction function)
     {
-        int sizeCode = f.Code.Length / 4;
-
-        writer.Write(sizeCode);
-        writer.Write(f.Code);
+        Ar.Write(function.Code.Length / sizeof(uint));
+        Ar.Write(function.Code);
     }
 
-    private static void WriteConstants(FLua53ArchiveWriter writer, LuaFunction f)
+    private void WriteConstants(LuaFunction function)
     {
-        writer.Write(f.Constants.Length);
-
-        foreach (var c in f.Constants)
+        Ar.Write(function.Constants.Length);
+        foreach (var constant in function.Constants)
         {
-            writer.Write(c.Type);
-            switch (c.Type)
+            Ar.Write(constant.Type);
+
+            switch (constant.Type)
             {
-                case 0: // LUA_TNIL
+                case 0: // LUA_TNIL; Null
                     break;
-                case 1: // LUA_TBOOLEAN
-                    writer.Write(c.Data[0]);
+                case 1: // LUA_TBOOLEAN; Boolean
+                    Ar.Write(constant.Data[0]);
                     break;
-                case 3:  // LUA_TNUMFLT
-                case 19: // LUA_TNUMINT
-                    writer.Write(c.Data);
+                case 3:  // LUA_TNUMFLT; Float
+                case 19: // LUA_TNUMINT; Integer
+                    Ar.Write(constant.Data);
                     break;
-                case 4:  // LUA_TSHRSTR
-                case 20: // LUA_TLNGSTR
-                    writer.WriteLuaString(c.StrData);
+                case 4:  // LUA_TSHRSTR; Short string
+                case 20: // LUA_TLNGSTR; Long string
+                    Ar.WriteLuaString(constant.StrData);
                     break;
             }
         }
     }
 
-    private static void WriteUpvalues(FLua53ArchiveWriter writer, LuaFunction f)
+    private void WriteUpvalues(LuaFunction function)
     {
-        writer.Write(f.Upvalues.Length);
+        Ar.Write(function.Upvalues.Length);
 
-        foreach (var u in f.Upvalues)
+        foreach (var upvalue in function.Upvalues)
         {
-            writer.Write(u.Instack);
-            writer.Write(u.Idx);
+            Ar.Write(upvalue.Instack);
+            Ar.Write(upvalue.Idx);
         }
     }
 
-    private static void WriteProtos(FLua53ArchiveWriter writer, LuaFunction f)
+    private void WriteProtos(LuaFunction function)
     {
-        writer.Write(f.Protos.Length);
-        foreach (var p in f.Protos)
-            WriteFunction(writer, p);
+        Ar.Write(function.Protos.Length);
+
+        foreach (var proto in function.Protos)
+            WriteFunction(proto);
     }
 
-    private static void WriteDebug(FLua53ArchiveWriter writer, LuaDebug d)
+    private void WriteDebug(LuaDebug debug)
     {
-        writer.Write((int) d.SizeLineInfo);
-        writer.Write(d.LineInfo);
+        Ar.Write((int) debug.SizeLineInfo);
+        Ar.Write(debug.LineInfo);
 
-        writer.Write(d.LocVars.Length);
-        foreach (var v in d.LocVars)
+        Ar.Write(debug.LocVars.Length);
+        foreach (var local in debug.LocVars)
         {
-            writer.WriteLuaString(v.NameData);
-
-            writer.Write((int) v.StartPc);
-            writer.Write((int) v.EndPc);
+            Ar.WriteLuaString(local.NameData);
+            Ar.Write((int) local.StartPc);
+            Ar.Write((int) local.EndPc);
         }
 
-        writer.Write(d.UpvalueNames.Length);
-        foreach (var un in d.UpvalueNames)
-            writer.WriteLuaString(un.NameData);
+        Ar.Write(debug.UpvalueNames.Length);
+        foreach (var name in debug.UpvalueNames)
+            Ar.WriteLuaString(name.NameData);
     }
 }
