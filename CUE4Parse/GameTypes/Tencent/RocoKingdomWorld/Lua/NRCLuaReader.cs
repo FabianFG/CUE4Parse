@@ -38,10 +38,19 @@ public class NRCLuaReader
         61, 29, 82
     ];
 
-    public static LuaBytecode ReadBytecode(FNRCLuaArchive Ar)
+    public static LuaBytecode ReadBytecode(FNRCLuaArchive Ar, bool usesNewHeader)
     {
-        var header = FLua54Reader.ReadHeader(Ar);
-        header.Version = 0x54; // Header is standard except the version
+        LuaHeader header;
+        if (usesNewHeader)
+        {
+            header = FLua54Reader.DefaultHeader;
+            header.Closure = Ar.Read<byte>();
+        }
+        else
+        {
+            header = FLua54Reader.ReadHeader(Ar);
+            header.Version = 0x54; // Header is standard except the version
+        }
 
         var result = new LuaBytecode
         {
