@@ -31,7 +31,7 @@ public static class ABIDecryption
     private static readonly byte[] uassetMagic = [0xc1, 0x83, 0x2a, 0x9e, 0xf9, 0xff, 0xff, 0xff];
     private const int uassetMagicLength = 8;
 
-    public static byte[] ABIDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] ABIDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

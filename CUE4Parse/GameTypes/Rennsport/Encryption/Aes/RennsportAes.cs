@@ -30,7 +30,7 @@ public static class RennsportAes
         0x66, 0x23, 0x0D, 0xAC, 0x19, 0xA2, 0x77, 0xE4, 0xA3, 0x2C, 0xD1, 0xD9, 0x2E, 0x92, 0x45, 0x50
     ];
 
-    public static byte[] RennsportDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader) =>
+    public static byte[] RennsportDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null) =>
         RennsportDecrypt(bytes, beginOffset, count, isIndex, reader, false);
 
     public static byte[] RennsportDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, bool directoryIndex)

@@ -8,7 +8,7 @@ public class PMAAes
     /// <summary>
     /// Reversed by Spiritovod
     /// </summary>
-    public static byte[] PMADecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] PMADecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         var key = reader?.AesKey?.Key;
         if (key is null)

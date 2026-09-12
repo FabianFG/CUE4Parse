@@ -27,7 +27,7 @@ public static class Aes1047Games
         state.CopyTo(input, index);
     }
 
-    public static byte[] Decrypt1047Games(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] Decrypt1047Games(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

@@ -6,6 +6,7 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
 using CUE4Parse.GameTypes.BB3.Encryption.Aes;
+using CUE4Parse.GameTypes.ChasingKaleidoRIDER.Encryption;
 using CUE4Parse.GameTypes.DBD.Encryption.Aes;
 using CUE4Parse.GameTypes.DFHO.Encryption.Aes;
 using CUE4Parse.GameTypes.DragonSword.Encryption.Aes;
@@ -109,6 +110,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_ValorantSource => ValorantSourceAes.ValorantSourceDecrypt,
                 GAME_PUBGMobile or GAME_PUBGLite => PUBGMobileAes.PUBGMobileDecrypt,
                 GAME_GangstarMirageCity => GangstarMirageCityAes.GangstarMirageCityDecrypt,
+                GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt,
                 _ => null
             };
         }

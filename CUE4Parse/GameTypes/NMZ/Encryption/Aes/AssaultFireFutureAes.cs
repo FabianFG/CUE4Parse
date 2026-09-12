@@ -130,7 +130,7 @@ public class AssaultFireFutureAes
             0xDB3A500D, 0x63C4FE36, 0x4EA5C9D3, 0xA26FDEFF
         ];
 
-    public static byte[] AssaultFireFutureDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] AssaultFireFutureDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");
