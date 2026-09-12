@@ -18,6 +18,7 @@ public class ULevelStreaming : Assets.Exports.UObject
 
 public class ULevelStreamingDynamic : ULevelStreaming;
 public class ULevelStreamingAlwaysLoaded : ULevelStreaming;
+public class ULevelStreamingKismet : ULevelStreaming;
 public class ULevelStreamingPersistent : ULevelStreaming;
 public class ULevelStreamingLevelInstanceEditor : ULevelStreamingAlwaysLoaded;
 public class ULevelStreamingLevelInstance : ULevelStreamingDynamic;

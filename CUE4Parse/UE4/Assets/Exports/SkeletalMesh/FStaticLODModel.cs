@@ -41,7 +41,9 @@ public class FStaticLODModel
     public FMultisizeIndexContainer AdjacencyIndexBuffer;
     public FSkeletalMeshVertexClothBuffer ClothVertexBuffer;
     public FSkeletalMeshHalfEdgeBuffer HalfEdgeBuffer;
+
     public bool SkipLod => Indices?.Buffer == null || Indices.Buffer.Length < 1;
+
     // Game specific data
     public object? AdditionalBuffer;
 
@@ -211,14 +213,25 @@ public class FStaticLODModel
                 var RigidVertices = Ar.ReadArray(() => new FRigidVertex(Ar));
                 var SoftVertices = Ar.ReadArray(() => new FSoftVertex(Ar));
 
-                Chunks = Ar.ReadArray(() => new FSkelMeshChunk(RigidVertices, SoftVertices));
+                Chunks = [new FSkelMeshChunk(RigidVertices, SoftVertices)];
             }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
+            {
+                Ar.SkipArray<short>(); // ShadowIndices
+            }
+
             ActiveBoneIndices = Ar.ReadArray<short>();
 
             if (!stripDataFlags.IsEditorDataStripped() && FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.SkeletalMeshLODModelMeshInfo)
             {
                 var ImportedMeshInfos = Ar.ReadArray(() => new FSkelMeshImportedMeshInfo(Ar));
             }
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
+        {
+            Ar.SkipArray<byte>(); // ShadowTriangleDoubleSided
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.DeprecatedOldLodformat)
@@ -233,8 +246,29 @@ public class FStaticLODModel
                 NumVertices = Ar.Read<int>();
         }
 
-        RequiredBones = Ar.ReadArray<short>();
-        if (!stripDataFlags.IsEditorDataStripped())
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
+        {
+            Ar.SkipFixedArray(16); // Edges
+        }
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.BonesAsBytes && Ar.Game < GAME_UE4_0)
+        {
+            var byteBones = Ar.ReadArray<byte>();
+            RequiredBones = new short[byteBones.Length];
+            for (int i = 0; i < byteBones.Length; i++)
+                RequiredBones[i] = byteBones[i];
+        }
+        else
+        {
+            RequiredBones = Ar.ReadArray<short>();
+        }
+
+        if (Ar.Game == GAME_APBReloaded)
+        {
+            Ar.Position += 8;
+        }
+
+        if (!stripDataFlags.IsEditorDataStripped() && Ar.Ver >= EUnrealEngineObjectUE3Version.AddedBulkLod && Ar.Game != GAME_APBReloaded)
         {
             if (FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.RemoveSkeletalMeshLODModelBulkDatas)
             {
@@ -260,6 +294,11 @@ public class FStaticLODModel
                 var bIsBuildDataAvailable = Ar.ReadBoolean();
                 var bIsRawSkeletalMeshBulkDataEmpty = Ar.ReadBoolean();
             }
+        };
+
+        if (Ar.Game == GAME_LifeIsStrange && (int) Ar.LicenseeVer >= 19)
+        {
+            Ar.Read<int>();
         }
 
         if (Ar.Game != GAME_StateOfDecay2 && Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_SKELMESH_MESHTOIMPORTVERTEXMAP)
@@ -321,8 +360,10 @@ public class FStaticLODModel
                     }
                 }
 
-                if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_EXTRA_SKELMESH_VERTEX_INFLUENCES)
-                    throw new ParserException("Unsupported: extra SkelMesh vertex influences (old mesh format)");
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCES && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_EXTRA_SKELMESH_VERTEX_INFLUENCES)
+                {
+                    Ar.ReadArray(() => new FSkeletalMeshVertexInfluences(Ar));
+                }
 
                 // https://github.com/gildor2/UEViewer/blob/master/Unreal/UnrealMesh/UnMesh4.cpp#L1415
                 if (Ar.Game == GAME_StateOfDecay2)
@@ -377,7 +418,7 @@ public class FStaticLODModel
                     return;
                 }
 
-                if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData))
+                if (!stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_AdjacencyData) && Ar.Ver >= EUnrealEngineObjectUE3Version.CRACK_FREE_DISPLACEMENT_SUPPORT)
                     AdjacencyIndexBuffer = new FMultisizeIndexContainer(Ar);
 
                 if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH && HasClothData())
@@ -388,6 +429,7 @@ public class FStaticLODModel
                     _ = new FMultisizeIndexContainer(Ar);
                     Ar.Position += 12;
                 }
+
                 if (Ar.Game == GAME_StateOfDecay2) Ar.Position += 8;
             }
         }
@@ -723,5 +765,77 @@ public class FStaticLODModel
             if (Sections[i].HasClothData)
                 return true;
         return false;
+    }
+
+    public class FVertexInfluence
+    {
+        public int Weights;
+        public int BoneId;
+
+        public FVertexInfluence(FArchive Ar)
+        {
+            Weights = Ar.Read<int>();
+            BoneId = Ar.Read<int>();
+        }
+    }
+
+    public struct FBoneIndexPair
+    {
+        public int[] BoneIdx;
+
+        public FBoneIndexPair(FArchive Ar)
+        {
+            BoneIdx = new int[2];
+            BoneIdx[0] = Ar.Read<int>();
+            BoneIdx[1] = Ar.Read<int>();
+        }
+    }
+
+    public class FSkeletalMeshVertexInfluences
+    {
+        public FVertexInfluence[] Influences;
+        public Dictionary<FBoneIndexPair, int[]> VertexInfluenceMapping;
+        public FSkelMeshSection[] Sections;
+        public FSkelMeshChunk[] Chunks;
+        public byte[] RequiredBones;
+        public byte Usage;
+
+        public FSkeletalMeshVertexInfluences(FArchive Ar)
+        {
+            Influences = Ar.ReadArray(() => new FVertexInfluence(Ar));
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_MAPPING)
+            {
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.DWORD_SKELETAL_MESH_INDICES_FIXUP)
+                {
+                    VertexInfluenceMapping = Ar.ReadMap(() => new FBoneIndexPair(Ar), () => Ar.ReadArray<int>());
+                }
+                else
+                {
+                    if (Ar.Ver >= EUnrealEngineObjectUE3Version.DWORD_SKELETAL_MESH_INDICES)
+                    {
+                        Ar.Read<byte>(); // IndexSize
+                    }
+
+                    Ar.ReadMap(() => new FBoneIndexPair(Ar), Ar.ReadArray<short>); // VertexInfluenceMapping
+                }
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CHUNKS_SECTIONS_VERTEX_INFLUENCE)
+            {
+                Sections = Ar.ReadArray(() => new FSkelMeshSection(Ar));
+                Chunks = Ar.ReadArray(() => new FSkelMeshChunk(Ar));
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_REQUIRED_BONES_VERTEX_INFLUENCE)
+            {
+                RequiredBones = Ar.ReadArray<byte>();
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_USAGE_VERTEX_INFLUENCE)
+            {
+                Usage = Ar.Read<byte>();
+            }
+        }
     }
 }

@@ -93,7 +93,7 @@ public class USoundNodeWave : UObject
             }
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_SOUNDNODEWAVE_GUID && Ar.Game is not GAME_APBReloaded)
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_SOUNDNODEWAVE_GUID)
         {
             Ar.Read<FGuid>(); // CompressedDataGuid
         }

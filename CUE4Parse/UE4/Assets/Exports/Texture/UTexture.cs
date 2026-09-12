@@ -28,6 +28,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
     public FEditorBulkData? EditorData { get; private set; }
     public FByteBulkData? SourceArt { get; private set; }
     public ETextureCookPlatformTilingSettings CookPlatformTilingSettings { get; private set; }
+    public FPackageIndex? Palette { get; private set; }
 
     public bool RenderNearestNeighbor => LODGroup == TextureGroup.TEXTUREGROUP_Pixels2D || Filter == TextureFilter.TF_Nearest;
     public bool IsNormalMap => CompressionSettings == TextureCompressionSettings.TC_Normalmap;
@@ -73,10 +74,11 @@ public class UTexture : UUnrealMaterial, IAssetUserData
         SRGB = GetOrDefault(nameof(SRGB), true);
         AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
         CookPlatformTilingSettings = GetOrDefault<ETextureCookPlatformTilingSettings>(nameof(CookPlatformTilingSettings));
+        Palette = GetOrDefault(nameof(Palette), new FPackageIndex());
 
-        if (Ar.Game < GAME_UE4_0)
+        if (Ar.Game == GAME_APBReloaded)
         {
-            SourceArt = new FByteBulkData(Ar);
+            Ar.Position += 8 * 2; // Bulkdata headers
             return;
         }
 

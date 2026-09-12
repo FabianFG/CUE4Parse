@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.Compression;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -49,7 +50,7 @@ public abstract class TBulkData<T> where T: struct
     protected TBulkData(FAssetArchive Ar)
     {
         Header = new FByteBulkDataHeader(Ar);
-        if (Header.SizeOnDisk == 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
+        if (Header.SizeOnDisk == 0 || Header.ElementCount <= 0 || BulkDataFlags.HasFlag(BULKDATA_Unused))
         {
             _data = new Lazy<T[]?>(() => []);
             return;
@@ -58,7 +59,7 @@ public abstract class TBulkData<T> where T: struct
         _dataPosition = Ar.Position;
         _savedAr = Ar;
 
-        if (Ar.Game >= GAME_UE4_0 && (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None))
+        if (Ar.Game >= GAME_UE4_0 ? BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None : !BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
         {
             Ar.Position += Header.SizeOnDisk;
         }
@@ -113,13 +114,13 @@ public abstract class TBulkData<T> where T: struct
         {
             data = new T[Header.ElementCount];
             var dest = MemoryMarshal.AsBytes(data.AsSpan());
-            dataAr.SerializeCompressedNew(dest, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            dataAr.SerializeCompressedNew(dest, GetDataSize(), nameof(CompressionMethod.Zlib), ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_CompressedLZO))
         {
             data = new T[Header.ElementCount];
             var dest = MemoryMarshal.AsBytes(data.AsSpan());
-            dataAr.SerializeCompressedNew(dest, GetDataSize(), "LZO", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            dataAr.SerializeCompressedNew(dest, GetDataSize(), nameof(CompressionMethod.LZO), ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }
         else
         {

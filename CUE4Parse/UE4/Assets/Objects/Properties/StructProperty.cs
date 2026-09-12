@@ -9,7 +9,10 @@ public class StructProperty : FPropertyTagType<FScriptStruct>
 {
     public StructProperty(FAssetArchive Ar, FPropertyTagData? tagData, ReadType type)
     {
+        var structType = tagData?.StructType;
+        if (!string.IsNullOrEmpty(structType)) Ar.StructTypeStack.Push(structType);
         Value = new FScriptStruct(Ar, tagData?.StructType, tagData?.Struct, type);
+        if (!string.IsNullOrEmpty(structType)) Ar.StructTypeStack.Pop();
     }
 
     public StructProperty(FScriptStruct value) => Value = value;

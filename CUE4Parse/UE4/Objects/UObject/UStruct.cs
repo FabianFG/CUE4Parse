@@ -9,7 +9,6 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [SkipObjectRegistration]
 public class UStruct : UField
 {
-    
     public FPackageIndex SuperStruct;
     public FPackageIndex[] Children;
     public FField[] ChildProperties;

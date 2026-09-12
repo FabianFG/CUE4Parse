@@ -18,6 +18,13 @@ public class FPositionVertexBuffer
         Verts = [];
     }
 
+    public FPositionVertexBuffer(FVector[] verts)
+    {
+        Verts = verts;
+        Stride = 12;
+        NumVertices = verts.Length;
+    }
+
     public FPositionVertexBuffer(FArchive Ar)
     {
         if (Ar.Game is GAME_Undawn or GAME_RacingMaster)
