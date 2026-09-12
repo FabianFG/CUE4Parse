@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Exports.CriWare;
 
 public class UAtomConfig : USoundAtomConfig;
+
 public class USoundAtomConfig : UObject
 {
     public AcbReader? AcbReader;
@@ -16,12 +17,10 @@ public class USoundAtomConfig : UObject
         base.Deserialize(Ar, validPos);
 
         var bulkData = new FByteBulkData(Ar);
-        var savedPosition = Ar.Position;
-
         if (bulkData.Data == null)
             return;
 
-        using var bulkAr = new FByteArchive("bulk", bulkData.Data);
+        using var bulkAr = new FByteArchive("AcbReader", bulkData.Data);
         AcbReader = new AcbReader(bulkAr);
     }
 

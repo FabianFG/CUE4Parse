@@ -1,4 +1,3 @@
-using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.CriWare.Readers;
 using CUE4Parse.UE4.Readers;
@@ -6,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.CriWare;
 
-public class UAtomCueSheet : UObject
+public class UAtomCueSheet : UAtomSoundBank
 {
     public AcbReader? AcbReader;
 
@@ -14,18 +13,11 @@ public class UAtomCueSheet : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        Ar.Position += 2; // No clue
-
-        var bulkData = new FByteBulkData(Ar);
-        var savedPosition = Ar.Position;
-
-        if (bulkData.Data == null)
+        if (RawData is null || RawData.ReadDataOnce() is not {Length: > 0} bulkData)
             return;
 
-        using var bulkAr = new FByteArchive("bulk", bulkData.Data);
+        using var bulkAr = new FByteArchive("AcbReader", bulkData);
         AcbReader = new AcbReader(bulkAr);
-
-        Ar.Position += 2; // No clue
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

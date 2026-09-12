@@ -22,15 +22,16 @@ public class CriWareExtractedSound
 /// <summary>
 /// Tested games:
 ///
-/// 4.20 | DAEMON X MACHINA
+/// 4.20 | DAEMON X MACHINA, Tales of Arise (0x44F555E9A4B5089B) (need to verify)
 /// 4.23 | SgyuinBaldo
 /// 4.27 | DRAGON QUEST I & II HD-2D Remake, EDENS ZERO, MOBILE SUIT GUNDAM SEED BATTLE DESTINY REMASTERED
-///      | Persona 3 Reload (0x0000000000B5DE48)
+///      | Persona 3 Reload (0x0000000000B5DE48), MY HERO ULTRA RUMBLE (1.31.00.01)
 /// 5.1  | DRAGON BALL: Sparking! ZERO (0xB7B8B9442F99A221), Jujutsu Kaisen Cursed Clash (0x0DAA5EA10B547CDE)
-///      | SAND LAND (0x0CA47CCB51010000), SWORD ART ONLINE Fractured Daydream
-/// 5.3  | Demon Slayer -Kimetsu no Yaiba- The Hinokami Chronicles 2
-/// 5.4  | Double Dragon Revive, FANTASY LIFE i: The Girl Who Steals Time
-///      | Rune Factory: Guardians of Azuma, Sonic Racing: CrossWorlds (0x00720FB46101DF7A)
+///      | SAND LAND (0x0CA47CCB51010000), SWORD ART ONLINE Fractured Daydream, WUCHANG: Fallen Feathers
+/// 5.3  | Demon Slayer -Kimetsu no Yaiba- The Hinokami Chronicles 2, Echoes of Aincrad (2.04.01)
+/// 5.4  | Double Dragon Revive, FANTASY LIFE i: The Girl Who Steals Time, Daemon X Machina: Titanic Scion
+///      | Rune Factory: Guardians of Azuma, Sonic Racing: CrossWorlds (0x00720FB46101DF7A), OCTOPATH TRAVELER 0
+/// 5.6  | DRAGON QUEST MONSTERS: The Withered World (2.04.02), Final Fantasy Resonance (0x0A8D2AB57335950C)
 ///
 /// </summary>
 public class CriWareProvider

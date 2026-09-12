@@ -15,12 +15,10 @@ public class USoundAtomCueSheet : UObject
         base.Deserialize(Ar, validPos);
 
         var bulkData = new FByteBulkData(Ar);
-        var savedPosition = Ar.Position;
-
         if (bulkData.Data == null)
             return;
 
-        using var bulkAr = new FByteArchive("bulk", bulkData.Data);
+        using var bulkAr = new FByteArchive("AcbReader", bulkData.Data);
         AcbReader = new AcbReader(bulkAr);
     }
 
