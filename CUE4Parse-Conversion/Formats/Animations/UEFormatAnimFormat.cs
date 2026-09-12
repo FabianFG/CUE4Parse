@@ -10,13 +10,13 @@ public sealed class UEFormatAnimFormat : IAnimExportFormat
 {
     public string DisplayName => "UEFormat (ueanim)";
 
-    public IReadOnlyList<ExportFile> Build(string objectName, ExportOptions options, CAnimSet animSet)
+    public IReadOnlyList<ExportFile> Build(string objectName, string objectPath, ExportOptions options, CAnimSet animSet)
     {
         var results = new List<ExportFile>(animSet.Sequences.Count);
         for (var i = 0; i < results.Capacity; i++)
         {
             using var ar = new FArchiveWriter();
-            new UEAnim(objectName, animSet, i, options).Save(ar);
+            new UEAnim(objectName, objectPath, animSet, i, options).Save(ar);
 
             var suffix = i == 0 ? "" : $"_SEQ{i}";
             results.Add(new ExportFile("ueanim", ar.GetBuffer(), suffix));
@@ -25,10 +25,10 @@ public sealed class UEFormatAnimFormat : IAnimExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildAnimStreamable(string objectName, ExportOptions options, UAnimStreamable animStreamable)
+    public IReadOnlyList<ExportFile> BuildAnimStreamable(string objectName, string objectPath, ExportOptions options, UAnimStreamable animStreamable)
     {
         using var ar = new FArchiveWriter();
-        new UEAnim(objectName, animStreamable, options).Save(ar);
+        new UEAnim(objectName, objectPath, animStreamable, options).Save(ar);
         return [new ExportFile("ueanim", ar.GetBuffer())];
     }
 }

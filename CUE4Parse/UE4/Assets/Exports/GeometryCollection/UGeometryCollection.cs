@@ -78,7 +78,7 @@ public class UGeometryCollection : UObject
         writer.WritePropertyName(nameof(GeometryCollection));
         serializer.Serialize(writer, GeometryCollection);
 
-        //writer.WritePropertyName(nameof(RenderData));
-        //serializer.Serialize(writer, RenderData);
+        writer.WritePropertyName(nameof(RenderData));
+        serializer.Serialize(writer, RenderData);
     }
 }

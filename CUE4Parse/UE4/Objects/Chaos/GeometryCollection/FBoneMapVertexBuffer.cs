@@ -1,11 +1,12 @@
 ﻿using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
 public class FBoneMapVertexBuffer
 {
     public uint NumVertices;
-    public ushort[] BoneMap;
+    [JsonIgnore] public ushort[] BoneMap;
 
     public FBoneMapVertexBuffer(FArchive Ar)
     {

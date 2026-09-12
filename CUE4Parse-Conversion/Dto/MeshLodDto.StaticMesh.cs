@@ -1,5 +1,4 @@
-﻿using System;
-using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+﻿using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
@@ -14,7 +13,7 @@ public partial class MeshLodDto<TVertex>
         ArgumentNullException.ThrowIfNull(lod.VertexBuffer, "LOD has no vertex buffer");
         ArgumentNullException.ThrowIfNull(lod.PositionVertexBuffer, "LOD has no position vertex buffer");
 
-        var extraUvs = new FMeshUVFloat[lod.VertexBuffer.NumTexCoords - 1][];
+        var extraUvs = new FMeshUVFloat[Math.Max(0, lod.VertexBuffer.NumTexCoords - 1)][];
         var vertices = new MeshVertex[lod.PositionVertexBuffer.Verts.Length];
 
         for (var i = 0; i < extraUvs.Length; i++)

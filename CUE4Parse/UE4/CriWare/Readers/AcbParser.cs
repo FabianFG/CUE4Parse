@@ -76,6 +76,14 @@ struct Synth
     public ushort NumActionTracks;
 }
 
+enum ESynthReferenceType : ushort
+{
+    None,
+    Waveform,
+    Synth,
+    Sequence
+}
+
 public struct Waveform
 {
     public ushort Id;
@@ -370,7 +378,7 @@ public class AcbParser
     {
         PreloadAcbWaveForm();
 
-        if (index > _waveFormRows)
+        if (index >= _waveFormRows)
             throw new ArgumentOutOfRangeException(nameof(index));
         if (_waveform is null)
             return;
@@ -429,7 +437,7 @@ public class AcbParser
     {
         PreloadAcbSynth();
 
-        if (index > _synthRows)
+        if (index >= _synthRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
         if (_synth is null)
@@ -449,28 +457,22 @@ public class AcbParser
         {
             _synthReader.BaseStream.Position = r.ReferenceItemsOffset + i * 4;
 
-            ushort itemType = _synthReader.ReadUInt16BE();
-            ushort itemIndex = _synthReader.ReadUInt16BE();
-
+            var itemType = (ESynthReferenceType) _synthReader.ReadUInt16BE();
+            var itemIndex = _synthReader.ReadUInt16BE();
             switch (itemType)
             {
-                case 0:
+                case ESynthReferenceType.None:
                     count = 0;
                     break;
-
-                case 1:
+                case ESynthReferenceType.Waveform:
                     LoadAcbWaveForm(itemIndex);
                     break;
-
-                case 2:
+                case ESynthReferenceType.Synth:
                     LoadAcbSynth(itemIndex);
                     break;
-
-                case 3:
+                case ESynthReferenceType.Sequence:
                     LoadAcbSequence(itemIndex);
                     break;
-
-                case 6:
                 default:
                     count = 0;
                     break;
@@ -548,7 +550,6 @@ public class AcbParser
         _trackCommand = new TrackCommand[rows];
 
         int cCommand = table.GetColumn("Command");
-
         for (int i = 0; i < rows; i++)
         {
             ref TrackCommand r = ref _trackCommand[i];
@@ -561,7 +562,7 @@ public class AcbParser
     {
         PreloadAcbTrackCommand();
 
-        if (index > _trackCommandRows)
+        if (index >= _trackCommandRows)
             throw new ArgumentOutOfRangeException(nameof(index));
 
         if (_trackCommandReader is null)
@@ -664,14 +665,14 @@ public class AcbParser
     {
         PreloadAcbTrack();
 
-        if (index > _trackRows)
+        if (index >= _trackRows)
             throw new ArgumentOutOfRangeException(nameof(index));
         if (_track is null)
             return;
 
         ref Track r = ref _track[index];
 
-        if (r.EventIndex == 65535)
+        if (r.EventIndex == ushort.MaxValue)
             return;
 
         LoadAcbTrackCommand(r.EventIndex);
@@ -713,7 +714,7 @@ public class AcbParser
     {
         PreloadAcbSequence();
 
-        if (index > _sequenceRows)
+        if (index >= _sequenceRows)
             throw new ArgumentOutOfRangeException(nameof(index));
         if (_sequence is null)
             return;
@@ -779,7 +780,7 @@ public class AcbParser
     {
         PreloadAcbBlock();
 
-        if (index > _blockRows)
+        if (index >= _blockRows)
             throw new ArgumentOutOfRangeException(nameof(index));
         if (_block is null)
             return;
@@ -897,7 +898,7 @@ public class AcbParser
     {
         PreloadAcbCue();
 
-        if (index > _cueRows)
+        if (index >= _cueRows)
             throw new ArgumentOutOfRangeException(nameof(index));
         if (_cue is null)
             return;
@@ -905,25 +906,20 @@ public class AcbParser
         ref Cue r = ref _cue[index];
 
         _currentCueId = r.Id;
-
         switch (r.ReferenceType)
         {
             case EReferenceType.Waveform:
                 LoadAcbWaveForm(r.ReferenceIndex);
                 break;
-
             case EReferenceType.Synth:
                 LoadAcbSynth(r.ReferenceIndex);
                 break;
-
             case EReferenceType.Sequence:
                 LoadAcbSequence(r.ReferenceIndex);
                 break;
-
             case EReferenceType.BlockSequence:
                 LoadAcbBlockSequence(r.ReferenceIndex);
                 break;
-
             default:
                 break;
         }
@@ -960,7 +956,7 @@ public class AcbParser
     {
         PreloadAcbCueName();
 
-        if (index > _cueNameRows)
+        if (index >= _cueNameRows)
             throw new ArgumentOutOfRangeException(nameof(index));
         if (_cueName is null)
             return;

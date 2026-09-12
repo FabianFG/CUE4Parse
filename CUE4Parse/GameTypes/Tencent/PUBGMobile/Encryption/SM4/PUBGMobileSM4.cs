@@ -24,7 +24,7 @@ public static class PUBGMobileSM4
     private const string SM4KeyLite = "Q0hVTKey$nq*3ZFlQCiA";
 
     // Constructed at sub_A18BE0C to qword_F1B9528
-    private static readonly string[] _pathKeySalts =
+    private static readonly string[] _staticPathKeySalts =
     [
         "xG2qW5lP7lV2iN5fN5pG", "xT1cJ6dL5wC0kK1rB4dK", "qC4jS5bZ6fL5xE6nD4zA",
         "gD4jQ2aL3bS3lC3xT0iW", "xU1yQ8wE9zY3gZ3bT5aE", "uQ3cO2dX7xY4xU7gH7iS",
@@ -32,7 +32,8 @@ public static class PUBGMobileSM4
         "iT2vS0cS6yT6cZ1sE1lO", "hM1pH9iY8wM9hT4lN5uJ", "kG6bC8jK0fL0dE4sH4mL",
         "dB6lB3vE0eZ8wM8rI0aC", "tP7sP7nI9rA2vQ4cV5yQ", "aT0cL1yN4pT3sZ7eM2vY",
         "uV6fU8fC9zN3mP5dH8mN", "rT6aQ6oZ1yM0gO5tO1aN", "jU5bH7lQ0fM9hK2kI0oF",
-        "iQ0eM0mJ7uT0kV6kL5zY"
+        "iQ0eM0mJ7uT0kV6kL5zY", "wD2rP3lP9xF4mE1eC5jS", "rG0lR2rZ5vM6mW5lM1rR",
+        "fO3kW1fE6eD0pU1kY7xK"
     ];
 
     // Dynamic encryption keys come from the TCP
@@ -65,11 +66,16 @@ public static class PUBGMobileSM4
         [24] = "e4bb6ceb363e5841d946",
         [25] = "06d780b85eade141e5fd",
         [26] = "a6a915cd11add12a94e9",
+        [27] = "5967e403b057bc02a8a9",
         [28] = "87bae21ce1a1631ad6c9",
         [29] = "14f8efdb5552af690d44",
         [30] = "9477ecd3fee28c7d2a34",
         [31] = "b4ecef20999b7ccb205e",
-        [34] = "e5901d4631734da09feb"
+        [32] = "ec7c6575fc2a54caeb0d",
+        [33] = "afa22d65c9f5a95f0f73",
+        [34] = "e5901d4631734da09feb",
+        [35] = "e31c6f4e994cb4330504",
+        [36] = "df473da3aa9b5704ce73"
     };
 
     public static byte[] Decrypt(byte[] bytes, int beginOffset, int count, string path, EPUBGMobileEncryptionMethod encryptionMethod, uint encryptionKeyId)
@@ -90,7 +96,12 @@ public static class PUBGMobileSM4
                 var name = path.AsSpan(separator + 1);
                 var extension = name.LastIndexOf('.');
                 var cleanName = (extension >= 0 ? name[..extension] : name).ToString().ToLowerInvariant();
-                var salt = _pathKeySalts[(encryptionMethod - EPUBGMobileEncryptionMethod.SaltSM4Min) % _pathKeySalts.Length];
+
+                var saltIndex = encryptionMethod - EPUBGMobileEncryptionMethod.SaltSM4Min;
+                if (saltIndex >= _staticPathKeySalts.Length)
+                    throw new ParserException($"Static encryption key with index {saltIndex} is not available");
+
+                var salt = _staticPathKeySalts[saltIndex];
                 var keySource = string.Concat(cleanName, salt, encryptionMethod.ToString().ToLowerInvariant());
 
                 Span<byte> key = stackalloc byte[SHA1.HashSizeInBytes];
@@ -121,7 +132,7 @@ public static class PUBGMobileSM4
                 {
                     var encryptionKeyIndex = encryptionKeyId & 0xFFFFFF;
                     if (!_dynamicKeySalts.TryGetValue(encryptionKeyIndex, out var keySalt))
-                        throw new ParserException($"Dynamic encryption key index {encryptionKeyIndex} is not available");
+                        throw new ParserException($"Dynamic encryption key with index {encryptionKeyIndex} is not available");
 
                     Span<byte> hash = stackalloc byte[SHA1.HashSizeInBytes];
                     SHA1.HashData(Encoding.ASCII.GetBytes(keySalt), hash);

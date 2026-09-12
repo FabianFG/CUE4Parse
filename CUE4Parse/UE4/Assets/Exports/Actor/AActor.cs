@@ -368,7 +368,12 @@ public class ASpotLight : ALight;
 public class ASpotLightMovable : ASpotLight;
 public class ASpotLightStatic : ASpotLight;
 public class ASpotLightStationary : ASpotLight;
+public class AStaticMeshActorBase : AActor;
 public class AStaticMeshActor : AActor;
+
+public class AStaticMeshCollectionActor : AStaticMeshActorBase;
+public class AStaticLightCollectionActor : ALight;
+
 public class ASwitchActor : AActor;
 public class ATagCollectionModifierSharedActor : AActorModifierCoreSharedActor;
 public class ATargetPoint : AActor;
@@ -433,13 +438,15 @@ public class AWorldPartitionReplay : AActor;
 public class AWorldPartitionVolume : AVolume;
 public class AWorldSettings : AInfo
 {
-    public FPackageIndex WorldPartition;
+    public FPackageIndex? WorldPartition { get; private set; }
+    public FPackageIndex[]? StreamingLevels { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 20;
         base.Deserialize(Ar, validPos);
 
-        WorldPartition = GetOrDefault(nameof(WorldPartition), new FPackageIndex());
+        WorldPartition = GetOrDefault<FPackageIndex?>(nameof(WorldPartition));
+        StreamingLevels = GetOrDefault<FPackageIndex[]?>(nameof(StreamingLevels));
     }
 }

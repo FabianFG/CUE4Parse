@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -52,6 +53,12 @@ namespace CUE4Parse.UE4.Objects.Core.Misc
             B = uint.Parse(hexString.Slice(8, 8), NumberStyles.HexNumber);
             C = uint.Parse(hexString.Slice(16, 8), NumberStyles.HexNumber);
             D = uint.Parse(hexString.Slice(24, 8), NumberStyles.HexNumber);
+        }
+
+        public FGuid(ReadOnlySpan<byte> span)
+        {
+            var len = System.Math.Min(span.Length, Size);
+            span[..len].CopyTo(GetSpan());
         }
 
         public static FGuid Random()

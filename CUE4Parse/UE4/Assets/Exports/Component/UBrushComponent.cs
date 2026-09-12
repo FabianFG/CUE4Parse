@@ -2,7 +2,6 @@
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.PhysicsEngine;
 using CUE4Parse.UE4.Objects.UObject;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component;
 
@@ -18,7 +17,7 @@ public class UBrushComponent : UPrimitiveComponent
         Brush = GetOrDefault(nameof(Brush), new FPackageIndex());
         BrushBodySetup = GetOrDefault(nameof(BrushBodySetup), new FPackageIndex());
 
-        if (Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.Game < GAME_UE4_0)
         {
             Ar.ReadArray(Ar.ReadBulkArray<byte>); // CachedPhysBrushData
         }

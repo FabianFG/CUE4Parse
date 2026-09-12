@@ -22,7 +22,15 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             var bHasNameHashes = Ar.Ver >= EUnrealEngineObjectUE4Version.NAME_HASHES_SERIALIZED || Ar.Game is GAME_GearsOfWar4 or GAME_DaysGone;
 
-            Name = Ar.ReadFString().Trim();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release64)
+            {
+                Name = Ar.ReadFString().Trim();
+                if (Ar.Game == GAME_AvaGlobal) Ar.Position += (Name.Length ^ 7) & 0xF;
+            }
+            else
+            {
+                // todo: add ReadAnsi
+            }
 
             if (Ar.Game == GAME_PlayerUnknownsBattlegrounds)
             {

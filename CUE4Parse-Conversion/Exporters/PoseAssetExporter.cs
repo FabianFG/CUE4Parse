@@ -19,7 +19,7 @@ public class PoseAssetExporter(UPoseAsset poseAsset) : ExporterBase(poseAsset)
         }
 
         var format = GetPoseFormat(Session.Options.MeshFormat);
-        return [format.Build(ObjectName, Session.Options, convertedPoseAsset)];
+        return [format.Build(ObjectName, ObjectPath, Session.Options, convertedPoseAsset)];
     }
 
     private IPoseExportFormat GetPoseFormat(EMeshFormat format) => format switch

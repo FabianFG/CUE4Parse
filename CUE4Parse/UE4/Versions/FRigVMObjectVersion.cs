@@ -68,7 +68,7 @@ public static class FRigVMObjectVersion
 
         // The VM stores a local snapshot registry to use in cooked environments instead of the shared global registry
         LocalizedRegistry,
-        
+
         // The VM stores a relative seek offset to be able to skip the registry during load
         LocalizedRegistryWithRelativeSeekOffset,
 
@@ -86,6 +86,12 @@ public static class FRigVMObjectVersion
 
         // Referencing variables through Guids
         GuidForVariables,
+
+        // Nativized Functions as Callable Swap-Ins
+        NativizedFunctionAsCallables,
+
+        // Rename-stable GUIDs added to function identifiers, headers, and arguments
+        GuidForFunctions,
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
@@ -109,6 +115,7 @@ public static class FRigVMObjectVersion
             < GAME_UE5_6 => Type.FunctionHeaderLayoutStoresCategoryExpansion,
             < GAME_UE5_7 => Type.ByteCodeCleanup,
             < GAME_UE5_8 => Type.LocalizedRegistry,
+            < GAME_UE6_0 => Type.GuidForVariables,
             _ => Type.LatestVersion
         };
     }

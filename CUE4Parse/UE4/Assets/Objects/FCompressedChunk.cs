@@ -1,5 +1,4 @@
 ﻿using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Objects
 {
@@ -10,13 +9,17 @@ namespace CUE4Parse.UE4.Assets.Objects
         public readonly int CompressedOffset;
         public readonly int CompressedSize;
 
-        // currently this is useless but it'll be used for future custom game changes
         public FCompressedChunk(FArchive Ar)
         {
-            UncompressedOffset = Ar.Read<int>();
+            UncompressedOffset = Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22 ? (int)Ar.Read<long>() : Ar.Read<int>();
             UncompressedSize = Ar.Read<int>();
-            CompressedOffset = Ar.Read<int>();
+            CompressedOffset = Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22 ? (int)Ar.Read<long>() : Ar.Read<int>();
             CompressedSize = Ar.Read<int>();
+
+            if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer >= 33)
+            {
+                Ar.Position += 12;
+            }
         }
     }
 }

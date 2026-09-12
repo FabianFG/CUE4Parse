@@ -26,7 +26,7 @@ public partial class MeshLodDto<TVertex>
             }
         }
 
-        var extraUvs = new FMeshUVFloat[lod.NumTexCoords - 1][];
+        var extraUvs = new FMeshUVFloat[Math.Max(0, lod.NumTexCoords - 1)][];
         var vertices = new SkinnedMeshVertex[vertexCount];
 
         for (var i = 0; i < extraUvs.Length; i++)

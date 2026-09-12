@@ -16,7 +16,7 @@ public class FInstancedStaticMeshInstanceData
         Ar.Position += Ar.Game switch
         {
             GAME_HogwartsLegacy => Ar.Read<int>() * sizeof(int) + 4,
-            GAME_AWayOut or GAME_PlayerUnknownsBattlegrounds or GAME_SeaOfThieves or GAME_AceCombat7
+            GAME_AWayOut or GAME_PlayerUnknownsBattlegrounds or GAME_SeaOfThieves or GAME_AceCombat7 or GAME_Overhit
                 or GAME_DaysGone or GAME_InfinityNikki or GAME_NarutotoBorutoShinobiStriker or GAME_eFootball
                 or GAME_DragonQuestXI or GAME_WeHappyFew or GAME_CodeVein or GAME_TheDivisionResurgence or < GAME_UE4_0 => 16, // sizeof(FVector2D) * 2; LightmapUVBias, ShadowmapUVBias
             GAME_SilentHill2Remake or GAME_StateOfDecay2 or GAME_ThePathless or GAME_Abzu => 32,// probably LightmapUVBias, ShadowmapUVBias as FVector2d * 2

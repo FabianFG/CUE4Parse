@@ -80,7 +80,7 @@ public static class PixelFormatUtils
         { EPixelFormat.PF_ASTC_8x8,           new(EPixelFormat.PF_ASTC_8x8,           "ASTC_8x8",               8,          8,          1,          16,           4,                true) },
         { EPixelFormat.PF_ASTC_10x10,         new(EPixelFormat.PF_ASTC_10x10,         "ASTC_10x10",             10,         10,         1,          16,           4,                true) },
         { EPixelFormat.PF_ASTC_12x12,         new(EPixelFormat.PF_ASTC_12x12,         "ASTC_12x12",             12,         12,         1,          16,           4,                true) },
-        
+
         { EPixelFormat.PF_BC6H,               new(EPixelFormat.PF_BC6H,               "BC6H",                   4,          4,          1,          16,           3,                true) },
         { EPixelFormat.PF_BC7,                new(EPixelFormat.PF_BC7,                "BC7",                    4,          4,          1,          16,           4,                true) },
         { EPixelFormat.PF_R8_UINT,            new(EPixelFormat.PF_R8_UINT,            "R8_UINT",                1,          1,          1,          1,            1,                false) },
@@ -137,6 +137,7 @@ public static class PixelFormatUtils
         { EPixelFormat.PF_R8G8B8,             new(EPixelFormat.PF_R8G8B8,             "R8G8B8",                 1,          1,          1,          3,            3,                false) },
 
         //Custom
+        { EPixelFormat.PF_B4G4R4A4,           new(EPixelFormat.PF_B4G4R4A4,           "B4G4R4A4",               1,          1,          1,          2,            4,                true) },
         { EPixelFormat.PF_BC6H_Signed,        new(EPixelFormat.PF_BC6H_Signed,        "BC6H_Signed",            4,          4,          1,          16,           3,                true) },
         { EPixelFormat.PF_ETC2_R11,           new(EPixelFormat.PF_ETC2_R11,           "PF_ETC2_R11",            4,          4,          1,          8,            1,                true) },
         { EPixelFormat.PF_ASTC_8x5,           new(EPixelFormat.PF_ASTC_8x5,           "PF_ASTC_8x5",            8,          5,          1,          16,           4,                true) },
@@ -307,6 +308,7 @@ public enum EPixelFormat : byte
     PF_MAX                  = 94,
 
     // Custom
+    PF_B4G4R4A4             = 250,
     PF_BC6H_Signed          = 251,
     PF_ETC2_R11             = 252,
     PF_ASTC_8x5             = 253,

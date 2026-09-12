@@ -17,7 +17,7 @@ public class FFieldPath
 
     public FFieldPath(FAssetArchive Ar) : this()
     {
-        Path = Ar.ReadArray(() => Ar.ReadFName());
+        Path = Ar.ReadArray(Ar.ReadFName);
         // The old serialization format could save 'None' paths, they should be just empty
         if (Path.Length == 1 && Path[0].IsNone) Path = [];
 

@@ -10,7 +10,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Wwise;
 [JsonConverter(typeof(FWwisePackagedFileConverter))]
 public class FWwisePackagedFile : FStructFallback
 {
-    
     public EWwisePackagingStrategy PackagingStrategy;
     public FName PathName;
     public FName ModularGameplayName;

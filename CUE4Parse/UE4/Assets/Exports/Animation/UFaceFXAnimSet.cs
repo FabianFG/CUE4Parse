@@ -22,7 +22,15 @@ public class UFaceFXAnimSet : UObject
             return;
         }
 
-        Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 1); // RawFaceFXAnimSetBytes
-        Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 1); // RawFaceFXMiniSessionBytes
+        if (Ar.Game >= GAME_UE4_0)
+        {
+            Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 1); // RawFaceFXAnimSetBytes
+            Ar.SkipMultipleFixedArrays(Ar.Read<int>(), 1); // RawFaceFXMiniSessionBytes
+        }
+        else
+        {
+            Ar.SkipArray<byte>(); // RawFaceFXAnimSetBytes
+            Ar.SkipArray<byte>(); // RawFaceFXMiniSessionBytes
+        }
     }
 }

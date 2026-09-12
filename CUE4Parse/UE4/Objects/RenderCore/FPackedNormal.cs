@@ -27,14 +27,14 @@ namespace CUE4Parse.UE4.Objects.RenderCore
             Data = data;
         }
 
-        public FPackedNormal(FVector vector)
-        {
-            Data = (uint) ((int) (vector.X + 1 * 127.5) + (int) (vector.Y + 1 * 127.5) << 8 + (int) (vector.Z + 1 * 127.5) << 16);
-        }
 
-        public FPackedNormal(FVector4 vector)// is this broken?
+        public FPackedNormal(FVector vector) : this(vector.X, vector.Y, vector.Z, 0f) { }
+
+        public FPackedNormal(FVector4 vector) : this(vector.X, vector.Y, vector.Z, vector.W) { }
+
+        private FPackedNormal(float x, float y, float z, float w)
         {
-            Data = (uint) ((int) (vector.X + 1 * 127.5) + (int) (vector.Y + 1 * 127.5) << 8 + (int) (vector.Z + 1 * 127.5) << 16 + (int) (vector.W + 1 * 127.5) << 24);
+            Data = Pack(x) | Pack(y) << 8 | Pack(z) << 16 | Pack(w) << 24;
         }
 
         public void SetW(float value)
@@ -46,6 +46,8 @@ namespace CUE4Parse.UE4.Objects.RenderCore
         {
             return (byte) (Data >> 24) / 127.0f;
         }
+
+        private uint Pack(float value) => (uint) Math.Clamp((int) MathF.Round((value + 1f) * 127.5f), 0, 255);
 
         public static explicit operator FVector(FPackedNormal packedNormal) => new(packedNormal.X, packedNormal.Y, packedNormal.Z);
         public static implicit operator FVector4(FPackedNormal packedNormal) => new(packedNormal.X, packedNormal.Y, packedNormal.Z, packedNormal.W);

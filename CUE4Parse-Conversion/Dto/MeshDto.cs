@@ -1,20 +1,19 @@
-﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using CUE4Parse_Conversion.Options;
-using CUE4Parse_Conversion.Writers;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Engine;
+using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
+using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse_Conversion.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
@@ -49,7 +48,16 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         Sockets = mesh.Sockets;
     }
 
-    protected MeshDto(USkeletalMesh mesh) : base(mesh)
+    protected MeshDto(UGeometryCollection mesh) : base(mesh)
+    {
+        Materials = new MeshMaterialDto[mesh.Materials.Length];
+        for (var i = 0; i < Materials.Length; i++)
+        {
+            Materials[i] = new MeshMaterialDto($"{i}", mesh.Materials[i]);
+        }
+    }
+
+    protected MeshDto(USkinnedAsset mesh) : base(mesh)
     {
         Materials = new MeshMaterialDto[mesh.SkeletalMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
@@ -68,11 +76,6 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
     protected MeshDto(USkeleton skeleton) : base(skeleton)
     {
         Sockets = skeleton.Sockets;
-    }
-
-    protected MeshDto(ALandscapeProxy landscape) : base(landscape)
-    {
-        Materials = [new MeshMaterialDto(null, landscape.LandscapeMaterial)];
     }
 
     public MeshMaterialDto? GetMaterial(MeshSectionDto section)
@@ -180,17 +183,22 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
     }
 
+    protected StaticMeshDto(UObject owner, MeshMaterialDto[] materials) : base(owner, materials)
+    {
+
+    }
+
     /// <summary>
     /// Builds a static mesh DTO purely from nanite cluster data
     /// </summary>
     public StaticMeshDto(UObject owner, MeshMaterialDto[] materials, FNaniteResources nanite, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NaniteOnly) : base(owner, materials)
     {
-        Bounds = new FBox(FVector.ZeroVector, FVector.OneVector);
-
         if (nanite.PageStreamingStates.Length > 0)
         {
             ParseNaniteResources(this, nanite, naniteFormat);
         }
+
+        Bounds = LODs.First().CalculateLodBounds();
 
         SetLodSuffixes();
     }
@@ -221,12 +229,39 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         SetLodSuffixes();
     }
 
-    public StaticMeshDto(USplineMeshComponent spline, EMeshQuality quality = EMeshQuality.All) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), quality, ENaniteMeshFormat.NoNanite, spline)
+    public StaticMeshDto(UGeometryCollection mesh, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite) : base(mesh)
     {
+        FBox? bounds = null;
+        if (mesh.RenderData?.PreSkinnedBounds is { } preSkinnedBounds)
+            bounds = preSkinnedBounds.GetBox();
+        else if (mesh.RenderData?.MeshDescription?.PreSkinnedBounds is { } meshDescriptionBounds)
+            bounds = meshDescriptionBounds.GetBox();
 
+        if (naniteFormat != ENaniteMeshFormat.NaniteOnly) // just so we don't waste time
+        {
+            ParseCollectionData(mesh.RenderData, mesh.GeometryCollection);
+        }
+
+        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
+        if (shouldParseNanite && mesh.RenderData?.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
+        {
+            ParseNaniteResources(this, nanite, naniteFormat);
+
+            if (nanite.MeshBounds is { } meshBounds)
+                bounds = meshBounds.GetBox();
+        }
+        else if (LODs.Count == 0) // in case someone put NaniteOnly but there was no nanite to parse
+        {
+            ParseCollectionData(mesh.RenderData, mesh.GeometryCollection);
+        }
+
+        bounds ??= LODs.FirstOrDefault()?.CalculateLodBounds();
+        Bounds = bounds ?? new FBox(FVector.ZeroVector, FVector.OneVector);
+
+        SetLodSuffixes();
     }
 
-    protected StaticMeshDto(ALandscapeProxy landscape) : base(landscape)
+    public StaticMeshDto(USplineMeshComponent spline, EMeshQuality quality = EMeshQuality.All) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), quality, ENaniteMeshFormat.NoNanite, spline)
     {
 
     }
@@ -243,6 +278,40 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
             LODs.Add(MeshLodDto<MeshVertex>.FromStaticMesh(this, sourceLodIndex, renderData.LODs[sourceLodIndex], screenSize, spline));
         }
+    }
+
+    private void ParseCollectionData(FGeometryCollectionRenderData? renderData, FGeometryCollection? collection)
+    {
+        if (renderData?.bHasMeshData == false) return; // don't crash, keep LODs to 0, so it tries the nanite data
+
+        var resources = renderData?.MeshResources;
+        var description = renderData?.MeshDescription;
+        if (renderData?.CustomData is List<(FGeometryCollectionMeshResources?, FGeometryCollectionMeshDescription?)> { Count: > 0 } customData) // MR
+        {
+            resources = customData[0].Item1;
+            description = customData[0].Item2;
+            // CustomData[0] = SM
+            // CustomData[1] = plane
+            // CustomData[2] = SK?? it really looks like it's CustomData[0] with all bones at the origin
+            // CustomData[3] = plane
+        }
+
+        if (resources != null && description != null)
+        {
+            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromRenderData(this, 0u, resources, description.Value, collection));
+            return;
+        }
+
+        if (collection != null &&
+            collection.GroupInfo.TryGetValue("Vertices", out var vertices) && vertices.Size > 0 &&
+            collection.GroupInfo.TryGetValue("Faces", out var faces) && faces.Size > 0 &&
+            collection.GroupInfo.TryGetValue("Material", out var material) && material.Size > 0)
+        {
+            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromArrayCollection(this, 0u, collection));
+            return;
+        }
+
+        throw new InvalidOperationException("Geometry collection has no render data or vertex data");
     }
 
     public override void Dispose()
@@ -262,10 +331,8 @@ public class SkeletonDto : MeshDto<SkinnedMeshVertex>
     public string? SkeletonPathName { get; private set; }
     public FVirtualBone[]? VirtualBones { get; private set; }
 
-    protected SkeletonDto(USkeletalMesh mesh) : base(mesh)
+    protected SkeletonDto(USkinnedAsset mesh) : base(mesh)
     {
-        Bounds = mesh.ImportedBounds.GetBox();
-
         var refSkeleton = mesh.ReferenceSkeleton;
         Bones = new MeshBoneDto[refSkeleton.FinalRefBonePose.Length];
         for (var i = 0; i < Bones.Length; i++)
@@ -316,10 +383,12 @@ public sealed class SkeletalMeshDto : SkeletonDto
     public FPackageIndex[]? MorphTargets { get; private set; }
     public FPackageIndex[]? AssetUserData { get; private set; }
 
-    public SkeletalMeshDto(USkeletalMesh mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite) : base(mesh)
+    public SkeletalMeshDto(USkinnedAsset mesh, EMeshQuality quality = EMeshQuality.All, ENaniteMeshFormat naniteFormat = ENaniteMeshFormat.NoNanite, bool exportMorphTarget = true) : base(mesh)
     {
         ArgumentNullException.ThrowIfNull(mesh.LODModels, "Mesh has no LOD data");
+        ArgumentNullException.ThrowIfNull(mesh.LODInfo, "Mesh has no LOD info");
 
+        FBox? bounds = mesh.Bounds?.GetBox();
         PhysicsAsset = mesh.PhysicsAsset;
         MorphTargets = mesh.MorphTargets;
         AssetUserData = mesh.AssetUserData;
@@ -329,24 +398,29 @@ public sealed class SkeletalMeshDto : SkeletonDto
             ParseMeshRenderData(mesh, quality);
         }
 
-        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite || LODs.Count == 0;
+        var shouldParseNanite = naniteFormat != ENaniteMeshFormat.NoNanite && MorphTargets is { Length: > 0 } && exportMorphTarget || LODs.Count == 0;
         if (shouldParseNanite && mesh.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
         {
             ParseNaniteResources(this, nanite, naniteFormat);
+            if (nanite.MeshBounds is { } meshBounds)
+                bounds ??= meshBounds.GetBox();
         }
         else if (LODs.Count == 0) // in case someone put NaniteOnly but there was no nanite to parse
         {
             ParseMeshRenderData(mesh, quality);
         }
 
+        bounds ??= LODs.FirstOrDefault()?.CalculateLodBounds();
+        Bounds = bounds ?? new FBox(FVector.ZeroVector, FVector.OneVector);
+
         SetLodSuffixes();
     }
 
-    private void ParseMeshRenderData(USkeletalMesh mesh, EMeshQuality quality)
+    private void ParseMeshRenderData(USkinnedAsset mesh, EMeshQuality quality)
     {
         foreach (var sourceLodIndex in quality.GetRange(mesh.LODModels!.Length, i => mesh.LODModels[i].SkipLod))
         {
-            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, sourceLodIndex, mesh.LODModels[sourceLodIndex], mesh.LODInfo[sourceLodIndex].ScreenSize.Value));
+            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, sourceLodIndex, mesh.LODModels[sourceLodIndex], mesh.LODInfo![sourceLodIndex].ScreenSize.Value));
         }
     }
 
@@ -365,7 +439,31 @@ public sealed class LandscapeMeshDto : StaticMeshDto
     public readonly ConcurrentDictionary<string, SKBitmap>? BitmapTextures;
     public readonly Image<L16>? HeightmapTexture;
 
-    public LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeFlags flags = ELandscapeFlags.Mesh, ULandscapeComponent[]? components = null) : base(landscape)
+    public LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeFlags flags = ELandscapeFlags.Mesh, ULandscapeComponent[]? components = null)
+        : this(landscape, flags, PrepareComponents(landscape, components))
+    {
+
+    }
+
+    private LandscapeMeshDto(ALandscapeProxy landscape, ELandscapeFlags flags, (ULandscapeComponent[] Components, int SizeQuads, MeshMaterialDto[] Materials) prepared)
+        : base(landscape, prepared.Materials)
+    {
+        foreach (var component in prepared.Components)
+        {
+            Bounds = Bounds.ExpandBy(component.CachedLocalBox.GetSize());
+        }
+
+        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, prepared.Components, prepared.SizeQuads, flags, out BitmapTextures, out HeightmapTexture));
+    }
+
+    public LandscapeMeshDto(ULandscapeComponent component)
+        : base(component, [new MeshMaterialDto(component.OverrideMaterial?.Name, component.OverrideMaterial)])
+    {
+        Bounds = component.CachedLocalBox;
+        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, ELandscapeFlags.Mesh, out BitmapTextures, out HeightmapTexture));
+    }
+
+    private static (ULandscapeComponent[] Components, int SizeQuads, MeshMaterialDto[] Materials) PrepareComponents(ALandscapeProxy landscape, ULandscapeComponent[]? components)
     {
         var sizeQuads = landscape.ComponentSizeQuads;
 
@@ -386,18 +484,14 @@ public sealed class LandscapeMeshDto : StaticMeshDto
             }
         }
 
-        foreach (var component in components)
+        var materials = new MeshMaterialDto[components.Length];
+        for (var i = 0; i < components.Length; i++)
         {
-            Bounds = Bounds.ExpandBy(component.CachedLocalBox.GetSize());
+            var mat = components[i].OverrideMaterial ?? landscape.LandscapeMaterial;
+            materials[i] = new MeshMaterialDto(mat?.Name, mat);
         }
 
-        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, components, sizeQuads, flags, out BitmapTextures, out HeightmapTexture));
-    }
-
-    public LandscapeMeshDto(ULandscapeComponent component) : base(component)
-    {
-        Bounds = component.CachedLocalBox;
-        LODs.Add(MeshLodDto<MeshVertex>.FromLandscapeMesh(this, [component], component.ComponentSizeQuads, ELandscapeFlags.Mesh, out BitmapTextures, out HeightmapTexture));
+        return (components, sizeQuads, materials);
     }
 
     public override void Dispose()

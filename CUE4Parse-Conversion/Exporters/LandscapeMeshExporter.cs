@@ -45,7 +45,7 @@ public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter<
         additional.Add(new ExportFile("", Encoding.UTF8.GetBytes(actor.LandscapeGuid.ToString()), $"/Guid_{actor.LandscapeGuid}"));
 
         var materialPaths = EnqueueMaterials(dto.Materials);
-        return [..format.BuildStaticMesh(ObjectName, Session.Options, dto, materialPaths), ..additional];
+        return [..format.BuildStaticMesh(ObjectName, ObjectPath, Session.Options, dto, materialPaths), ..additional];
     }
 }
 
@@ -60,6 +60,6 @@ public sealed class LandscapeMeshExporter2(ULandscapeComponent component) : Mesh
         }
 
         var materialPaths = EnqueueMaterials(dto.Materials);
-        return format.BuildStaticMesh(ObjectName, Session.Options, dto, materialPaths);
+        return format.BuildStaticMesh(ObjectName, ObjectPath, Session.Options, dto, materialPaths);
     }
 }

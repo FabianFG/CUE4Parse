@@ -13,12 +13,14 @@ public struct FUEFormatHeader : ISerializable
     private readonly string Identifier;
     private EUEFormatVersion FileVersion;
     private string ObjectName;
+    private string ObjectPath;
     private const string MAGIC = "UEFORMAT";
 
-    public FUEFormatHeader(string identifier, string objectName, EFileCompressionFormat compressionFormat = EFileCompressionFormat.None)
+    public FUEFormatHeader(string identifier, string objectName, string objectPath, EFileCompressionFormat compressionFormat = EFileCompressionFormat.None)
     {
         Identifier = identifier;
         ObjectName = objectName;
+        ObjectPath = objectPath;
         CompressionFormat = compressionFormat;
         FileVersion = EUEFormatVersion.LatestVersion;
     }
@@ -33,6 +35,7 @@ public struct FUEFormatHeader : ISerializable
         Ar.WriteFString(Identifier);
         Ar.Write((byte) FileVersion);
         Ar.WriteFString(ObjectName);
+        Ar.WriteFString(ObjectPath);
 
         var isCompressed = CompressionFormat != EFileCompressionFormat.None;
         Ar.Write(isCompressed);

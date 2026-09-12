@@ -78,7 +78,7 @@ namespace CUE4Parse.UE4.Versions
             Options["RawIndexBuffer.HasShouldExpandTo32Bit"] = Game is >= GAME_UE4_25 and not GAME_DeltaForce and not GAME_ArenaBreakoutMobile;
             Options["ShaderMap.UseNewCookedFormat"] = Game >= GAME_UE5_0;
             Options["SkeletalMesh.UseNewCookedFormat"] = Game >= GAME_UE4_24;
-            Options["SkeletalMesh.HasRayTracingData"] = Game is >= GAME_UE4_27 or GAME_UE4_25_Plus;
+            Options["SkeletalMesh.HasRayTracingData"] = Game is >= GAME_UE4_27 or GAME_UE4_25_Plus or GAME_UE4_26_Plus or GAME_HellLetLoose or GAME_DarkPicturesAnthologyManofMedan or GAME_DarkPicturesAnthologyTheDevilinMe or GAME_DarkPicturesAnthologyLittleHope or GAME_Back4Blood;
             Options["StaticMesh.HasLODsShareStaticLighting"] = Game is < GAME_UE4_15 or >= GAME_UE4_16; // Exists in all engine versions except UE4.15
             Options["StaticMesh.HasRayTracingGeometry"] = Game >= GAME_UE4_25;
             Options["StaticMesh.HasVisibleInRayTracing"] = Game >= GAME_UE4_26 || Game is GAME_Back4Blood;
@@ -107,7 +107,7 @@ namespace CUE4Parse.UE4.Versions
 
         private bool OverrideUseAudioStreaming()
         {
-            return Game is not (GAME_UE4_28 or GAME_GTATheTrilogyDefinitiveEdition or GAME_ReadyOrNot or GAME_BladeAndSoul or GAME_Stray);
+            return Game is not (GAME_UE4_28 or GAME_GTATheTrilogyDefinitiveEdition or GAME_UE4_26_Plus or GAME_BladeAndSoul or GAME_Stray);
         }
 
         private void InitMapStructTypes()

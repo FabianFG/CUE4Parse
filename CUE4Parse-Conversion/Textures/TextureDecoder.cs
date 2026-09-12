@@ -9,6 +9,7 @@ using CUE4Parse_Conversion.Textures.ASTC;
 using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.ETC;
 using CUE4Parse_Conversion.Textures.Crunch;
+using CUE4Parse_Conversion.Textures.Custom;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
@@ -482,6 +483,10 @@ public static class TextureDecoder
             case EPixelFormat.PF_PVRTC4:
                 PvrtcDecoder.DecompressPVRTC<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, false, out data);
                 colorType = EPixelFormat.PF_R8G8B8A8;
+                break;
+            case EPixelFormat.PF_B4G4R4A4:
+                data = CustomFormatDecoder.B4G4R4A4(bytes, sizeX, sizeY, sizeZ);
+                colorType = EPixelFormat.PF_B8G8R8A8;
                 break;
 
             //SECTION: raw formats. Do nothing, we return original format and data

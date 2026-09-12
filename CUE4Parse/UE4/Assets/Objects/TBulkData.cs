@@ -1,6 +1,7 @@
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -15,7 +16,7 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(TBulkDataConverter))]
 public abstract class TBulkData<T> where T: struct
 {
-    
+
     public FByteBulkDataHeader Header { get; init; }
     public EBulkDataFlags BulkDataFlags => Header.BulkDataFlags;
 
@@ -23,6 +24,7 @@ public abstract class TBulkData<T> where T: struct
     protected Lazy<T[]?>? _data { get; init; }
 
     protected FAssetArchive? _savedAr { get; init; }
+    protected string? _savedTfc { get; init; }
     protected long _dataPosition { get; init; }
 
     protected TBulkData() { }
@@ -37,6 +39,13 @@ public abstract class TBulkData<T> where T: struct
         _data = data;
     }
 
+    protected TBulkData(FAssetArchive ar, string tfc)
+        : this(ar)
+    {
+        _savedAr = ar;
+        _savedTfc = tfc;
+    }
+
     protected TBulkData(FAssetArchive Ar)
     {
         Header = new FByteBulkDataHeader(Ar);
@@ -49,7 +58,7 @@ public abstract class TBulkData<T> where T: struct
         _dataPosition = Ar.Position;
         _savedAr = Ar;
 
-        if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None)
+        if (Ar.Game >= GAME_UE4_0 && (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload) || BulkDataFlags is BULKDATA_LazyLoadable or BULKDATA_None))
         {
             Ar.Position += Header.SizeOnDisk;
         }
@@ -102,23 +111,15 @@ public abstract class TBulkData<T> where T: struct
         using var dataAr = new FByteArchive("", bulkData, Header.SizeOnDisk, _savedAr.Versions);
         if (BulkDataFlags.HasFlag(BULKDATA_SerializeCompressedZLIB))
         {
-            var size = GetDataSize();
-            var uncompressedData = new byte[size];
             data = new T[Header.ElementCount];
-            dataAr.SerializeCompressedNew(uncompressedData, size, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref data[0]), ref uncompressedData[0], (uint) size);
-
-            // To-Do rewrite once SerializeCompressedNew/Decompress works with span
-            // var dest = MemoryMarshal.AsBytes(data.AsSpan());
-            // dataAr.SerializeCompressedNew(dest, size, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            var dest = MemoryMarshal.AsBytes(data.AsSpan());
+            dataAr.SerializeCompressedNew(dest, GetDataSize(), "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_CompressedLZO))
         {
-            var size = GetDataSize();
-            var uncompressedData = new byte[size];
             data = new T[Header.ElementCount];
-            dataAr.SerializeCompressedNew(uncompressedData, size, "LZO", ECompressionFlags.COMPRESS_NoFlags, false, out _);
-            Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref data[0]), ref uncompressedData[0], (uint) size);
+            var dest = MemoryMarshal.AsBytes(data.AsSpan());
+            dataAr.SerializeCompressedNew(dest, GetDataSize(), "LZO", ECompressionFlags.COMPRESS_NoFlags, false, out _);
         }
         else
         {
@@ -138,6 +139,7 @@ public abstract class TBulkData<T> where T: struct
 
         if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload))
         {
+            if (_savedAr.Game < GAME_UE4_0) position = Header.OffsetInFile;
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_OptionalPayload))
         {
@@ -178,6 +180,32 @@ public abstract class TBulkData<T> where T: struct
 
             archive = ubulkAr;
             position = ubulkAr.Length == Header.SizeOnDisk ? 0 : Header.OffsetInFile;
+        }
+        else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile) && archive.Game < GAME_UE4_0) // basically a BULKDATA_PayloadInSeperateFile
+        {
+            if (_savedTfc is null)
+            {
+#if DEBUG
+                Log.Debug("Failed unsupported, Can't find payload (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
+#endif
+                return false; // This is some very stupid stuff. You need to get the outermost export, get its ObjectName, and then load that .upk
+            }
+
+            if (!_savedAr.Owner.Provider.TextureCachePaths.TryGetValue(_savedTfc, out var tfcPath))
+            {
+#if DEBUG
+                Log.Debug("Failed {TFC} is missing, Can't find payload (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", _savedTfc, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
+#endif
+                return false;
+            }
+
+            // TFC files are huge so jump to the payload offset and create an archive of the payload.
+            var bytes = new byte[Header.SizeOnDisk];
+            using var fs = File.OpenRead(tfcPath);
+            fs.Seek(Header.OffsetInFile, SeekOrigin.Begin);
+            fs.ReadExactly(bytes);
+            archive = new FAssetArchive(new FByteArchive("TFC Payload", bytes, _savedAr.Versions), _savedAr.Owner);
+            position = 0;
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
         {

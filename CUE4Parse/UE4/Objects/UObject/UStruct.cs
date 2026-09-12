@@ -36,15 +36,30 @@ public class UStruct : UField
             Children = Ar.ReadArray(() => new FPackageIndex(Ar));
         }
 
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.MovedFriendlyNameToUFunction)
+        {
+            Ar.SkipFName();
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.CONSOLIDATE_HEADER_PARSER_ONLY_PROPERTIES)
+        {
+            if (Ar.Ver > EUnrealEngineObjectUE3Version.AddedCppTextToUStruct)
+            {
+                Ar.Position += sizeof(int); // FPackageIndex - CppText
+            }
+
+            Ar.Position += sizeof(int) * 2; // int - Line, TextPos
+        }
+
         if (FCoreObjectVersion.Get(Ar) >= FCoreObjectVersion.Type.FProperties)
         {
             DeserializeProperties(Ar);
         }
 
         var bytecodeBufferSize = Ar.Read<int>();
-        var serializedScriptSize = Ar.Read<int>();
+        var serializedScriptSize = Ar.Ver >= EUnrealEngineObjectUE3Version.USTRUCT_SERIALIZE_ONDISK_SCRIPTSIZE ? Ar.Read<int>() : bytecodeBufferSize;
 
-        if (Ar.Owner!.Provider?.ReadScriptData == true && serializedScriptSize > 0)
+        if (Ar.Owner!.Provider?.ReadScriptData == true && Ar.Game >= GAME_UE4_0 && serializedScriptSize > 0)
         {
             using var kismetAr = new FKismetArchive(Name, Ar.ReadBytes(serializedScriptSize), Ar.Owner, Ar.Versions);
             var tempCode = new List<KismetExpression>();

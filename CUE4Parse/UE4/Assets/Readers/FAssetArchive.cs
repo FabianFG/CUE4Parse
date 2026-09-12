@@ -55,6 +55,9 @@ namespace CUE4Parse.UE4.Assets.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipFName() => Position += Ver >= EUnrealEngineObjectUE3Version.FNAME_CHANGE_NAME_SPLIT ? 2 * sizeof(int) : sizeof(int);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual bool TestReadFName()
         {
             if (HasUnversionedProperties) return false;

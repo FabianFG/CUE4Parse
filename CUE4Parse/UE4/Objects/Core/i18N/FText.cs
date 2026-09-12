@@ -150,6 +150,7 @@ public class FText : IUStruct
                 ETextHistoryType.Transform => new FTextHistory.Transform(Ar),
                 ETextHistoryType.StringTableEntry => new FTextHistory.StringTableEntry(Ar),
                 ETextHistoryType.TextGenerator => new FTextHistory.TextGenerator(Ar),
+                (ETextHistoryType)22 when Ar.Game is GAME_Zeus => new FTextHistory.Base("", Ar.Read<ulong>().ToString(), ""),
                 _ => new FTextHistory.None(Ar)
             };
             if (Ar.Game == GAME_Splitgate2) Ar.Position += 4;

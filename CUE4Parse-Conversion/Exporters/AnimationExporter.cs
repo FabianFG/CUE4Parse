@@ -15,8 +15,8 @@ public sealed class AnimationExporter(UAnimationAsset animation) : ExporterBase(
         return format switch
         {
             // TODO: should we extend IAnimExportFormat to handle these for all writers?
-            UEFormatAnimFormat when animation is UAnimStreamable streamable => new UEFormatAnimFormat().BuildAnimStreamable(ObjectName, Session.Options, streamable),
-            _ => format.Build(ObjectName, Session.Options, animation.ConvertAnims())
+            UEFormatAnimFormat when animation is UAnimStreamable streamable => new UEFormatAnimFormat().BuildAnimStreamable(ObjectName, ObjectPath, Session.Options, streamable),
+            _ => format.Build(ObjectName, ObjectPath, Session.Options, animation.ConvertAnims())
         };
     }
 

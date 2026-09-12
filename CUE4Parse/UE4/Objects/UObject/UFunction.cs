@@ -14,8 +14,31 @@ public class UFunction : UStruct
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release64)
+        {
+            Ar.Position += sizeof(short); // short - ParmsSize
+        }
+
+        if (Ar.Game < GAME_UE4_0)
+        {
+            Ar.Position += sizeof(short); // short - iNative
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release64)
+            {
+                Ar.Position += sizeof(byte); // byte - NumParms
+            }
+
+            Ar.Position += sizeof(byte); // byte - OperPrecedence
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release64)
+            {
+                Ar.Position += sizeof(ushort); // ushort - ReturnValueOffset
+            }
+        }
+
         FunctionFlags = Ar.Read<EFunctionFlags>();
-        if (Ar.Game is GAME_AshesOfCreation) Ar.Position += 4;
+        if (Ar.Game is GAME_AshesOfCreation or GAME_RocketLeague) Ar.Position += 4;
 
         // Replication info
         if (FunctionFlags.HasFlag(EFunctionFlags.FUNC_Net))

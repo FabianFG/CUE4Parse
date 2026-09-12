@@ -6,8 +6,6 @@ namespace CUE4Parse.UE4.Assets.Exports.FastGeoStreaming;
 
 public class FFastGeoPrimitiveComponent : FFastGeoComponent
 {
-    public FTransform LocalTransform;
-    public FTransform WorldTransform;
     public FBoxSphereBounds LocalBounds;
     public FBoxSphereBounds WorldBounds;
     public bool bVisible;
@@ -18,7 +16,6 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
     public bool bMultiBodyOverlap;
     public int SurrogateComponentDescriptorIndex;
     public float[] CustomPrimitiveData;
-    public EDetailMode DetailMode;
     public EHasCustomNavigableGeometry bHasCustomNavigableGeometry;
     public FPackageIndex[]? RuntimeVirtualTextures;
     public FStructFallback? BodyInstance;
@@ -27,10 +24,6 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
 
     public FFastGeoPrimitiveComponent(FFastGeoArchive Ar) : base(Ar)
     {
-        if (Ar.Game is GAME_GearsofWarEDay) Ar.Position += 8;
-        LocalTransform = new FTransform(Ar);
-        WorldTransform = new FTransform(Ar);
-        if (Ar.Game is GAME_GearsofWarEDay) Ar.Position += 1;
         LocalBounds = new FBoxSphereBounds(Ar);
         WorldBounds = new FBoxSphereBounds(Ar);
         bVisible = Ar.ReadBoolean();

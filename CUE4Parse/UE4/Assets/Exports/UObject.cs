@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.MappingsProvider;
+using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
@@ -136,6 +137,90 @@ public class UObject : AbstractPropertyHolder
         }
         else
         {
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release40)
+            {
+                Ar.Position += sizeof(int) * 2; // int - TempNum, TempMax
+            }
+
+            if (Class?.Name.Text == null && Ar.Game < GAME_UE4_0)
+            {
+                Ar.Position = validPos;
+                return; // there some missing data after this
+            }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release47)
+            {
+                var node = 0;
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release51)
+                {
+                    node = Ar.Read<int>(); // FPackageIndex - Node
+                    Ar.Position += sizeof(int); // FPackageIndex - StateNode
+                }
+                else
+                {
+                    var oldClass = Ar.Read<int>(); // FPackageIndex - OldClass
+                    if (oldClass != 0)
+                    {
+                        Ar.Position += sizeof(int); // int - iOldNode
+                    }
+                }
+
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.Release52)
+                {
+                    Ar.Position += sizeof(int); // FPackageIndex - Tmp
+                }
+
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.REDUCED_PROBEMASK_REMOVED_IGNOREMASK)
+                {
+                    Ar.Position += sizeof(long); // long - ProbeMask
+                }
+                else
+                {
+                    Ar.Position += sizeof(int); // int - ProbeMask
+                }
+
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.REDUCED_STATEFRAME_LATENTACTION_SIZE)
+                {
+                    Ar.Position += sizeof(short); // short - LatentAction
+                }
+                else if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release55)
+                {
+                    Ar.Position += sizeof(int); // int - LatentAction
+                }
+
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedStateStackToUStateFrame)
+                {
+                    Ar.SkipFixedArray(9); // StateStack
+                }
+
+                if (node != 0)
+                {
+                    Ar.Position += sizeof(int);
+                }
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.REMOVE_SIZE_VJOINTPOS && Ar.Game < GAME_UE4_0)
+            {
+                if (this is UComponent)
+                {
+                    Ar.Position += sizeof(int); // FPackageIndex
+                    if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_COMPONENT_TEMPLATES)
+                    {
+                        Ar.SkipFName();
+                    }
+                }
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
+            {
+                var NetIndex = Ar.Read<int>();
+
+                if (Ar.Game == GAME_Paladins && NetIndex == -1)
+                {
+                    Ar.Position += 8; // Unknown, should be an index to bulkdata payload
+                }
+            }
+
             DeserializePropertiesTagged(Properties = [], Ar, false);
         }
 
@@ -150,6 +235,16 @@ public class UObject : AbstractPropertyHolder
 
                 ObjectGuid = Ar.Read<FGuid>();
             }
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release57)
+        {
+            Ar.SkipFName(); // TempState
+        }
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release58)
+        {
+            Ar.SkipFName(); // TempGroup
         }
 
         if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SparseClassDataStructSerialization || !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))

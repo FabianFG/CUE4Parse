@@ -20,6 +20,7 @@ public class UStaticMeshComponent : UMeshComponent
         if (Ar.Game is GAME_Borderlands3) Ar.ReadBoolean();
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         LODData = Ar.ReadArray(() => new FStaticMeshComponentLODInfo(Ar));
+        if (Ar.Game is GAME_Dishonored) return;
         if (Ar.Game is GAME_SuicideSquad)
         {
             var count = Ar.Read<int>();

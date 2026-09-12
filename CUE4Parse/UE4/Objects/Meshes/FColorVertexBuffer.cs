@@ -9,7 +9,7 @@ namespace CUE4Parse.UE4.Objects.Meshes;
 [JsonConverter(typeof(FColorVertexBufferConverter))]
 public class FColorVertexBuffer
 {
-    public readonly FColor[] Data;
+    [JsonIgnore] public readonly FColor[] Data;
     public readonly int Stride;
     public readonly int NumVertices;
 
@@ -17,7 +17,7 @@ public class FColorVertexBuffer
     {
         Data = [];
     }
-    
+
     public FColorVertexBuffer(FColor[] data)
     {
         Data = data;

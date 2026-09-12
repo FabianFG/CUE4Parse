@@ -16,14 +16,14 @@ public readonly struct FWwiseLocalizedEventCookedData
 
     public FWwiseLocalizedEventCookedData(FStructFallback fallback)
     {
-        EventLanguageMap = new Dictionary<FWwiseLanguageCookedData, FWwiseEventCookedData?>();
+        EventLanguageMap = [];
         foreach (var kv in fallback.GetOrDefault<UScriptMap>(nameof(EventLanguageMap)).Properties)
         {
             EventLanguageMap[kv.Key.GetValue<FWwiseLanguageCookedData>()] = kv.Value?.GetValue<FWwiseEventCookedData>();
         }
 
         DebugName = fallback.GetOrDefault<FName>(nameof(DebugName));
-        EventId = (uint)fallback.GetOrDefault<int>(nameof(EventId));
+        EventId = (uint)fallback.GetOrDefault<int>(nameof(EventId), comparisonType: StringComparison.OrdinalIgnoreCase);
     }
 
     public void SerializeBulkData(FAssetArchive Ar)
