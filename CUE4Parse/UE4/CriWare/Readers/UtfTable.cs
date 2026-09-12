@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using CUE4Parse.UE4.CriWare.Readers.Common;
 using CUE4Parse.UE4.Exceptions;
@@ -89,6 +90,8 @@ public sealed class UtfTable
     private readonly byte[] _stringTable;
     private readonly string _tableName;
 
+    private const uint UtfTableMagic = 0x40555446; // @UTF
+
     public UtfTable(Stream utfTableStream, out int utfTableRows, out string utfTableRowName) :
         this(utfTableStream, 0, out utfTableRows, out utfTableRowName)
     { }
@@ -104,7 +107,7 @@ public sealed class UtfTable
 
         _binaryReader.BaseStream.Position = offset;
 
-        if (!_binaryReader.ReadChars(4).SequenceEqual("@UTF"))
+        if (_binaryReader.ReadUInt32BE() != UtfTableMagic)
             throw new ParserException("Incorrect UtfTable magic.");
         _tableSize = _binaryReader.ReadUInt32BE() + 0x08;
         _version = _binaryReader.ReadUInt16BE();
@@ -425,10 +428,35 @@ public sealed class UtfTable
 
         _binaryReader.BaseStream.Position = tableValueData.Offset;
 
-        return new UtfTable(
-            _binaryReader.BaseStream,
-            tableValueData.Offset,
-            out int _,
-            out string _);
+        return new UtfTable(_binaryReader.BaseStream, tableValueData.Offset, out int _, out string _);
+    }
+
+    public bool TryOpenSubtable(VLData tableValueData, [NotNullWhen(true)] out UtfTable? subtable)
+    {
+        subtable = null;
+
+        var stream = _binaryReader.BaseStream;
+        if (tableValueData.Offset > stream.Length || tableValueData.Size > stream.Length - tableValueData.Offset)
+            throw new ParserException("Subtable data exceeds bounds of file.");
+        if (tableValueData.Size < 4)
+            return false;
+
+        var previousPosition = stream.Position;
+        uint magic;
+        try
+        {
+            stream.Position = tableValueData.Offset;
+            magic = _binaryReader.ReadUInt32BE();
+        }
+        finally
+        {
+            stream.Position = previousPosition;
+        }
+
+        if (magic != UtfTableMagic)
+            return false;
+
+        subtable = new UtfTable(stream, tableValueData.Offset);
+        return true;
     }
 }

@@ -142,6 +142,7 @@ public enum ESequenceType : byte
 public class AcbParser
 {
     public readonly Dictionary<string, List<Dictionary<string, object?>>> TableData = [];
+    public readonly Dictionary<string, VLData> BinaryPayloads = [];
 
     private readonly Stream _acbStream;
 
@@ -212,13 +213,14 @@ public class AcbParser
         {
             if (col.Type != ColumnType.VLData)
                 continue;
-
-            UtfTable? sub = null;
-            try
-            { sub = _header.OpenSubtable(col.Name); }
-            catch { }
-
-            if (sub == null || sub.Rows == 0)
+            if (!_header.Query(0, col.Name, out VLData payload) || payload.Size == 0)
+                continue;
+            if (!_header.TryOpenSubtable(payload, out var sub))
+            {
+                BinaryPayloads[col.Name] = payload;
+                continue;
+            }
+            if (sub.Rows == 0)
                 continue;
 
             var data = new List<Dictionary<string, object?>>();

@@ -74,12 +74,10 @@ public sealed class AwbReader : IDisposable
                     subfileOffset = _binaryReader.ReadUInt32();
                     subfileNext = _binaryReader.ReadUInt32();
                     break;
-
                 case 0x2:
                     subfileOffset = _binaryReader.ReadUInt16();
                     subfileNext = _binaryReader.ReadUInt16();
                     break;
-
                 default:
                     throw new ParserException($"Unsupported AWB offset size {_offsetSize}.");
             }
@@ -104,8 +102,5 @@ public sealed class AwbReader : IDisposable
     public Stream GetWaveSubfileStream(Wave wave)
         => _binaryReader.BaseStream.Substream(_offset + wave.Offset, wave.Length);
 
-    public void Dispose()
-    {
-        _binaryReader.Dispose();
-    }
+    public void Dispose() => _binaryReader.Dispose();
 }
