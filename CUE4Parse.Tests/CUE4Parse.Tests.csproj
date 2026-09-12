@@ -31,6 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CUE4Parse-Conversion\CUE4Parse-Conversion.csproj" />
     <ProjectReference Include="..\CUE4Parse\CUE4Parse.csproj" />
+    <ProjectReference Include="..\CUE4Parse-Conversion\CUE4Parse-Conversion.csproj" />
   </ItemGroup>
 
   <ItemGroup>
