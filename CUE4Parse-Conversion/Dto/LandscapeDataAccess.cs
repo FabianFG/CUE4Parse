@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using CUE4Parse_Conversion.Textures;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 
@@ -11,7 +12,7 @@ namespace CUE4Parse_Conversion.Dto;
 internal class FLandscapeComponentDataInterface {
     // offset of this component's data into heightmap texture
     public readonly ULandscapeComponent Component;
-    private readonly bool bWorkOnEditingLayer;
+    // private readonly bool bWorkOnEditingLayer;
     private readonly int HeightmapStride;
     private readonly int HeightmapComponentOffsetX;
     private readonly int HeightmapComponentOffsetY;
@@ -33,7 +34,7 @@ internal class FLandscapeComponentDataInterface {
     internal unsafe FLandscapeComponentDataInterface(ULandscapeComponent inComponent, int inMipLevel)
     {
         Component = inComponent;
-        HeightMipData = null;
+        HeightMipData = [];
         XYOffsetMipData = null;
         MipLevel = inMipLevel;
 
@@ -180,13 +181,18 @@ internal class FLandscapeComponentDataInterface {
 
         var platform = weightTexture.Owner!.Provider!.Versions.Platform;
 
-        var mip = weightTexture.GetMip(MipLevel);
-
+        var mip = weightTexture.GetMip(MipLevel) ?? throw new ParserException($"WeightTexture contains no mip level {MipLevel}");
+        
+        if (mip?.BulkData?.Data is null)
+        {
+            throw new ParserException($"WeightTexture has no BulkData");
+        }
+        
         var bulkData = mip.BulkData.Data;
         if (platform == ETexturePlatform.XboxAndPlaystation4)
-            bulkData = PlatformDeswizzlers.DeswizzleXBPS4(bulkData!, mip, formatInfo);
+            bulkData = PlatformDeswizzlers.DeswizzleXBPS4(bulkData, mip, formatInfo);
         else if (platform == ETexturePlatform.NintendoSwitch)
-            bulkData = PlatformDeswizzlers.GetDeswizzledData(bulkData!, mip, formatInfo);
+            bulkData = PlatformDeswizzlers.GetDeswizzledData(bulkData, mip, formatInfo);
 
         // FColor is BGRA
         // Channel remapping
@@ -222,7 +228,7 @@ internal class FLandscapeComponentDataInterface {
     }
 
     internal byte GetLayerWeight(int localX, int localY,
-        FWeightmapLayerAllocationInfo? /*ULandscapeLayerInfoObject*/ allocationInfo) {
+        FWeightmapLayerAllocationInfo /*ULandscapeLayerInfoObject*/ allocationInfo) {
         if (GetWeightMapIndex(allocationInfo, out var LayerIdx)) {
             return GetLayerWeight(localX, localY, LayerIdx);
         }
@@ -334,7 +340,7 @@ internal class FLandscapeComponentDataInterface {
 
     float GetLocalHeight(ushort height) {
         const float LANDSCAPE_ZSCALE = 1.0f / 128.0f;
-        const int MaxValue = 65535;
+        // const int MaxValue = 65535;
         const float MidValue = 32768f;
         // Reserved 2 bits for other purpose
         // Most significant bit - Visibility, 0 is visible(default), 1 is invisible

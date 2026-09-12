@@ -363,22 +363,23 @@ public class AssetObjectPropertyConverter : JsonConverter<AssetObjectProperty>
     public override void WriteJson(JsonWriter writer, AssetObjectProperty value, JsonSerializer serializer)
     {
         if (value.Value is null)
-            writer.WriteNull();
-        else
         {
-            var str = value.Value;
-            var index = str.LastIndexOf('.');
-            var (path, substring) = index == -1 ? (str, "") : (str[..index], str[(index+1)..]);
-            writer.WriteStartObject();
-
-            writer.WritePropertyName("AssetPathName");
-            writer.WriteValue(path);
-
-            writer.WritePropertyName("SubPathString");
-            writer.WriteValue(substring);
-
-            writer.WriteEndObject();
+            writer.WriteNull();
+            return;
         }
+
+        var str = value.Value;
+        var index = str.LastIndexOf('.');
+        var (path, substring) = index == -1 ? (str, "") : (str[..index], str[(index + 1)..]);
+        writer.WriteStartObject();
+
+        writer.WritePropertyName("AssetPathName");
+        writer.WriteValue(path);
+
+        writer.WritePropertyName("SubPathString");
+        writer.WriteValue(substring);
+
+        writer.WriteEndObject();
     }
 
     public override AssetObjectProperty ReadJson(JsonReader reader, Type objectType, AssetObjectProperty existingValue, bool hasExistingValue,

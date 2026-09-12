@@ -93,7 +93,7 @@ namespace CUE4Parse.UE4.Readers
             // We only support forward seeking.
             Trace.Assert(difference >= 0);
             // Seek by serializing data, albeit with NULL destination so it's just decompressing data.
-            Read(null, 0, (int) difference);
+            ReadExactly(null, 0, (int) difference);
             return Position;
         }
 

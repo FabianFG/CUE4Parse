@@ -62,8 +62,14 @@ public class FPannerDetails : IUStruct
 
 public class FPannerDetailsConverter : JsonConverter<FPannerDetails>
 {
-    public override void WriteJson(JsonWriter writer, FPannerDetails value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FPannerDetails? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
 
         writer.WritePropertyName("Version");
@@ -88,7 +94,7 @@ public class FPannerDetailsConverter : JsonConverter<FPannerDetails>
         writer.WriteEndObject();
     }
 
-    public override FPannerDetails ReadJson(JsonReader reader, Type objectType, FPannerDetails existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override FPannerDetails ReadJson(JsonReader reader, Type objectType, FPannerDetails? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

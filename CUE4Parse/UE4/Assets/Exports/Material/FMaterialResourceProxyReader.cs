@@ -4,7 +4,6 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -56,7 +55,7 @@ public class FMaterialResourceProxyReader : FArchive
 #if !NO_FNAME_VALIDATION
         if (nameIndex < 0 || nameIndex >= _nameMap!.Length)
         {
-            throw new ParserException(InnerArchive, $"FName could not be read, requested index {nameIndex}, name map size {_nameMap.Length}");
+            throw new ParserException(InnerArchive, $"FName could not be read, requested index {nameIndex}, name map size {_nameMap?.Length}");
         }
 #endif
         return new FName(_nameMap[nameIndex], nameIndex, number);

@@ -95,8 +95,14 @@ public enum PSOOrder : uint
 
 public class FPipelineCacheFileConverter : JsonConverter<FPipelineCacheFile>
 {
-    public override void WriteJson(JsonWriter writer, FPipelineCacheFile value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FPipelineCacheFile? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
 
         writer.WritePropertyName(nameof(value.Header));
@@ -110,7 +116,7 @@ public class FPipelineCacheFileConverter : JsonConverter<FPipelineCacheFile>
         writer.WriteEndObject();
     }
 
-    public override FPipelineCacheFile ReadJson(JsonReader reader, Type objectType, FPipelineCacheFile existingValue, bool hasExistingValue,
+    public override FPipelineCacheFile ReadJson(JsonReader reader, Type objectType, FPipelineCacheFile? existingValue, bool hasExistingValue,
         JsonSerializer serializer)
         => throw new NotImplementedException();
 }

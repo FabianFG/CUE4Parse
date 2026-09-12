@@ -231,7 +231,7 @@ public class FKismetArchive : FArchive
     public override byte[] ReadBytes(int length)
     {
         var result = new byte[length];
-        Read(result, 0, length);
+        ReadExactly(result, 0, length);
         Index += length;
         return result;
     }

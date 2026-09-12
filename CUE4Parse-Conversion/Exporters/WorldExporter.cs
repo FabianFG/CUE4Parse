@@ -114,10 +114,10 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
                 {
                     Session.Add(landscapeComp._component);
                 }
-                else if (landscapeComp.OuterProxy is { } proxy)
+                /*else if (landscapeComp.OuterProxy is { } proxy)
                 {
                     Session.Add(proxy);
-                }
+                }*/
                 break;
             }
         }

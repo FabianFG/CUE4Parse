@@ -62,9 +62,9 @@ public class AEDefaultFileProvider : DefaultFileProvider
             // Only load containers if .uproject file is not found
             if (upperExt is "PAK")
             {
-                if (file.Directory.FullName.EndsWith("Content\\Paks", StringComparison.OrdinalIgnoreCase))
+                if (file.Directory is { } directoryinfo && directoryinfo.FullName.EndsWith("Content\\Paks", StringComparison.OrdinalIgnoreCase))
                 {
-                    string? contentPath = file.Directory.Parent?.Parent?.FullName;
+                    string? contentPath = directoryinfo.Parent?.Parent?.FullName;
                     var storePath = Path.Combine(contentPath ?? "", "Store");
                     var indexpath = Path.Combine(storePath, "new_index");
                     if (File.Exists(indexpath))
@@ -113,7 +113,9 @@ public class AEDefaultFileProvider : DefaultFileProvider
             fileEntries.Add(entry);
         }
 
-        var repoPath = Path.Combine(Directory.GetParent(indexPath).FullName, "repo6");
+        var parent = Directory.GetParent(indexPath);
+        if (parent == null) throw new InvalidOperationException("Parent directory not found.");
+        var repoPath = Path.Combine(parent.FullName, "repo6");
         foreach (var entry in fileEntries)
         {
             if (string.IsNullOrEmpty(entry.Name) || entry.Size <= 0)

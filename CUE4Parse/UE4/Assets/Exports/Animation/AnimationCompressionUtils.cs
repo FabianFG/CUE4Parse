@@ -35,7 +35,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             const int YShift = 10;
             const uint ZMask = 0x000003ff;
             const uint YMask = 0x001ffc00;
-            const uint XMask = 0xffe00000;
+            // const uint XMask = 0xffe00000;
 
             var packed = Ar.Read<uint>();
             var unpackedX = packed >> XShift;
@@ -79,7 +79,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             const int YShift = 10;
             const uint XMask = 0x000003ff;
             const uint YMask = 0x001ffc00;
-            const uint ZMask = 0xffe00000;
+            // const uint ZMask = 0xffe00000;
 
             var packed = Ar.Read<uint>();
             var unpackedZ = packed >> ZShift;
@@ -99,7 +99,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             const int YShift = 10;
             const uint ZMask = 0x000003ff;
             const uint YMask = 0x001ffc00;
-            const uint XMask = 0xffe00000;
+            // const uint XMask = 0xffe00000;
 
             var packed = Ar.Read<uint>();
             var unpackedX = packed >> XShift;
@@ -120,7 +120,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             const int YShift = 10;
             const uint ZMask = 0x000003ff;
             const uint YMask = 0x001ffc00;
-            const uint XMask = 0xffe00000;
+            // const uint XMask = 0xffe00000;
 
             var packed = Ar.Read<uint>();
             var unpackedX = packed >> XShift;
