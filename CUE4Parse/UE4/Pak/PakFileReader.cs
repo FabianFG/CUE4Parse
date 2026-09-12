@@ -114,8 +114,6 @@ public partial class PakFileReader : AbstractAesVfsReader
             {
                 case GAME_MarvelRivals or GAME_OperationApocalypse or GAME_WutheringWaves or GAME_MindsEye or GAME_TamasShadowveil:
                     return PartialEncryptCompressedExtract(reader, pakEntry, header);
-                case GAME_GameForPeace:
-                    return GameForPeaceExtract(reader, pakEntry);
                 case GAME_Rennsport:
                     return RennsportCompressedExtract(reader, pakEntry);
                 case GAME_DragonQuestXI:
@@ -169,29 +167,6 @@ public partial class PakFileReader : AbstractAesVfsReader
                 uncompressedOff += uncompressedSize;
             }
 
-            switch (Ar.Game)
-            {
-                case GAME_NevernessToEverness when pakEntry.Extension is "ini":
-                    return NevernessToEvernessIniEncryption.DecryptIni(uncompressed, requestedSize);
-                case GAME_Snowbreak when pakEntry.Extension is "lua":
-                    return SnowbreakLua.DecryptLua(uncompressed, requestedSize);
-                case GAME_Undawn when pakEntry.Extension is "lua":
-                    return UndawnLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
-                case GAME_Strinova when pakEntry.Extension is "lua":
-                    uncompressed = StrinovaLua.DecryptLuaBytecode(uncompressed);
-                    break;
-                case GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
-                    return NFSLua.RestoreLuaBytecode(pakEntry.Path, uncompressed);
-                case GAME_LordOfMysteries when pakEntry.Extension is "luac":
-                    return LoMLua.DecryptLuaJITBytecode(pakEntry.Path, uncompressed);
-                case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
-                    return NiNoKuniCsv.DecryptCsv(pakEntry.Name, uncompressed);
-                case GAME_ValorantSource when pakEntry.Extension is "lua":
-                    return ValorantSourceLua.DecryptLuaBytecode(pakEntry.Name, uncompressed);
-                default:
-                    break;
-            }
-
             var offsetInFirstBlock = offset - firstBlockIndex * compressionBlockSize;
             if (offsetInFirstBlock == 0 && requestedSize == bufferSize)
                 return ProcessExtractedData(pakEntry, uncompressed);
@@ -225,31 +200,6 @@ public partial class PakFileReader : AbstractAesVfsReader
         var data = ReadAndDecryptEntryAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize,
             reader, pakEntry, (ulong) readOffset);
 
-        switch (Ar.Game)
-        {
-            case GAME_NevernessToEverness when pakEntry.Extension is "ini":
-                return NevernessToEvernessIniEncryption.DecryptIni(data, requestedSize);
-            case GAME_Snowbreak when pakEntry.Extension is "lua":
-                return SnowbreakLua.DecryptLua(data, requestedSize);
-            case GAME_GameForPeace when pakEntry.Extension is "lua":
-                return GameForPeaceLua.DecryptLuaBytecode(pakEntry.Path, data);
-            case GAME_Undawn when pakEntry.Extension is "lua":
-                return UndawnLua.DecryptLuaBytecode(pakEntry.Path, data);
-            case GAME_Strinova when pakEntry.Extension is "lua":
-                data = StrinovaLua.DecryptLuaBytecode(data);
-                break;
-            case GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
-                return NFSLua.RestoreLuaBytecode(pakEntry.Path, data);
-            case GAME_LordOfMysteries when pakEntry.Extension is "luac":
-                return LoMLua.DecryptLuaJITBytecode(pakEntry.Path, data);
-            case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
-                return NiNoKuniCsv.DecryptCsv(pakEntry.Name, data);
-            case GAME_ValorantSource when pakEntry.Extension is "lua":
-                return ValorantSourceLua.DecryptLuaBytecode(pakEntry.Name, data);
-            default:
-                break;
-        }
-
         if (dataOffset == 0 && requestedSize == data.Length)
             return ProcessExtractedData(pakEntry, data);
 
@@ -258,9 +208,23 @@ public partial class PakFileReader : AbstractAesVfsReader
         return ProcessExtractedData(pakEntry, chunk);
     }
 
-    protected virtual byte[] ProcessExtractedData(FPakEntry entry, byte[] data) => Game switch
+    protected virtual byte[] ProcessExtractedData(FPakEntry entry, byte[] data) => (Game, entry.Extension) switch
     {
-        GAME_RocoKingdomWorld => RocoKingdomWorldEncryption.DecryptFile(data, entry, AesKey),
+        (GAME_Snowbreak, "lua") => SnowbreakLua.DecryptLua(data, data.Length),
+        (GAME_GameForPeace, "lua") => GameForPeaceLua.DecryptLuaBytecode(entry.Path, data),
+        (GAME_Undawn, "lua") => UndawnLua.DecryptLuaBytecode(entry.Path, data),
+        (GAME_Strinova, "lua") => StrinovaLua.DecryptLuaBytecode(data),
+        (GAME_NeedForSpeedMobile, "lua") => NFSLua.RestoreLuaBytecode(entry.Path, data),
+        (GAME_ValorantSource, "lua") => ValorantSourceLua.DecryptLuaBytecode(entry.Name, data),
+        (GAME_LordOfMysteries, "luac") => LoMLua.DecryptLuaJITBytecode(entry.Path, data),
+
+        (GAME_NevernessToEverness, "ini") => NevernessToEvernessIniEncryption.DecryptIni(data, data.Length),
+        (GAME_GameForPeace, "ini") => DecryptGameForPeaceIni(data),
+
+        (GAME_NiNoKuniCrossWorlds, "csv") => NiNoKuniCsv.DecryptCsv(entry.Name, data),
+
+        (GAME_RocoKingdomWorld, _) => RocoKingdomWorldEncryption.DecryptFile(data, entry, AesKey),
+
         _ => data
     };
 

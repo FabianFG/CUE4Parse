@@ -1,16 +1,16 @@
-using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
-using CUE4Parse.GameTypes.PUBG.UE4.Lua;
 using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
-using static CUE4Parse.Compression.Compression;
 
 namespace CUE4Parse.UE4.Pak;
 
 public partial class PakFileReader
 {
-    private static byte[] GameForPeaceIniDecrypt = [
+    private static ReadOnlySpan<byte> GameForPeaceIniMagic => "Linimass"u8;
+    private const ulong GameForPeaceIniMagicEncrypted = 0x4b4457585d5d5b7d;
+    private static readonly byte[] _gameForPeaceIniDecryptTable =
+    [
         0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39,
         0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x31,
         0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x31, 0x32,
@@ -21,43 +21,22 @@ public partial class PakFileReader
         0x38, 0x39, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
         0x39, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
     ];
-    /// <summary>
-    /// Function for extracting an entry from the pak in Game for Peace
-    /// Ini files are encrypted with a simple xor cipher
-    /// </summary>
-    /// <param name="reader">The pak reader</param>
-    /// <param name="pakEntry">The entry to be extracted</param>
-    /// <returns>The merged and decompressed/decrypted entry data</returns>
-    private byte[] GameForPeaceExtract(FArchive reader, FPakEntry pakEntry)
+
+    private static byte[] DecryptGameForPeaceIni(byte[] data)
     {
-        var uncompressed = new byte[(int) pakEntry.UncompressedSize];
-        var uncompressedOff = 0;
-        foreach (var block in pakEntry.CompressionBlocks)
+        if (data.Length < sizeof(ulong))
+            return data;
+
+        if (BitConverter.ToUInt64(data, 0) == GameForPeaceIniMagicEncrypted)
         {
-            var blockSize = (int) block.Size;
-            var srcSize = blockSize.Align(pakEntry.IsEncrypted ? Aes.ALIGN : 1);
-            // Read the compressed block
-            var compressed = ReadAndDecryptAt(block.CompressedStart, srcSize, reader, pakEntry.IsEncrypted);
-            // Calculate the uncompressed size,
-            // its either just the compression block size,
-            // or if it's the last block, it's the remaining data size
-            var uncompressedSize = (int) Math.Min(pakEntry.CompressionBlockSize, pakEntry.UncompressedSize - uncompressedOff);
-            Decompress(compressed, 0, blockSize, uncompressed, uncompressedOff, uncompressedSize, pakEntry.CompressionMethod);
-            uncompressedOff += (int) pakEntry.CompressionBlockSize;
+            TensorUtils.Xor(data, _gameForPeaceIniDecryptTable);
+        }
+        else if (!data.AsSpan().StartsWith(GameForPeaceIniMagic))
+        {
+            return data;
         }
 
-        if (pakEntry.Extension == "ini" && BitConverter.ToUInt64(uncompressed, 0) == 0x4b4457585d5d5b7d)
-        {
-            for (var i = 0; i < uncompressed.Length; i++)
-            {
-                uncompressed[i] ^= GameForPeaceIniDecrypt[i % GameForPeaceIniDecrypt.Length];
-            }
-        }
-
-        if (pakEntry.Extension is "lua")
-            return GameForPeaceLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
-
-        return uncompressed;
+        return data[sizeof(ulong)..];
     }
 
     private void GameForPeaceReadIndex(StringComparer pathComparer, FByteArchive index)

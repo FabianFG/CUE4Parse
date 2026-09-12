@@ -11,9 +11,11 @@ namespace CUE4Parse.GameTypes.ChasingKaleidoRIDER.Encryption;
 // this is not ideal, but but is faster than manual reimplementation of the customized ChaCha20 algorithm
 public static class CKREncryption
 {
-    private static FieldInfo? _engineState = typeof(Salsa20Engine).GetField(nameof(_engineState), BindingFlags.NonPublic | BindingFlags.Instance);
-    private static FieldInfo? _keyStream = typeof(Salsa20Engine).GetField(nameof(_keyStream), BindingFlags.NonPublic | BindingFlags.Instance);
-    private static FieldInfo? _index = typeof(Salsa20Engine).GetField(nameof(_index), BindingFlags.NonPublic | BindingFlags.Instance);
+#pragma warning disable IDE1006
+    private static readonly FieldInfo? engineState = typeof(Salsa20Engine).GetField(nameof(engineState), BindingFlags.NonPublic | BindingFlags.Instance);
+    private static readonly FieldInfo? keyStream = typeof(Salsa20Engine).GetField(nameof(keyStream), BindingFlags.NonPublic | BindingFlags.Instance);
+    private static readonly FieldInfo? index = typeof(Salsa20Engine).GetField(nameof(index), BindingFlags.NonPublic | BindingFlags.Instance);
+#pragma warning restore IDE1006
     private const int BlockSize = 64;
     public static byte[] CKRDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
@@ -31,6 +33,7 @@ public static class CKREncryption
             null when reader is PakFileReader pak => (pak.Info.IndexOffset, pak.Info.IndexOffset),
             _ => throw new ArgumentException("Unsupported CKR custom encryption data", nameof(customData))
         };
+
         var byteOffset = position - encryptionBaseOffset;
         var counter = byteOffset / BlockSize;
         var blockOffset = (int) (byteOffset % BlockSize);
@@ -41,20 +44,21 @@ public static class CKREncryption
         ParametersWithIV parameters = new ParametersWithIV(new KeyParameter(reader.AesKey.Key), iv);
         chacha.Init(false, parameters);
 
-        if (_engineState == null)
+        if (engineState == null)
             throw new NullReferenceException("Salsa20Engine engineState is null");
 
-        uint[] state = (uint[]) _engineState.GetValue(chacha)!;
+        uint[] state = (uint[]) engineState.GetValue(chacha)!;
         state[12] = (uint) counter;
         state[13] = (uint) (counter >> 32);
         
         var output = new byte[count];
         if (blockOffset != 0 )
         {
-            if (_keyStream is null || _index is null)
+            if (keyStream is null || index is null)
                 throw new NullReferenceException("Salsa20Engine keyStream or index is null");
-            byte[] key = (byte[]) _keyStream.GetValue(chacha)!;
-            int indexValue = (int) _index.GetValue(chacha)!;
+
+            byte[] key = (byte[]) keyStream.GetValue(chacha)!;
+            int indexValue = (int) index.GetValue(chacha)!;
             var outputOffset = 0;
             var blockLength = Math.Min((BlockSize - blockOffset), count - outputOffset);
             chacha.ProcessBytes(bytes, beginOffset, blockLength, output, 0);
@@ -62,7 +66,7 @@ public static class CKREncryption
                 output[outputOffset + i] = (byte)(bytes[beginOffset + outputOffset + i] ^ key[blockOffset + i]);
             outputOffset += blockLength;
 
-            _index.SetValue(chacha, 0);
+            index.SetValue(chacha, 0);
             chacha.ProcessBytes(bytes, beginOffset + outputOffset, count - outputOffset, output, outputOffset);
         }
         else
