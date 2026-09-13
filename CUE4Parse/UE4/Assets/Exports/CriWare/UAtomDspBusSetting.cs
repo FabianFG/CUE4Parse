@@ -1,8 +1,8 @@
-﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Exports.CriWare;
+namespace CUE4Parse.UE4.Assets.Exports.Criware;
 
 public class UAtomDspBusSetting : UObject
 {

@@ -1,7 +1,7 @@
-using static CUE4Parse.UE4.CriWare.Decoders.HCA.Constants;
-using static CUE4Parse.UE4.CriWare.Decoders.HCA.Tables;
+using static CUE4Parse.UE4.Criware.Decoders.HCA.Constants;
+using static CUE4Parse.UE4.Criware.Decoders.HCA.Tables;
 
-namespace CUE4Parse.UE4.CriWare.Decoders.HCA;
+namespace CUE4Parse.UE4.Criware.Decoders.HCA;
 
 // This is a direct port of vgmstream's clHCA decoder:
 // https://github.com/vgmstream/vgmstream/blob/master/src/coding/libs/clhca.c

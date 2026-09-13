@@ -1,14 +1,14 @@
 using System.Security.Cryptography;
 using CUE4Parse.FileProvider;
-using CUE4Parse.UE4.Assets.Exports.CriWare;
+using CUE4Parse.UE4.Assets.Exports.Criware;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using CUE4Parse.UE4.CriWare.Decoders;
-using CUE4Parse.UE4.CriWare.Readers;
+using CUE4Parse.UE4.Criware.Decoders;
+using CUE4Parse.UE4.Criware.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using UE4Config.Parsing;
 
-namespace CUE4Parse.UE4.CriWare;
+namespace CUE4Parse.UE4.Criware;
 
 public class CriWareExtractedSound
 {

@@ -1,10 +1,10 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.CriWare.Readers;
+using CUE4Parse.UE4.Criware.Readers;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Exports.CriWare;
+namespace CUE4Parse.UE4.Assets.Exports.Criware;
 
 public class UAtomConfig : USoundAtomConfig;
 

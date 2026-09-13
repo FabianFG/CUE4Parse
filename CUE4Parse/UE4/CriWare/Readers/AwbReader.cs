@@ -4,7 +4,7 @@ using CUE4Parse.Utils;
 using Newtonsoft.Json;
 using SubstreamSharp;
 
-namespace CUE4Parse.UE4.CriWare.Readers;
+namespace CUE4Parse.UE4.Criware.Readers;
 
 public struct Wave
 {

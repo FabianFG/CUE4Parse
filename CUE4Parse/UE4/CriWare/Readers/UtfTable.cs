@@ -1,9 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using CUE4Parse.UE4.CriWare.Readers.Common;
+using CUE4Parse.UE4.Criware.Readers.Common;
 using CUE4Parse.UE4.Exceptions;
 
-namespace CUE4Parse.UE4.CriWare.Readers;
+namespace CUE4Parse.UE4.Criware.Readers;
 
 [Flags]
 public enum ColumnFlag : byte

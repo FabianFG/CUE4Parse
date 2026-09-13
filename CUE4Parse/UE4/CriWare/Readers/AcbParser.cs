@@ -1,6 +1,6 @@
-using CUE4Parse.UE4.CriWare.Readers.Common;
+using CUE4Parse.UE4.Criware.Readers.Common;
 
-namespace CUE4Parse.UE4.CriWare.Readers;
+namespace CUE4Parse.UE4.Criware.Readers;
 
 struct CueName
 {

@@ -2,7 +2,7 @@ using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 using SubstreamSharp;
 
-namespace CUE4Parse.UE4.CriWare.Readers;
+namespace CUE4Parse.UE4.Criware.Readers;
 
 [JsonConverter(typeof(AcbReaderConverter))]
 public sealed class AcbReader : IDisposable
