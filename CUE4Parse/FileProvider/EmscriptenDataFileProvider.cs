@@ -55,7 +55,7 @@ public class EmscriptenDataFileProvider(
                 throw new InvalidDataException("Invalid file entry: filename missing");
             if (f.Start < 0 || f.End < f.Start)
                 throw new InvalidDataException($"Invalid file entry offsets for '{f.Filename}'");
-            var name = NormalizePath(f.Filename);
+            var name = f.Filename.NormalizePath();
             entries[name] = f;
         }
 
@@ -102,12 +102,6 @@ public class EmscriptenDataFileProvider(
         }
 
         Files.AddFiles(osFiles);
-    }
-
-    private static string NormalizePath(string filename)
-    {
-        var name = filename.TrimStart('/').Replace('\\', '/');
-        return name;
     }
 
     private SegmentFileStream Slice(EmscriptenFileEntry fe) => new(dataFile.FullName, fe.Start, fe.End - fe.Start);

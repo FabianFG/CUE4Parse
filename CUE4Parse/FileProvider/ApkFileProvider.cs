@@ -1,6 +1,5 @@
 using System.IO.Compression;
 using System.Text;
-
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
@@ -34,64 +33,92 @@ public class ApkFileProvider : DefaultFileProvider
 
     public override void Initialize()
     {
-        if (!_apkFile.Exists)
-            throw new FileNotFoundException("Given APK file must exist");
-
         var osFiles = new Dictionary<string, GameFile>(PathComparer);
-        using var apkFs = File.OpenRead(_apkFile.FullName);
-        using var zipFile = new ZipArchive(apkFs, ZipArchiveMode.Read);
-        foreach (var pngEntry in zipFile.Entries.Where(x => x.FullName.EndsWith("main.obb.png", StringComparison.OrdinalIgnoreCase)))
+        LooseFileCount += LoadInto(_apkFile, this, osFiles);
+        Files.AddFiles(osFiles);
+    }
+
+    internal static int LoadInto(FileInfo apkFile, DefaultFileProvider provider, Dictionary<string, GameFile> osFiles)
+    {
+        if (!apkFile.Exists)
+            throw new FileNotFoundException("Given APK file must exist", apkFile.FullName);
+
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+        using var apkStream = File.OpenRead(apkFile.FullName);
+        using var apk = new ZipArchive(apkStream, ZipArchiveMode.Read);
+
+        return LoadArchive(apk, provider, osFiles);
+    }
+
+    private static int LoadArchive(ZipArchive apk, DefaultFileProvider provider, Dictionary<string, GameFile> osFiles)
+    {
+        var packageCount = 0;
+        foreach (var nestedApkEntry in apk.Entries.Where(x => x.FullName.EndsWith(".apk", StringComparison.OrdinalIgnoreCase)))
         {
-            var pngStream = new MemoryStream((int)pngEntry.Length);
-            {
-                using var pngEntryStream = pngEntry.Open();
-                pngEntryStream.CopyTo(pngStream);
-            }
-            pngStream.Position = 0;
-
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            using var container = new ZipArchive(pngStream, ZipArchiveMode.Read);
-
-            foreach (var fileEntry in container.Entries)
-            {
-                var streams = new Stream[2];
-                streams[0] = new MemoryStream((int)fileEntry.Length);
-                {
-                    using var fileEntryStream = fileEntry.Open();
-                    fileEntryStream.CopyTo(streams[0]);
-                }
-                streams[0].Position = 0;
-
-                var upperExt = fileEntry.Name.SubstringAfterLast('.').ToUpperInvariant();
-                switch (upperExt)
-                {
-                    case "PAK":
-                    case "UPAK" when Versions.Game is GAME_LordOfMysteries:
-                        RegisterVfs(fileEntry.Name, streams);
-                        continue;
-                    case "UTOC":
-                        if (container.Entries.FirstOrDefault(x => x.Name == $"{fileEntry.Name.SubstringBeforeLast('.')}.ucas") is { } ucasEntry)
-                        {
-                            streams[1] = new MemoryStream((int)ucasEntry.Length);
-                            {
-                                using var ucasEntryStream = ucasEntry.Open();
-                                ucasEntryStream.CopyTo(streams[1]);
-                            }
-                            streams[1].Position = 0;
-                        }
-                        RegisterVfs(fileEntry.Name, streams);
-                        continue;
-                }
-
-                // Register local file only if it has a known extension, we don't need every file
-                if (!GameFile.UeKnownExtensions.Contains(upperExt, StringComparer.OrdinalIgnoreCase))
-                    continue;
-
-                var osFile = new StreamedGameFile(fileEntry.Name, streams[0], Versions);
-                osFiles[osFile.Path] = osFile;
-            }
+            using var nestedApkStream = CopyEntry(nestedApkEntry);
+            using var nestedApk = new ZipArchive(nestedApkStream, ZipArchiveMode.Read);
+            packageCount += LoadArchive(nestedApk, provider, osFiles);
         }
 
-        Files.AddFiles(osFiles);
+        foreach (var obbEntry in apk.Entries.Where(x => x.FullName.EndsWith("main.obb.png", StringComparison.OrdinalIgnoreCase) || x.FullName.EndsWith(".obb", StringComparison.OrdinalIgnoreCase)))
+        {
+            using var obbStream = CopyEntry(obbEntry);
+            using var obb = new ZipArchive(obbStream, ZipArchiveMode.Read);
+            packageCount += LoadEntries(obb, provider, osFiles);
+        }
+
+        packageCount += LoadEntries(apk, provider, osFiles);
+        return packageCount;
+    }
+
+    private static int LoadEntries(ZipArchive archive, DefaultFileProvider provider, Dictionary<string, GameFile> osFiles)
+    {
+        var packageCount = 0;
+
+        foreach (var fileEntry in archive.Entries)
+        {
+            var filePath = fileEntry.FullName.NormalizePath();
+            var upperExt = filePath.SubstringAfterLast('.').ToUpperInvariant();
+            switch (upperExt)
+            {
+                case "PAK":
+                case "UPAK" when provider.Versions.Game is GAME_LordOfMysteries:
+                    provider.RegisterVfs(filePath, [CopyEntry(fileEntry)]);
+                    continue;
+                case "UTOC":
+                {
+                    var streams = new Stream[2];
+                    streams[0] = CopyEntry(fileEntry);
+                    var ucasPath = $"{filePath.SubstringBeforeLast('.')}.ucas";
+                    if (archive.Entries.FirstOrDefault(x => x.FullName.NormalizePath().Equals(ucasPath, provider.StringComparison)) is { } ucasEntry)
+                    {
+                        streams[1] = CopyEntry(ucasEntry);
+                    }
+                    provider.RegisterVfs(filePath, streams);
+                    continue;
+                }
+            }
+
+            // Register local file only if it has a known extension, we don't need every file
+            if (!GameFile.UeKnownExtensionsSet.Contains(upperExt))
+                continue;
+            if (!GameFile.UePackagePayloadExtensionsSet.Contains(upperExt))
+                packageCount++;
+
+            var osFile = new StreamedGameFile(filePath, CopyEntry(fileEntry), provider.Versions);
+            osFiles[osFile.Path] = osFile;
+        }
+
+        return packageCount;
+    }
+
+    private static MemoryStream CopyEntry(ZipArchiveEntry entry)
+    {
+        var stream = new MemoryStream((int) entry.Length);
+        using var entryStream = entry.Open();
+        entryStream.CopyTo(stream);
+        stream.Position = 0;
+        return stream;
     }
 }

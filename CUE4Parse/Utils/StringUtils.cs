@@ -109,6 +109,9 @@ namespace CUE4Parse.Utils
         public static bool Contains(this string orig, string value, StringComparison comparisonType) => orig.IndexOf(value, comparisonType) >= 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string NormalizePath(this string path) => path.TrimStart('/').Replace('\\', '/');
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetReadableSize<T>(this T size) where T : INumber<T>
         {
             if (size == T.Zero) return "0 B";
