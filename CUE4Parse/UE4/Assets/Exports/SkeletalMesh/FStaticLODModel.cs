@@ -690,10 +690,14 @@ public class FStaticLODModel
         bytesToSkip += 4 * 2; // FColorVertexBuffer::SerializeMetaData 2x uint32
         bytesToSkip += FSkinWeightVertexBuffer.MetadataSize(Ar);
 
-        Ar.Position += bytesToSkip;
+        Ar.Position += bytesToSkip + Ar.Game switch
+        {
+            GAME_NeedForSpeedMobile => 32,
+            GAME_StarWarsJediSurvivor => 4,
+            GAME_Splitgate2 => 1,
+            _ => 0
+        };
 
-        if (Ar.Game is GAME_StarWarsJediSurvivor) Ar.Position += 4;
-        if (Ar.Game is GAME_NeedForSpeedMobile) Ar.Position += 32;
         if (HasClothData())
         {
             // FSkeletalMeshVertexClothBuffer::SerializeMetaData

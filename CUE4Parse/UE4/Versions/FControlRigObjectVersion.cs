@@ -173,6 +173,8 @@ public static class FControlRigObjectVersion
 
         return Ar.Game switch
         {
+            GAME_Splitgate2 => Type.RigHierarchyStoresComponents,
+
             < GAME_UE4_23 => Type.BeforeCustomVersionWasAdded,
             < GAME_UE4_25 => Type.OperatorsStoringPropertyPaths,
             < GAME_UE4_26 => Type.SwitchedToRigVM,
