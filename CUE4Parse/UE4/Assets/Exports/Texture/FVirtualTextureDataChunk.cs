@@ -39,8 +39,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture
             for (uint layerIndex = 0u; layerIndex < numLayers; ++layerIndex)
             {
                 CodecType[layerIndex] = Ar.Read<EVirtualTextureCodec>();
-                if (Ar.Game == GAME_DeltaForce) continue;
-                CodecPayloadOffset[layerIndex] = Ar.Game >= GAME_UE4_27 ? Ar.Read<uint>() : Ar.Read<ushort>();
+                CodecPayloadOffset[layerIndex] = Ar.Game switch
+                {
+                    GAME_DeltaForce => Ar.Read<ushort>(),
+                    >= GAME_UE4_27 => Ar.Read<uint>(),
+                    _ => Ar.Read<ushort>(),
+                };
             }
             BulkData = new FByteBulkData(Ar);
         }
