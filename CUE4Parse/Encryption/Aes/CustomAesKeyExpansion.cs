@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using CUE4Parse.GameTypes.FSR.Encryption.Aes;
 using CUE4Parse.GameTypes.FunkoFusion.Encryption.Aes;
 using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
@@ -13,8 +12,6 @@ namespace CUE4Parse.Encryption.Aes;
 public static class CustomAesKeyExpansion
 {
     private const int BlockSize = 16;
-
-    public static readonly ConcurrentDictionary<IAesVfsReader, Vector128<byte>[]> RoundKeysCache = [];
 
     public static void DecryptWithRoundKeys(byte[] input, int index, ReadOnlySpan<Vector128<byte>> roundKeys)
     {
@@ -42,7 +39,7 @@ public static class CustomAesKeyExpansion
         var output = new byte[count];
         Array.Copy(bytes, beginOffset, output, 0, count);
 
-        var roundKeys = RoundKeysCache.GetOrAdd(reader, KeyExpansion(reader));
+        var roundKeys = KeyExpansion(reader);
         for (var i = 0; i < count; i += BlockSize)
         {
             DecryptWithRoundKeys(output, i, roundKeys);
