@@ -34,9 +34,9 @@ namespace CUE4Parse.UE4.Objects.Engine
             pVertex = Ar.Read<int>();
             iSide = Ar.Read<int>();
             ShadowTexCoord = new FVector2D(Ar);
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.BACKFACESHADOWTEXCOORD)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.BACKFACESHADOWTEXCOORD && !(Ar.Versions["Platform.IOS"] || Ar.Versions["Platform.Android"]))
             {
-                BackfaceShadowTexCoord = new FVector2D(Ar); // why do some builds have this removed in UE3
+                BackfaceShadowTexCoord = new FVector2D(Ar); // findout the reason why this is removed in UE3
             }
         }
     }
@@ -344,7 +344,7 @@ namespace CUE4Parse.UE4.Objects.Engine
                 Ar.Position += sizeof(int); // surfsOwner - PackageIndex
             }
             Surfs = Ar.ReadArray(() => new FBspSurf(Ar));
-            Verts = Ar.ReadBulkArray<FVert>();
+            Verts = Ar.ReadBulkArray(() => new FVert(Ar));
 
             NumSharedSides = Ar.Read<int>();
             if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_ZONES_FROM_MODEL)

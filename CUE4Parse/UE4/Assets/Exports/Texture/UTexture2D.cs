@@ -75,10 +75,11 @@ public class UTexture2D : UTexture
                 PlatformData.Mips = legacyMips;
 
                 /*
+                 * UE3:
                  * Todo: add the extra android stuff needed
-                 * Todo: Find a way to allow users to change Platform
-
-                if (false) // if game is ios
+                 * Todo: there are other mips that aren't used such as "CachedETCMips" and TextureFileCacheName needs prefixes appended
+                */
+                if (Ar.Versions["Platform.IOS"])
                 {
                     if (Format == EPixelFormat.PF_DXT1)
                     {
@@ -88,16 +89,18 @@ public class UTexture2D : UTexture
                     {
                         Format = EPixelFormat.PF_PVRTC4;
                     }
-                } else if (false) // if game is android
+                }
+                else if (Ar.Versions["Platform.Android"])
                 {
                     if (Format == EPixelFormat.PF_DXT1)
                     {
                         Format = EPixelFormat.PF_ETC1;
-                    } else if (Format == EPixelFormat.PF_DXT5)
+                    }
+                    else if (Format == EPixelFormat.PF_DXT5)
                     {
                         // unsupported RGBA4
                     }
-                }*/
+                }
 
             }
         }
