@@ -1,5 +1,6 @@
 using System.Text;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -14,6 +15,8 @@ public class UsmapParser
     public readonly TypeMappings? Mappings;
     public readonly EUsmapCompressionMethod CompressionMethod;
     public readonly EUsmapVersion Version;
+    public readonly bool HasVersioning;
+    public readonly FEngineVersion? EngineVersion;
     public readonly FPackageFileVersion PackageVersion;
     public readonly FCustomVersionContainer CustomVersions;
     public readonly uint NetCL;
@@ -37,9 +40,14 @@ public class UsmapParser
 
         var Ar = new FUsmapReader(archive, Version);
 
-        var bHasVersioning = Ar.Version >= EUsmapVersion.PackageVersioning && Ar.ReadBoolean();
-        if (bHasVersioning)
+        HasVersioning = Ar.Version >= EUsmapVersion.PackageVersioning && Ar.ReadBoolean();
+        if (HasVersioning)
         {
+            if (Ar.Version >= EUsmapVersion.EngineVersioning)
+            {
+                EngineVersion = new FEngineVersion(Ar);
+            }
+
             PackageVersion = new FPackageFileVersion(Ar.Read<int>(), Ar.Read<int>());
             CustomVersions = new FCustomVersionContainer(Ar);
             NetCL = Ar.Read<uint>();
