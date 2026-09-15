@@ -621,33 +621,33 @@ public partial class PakFileReader : AbstractAesVfsReader
     private byte[] ReadAndDecryptIndex(int length, FIoStoreEncryptionIV? iv, object? customData = null)
     {
         var bytes = Ar.ReadBytes(length);
-        return DecryptPakEncryptionUnit(bytes, IsEncrypted, iv, 0, true, customData);
+        return DecryptPakEncryptionUnit(bytes, length, IsEncrypted, iv, 0, true, customData);
     }
 
     private byte[] ReadAndDecryptEntryAt(byte[] buffer, long position, int length, FArchive reader, FPakEntry entry, ulong offsetInEncryptionUnit)
     {
         reader.ReadAt(position, buffer, 0, length);
-        return DecryptPakEncryptionUnit(buffer, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit, customData: new FPakCustomEncryptionData(entry, position));
+        return DecryptPakEncryptionUnit(buffer, length, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit, customData: new FPakCustomEncryptionData(entry, position));
     }
 
     private byte[] ReadAndDecryptEntryAt(long position, int length, FArchive reader, FPakEntry entry, ulong offsetInEncryptionUnit)
     {
         var bytes = reader.ReadBytesAt(position, length);
-        return DecryptPakEncryptionUnit(bytes, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit, customData: new FPakCustomEncryptionData(entry, position));
+        return DecryptPakEncryptionUnit(bytes, length, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit, customData: new FPakCustomEncryptionData(entry, position));
     }
 
-    private byte[] DecryptPakEncryptionUnit(byte[] bytes, bool isEncrypted, FIoStoreEncryptionIV? iv, ulong offsetInEncryptionUnit, bool isIndex = false, object? customData = null)
+    private byte[] DecryptPakEncryptionUnit(byte[] bytes, int length, bool isEncrypted, FIoStoreEncryptionIV? iv, ulong offsetInEncryptionUnit, bool isIndex = false, object? customData = null)
     {
         if (!isEncrypted || Info.EncryptionMethod != EIoEncryptionMethod.AES_CTR)
-            return DecryptIfEncrypted(bytes, isEncrypted, isIndex, customData);
+            return DecryptIfEncrypted(bytes, 0, length, isEncrypted, isIndex: isIndex, customData: customData);
         if (CustomEncryption is not null)
-            return CustomEncryption(bytes, 0, bytes.Length, isIndex, this, customData);
+            return CustomEncryption(bytes, 0, length, isIndex, this, customData);
         if (iv is null)
             throw new ParserException("AES-CTR pak encryption unit is missing its IV");
         EnsureValidAesKey(AesKey);
         var initialBlockIndex = checked((uint) (offsetInEncryptionUnit / Aes.ALIGN));
         var initialBlockByteOffset = (int) (offsetInEncryptionUnit % Aes.ALIGN);
-        bytes.AsSpan().CryptCtrInPlace(AesKey!, iv.Bytes, initialBlockIndex, initialBlockByteOffset);
+        bytes.AsSpan(0, length).CryptCtrInPlace(AesKey!, iv.Bytes, initialBlockIndex, initialBlockByteOffset);
         return bytes;
     }
 

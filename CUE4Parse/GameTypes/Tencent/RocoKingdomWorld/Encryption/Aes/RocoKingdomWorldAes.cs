@@ -19,7 +19,11 @@ public static class RocoKingdomWorldAes
         Buffer.BlockCopy(bytes, beginOffset, ciphertext, 0, count);
 
         if (customData is FPakCustomEncryptionData { Entry: var entry })
-            return FConfigurableCrypto.DecryptChunked(ciphertext, (byte) entry.CustomData, reader.AesKey, entry.Name);
+        {
+            return entry.IsCompressed
+                ? FConfigurableCrypto.Decrypt(ciphertext, (byte) entry.CustomData, reader.AesKey, entry.Name)
+                : FConfigurableCrypto.DecryptChunked(ciphertext, (byte) entry.CustomData, reader.AesKey, entry.Name);
+        }
 
         var strategyIndex = (reader as PakFileReader)?.Info.CustomEncryptionData[0] ?? 0;
         return FConfigurableCrypto.Decrypt(ciphertext, strategyIndex, reader.AesKey, reader.Name);
