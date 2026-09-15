@@ -26,12 +26,29 @@ public class FStaticMeshSection
 
     public FStaticMeshSection(FArchive Ar)
     {
+        var sectionStart = Ar.Position;
+        bool ReadSectionBoolean(string field)
+        {
+            if ((Ar.Game is GAME_Splitgate2 or GAME_Empulse) && Ar.Length - Ar.Position >= 4)
+            {
+                var raw = BitConverter.ToInt32(Ar.ReadBytesAt(Ar.Position, 4), 0);
+                if (raw is not (0 or 1))
+                {
+                    var sampleStart = Math.Max(0, sectionStart - 8);
+                    var sample = Ar.ReadBytesAt(sampleStart, (int)Math.Min(96, Ar.Length - sampleStart));
+                    Serilog.Log.Warning("[StaticMeshDiag] {Archive}: section start={Start}; invalid {Field} at {Position}={Raw}; material={Material}; first index={First}; triangles={Triangles}; vertex range={Min}-{Max}; bytes at {SampleStart}={Sample}",
+                        Ar.Name, sectionStart, field, Ar.Position, raw, MaterialIndex, FirstIndex, NumTriangles, MinVertexIndex, MaxVertexIndex, sampleStart, Convert.ToHexString(sample));
+                }
+            }
+            return Ar.ReadBoolean();
+        }
+
         if (Ar.Game < GAME_UE4_0)
         {
             Material = new FPackageIndex((FAssetArchive)Ar); // Material
-            bEnableCollision = Ar.ReadBoolean();
+            bEnableCollision = ReadSectionBoolean("bEnableCollision");
             Ar.ReadBoolean(); // OldEnableCollision
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedCastShadow) bCastShadow = Ar.ReadBoolean();
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedCastShadow) bCastShadow = ReadSectionBoolean("bCastShadow");
         }
         else
         {
@@ -43,8 +60,8 @@ public class FStaticMeshSection
         MaxVertexIndex = Ar.Read<int>();
         if (Ar.Game >= GAME_UE4_0)
         {
-            bEnableCollision = Ar.ReadBoolean();
-            bCastShadow = Ar.ReadBoolean();
+            bEnableCollision = ReadSectionBoolean("bEnableCollision");
+            bCastShadow = ReadSectionBoolean("bCastShadow");
         }
         else
         {
@@ -63,14 +80,14 @@ public class FStaticMeshSection
         if (Ar.Game == GAME_NeedForSpeedMobile) CustomData = Ar.Read<int>();
         if (Ar.Game is GAME_AssaultFireFuture) return;
         if (Ar.Game is GAME_ArenaBreakoutMobile) Ar.Position += 4;
-        bForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
+        bForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && ReadSectionBoolean("bForceOpaque");
         if (Ar.Game is GAME_MortalKombat1 or GAME_TheFinals or GAME_ArcRaiders) Ar.Position += 8;
         if (Ar.Game == GAME_BlueProtocol) CustomData = Ar.Read<short>(); // Must be read before bVisibleInRayTracing
         if (Ar.Game is GAME_WutheringWaves) Ar.SkipFixedArray(sizeof(int));
-        bVisibleInRayTracing = !Ar.Versions["StaticMesh.HasVisibleInRayTracing"] || Ar.ReadBoolean();
+        bVisibleInRayTracing = !Ar.Versions["StaticMesh.HasVisibleInRayTracing"] || ReadSectionBoolean("bVisibleInRayTracing");
         if (Ar.Game is GAME_Grounded or GAME_Dauntless) Ar.Position += 8;
         if (Ar.Game is GAME_ValorantSource) Ar.Position += 12;
-        bAffectDistanceFieldLighting = Ar.Game >= GAME_UE5_1 && Ar.ReadBoolean();
+        bAffectDistanceFieldLighting = Ar.Game >= GAME_UE5_1 && ReadSectionBoolean("bAffectDistanceFieldLighting");
         if (Ar.Game is GAME_RogueCompany or GAME_Grounded or GAME_Grounded2 or GAME_RacingMaster
             or GAME_MetroAwakening or GAME_Avowed or GAME_OutlastTrials or GAME_OuterWorlds2 or GAME_LiesofP) Ar.Position += 4;
         if (Ar.Game is GAME_InfinityNikki)

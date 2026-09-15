@@ -43,6 +43,11 @@ public class FStaticMeshLODResources
 
     public FStaticMeshLODResources(FArchive Ar)
     {
+        if (Ar.Game is GAME_Splitgate2 or GAME_Empulse)
+        {
+            Serilog.Log.Warning("[StaticMeshDiag] {Archive}: LOD start={Position}; header={Header}", Ar.Name, Ar.Position,
+                Convert.ToHexString(Ar.ReadBytesAt(Ar.Position, (int)Math.Min(64, Ar.Length - Ar.Position))));
+        }
         var stripDataFlags = new FStripDataFlags(Ar);
 
         if (Ar.Game == GAME_APBReloaded)
@@ -91,6 +96,10 @@ public class FStaticMeshLODResources
         if (Ar.Game != GAME_Splitgate)
             bIsLODCookedOut = Ar.ReadBoolean();
         var bInlined = Ar.ReadBoolean() || Ar.Game == GAME_RogueCompany;
+        if (Ar.Game is GAME_Splitgate2 or GAME_Empulse)
+            Serilog.Log.Warning("[StaticMeshDiag] {Archive}: after LOD header={Position}; sections={Sections}; cooked out={CookedOut}; inline={Inline}",
+                Ar.Name, Ar.Position, Sections.Length, bIsLODCookedOut, bInlined);
+
 
         if (Ar.Game is GAME_LordOfMysteries) Ar.Position += 4;
 
@@ -140,7 +149,32 @@ public class FStaticMeshLODResources
                 }
 
                 // https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L560
+                if (Ar.Game is GAME_Splitgate2 or GAME_Empulse)
+                    Serilog.Log.Warning("[StaticMeshDiag] {Archive}: external metadata at {Position}; decoded stride={Stride}; vertices={Vertices}; bytes={Bytes}",
+                        Ar.Name, Ar.Position, PositionVertexBuffer?.Stride, PositionVertexBuffer?.NumVertices,
+                        Convert.ToHexString(Ar.ReadBytesAt(Ar.Position, (int)Math.Min(128, Ar.Length - Ar.Position))));
                 Ar.Position += 8; // DepthOnlyNumTriangles + Packed
+                if ((Ar.Game is GAME_Splitgate2 or GAME_Empulse) && Ar.Length - Ar.Position >= 25)
+                {
+                    // Availability metadata exists even when external LOD data is absent.
+                    // Cross-check the adjacent vertex counts, and the decoded buffer when available.
+                    var metadata = Ar.ReadBytesAt(Ar.Position, 25);
+                    var vertexCount = BitConverter.ToInt32(metadata, 4);
+                    var fullPrecisionUVs = BitConverter.ToInt32(metadata, 8);
+                    var highPrecisionTangents = BitConverter.ToInt32(metadata, 12);
+                    var stride = BitConverter.ToInt32(metadata, 16);
+                    var count = BitConverter.ToInt32(metadata, 20);
+                    var format = metadata[24];
+                    var matchesDecoded = PositionVertexBuffer is not { } positions ||
+                        (stride == positions.Stride && count == positions.NumVertices);
+                    if (count >= 0 && count == vertexCount && matchesDecoded &&
+                        fullPrecisionUVs is 0 or 1 && highPrecisionTangents is 0 or 1 &&
+                        ((stride == 12 && format == 3) || (stride == 8 && format == 13)))
+                    {
+                        Ar.Position += 1;
+                        Serilog.Log.Warning("[StaticMeshDiag] {Archive}: validated extra static position metadata byte", Ar.Name);
+                    }
+                }
                 Ar.Position += 4 * 4 + 2 * 4 + 2 * 4 + 5 * 2 * 4;
                 // StaticMeshVertexBuffer = 2x int32, 2x bool
                 // PositionVertexBuffer = 2x int32
@@ -187,6 +221,8 @@ public class FStaticMeshLODResources
                 }
             }
         }
+        if (Ar.Game is GAME_Splitgate2 or GAME_Empulse)
+            Serilog.Log.Warning("[StaticMeshDiag] {Archive}: LOD end={Position}", Ar.Name, Ar.Position);
     }
 
     // Pre-UE4.23 code

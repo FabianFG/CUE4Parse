@@ -50,6 +50,7 @@ public class FStaticMeshVertexBuffer
                     GAME_HonorofKingsWorld => Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeHonorOfKingsWorldQTangent(Ar, UseHighPrecisionTangentBasis)),
                     GAME_FinalFantasy7Rebirth => Ar.ReadBulkArray(() => FStaticMeshUVItem.SerializeTangentsFF7R(Ar)),
                     GAME_GangstarMirageCity => FStaticMeshUVItem.SerializeTangentsGangstar(Ar),
+                    GAME_Splitgate2 or GAME_Empulse => FStaticMeshUVItem.SerializeTangents1047(Ar, UseHighPrecisionTangentBasis, NumVertices),
                     _ => null,
                 };
 

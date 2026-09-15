@@ -686,6 +686,21 @@ public class FStaticLODModel
             bytesToSkip += 1 + 4; // FMultiSizeIndexContainer::SerializeMetaData 1x uint8 + 1x int32
 
         bytesToSkip += 4 * 4; // FStaticMeshVertexBuffer::SerializeMetaData 2x uint32 + 2x bool
+        if ((Ar.Game is GAME_Splitgate2 or GAME_Empulse) && NumVertices > 0 &&
+            Ar.Length - Ar.Position - bytesToSkip >= 9)
+        {
+            // External-LOD availability metadata repeats the 1047 position-format byte.
+            // Validate the stride/count/format against the already decoded LOD before
+            // extending the metadata skip; standard layouts retain their existing size.
+            var positionMetadata = Ar.ReadBytesAt(Ar.Position + bytesToSkip, 9);
+            var stride = BitConverter.ToInt32(positionMetadata, 0);
+            var count = BitConverter.ToInt32(positionMetadata, 4);
+            var format = positionMetadata[8];
+            if (count == NumVertices && ((stride == 12 && format == 3) || (stride == 8 && format == 13)))
+            {
+                bytesToSkip += 1;
+            }
+        }
         bytesToSkip += 4 * 2; // FPositionVertexBuffer::SerializeMetaData 2x uint32
         bytesToSkip += 4 * 2; // FColorVertexBuffer::SerializeMetaData 2x uint32
         bytesToSkip += FSkinWeightVertexBuffer.MetadataSize(Ar);
@@ -705,7 +720,6 @@ public class FStaticLODModel
                 Ar.Position += 4 * num;
             }
         }
-
         _ = Ar.ReadArray(Ar.ReadFName); // FSkinWeightProfilesData::SerializeMetaData
 
         if (Ar.Versions["SkeletalMesh.HasRayTracingData"] && Ar.Game >= GAME_UE5_6)

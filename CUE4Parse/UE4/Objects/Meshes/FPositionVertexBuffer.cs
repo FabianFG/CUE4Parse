@@ -186,6 +186,47 @@ public class FPositionVertexBuffer
             Ar.Position += sizeof(float) * 6; // FVector, FVector
         }
 
+        if (Ar.Game is GAME_Splitgate2 or GAME_Empulse)
+        {
+            // Observed 1047 prefix matches EVertexElementType: Float3=3, Half4=13.
+            // Validate the prefixed bulk header against stride/count and available data
+            // before selecting a decoder; leave other layouts untouched.
+            var candidatePosition = Ar.Position;
+            if ((Stride == 12 || Stride == 8) && NumVertices > 0 && Ar.Length - candidatePosition >= 9)
+            {
+                byte marker;
+                int candidateSize, candidateCount;
+                try
+                {
+                    marker = Ar.Read<byte>();
+                    candidateSize = Ar.Read<int>();
+                    candidateCount = Ar.Read<int>();
+                }
+                finally
+                {
+                    Ar.Position = candidatePosition;
+                }
+                if (((marker == 0x03 && Stride == 12) || (marker == 0x0D && Stride == 8)) &&
+                    candidateSize == Stride && candidateCount == NumVertices &&
+                    (long) candidateSize * candidateCount <= Ar.Length - candidatePosition - 9)
+                {
+                    Ar.Position = candidatePosition + 1;
+                    if (marker == 0x0D)
+                    {
+                        var halfPositions = Ar.ReadBulkArray<FHalfVector4>();
+                        Verts = new FVector[halfPositions.Length];
+                        for (var i = 0; i < halfPositions.Length; ++i)
+                        {
+                            var v = halfPositions[i];
+                            // Half4 vertex attributes store XYZ in their first three components.
+                            // Do not use FHalfVector4's scaled-vector implicit conversion.
+                            Verts[i] = new FVector((float) v.X, (float) v.Y, (float) v.Z);
+                        }
+                        return;
+                    }
+                }
+            }
+        }
         Verts = Ar.ReadBulkArray<FVector>();
     }
 }
