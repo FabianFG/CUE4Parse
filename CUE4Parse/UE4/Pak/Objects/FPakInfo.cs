@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Numerics;
 using CUE4Parse.Compression;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.RSA;
@@ -204,16 +205,16 @@ public partial class FPakInfo
             }
         }
 
-        if (Ar.Game == GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is GAME_ArenaBreakoutInfinite)
         {
             EncryptionKeyGuid = Ar.Read<FGuid>();
+            Version = Ar.Read<EPakFileVersion>();
             Magic = Ar.Read<uint>();
             if (Magic != PAK_FILE_MAGIC_ArenaBreakoutInfinite) return;
             EncryptedIndex = Ar.Read<byte>() != 0;
-            IndexSize = Ar.Read<long>();
-            IndexOffset = Ar.Read<long>();
-            IndexHash = new FSHAHash(Ar);
-            Version = Ar.Read<EPakFileVersion>();
+            IndexHash = ABIDecryption.DecodeIndexHash(Ar.ReadBytes(FSHAHash.SIZE));
+            IndexOffset = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xD3A512UL);
+            IndexSize = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xB640093CUL);
             goto beforeCompression;
         }
 
@@ -596,6 +597,7 @@ public partial class FPakInfo
         SizeQQ = Size8a + 26,
         SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
         SizeBack4Blood = Size9,
+        SizeRocoKingdomWorld = Size9, // extra strategy id byte
         SizeHotta = Size9a, // additional int for custom pak version
 
         SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
@@ -604,7 +606,6 @@ public partial class FPakInfo
         SizeDuneAwakening = 261,
         SizeValorantSource = 286, // For older versions it was 282
         SizeKartRiderDrift = 397, // don't let this be SizeMax, it's way above average and cause issues
-        SizeRocoKingdomWorld = Size8a + 1 // extra strategy id byte
     }
 
     private static readonly OffsetsToTry[] _offsetsToTry =
