@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Numerics;
 using CUE4Parse.Compression;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.RSA;
@@ -206,14 +207,43 @@ public partial class FPakInfo
 
         if (Ar.Game == GAME_ArenaBreakoutInfinite)
         {
+            /*
+                S7 reorders some fields
+
+                Old Before S7：
+                Guid    Magic    EncryptedIndex    IndexSize    IndexOffset    IndexHash    Version    CompressionMethods
+
+                S7：
+                Guid    Version    Magic    EncryptedIndex    IndexHash    IndexOffset    IndexSize    CompressionMethods
+
+            */
+
             EncryptionKeyGuid = Ar.Read<FGuid>();
-            Magic = Ar.Read<uint>();
-            if (Magic != PAK_FILE_MAGIC_ArenaBreakoutInfinite) return;
-            EncryptedIndex = Ar.Read<byte>() != 0;
-            IndexSize = Ar.Read<long>();
-            IndexOffset = Ar.Read<long>();
-            IndexHash = new FSHAHash(Ar);
-            Version = Ar.Read<EPakFileVersion>();
+            var magicOrVersion = Ar.Read<uint>();
+            if (magicOrVersion == PAK_FILE_MAGIC_ArenaBreakoutInfinite)
+            {
+                Magic = magicOrVersion;
+                EncryptedIndex = Ar.Read<byte>() != 0;
+                IndexSize = Ar.Read<long>();
+                IndexOffset = Ar.Read<long>();
+                IndexHash = new FSHAHash(Ar);
+                Version = Ar.Read<EPakFileVersion>();
+            }
+            else
+            {
+
+                Version = (EPakFileVersion) magicOrVersion;
+                Magic = Ar.Read<uint>();
+                if (Magic != PAK_FILE_MAGIC_ArenaBreakoutInfinite) return;
+                EncryptedIndex = Ar.Read<byte>() != 0;
+
+                var hash = Ar.ReadBytes(FSHAHash.SIZE);
+                DecodeArenaBreakoutInfiniteIndexHash(hash);
+
+                IndexHash = new FSHAHash(hash);
+                IndexOffset = (long) DecodeArenaBreakoutInfiniteIndexValue(Ar.Read<ulong>(), 0xD3A512UL);
+                IndexSize = (long) DecodeArenaBreakoutInfiniteIndexValue(Ar.Read<ulong>(), 0xB640093CUL);
+            }
             goto beforeCompression;
         }
 
@@ -563,6 +593,21 @@ public partial class FPakInfo
         if (Version < EPakFileVersion.PakFile_Version_EncryptionKeyGuid)
         {
             EncryptionKeyGuid = default;
+        }
+    }
+
+    private static ulong DecodeArenaBreakoutInfiniteIndexValue(ulong encoded, ulong finalXor)
+    {
+        return BitOperations.RotateRight(encoded ^ 0xD72CAC4E59907DA0UL, 23) ^ finalXor;
+    }
+
+    private static void DecodeArenaBreakoutInfiniteIndexHash(Span<byte> hash)
+    {
+        var key = 0xC360A0B3AC0A1368UL;
+        for (var index = 0; index < hash.Length; index++)
+        {
+            hash[index] ^= (byte) (key >> ((index & 7) * 8));
+            key = BitOperations.RotateRight(key, 57);
         }
     }
 
