@@ -46,6 +46,11 @@ public class UTexture2D : UTexture
                 legacyMips = Ar.ReadArray(() => TextureFileCacheName.IsNone ? new FTexture2DMipMap(Ar) : new FTexture2DMipMap(Ar, TextureFileCacheName.Text));
             }
 
+            if (Ar.Game == GAME_Borderlands2 || Ar.Game == GAME_BorderlandsSequel)
+            {
+                Ar.Position += 16; // hash?
+            }
+
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_FILECACHE_GUIDS)
             {
                 Ar.Position += sizeof(uint) * 4; // FGuid - TextureFileCacheGuid_DEPRECATED

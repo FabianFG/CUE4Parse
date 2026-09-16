@@ -16,7 +16,6 @@ public class UBinkMediaTexture : UTexture;
 
 public class UTexture : UUnrealMaterial, IAssetUserData
 {
-    
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
     public TextureGroup LODGroup { get; private set; }
@@ -76,7 +75,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
         CookPlatformTilingSettings = GetOrDefault<ETextureCookPlatformTilingSettings>(nameof(CookPlatformTilingSettings));
         Palette = GetOrDefault(nameof(Palette), new FPackageIndex());
 
-        if (Ar.Game == GAME_APBReloaded)
+        if (Ar.Game == GAME_APBReloaded || Ar.Game == GAME_Borderlands2 || Ar.Game == GAME_BorderlandsSequel) // borderlands might be a hash instead of bulkdata
         {
             Ar.Position += 8 * 2; // Bulkdata headers
             return;

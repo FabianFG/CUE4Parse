@@ -207,6 +207,12 @@ namespace CUE4Parse.UE4.Objects.Engine
                 VertexFactoryMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
             }
 
+            if (Ar.Game == GAME_BorderlandsSequel)
+            {
+                ShaderCache = new FShaderCache { Shaders = [] }; // alot of changes so just ignore
+                return;
+            }
+
             ShaderCache = new FShaderCache(Ar);
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.GLOBAL_SHADER_FILE && Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_AUTO_SHADER_VERSIONING)

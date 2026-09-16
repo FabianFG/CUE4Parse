@@ -135,7 +135,7 @@ public class UStaticMesh : UObject
                  }
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERSION_18 && FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh && Ar.Game is not GAME_APBReloaded)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERSION_18 && FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh && Ar.Game is not GAME_APBReloaded && Ar.Game is not GAME_BorderlandsSequel)
             {
                 var Deprecated_HighResSourceMeshName = Ar.ReadFString();
                 var Deprecated_HighResSourceMeshCRC = Ar.Read<uint>();

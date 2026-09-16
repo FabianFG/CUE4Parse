@@ -194,10 +194,10 @@ public class FStaticMeshLODResources
     // Pre-UE4.23 code
     public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
     {
-
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE)
         {
             if (Ar.Game is GAME_Abzu) Ar.Position += 4;
+
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS)
             {
                 PositionVertexBuffer = new FPositionVertexBuffer(Ar);
@@ -289,7 +289,7 @@ public class FStaticMeshLODResources
             {
                 Ar.Position += 8; // bulkdata
             }
-            else if (!stripDataFlags.IsEditorDataStripped())
+            else if (!stripDataFlags.IsEditorDataStripped() && Ar.Game != GAME_Borderlands2 && Ar.Game != GAME_BorderlandsSequel)
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
