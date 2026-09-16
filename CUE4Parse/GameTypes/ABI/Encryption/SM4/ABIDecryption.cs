@@ -1,5 +1,7 @@
+using System.Numerics;
 using CUE4Parse.GameTypes.ABI.UE4.Lua;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
@@ -29,8 +31,8 @@ public static class ABIDecryption
     private static readonly byte[] _uassetDecryptMobileKey3A = [0xF6, 0xA5, 0xD8, 0x49, 0xF8, 0x69, 0xDA, 0x0D, 0xBC, 0x2D, 0x1B, 0x8C, 0xFD, 0x6E, 0xDE, 0x4F];
     #endregion
 
-    private static readonly byte[] uassetMagic = [0xc1, 0x83, 0x2a, 0x9e, 0xf9, 0xff, 0xff, 0xff];
-    private const int uassetMagicLength = 8;
+    private static readonly byte[] _uassetMagic = [0xc1, 0x83, 0x2a, 0x9e, 0xf9, 0xff, 0xff, 0xff];
+    private const int UassetMagicLength = 8;
 
     public static byte[] ABIDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
@@ -78,7 +80,7 @@ public static class ABIDecryption
             0x03000337 or 0x04000337 => (_uassetDecryptKey37, SM4Mode.C, SboxMode.Mode37),
             0x03000338 => (_uassetDecryptKey38, SM4Mode.C, SboxMode.Mode38),
             0x03000339 => (_uassetDecryptKey39, SM4Mode.D, SboxMode.Mode39),
-            0x0300033A => (_uassetDecryptKey3A, SM4Mode.PackageSummary3A, SboxMode.Mode3A),
+            0x0300033A => (_uassetDecryptKey3A, SM4Mode.E, SboxMode.Mode3A),
             0x04000338 => (_uassetDecryptMobileKey38, SM4Mode.C, SboxMode.Mode38Mobile),
             0x04000339 => (_uassetDecryptMobileKey39, SM4Mode.C, SboxMode.Mode39Mobile),
             0x0400033A => (_uassetDecryptMobileKey3A, SM4Mode.MobileD, SboxMode.Mode3AMobile),
@@ -86,17 +88,17 @@ public static class ABIDecryption
         };
 
         var encryptedLength = BitConverter.ToUInt16(bytes, 6);
-        var unencryptedLength = encryptedLength + uassetMagicLength;
+        var unencryptedLength = encryptedLength + UassetMagicLength;
         var output = new byte[bytes.Length];
-        Buffer.BlockCopy(uassetMagic, 0, output, 0, uassetMagicLength);
+        Buffer.BlockCopy(_uassetMagic, 0, output, 0, UassetMagicLength);
         Buffer.BlockCopy(bytes, unencryptedLength, output, unencryptedLength, bytes.Length - unencryptedLength);
 
         var encryptedBlock = new byte[encryptedLength];
-        Buffer.BlockCopy(bytes, uassetMagicLength, encryptedBlock, 0, encryptedLength);
+        Buffer.BlockCopy(bytes, UassetMagicLength, encryptedBlock, 0, encryptedLength);
 
         Sm4Helper.Decrypt(ref encryptedBlock, currentKey, mode, sboxMode);
 
-        Buffer.BlockCopy(encryptedBlock, 0, output, uassetMagicLength, encryptedLength);
+        Buffer.BlockCopy(encryptedBlock, 0, output, UassetMagicLength, encryptedLength);
         return output;
     }
 
@@ -112,7 +114,7 @@ public static class ABIDecryption
         {
             0x45 when game is GAME_ArenaBreakoutMobile => (_iniDecryptMobileKey45, SM4Mode.None),
             0x46 when game is GAME_ArenaBreakoutMobile => (_iniDecryptMobileKey46, SM4Mode.F),
-            >= 0x41 and <= 0x46 => (_iniDecryptKey, (SM4Mode) (encryptionVersion - 0x40)), // For PC
+            0x41 when game is GAME_ArenaBreakoutInfinite => (_iniDecryptKey, SM4Mode.A),
             _ => throw new ParserException($"Unknown ABI SM4 mode: 0x{encryptionVersion:X2}")
         };
 
@@ -150,5 +152,20 @@ public static class ABIDecryption
         };
 
         Sm4Helper.Decrypt(ref data, key, SM4Mode.B, SboxMode.None);
+    }
+
+    public static long DecodeIndexInfo(ulong encoded, ulong finalXor)
+        => (long) (BitOperations.RotateRight(encoded ^ 0xD72CAC4E59907DA0UL, 23) ^ finalXor);
+
+    public static FSHAHash DecodeIndexHash(Span<byte> hash)
+    {
+        var key = 0xC360A0B3AC0A1368UL;
+        for (var index = 0; index < hash.Length; index++)
+        {
+            hash[index] ^= (byte) (key >> ((index & 7) * 8));
+            key = BitOperations.RotateLeft(key, 7);
+        }
+
+        return new FSHAHash(hash);
     }
 }

@@ -205,45 +205,16 @@ public partial class FPakInfo
             }
         }
 
-        if (Ar.Game == GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is GAME_ArenaBreakoutInfinite)
         {
-            /*
-                S7 reorders some fields
-
-                Old Before S7：
-                Guid    Magic    EncryptedIndex    IndexSize    IndexOffset    IndexHash    Version    CompressionMethods
-
-                S7：
-                Guid    Version    Magic    EncryptedIndex    IndexHash    IndexOffset    IndexSize    CompressionMethods
-
-            */
-
             EncryptionKeyGuid = Ar.Read<FGuid>();
-            var magicOrVersion = Ar.Read<uint>();
-            if (magicOrVersion == PAK_FILE_MAGIC_ArenaBreakoutInfinite)
-            {
-                Magic = magicOrVersion;
-                EncryptedIndex = Ar.Read<byte>() != 0;
-                IndexSize = Ar.Read<long>();
-                IndexOffset = Ar.Read<long>();
-                IndexHash = new FSHAHash(Ar);
-                Version = Ar.Read<EPakFileVersion>();
-            }
-            else
-            {
-
-                Version = (EPakFileVersion) magicOrVersion;
-                Magic = Ar.Read<uint>();
-                if (Magic != PAK_FILE_MAGIC_ArenaBreakoutInfinite) return;
-                EncryptedIndex = Ar.Read<byte>() != 0;
-
-                var hash = Ar.ReadBytes(FSHAHash.SIZE);
-                DecodeArenaBreakoutInfiniteIndexHash(hash);
-
-                IndexHash = new FSHAHash(hash);
-                IndexOffset = (long) DecodeArenaBreakoutInfiniteIndexValue(Ar.Read<ulong>(), 0xD3A512UL);
-                IndexSize = (long) DecodeArenaBreakoutInfiniteIndexValue(Ar.Read<ulong>(), 0xB640093CUL);
-            }
+            Version = Ar.Read<EPakFileVersion>();
+            Magic = Ar.Read<uint>();
+            if (Magic != PAK_FILE_MAGIC_ArenaBreakoutInfinite) return;
+            EncryptedIndex = Ar.Read<byte>() != 0;
+            IndexHash = ABIDecryption.DecodeIndexHash(Ar.ReadBytes(FSHAHash.SIZE));
+            IndexOffset = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xD3A512UL);
+            IndexSize = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xB640093CUL);
             goto beforeCompression;
         }
 
@@ -596,21 +567,6 @@ public partial class FPakInfo
         }
     }
 
-    private static ulong DecodeArenaBreakoutInfiniteIndexValue(ulong encoded, ulong finalXor)
-    {
-        return BitOperations.RotateRight(encoded ^ 0xD72CAC4E59907DA0UL, 23) ^ finalXor;
-    }
-
-    private static void DecodeArenaBreakoutInfiniteIndexHash(Span<byte> hash)
-    {
-        var key = 0xC360A0B3AC0A1368UL;
-        for (var index = 0; index < hash.Length; index++)
-        {
-            hash[index] ^= (byte) (key >> ((index & 7) * 8));
-            key = BitOperations.RotateRight(key, 57);
-        }
-    }
-
     private enum OffsetsToTry
     {
         Size = sizeof(int) * 2 + sizeof(long) * 2 + 20 + /* new fields */ 1 + 16, // sizeof(FGuid)
@@ -641,6 +597,7 @@ public partial class FPakInfo
         SizeQQ = Size8a + 26,
         SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
         SizeBack4Blood = Size9,
+        SizeRocoKingdomWorld = Size9, // extra strategy id byte
         SizeHotta = Size9a, // additional int for custom pak version
 
         SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
@@ -649,7 +606,6 @@ public partial class FPakInfo
         SizeDuneAwakening = 261,
         SizeValorantSource = 286, // For older versions it was 282
         SizeKartRiderDrift = 397, // don't let this be SizeMax, it's way above average and cause issues
-        SizeRocoKingdomWorld = Size8a + 1 // extra strategy id byte
     }
 
     private static readonly OffsetsToTry[] _offsetsToTry =
