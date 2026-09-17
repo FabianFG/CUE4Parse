@@ -112,7 +112,7 @@ public abstract class PrimitiveComponentDto : SceneComponentDto
         {
             IsVisible = visible;
         }
-        else if (component.TryGetValue(out bool hidden, "bHiddenInGame"))
+        else if (component.TryGetValue(out bool hidden, "bHiddenInGame", "HiddenInGame", "HiddenGame", "bIsHidden"))
         {
             IsVisible = !hidden;
         }
