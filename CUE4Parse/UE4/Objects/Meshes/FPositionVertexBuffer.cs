@@ -137,7 +137,7 @@ public class FPositionVertexBuffer
                 Verts[i] = vertsHalf[i];
             return;
         }
-        if (Ar.Game is GAME_Splitgate2 )
+        if (Ar.Game is GAME_Splitgate2 or GAME_Empulse)
         {
             Ar.Position += 1;
             Verts = Stride == 8 ? Ar.ReadBulkArray<FVector>(() => Ar.Read<FHalfVector4>()) : Ar.ReadBulkArray<FVector>();
