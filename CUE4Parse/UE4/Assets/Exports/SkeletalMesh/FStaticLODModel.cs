@@ -694,7 +694,7 @@ public class FStaticLODModel
         {
             GAME_NeedForSpeedMobile => 32,
             GAME_StarWarsJediSurvivor => 4,
-            GAME_Splitgate2 => 1,
+            GAME_Splitgate2 or GAME_Empulse => 1,
             _ => 0
         };
 

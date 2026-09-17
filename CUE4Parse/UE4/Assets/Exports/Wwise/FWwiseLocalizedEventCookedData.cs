@@ -16,12 +16,7 @@ public readonly struct FWwiseLocalizedEventCookedData
 
     public FWwiseLocalizedEventCookedData(FStructFallback fallback)
     {
-        EventLanguageMap = [];
-        foreach (var kv in fallback.GetOrDefault<UScriptMap>(nameof(EventLanguageMap)).Properties)
-        {
-            EventLanguageMap[kv.Key.GetValue<FWwiseLanguageCookedData>()] = kv.Value?.GetValue<FWwiseEventCookedData>();
-        }
-
+        EventLanguageMap = fallback.GetOrDefault<Dictionary<FWwiseLanguageCookedData, FWwiseEventCookedData?>>(nameof(EventLanguageMap), []);
         DebugName = fallback.GetOrDefault<FName>(nameof(DebugName));
         EventId = (uint)fallback.GetOrDefault<int>(nameof(EventId), comparisonType: StringComparison.OrdinalIgnoreCase);
     }

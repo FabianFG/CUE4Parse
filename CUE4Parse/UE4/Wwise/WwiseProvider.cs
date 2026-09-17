@@ -150,6 +150,20 @@ public partial class WwiseProvider
                 CacheSoundBankCookedData(soundBank);
             }
 
+            foreach (var kvp in eventData.Value.AudioNodes)
+            {
+                if (kvp.Value is not { } node) continue;
+                foreach (var media in node.Media)
+                {
+                    CacheMediaCookedData(media);
+                }
+
+                foreach (var soundBank in node.SoundBanks)
+                {
+                    CacheSoundBankCookedData(soundBank);
+                }
+            }
+
             foreach (var leaf in eventData.Value.SwitchContainerLeaves)
             {
                 foreach (var soundBank in leaf.SoundBanks)
@@ -173,6 +187,17 @@ public partial class WwiseProvider
                 ProcessMediaCookedData(ownerDirectory, media, languageData, results);
             }
 
+            foreach (var kvp in eventData.Value.AudioNodes)
+            {
+                if (kvp.Value is not { } node) continue;
+                foreach (var media in node.Media)
+                {
+                    if (!visitedMedia.Add(media.MediaId))
+                        continue;
+                    ProcessMediaCookedData(ownerDirectory, media, languageData, results);
+                }
+            }
+
             foreach (var leaf in eventData.Value.SwitchContainerLeaves)
             {
                 foreach (var media in leaf.Media)
@@ -189,18 +214,7 @@ public partial class WwiseProvider
             if (!eventData.HasValue)
                 continue;
 
-            foreach (var soundBank in eventData.Value.SoundBanks)
-            {
-                ProcessSoundBankCookedData(ownerDirectory, eventData, results, visitedMedia);
-            }
-
-            foreach (var leaf in eventData.Value.SwitchContainerLeaves)
-            {
-                foreach (var soundBank in leaf.SoundBanks)
-                {
-                    ProcessSoundBankCookedData(ownerDirectory, eventData, results, visitedMedia);
-                }
-            }
+            ProcessSoundBankCookedData(ownerDirectory, eventData, results, visitedMedia);
         }
 
         return results;
