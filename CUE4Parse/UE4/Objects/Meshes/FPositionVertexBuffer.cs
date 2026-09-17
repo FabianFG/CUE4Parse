@@ -129,7 +129,7 @@ public class FPositionVertexBuffer
                 return;
             }
         }
-        if (Ar.Game is GAME_Gothic1Remake && Stride == 8)
+        if (Ar.Game is GAME_Gothic1Remake or GAME_DestroyAllHumans2Reprobed && Stride == 8)
         {
             var vertsHalf = Ar.ReadBulkArray<FHalfVector4>();
             Verts = new FVector[vertsHalf.Length];

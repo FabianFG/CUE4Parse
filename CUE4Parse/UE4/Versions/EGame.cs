@@ -262,6 +262,7 @@ public enum EGame : uint
         GAME_GearsofWarEDay = GAME_UE5_6 + 12,
         GAME_Zeus = GAME_UE5_6 + 13,
         GAME_InZOI = GAME_UE5_6 + 14,
+        GAME_DestroyAllHumans2Reprobed = GAME_UE5_6 + 15,
     GAME_UE5_7 = GameUtils.GameUe5Base + (7 << 16),
         GAME_TitanQuest2 = GAME_UE5_7 + 1,
         GAME_Squad = GAME_UE5_7 + 2,
