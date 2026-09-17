@@ -2,6 +2,7 @@ using System.Text;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Core.Serialization;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
@@ -123,6 +124,12 @@ public class UsmapParser
 
             // Some companies man... Their duplicated enums, even with different values, have to be ignored.
             enums.TryAdd(enumName, enumNames);
+        }
+
+        if (Ar.Version >= EUsmapVersion.PropertyFlags)
+        {
+            var flagLutCount = Ar.Read<uint>();
+            Ar.FlagLUT = flagLutCount == 0 ? [] : Ar.ReadArray<EPropertyFlags>((int) flagLutCount);
         }
 
         var structCount = Ar.Read<uint>();
