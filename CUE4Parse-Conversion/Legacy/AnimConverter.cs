@@ -183,7 +183,7 @@ namespace CUE4Parse_Conversion.Animations
                 }
                 case FACLCompressedAnimData aclData:
                 {
-                    var tracks = aclData.GetCompressedTracks();
+                    using var tracks = aclData.GetCompressedTracks();
                     var tracksHeader = tracks.GetTracksHeader();
                     var numSamples = (int) tracksHeader.NumSamples;
 
