@@ -76,6 +76,7 @@ public static class PUBGMobileSM4
         [34] = "e5901d4631734da09feb",
         [35] = "e31c6f4e994cb4330504",
         [36] = "df473da3aa9b5704ce73",
+        [37] = "46e490567d02cdb312b3",
         [42] = "56eed0401753d9e5ee86"
     };
 
