@@ -30,7 +30,8 @@ public static class UsmapProperties
         var arrayDim = Ar.Read<byte>();
         var name = Ar.ReadName(nameLut)!;
         var type = ParsePropertyType(Ar, nameLut);
-        return new PropertyInfo(index, name, type, arrayDim);
+        var flags = Ar.ReadPropertyFlags(name);
+        return new PropertyInfo(index, name, type, arrayDim, flags);
     }
 
     public static PropertyType ParsePropertyType(FUsmapReader Ar, IReadOnlyList<string> nameLut)
