@@ -253,6 +253,7 @@ public enum EGame : uint
         GAME_Solasta2 = GAME_UE5_6 + 3,
         GAME_NevernessToEverness = GAME_UE5_6 + 4,
         GAME_DeadByDaylight_Old = GAME_UE5_6 + 5,
+        GAME_Placeholder9 = GAME_UE5_6 + 6,
         GAME_Subnautica2 = GAME_UE5_6 + 7,
         GAME_LEGOBatmanLegacyoftheDarkKnight = GAME_UE5_6 + 8,
         GAME_Fatekeeper = GAME_UE5_6 + 9,
