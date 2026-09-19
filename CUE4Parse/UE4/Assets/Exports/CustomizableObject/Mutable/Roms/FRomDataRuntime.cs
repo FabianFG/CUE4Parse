@@ -5,7 +5,10 @@ namespace CUE4Parse.UE4.Assets.Exports.CustomizableObject.Mutable.Roms;
 
 public struct FRomDataRuntime
 {
-    [JsonIgnore] private uint Packed;
+    [JsonIgnore]
+#pragma warning disable CS0649
+    private uint Packed;
+#pragma warning restore CS0649
 
     public uint Size => Packed & 0x3FFFFFFF;
     public ERomDataType Type => (ERomDataType)((Packed >> 30) & 1);

@@ -33,7 +33,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public static Vector128<float> VectorReplicate(Vector128<float> vec, byte elementIndex)
         {
+#pragma warning disable CA1857
             return Sse.Shuffle(vec, vec, ShuffleMask(elementIndex, elementIndex, elementIndex, elementIndex));
+#pragma warning restore CA1857
         }
 
         public static Vector128<float> VectorMultiply(Vector128<float> vec1, Vector128<float> vec2)
@@ -43,7 +45,9 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public static Vector128<float> VectorSwizzle(Vector128<float> vec, byte x, byte y, byte z, byte w)
         {
+#pragma warning disable CA1857
             return Sse.Shuffle(vec, vec, ShuffleMask(x, y, z, w));
+#pragma warning restore CA1857
         }
 
         public static Vector128<float> VectorMultiplyAdd(Vector128<float> vec1, Vector128<float> vec2, Vector128<float> vec3)

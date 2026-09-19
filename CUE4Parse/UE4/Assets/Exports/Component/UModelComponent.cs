@@ -85,7 +85,7 @@ public class FModelElement
 
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
-            LegacyMapBuildData.IrrelevantLights = Ar.ReadArray<FGuid>();
+            LegacyMapBuildData!.IrrelevantLights = Ar.ReadArray<FGuid>();
         }
     }
 }

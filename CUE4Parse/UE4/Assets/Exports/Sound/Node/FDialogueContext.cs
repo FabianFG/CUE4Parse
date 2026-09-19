@@ -40,4 +40,20 @@ public struct FDialogueContext
     }
 
     public static bool operator !=(FDialogueContext left, FDialogueContext right) => !(left == right);
+
+    public override bool Equals(object? obj) => obj is FDialogueContext other && this == other;
+
+    public bool Equals(FDialogueContext other) => this == other;
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Speaker.ResolvedObject?.GetFullName(), StringComparer.OrdinalIgnoreCase);
+        hash.Add(Targets.Length);
+        foreach (var target in Targets)
+        {
+            hash.Add(target.ResolvedObject?.GetFullName(), StringComparer.OrdinalIgnoreCase);
+        }
+        return hash.ToHashCode();
+    }
 }

@@ -1,5 +1,6 @@
 using CUE4Parse.UE4;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.i18N;
 
 namespace CUE4Parse.GameTypes.OtherGames.Objects;
@@ -36,6 +37,7 @@ public class FSUDSValue : IUStruct
             //ESUDSValueType.Gender => Ar.Read<FName>(),
             ESUDSValueType.Name or ESUDSValueType.Variable => Ar.ReadFString(),
             ESUDSValueType.Empty => null,
+            _ => throw new ParserException($"Unknown ESUDSValueType value {Type}")
         };
     }
 }

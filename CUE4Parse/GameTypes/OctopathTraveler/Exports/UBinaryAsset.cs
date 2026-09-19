@@ -122,7 +122,6 @@ public class UBinaryAsset : UObject
 
         UScriptArray ReadArray(FArchive Ar)
         {
-            var pos = Ar.Position;
             var type = Ar.Read<byte>();
 
             var length = type switch

@@ -907,7 +907,7 @@ public static class BlueprintDecompilerUtils
             }
             case EPropertyType.AssetObjectProperty: // AssetObjectProperty is the old name of SoftObjectProperty
             {
-                var softObjectPath = propertyTag.Tag.GenericValue;
+                var softObjectPath = propertyTag?.Tag?.GenericValue ?? "None";
 
                 type = "FSoftObjectPath";
                 value = $"FSoftObjectPath(\"{softObjectPath}\")";
@@ -1421,8 +1421,8 @@ public static class BlueprintDecompilerUtils
             }
             case EX_Context context:
             {
-                var function = GetLineExpression(context?.ContextExpression).SubstringAfter("::");
-                var obj = GetLineExpression(context?.ObjectExpression);
+                var function = GetLineExpression(context.ContextExpression).SubstringAfter("::");
+                var obj = GetLineExpression(context.ObjectExpression);
 
                 var customStringBuilder = new CustomStringBuilder();
                 if (expression is EX_Context_FailSilent)
@@ -1536,7 +1536,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_SetArray setArray:
             {
-                var variable = GetLineExpression(setArray.AssigningProperty);
+                var variable = GetLineExpression(setArray.AssigningProperty); // todo: ArrayInnerProp
 
                 var values = new List<string>(setArray.Elements.Length);
                 foreach (var element in setArray.Elements)
@@ -1970,15 +1970,17 @@ public static class BlueprintDecompilerUtils
             {
 #if DEBUG
                 return "throw std::runtime_error(\"TracePoint hit\");";
-#endif
+#else
                 return "";
+#endif
             }
             case EX_Breakpoint:
             {
 #if DEBUG
                 return "breakpoint;";
-#endif
+#else
                 return "";
+#endif
             }
             case EX_Nothing:
             case EX_NothingInt32:

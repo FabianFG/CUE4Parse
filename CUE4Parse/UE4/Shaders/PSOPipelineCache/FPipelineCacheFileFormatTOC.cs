@@ -103,8 +103,14 @@ public readonly struct FPipelineStateStats
 
 public class FPipelineCacheFileFormatTOCConverter : JsonConverter<FPipelineCacheFileFormatTOC>
 {
-    public override void WriteJson(JsonWriter writer, FPipelineCacheFileFormatTOC value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FPipelineCacheFileFormatTOC? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
         writer.WritePropertyName(nameof(FPipelineCacheFileFormatTOC.SortedOrder));
         writer.WriteValue(value.SortedOrder);
@@ -168,7 +174,7 @@ public class FPipelineCacheFileFormatTOCConverter : JsonConverter<FPipelineCache
         writer.WriteEndObject();
     }
 
-    public override FPipelineCacheFileFormatTOC ReadJson(JsonReader reader, Type objectType, FPipelineCacheFileFormatTOC existingValue, bool hasExistingValue,
+    public override FPipelineCacheFileFormatTOC ReadJson(JsonReader reader, Type objectType, FPipelineCacheFileFormatTOC? existingValue, bool hasExistingValue,
         JsonSerializer serializer)
         => throw new NotImplementedException();
 }

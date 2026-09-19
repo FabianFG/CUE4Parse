@@ -381,7 +381,7 @@ public static class TextureEncoder
         return retPtr;
     }
 
-    private static unsafe nint ConvertTo8<T>(EPixelFormat pixelFormat, int width, int height, ReadOnlySpan<byte> inp, Func<T, byte> conversionFunc, bool flipOrder = false)
+    private static unsafe nint ConvertTo8<T>(EPixelFormat pixelFormat, int width, int height, ReadOnlySpan<byte> inp, Func<T, byte> conversionFunc, bool flipOrder = false) where T : unmanaged
     {
         if (!PixelFormatUtils.PixelFormats.TryGetValue(pixelFormat, out var formatInfo))
             throw new NotImplementedException("Unsupported pixel format: " + pixelFormat);

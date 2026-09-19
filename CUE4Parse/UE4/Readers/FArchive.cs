@@ -78,7 +78,7 @@ namespace CUE4Parse.UE4.Readers
             CheckReadSize(length);
 
             var result = new byte[length];
-            Read(result, 0, length);
+            ReadExactly(result, 0, length);
             return result;
         }
 
@@ -100,7 +100,7 @@ namespace CUE4Parse.UE4.Readers
             var size = Unsafe.SizeOf<T>();
             var saved = Position;
             var buffer = ArrayPool<byte>.Shared.Rent(size);
-            Read(buffer, 0,  size);
+            ReadExactly(buffer, 0,  size);
             Position = saved;
             var result = Unsafe.ReadUnaligned<T>(ref buffer[0]);
             ArrayPool<byte>.Shared.Return(buffer);
@@ -515,7 +515,7 @@ namespace CUE4Parse.UE4.Readers
             CheckReadSize(length);
 
             var result = new byte[length];
-            Read(result, 0, length);
+            ReadExactly(result, 0, length);
             return result;
         }
 
@@ -620,7 +620,7 @@ namespace CUE4Parse.UE4.Readers
             //	assume it was CompressionFormatToDecodeOldV1Files (usually Zlib)
             var compressionFormatToDecode = compressionFormatToDecodeOldV1Files;
 
-            var bHeaderWasValid = false;
+            // var bHeaderWasValid = false;
             var bWasByteSwapped = false;
             var bReadCompressionFormat = false;
 
@@ -633,20 +633,20 @@ namespace CUE4Parse.UE4.Readers
             if (packageFileTag.CompressedSize == PACKAGE_FILE_TAG || packageFileTag.CompressedSize == PACKAGE_FILE_TAG_LOS)
             {
                 // v1 header, not swapped
-                bHeaderWasValid = true;
+                // bHeaderWasValid = true;
             }
             else if (packageFileTag.CompressedSize == PACKAGE_FILE_TAG_SWAPPED ||
                      packageFileTag.CompressedSize == (long) BYTESWAP_ORDER64(PACKAGE_FILE_TAG))
             {
                 // v1 header, swapped
-                bHeaderWasValid = true;
+                // bHeaderWasValid = true;
                 bWasByteSwapped = true;
             }
             else if (packageFileTag.CompressedSize == (long) ARCHIVE_V2_HEADER_TAG ||
                      packageFileTag.CompressedSize == (long) BYTESWAP_ORDER64(ARCHIVE_V2_HEADER_TAG))
             {
                 // v2 header
-                bHeaderWasValid = true;
+                // bHeaderWasValid = true;
                 bWasByteSwapped = (packageFileTag.CompressedSize != (long) ARCHIVE_V2_HEADER_TAG);
                 bReadCompressionFormat = true;
 
@@ -745,7 +745,7 @@ namespace CUE4Parse.UE4.Readers
             {
                 ref var chunk = ref compressionChunks[chunkIndex];
                 // Read compressed data.
-                Read(compressedBuffer, 0, (int) chunk.CompressedSize);
+                ReadExactly(compressedBuffer, 0, (int) chunk.CompressedSize);
 
                 // Decompress into dest pointer directly.
                 try

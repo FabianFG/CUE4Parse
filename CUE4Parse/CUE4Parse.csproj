@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>C# Parser for Unreal Engine packages &amp; assets</Description>
   </PropertyGroup>
@@ -13,6 +14,7 @@
     <PackageReference Include="GenericReader" />
     <PackageReference Include="Infrablack.UE4Config" />
     <PackageReference Include="LZMA-SDK" />
+    <PackageReference Include="Microsoft.Bcl.Memory" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="OffiUtils" />
     <PackageReference Include="OodleSharp" />

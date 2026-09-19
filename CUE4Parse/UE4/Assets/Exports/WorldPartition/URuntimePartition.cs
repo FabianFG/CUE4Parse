@@ -6,7 +6,7 @@ namespace CUE4Parse.UE4.Assets.Exports.WorldPartition;
 
 public class URuntimePartition : UObject
 {
-    public FName Name;
+    public FName RuntimeName;
     public bool bBlockOnSlowStreaming;
     public bool bClientOnlyVisible;
     public int Priority;
@@ -19,7 +19,7 @@ public class URuntimePartition : UObject
     {
         base.Deserialize(Ar, validPos);
         
-        Name = GetOrDefault<FName>(nameof(Name));
+        RuntimeName = GetOrDefault<FName>(nameof(Name));
         bBlockOnSlowStreaming = GetOrDefault(nameof(bBlockOnSlowStreaming), false);
         bClientOnlyVisible = GetOrDefault(nameof(bClientOnlyVisible), false);
         Priority = GetOrDefault<int>(nameof(Priority));

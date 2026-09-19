@@ -23,8 +23,14 @@ public class FCacheEventTrack : FStructFallback
 
 public class FCacheEventTrackConverter : JsonConverter<FCacheEventTrack>
 {
-    public override void WriteJson(JsonWriter writer, FCacheEventTrack value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FCacheEventTrack? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
         foreach (var property in value.Properties)
         {
@@ -35,7 +41,7 @@ public class FCacheEventTrackConverter : JsonConverter<FCacheEventTrack>
         serializer.Serialize(writer, value.Events);
         writer.WriteEndObject();
     }
-    public override FCacheEventTrack ReadJson(JsonReader reader, Type objectType, FCacheEventTrack existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override FCacheEventTrack ReadJson(JsonReader reader, Type objectType, FCacheEventTrack? existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

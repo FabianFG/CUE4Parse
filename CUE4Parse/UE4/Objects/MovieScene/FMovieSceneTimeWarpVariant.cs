@@ -65,8 +65,14 @@ public class FMovieSceneTimeWarpVariant : IUStruct
 
 public class FMovieSceneTimeWarpVariantConverter : JsonConverter<FMovieSceneTimeWarpVariant>
 {
-    public override void WriteJson(JsonWriter writer, FMovieSceneTimeWarpVariant value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FMovieSceneTimeWarpVariant? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
         switch (value.Type)
         {

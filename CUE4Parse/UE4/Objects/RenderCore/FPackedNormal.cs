@@ -56,6 +56,10 @@ namespace CUE4Parse.UE4.Objects.RenderCore
 
         public static bool operator ==(FPackedNormal a, FPackedNormal b) => a.Data == b.Data && a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
         public static bool operator !=(FPackedNormal a, FPackedNormal b) => a.Data != b.Data || a.X != b.X || a.Y != b.Y || a.Z != b.Z || a.W != b.W;
+        public override bool Equals(object? obj) => obj is FPackedNormal other && this == other;
+        public bool Equals(FPackedNormal? other) => other is not null && this == other;
+
+        public override int GetHashCode() => Data.GetHashCode();
     }
 
     public struct FDeprecatedSerializedPackedNormal

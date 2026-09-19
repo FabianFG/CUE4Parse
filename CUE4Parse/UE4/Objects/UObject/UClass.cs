@@ -104,7 +104,7 @@ public class UClass : UStruct
 
     public string DecompileBlueprintToPseudo(UClassCookedMetaData? cookedMetaData = null)
     {
-        BlueprintDecompilerUtils.Mappings = this.Owner.Mappings;
+        BlueprintDecompilerUtils.Mappings = Owner?.Mappings;
         var derivedClass = BlueprintDecompilerUtils.GetClassWithPrefix(this);
         var baseClass = BlueprintDecompilerUtils.GetClassWithPrefix(SuperStruct.Load<UStruct>());
         var accessSpecifier = Flags.HasFlag(EObjectFlags.RF_Public) ? "public" : "private";
@@ -299,7 +299,7 @@ public class UClass : UStruct
                 stringBuilder.CloseBlock("};");
                 return stringBuilder.ToString();
             }
-            var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
+            var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function?.Name, out var jumpList) ? jumpList : [];
             for (int i = 0; i < function.ScriptBytecode.Length; i++)
             {
                 var kismetExpression = function.ScriptBytecode[i];

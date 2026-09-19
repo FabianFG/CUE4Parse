@@ -609,7 +609,7 @@ public class CrcCalculatorStream : Stream, IDisposable
     // is no length set.  So we validate the length limit in those ctors that use an
     // explicit param, otherwise we don't validate, because it could be our special
     // value.
-    CrcCalculatorStream(bool leaveOpen, long length, Stream stream, CRC32 crc32)
+    CrcCalculatorStream(bool leaveOpen, long length, Stream stream, CRC32? crc32)
     {
         if (stream == null) throw new ArgumentNullException("stream");
         _innerStream = stream;

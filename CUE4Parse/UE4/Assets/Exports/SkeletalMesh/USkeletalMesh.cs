@@ -230,7 +230,7 @@ public partial class USkeletalMesh : USkinnedAsset
         if (Ar.Game == GAME_WorldofJadeDynasty)
         {
             _ = new FStripDataFlags(Ar);
-            for (var i = 0; i < LODModels.Length; i++)
+            for (var i = 0; i < LODModels?.Length; i++)
             {
                 if (Ar.ReadBoolean() && GetOrDefault<bool>("bGenerateMeshDistanceField")) _ = new FDistanceFieldVolumeData5(Ar);
             }

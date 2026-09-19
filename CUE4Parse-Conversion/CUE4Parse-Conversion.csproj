@@ -2,12 +2,14 @@
 
   <PropertyGroup>
     <RootNamespace>CUE4Parse_Conversion</RootNamespace>
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<Description>CUE4Parse Conversion</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AssetRipper.TextureDecoder" />
+    <PackageReference Include="Microsoft.Bcl.Memory" />
     <PackageReference Include="SharpGLTF.Core" />
     <PackageReference Include="SharpGLTF.Toolkit" />
     <PackageReference Include="SixLabors.ImageSharp" />
