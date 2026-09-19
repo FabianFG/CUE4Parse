@@ -79,8 +79,8 @@ public class ActorDto : ObjectDto
                     case FFoliageStaticMesh staticMesh:
                         yield return staticMesh.Component;
                         break;
-                    case FFoliageActor:
-                        throw new NotImplementedException("FoliageActor is not supported yet");
+                    // case FFoliageActor: // FFoliageActor.ActorInstances seem to be included in InstanceComponents already
+                    //     throw new NotImplementedException("FoliageActor is not supported yet");
                 }
             }
         }
