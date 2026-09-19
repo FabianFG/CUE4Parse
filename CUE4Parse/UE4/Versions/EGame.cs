@@ -253,7 +253,6 @@ public enum EGame : uint
         GAME_Solasta2 = GAME_UE5_6 + 3,
         GAME_NevernessToEverness = GAME_UE5_6 + 4,
         GAME_DeadByDaylight_Old = GAME_UE5_6 + 5,
-        GAME_ConanExilesEnhanced = GAME_UE5_6 + 6,
         GAME_Subnautica2 = GAME_UE5_6 + 7,
         GAME_LEGOBatmanLegacyoftheDarkKnight = GAME_UE5_6 + 8,
         GAME_Fatekeeper = GAME_UE5_6 + 9,
@@ -274,6 +273,7 @@ public enum EGame : uint
         GAME_Bringer = GAME_UE5_7 + 8,
         GAME_ArcRaiders = GAME_UE5_7 + 9,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
+        GAME_ConanExilesEnhanced = GAME_UE5_8 + 1,
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 
     GAME_UE5_LATEST = GAME_UE5_9,
