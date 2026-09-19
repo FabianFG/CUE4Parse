@@ -3,6 +3,15 @@ project(CUE4Parse-Natives CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
+include(CheckCXXCompilerFlag)
+
+# Clang 19+ (incl. Apple Clang shipping with Xcode 16 and newer) turns
+# -Wmissing-template-arg-list-after-template-kw into an error for the
+# `x.template decompress_tracks(...)` pattern used throughout the vendored ACL
+# headers. Probe the positive form of the flag (GCC silently accepts unknown
+# -Wno-* options, so probing the negative form yields false positives).
+check_cxx_compiler_flag("-Wmissing-template-arg-list-after-template-kw" HAS_MISSING_TEMPLATE_ARG_LIST_WARNING)
+
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/ACL/external/acl/includes")
     set(WITH_ACL 1)
@@ -32,6 +41,10 @@ include_directories("${PROJECT_SOURCE_DIR}/common")
 
 add_library("${PROJECT_NAME}" SHARED ${SOURCES})
 set_target_properties("${PROJECT_NAME}" PROPERTIES PREFIX "")
+
+if (HAS_MISSING_TEMPLATE_ARG_LIST_WARNING)
+    target_compile_options("${PROJECT_NAME}" PRIVATE -Wno-missing-template-arg-list-after-template-kw)
+endif()
 
 # Oodle
 if (WITH_Oodle)
