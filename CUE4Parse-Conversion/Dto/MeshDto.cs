@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
@@ -264,6 +265,22 @@ public class StaticMeshDto : MeshDto<MeshVertex>
     public StaticMeshDto(USplineMeshComponent spline, EMeshQuality quality = EMeshQuality.All) : this(spline.GetStaticMesh().Load<UStaticMesh>() ?? throw new ArgumentNullException(nameof(spline), "Spline mesh has no static mesh"), quality, ENaniteMeshFormat.NoNanite, spline)
     {
 
+    }
+
+    public StaticMeshDto(UIRMesh mesh) : base(mesh, new MeshMaterialDto[mesh.Materials.Length])
+    {
+        for (var i = 0; i < Materials.Length; i++)
+        {
+            Materials[i] = new MeshMaterialDto($"MaterialSlot_{i}"); // USD doesn't like empty materials
+        }
+
+        if (mesh.MeshBuffers.Length > 0 && mesh.Sections.Length > 0)
+        {
+            LODs.Add(MeshLodDto<MeshVertex>.FromIRMesh(this, mesh));
+        }
+
+        Bounds = mesh.Bounds;
+        SetLodSuffixes();
     }
 
     private void ParseMeshRenderData(FStaticMeshRenderData renderData, EMeshQuality quality, USplineMeshComponent? spline = null)
