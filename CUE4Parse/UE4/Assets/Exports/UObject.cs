@@ -105,6 +105,7 @@ public class UObject : AbstractPropertyHolder
     public ResolvedObject? Template;
     public FGuid? ObjectGuid { get; private set; }
     public EObjectFlags Flags;
+    public EObjectFlagsLegacy FlagsLegacy;
     public UStruct? SerializedSparseClassDataStruct;
     public FStructFallback? SerializedSparseClassData;
     // field for any custom data
@@ -137,82 +138,34 @@ public class UObject : AbstractPropertyHolder
         }
         else
         {
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release40)
+            if (Ar.Game < GAME_UE4_0)
             {
-                Ar.Position += sizeof(int) * 2; // int - TempNum, TempMax
-            }
-
-            if (Class?.Name.Text == null && Ar.Game < GAME_UE4_0)
-            {
-                Ar.Position = validPos;
-                return; // there some missing data after this
-            }
-
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.Release47)
-            {
-                var node = 0;
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release51)
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.Release40)
                 {
-                    node = Ar.Read<int>(); // FPackageIndex - Node
-                    Ar.Position += sizeof(int); // FPackageIndex - StateNode
+                    Ar.Position += sizeof(int) * 2; // int - TempNum, TempMax
                 }
-                else
+
+                if (FlagsLegacy.HasFlag(EObjectFlagsLegacy.HasStack) || Ar.Ver < EUnrealEngineObjectUE3Version.Release47 && !FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject))
                 {
-                    var oldClass = Ar.Read<int>(); // FPackageIndex - OldClass
-                    if (oldClass != 0)
+                    new FStateFrame(Ar);
+                }
+
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.REMOVE_SIZE_VJOINTPOS && !FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject) || IsComponent(Class.Name.Text, Ar))
+                {
+                    if (this is UComponent)
                     {
-                        Ar.Position += sizeof(int); // int - iOldNode
-                    }
-                }
-
-                if (Ar.Ver < EUnrealEngineObjectUE3Version.Release52)
-                {
-                    Ar.Position += sizeof(int); // FPackageIndex - Tmp
-                }
-
-                if (Ar.Ver < EUnrealEngineObjectUE3Version.REDUCED_PROBEMASK_REMOVED_IGNOREMASK)
-                {
-                    Ar.Position += sizeof(long); // long - ProbeMask
-                }
-                else
-                {
-                    Ar.Position += sizeof(int); // int - ProbeMask
-                }
-
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.REDUCED_STATEFRAME_LATENTACTION_SIZE)
-                {
-                    Ar.Position += sizeof(short); // short - LatentAction
-                }
-                else if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release55)
-                {
-                    Ar.Position += sizeof(int); // int - LatentAction
-                }
-
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedStateStackToUStateFrame)
-                {
-                    Ar.SkipFixedArray(9); // StateStack
-                }
-
-                if (node != 0)
-                {
-                    Ar.Position += sizeof(int);
-                }
-            }
-
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.REMOVE_SIZE_VJOINTPOS && Ar.Game < GAME_UE4_0)
-            {
-                if (this is UComponent)
-                {
-                    Ar.Position += sizeof(int); // FPackageIndex
-                    if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_COMPONENT_TEMPLATES)
-                    {
-                        Ar.SkipFName();
+                        Ar.Position += sizeof(int); // FPackageIndex
+                        if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_COMPONENT_TEMPLATES || IsPropertiesObject())
+                        {
+                            Ar.SkipFName();
+                        }
                     }
                 }
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
             {
+                if (Ar.Game == GAME_Mars) Ar.Position += sizeof(int); // unknown
                 var NetIndex = Ar.Read<int>();
 
                 if (Ar.Game == GAME_Paladins && NetIndex == -1)
@@ -221,7 +174,14 @@ public class UObject : AbstractPropertyHolder
                 }
             }
 
+            if (ExportType == "Class" && Ar.Game < GAME_UE4_0)
+            {
+                return;
+            }
+
+            Ar.StructTypeStack.Push(Class?.Super?.Name.Text ?? Class?.Name.Text);
             DeserializePropertiesTagged(Properties = [], Ar, false);
+            Ar.StructTypeStack.Pop();
         }
 
         if (Ar.Game >= GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
@@ -490,8 +450,16 @@ public class UObject : AbstractPropertyHolder
         writer.WritePropertyName(nameof(Name)); // ctrl click depends on the name, we always need it
         writer.WriteValue(Name);
 
-        writer.WritePropertyName(nameof(Flags));
-        writer.WriteValue(Flags.ToStringBitfield());
+        if (FlagsLegacy > 0)
+        {
+            writer.WritePropertyName(nameof(FlagsLegacy));
+            writer.WriteValue(FlagsLegacy.ToStringBitfield());
+        }
+        else
+        {
+            writer.WritePropertyName(nameof(Flags));
+            writer.WriteValue(Flags.ToStringBitfield());
+        }
 
         if (Class is { Object.Value: { } clas })
         {
@@ -598,6 +566,46 @@ public class UObject : AbstractPropertyHolder
     {
         return IsFullNameStableForNetworking();
     }
+
+    // checks if the current object or outers are PropertiesObject.
+    public bool IsPropertiesObject()
+    {
+        if (FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject))
+            return true;
+
+        var current = Outer;
+
+        while (current?.TryLoad(out var outer) == true)
+        {
+            if (outer.FlagsLegacy.HasFlag(EObjectFlagsLegacy.PropertiesObject))
+                return true;
+
+            current = outer.Outer;
+        }
+
+        return false;
+    }
+
+    // checks if a type is a component with mappings.
+    public bool IsComponent(string type, FAssetArchive Ar)
+    {
+        var currentType = type;
+
+        while (currentType != null)
+        {
+            if (currentType == "Component")
+                return true;
+
+            if (Ar.Owner?.Mappings?.Types == null ||
+                !Ar.Owner.Mappings.Types.TryGetValue(currentType, out var mappings))
+                break;
+
+            currentType = mappings.SuperType;
+        }
+
+        return false;
+    }
+
 
     public override string ToString() => Name;
 }

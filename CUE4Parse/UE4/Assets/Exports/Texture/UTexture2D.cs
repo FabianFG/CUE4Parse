@@ -1,7 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -10,7 +9,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
 public class UTexture2D : UTexture
 {
-
     public FIntPoint ImportedSize { get; private set; }
     public TextureAddress AddressX { get; private set; }
     public TextureAddress AddressY { get; private set; }
@@ -48,6 +46,11 @@ public class UTexture2D : UTexture
                 legacyMips = Ar.ReadArray(() => TextureFileCacheName.IsNone ? new FTexture2DMipMap(Ar) : new FTexture2DMipMap(Ar, TextureFileCacheName.Text));
             }
 
+            if (Ar.Game == GAME_Borderlands2 || Ar.Game == GAME_BorderlandsSequel)
+            {
+                Ar.Position += 16; // hash?
+            }
+
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_FILECACHE_GUIDS)
             {
                 Ar.Position += sizeof(uint) * 4; // FGuid - TextureFileCacheGuid_DEPRECATED
@@ -77,10 +80,11 @@ public class UTexture2D : UTexture
                 PlatformData.Mips = legacyMips;
 
                 /*
+                 * UE3:
                  * Todo: add the extra android stuff needed
-                 * Todo: Find a way to allow users to change Platform
-
-                if (false) // if game is ios
+                 * Todo: there are other mips that aren't used such as "CachedETCMips" and TextureFileCacheName needs prefixes appended
+                */
+                if (Ar.Versions["Platform.IOS"])
                 {
                     if (Format == EPixelFormat.PF_DXT1)
                     {
@@ -90,16 +94,18 @@ public class UTexture2D : UTexture
                     {
                         Format = EPixelFormat.PF_PVRTC4;
                     }
-                } else if (false) // if game is android
+                }
+                else if (Ar.Versions["Platform.Android"])
                 {
                     if (Format == EPixelFormat.PF_DXT1)
                     {
                         Format = EPixelFormat.PF_ETC1;
-                    } else if (Format == EPixelFormat.PF_DXT5)
+                    }
+                    else if (Format == EPixelFormat.PF_DXT5)
                     {
                         // unsupported RGBA4
                     }
-                }*/
+                }
 
             }
         }

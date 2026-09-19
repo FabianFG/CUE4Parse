@@ -28,7 +28,9 @@ public class FStaticMeshLODResources
     public FRawStaticIndexBuffer? ReversedDepthOnlyIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? WireframeIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? AdjacencyIndexBuffer { get; private set; }
-    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null || PositionVertexBuffer == null;
+
+    public bool bisPositionBufferNormal = true;
+    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null || bisPositionBufferNormal && PositionVertexBuffer == null;
 
     public enum EClassDataStripFlag : byte
     {
@@ -193,13 +195,17 @@ public class FStaticMeshLODResources
     // Pre-UE4.23 code
     public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
     {
-
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE)
         {
             if (Ar.Game is GAME_Abzu) Ar.Position += 4;
+
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS)
             {
                 PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+            }
+            else
+            {
+                bisPositionBufferNormal = false;
             }
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
             if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS || Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS && Ar.Ver < EUnrealEngineObjectUE3Version.MovedColorFromUVItem) goto skipStreams;
@@ -284,7 +290,7 @@ public class FStaticMeshLODResources
             {
                 Ar.Position += 8; // bulkdata
             }
-            else if (!stripDataFlags.IsEditorDataStripped())
+            else if (!stripDataFlags.IsEditorDataStripped() && Ar.Game != GAME_Borderlands2 && Ar.Game != GAME_BorderlandsSequel)
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)

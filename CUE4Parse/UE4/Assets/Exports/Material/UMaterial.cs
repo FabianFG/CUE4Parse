@@ -11,7 +11,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public class UMaterial : UMaterialInterface
 {
-    
     public bool TwoSided { get; private set; }
     public bool bDisableDepthTest { get; private set; }
     public bool bIsMasked { get; private set; }
@@ -50,8 +49,7 @@ public class UMaterial : UMaterialInterface
                 ReferencedTextures.AddRange(referencedTextures);
         }
 
-        // UE4 has complex FMaterialResource format, so avoid reading anything here, but
-        // scan package's imports for UTexture objects instead
+        // scan package's imports for UTexture objects
         if (Ar is { Game: >= GAME_UE5_0, Owner.Provider.SkipReferencedTextures: false })
             ScanForTextures(Ar);
 
@@ -71,6 +69,7 @@ public class UMaterial : UMaterialInterface
                         {
                             bLocalSavedCachedExpressionData_DEPRECATED = Ar.ReadBoolean();
                         }
+
                         var bSavedCachedExpressionData_DEPRECATED = GetOrDefault("bSavedCachedExpressionData_DEPRECATED", false);
                         if (bSavedCachedExpressionData_DEPRECATED)
                         {
@@ -83,6 +82,7 @@ public class UMaterial : UMaterialInterface
                             CachedExpressionData = new FStructFallback(Ar, "MaterialCachedExpressionData");
                         }
                     }
+
                     if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.NaniteForceMaterialUsage)
                         bForceNaniteUsage = Ar.ReadBoolean();
                 }
@@ -95,6 +95,38 @@ public class UMaterial : UMaterialInterface
             else
             {
                 Ar.Position = validPos;
+            }
+        }
+        else if (Ar.Game < GAME_UE4_0) // test UE4 then remove
+        {
+            var QualityMask = 1;
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MATERIAL_QUALITY_LEVEL)
+            {
+                QualityMask = Ar.Read<int>();
+            }
+
+            if (Ar.Game == GAME_APBReloaded) return;
+
+            for (int QualityIndex = 0; QualityIndex < (Ar.Ver > EUnrealEngineObjectUE3Version.FLASH_MERGE_TO_MAIN && Ar.Game < GAME_UE4_0 ? 2 : 1); QualityIndex++)
+            {
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MATERIAL_QUALITY_LEVEL && (QualityMask & (1 << QualityIndex)) == 0)
+                {
+                    continue;
+                }
+
+                var loadedResource = new FMaterialResource();
+                loadedResource.Deserialize(Ar);
+
+                if (loadedResource.ReferencedTextures is not null)
+                    ReferencedTextures.AddRange(loadedResource.ReferencedTextures);
+            }
+
+            //new FMaterialShaderMapId(Ar); // if PKG_ContainsInlinedShaders and specific ue3 ver
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADER_MODEL_2)
+            {
+                var loadedResource = new FMaterialResource();
+                loadedResource.Deserialize(Ar);
             }
         }
     }

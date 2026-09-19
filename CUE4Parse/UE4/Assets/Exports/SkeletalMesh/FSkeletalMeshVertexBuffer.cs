@@ -41,8 +41,7 @@ public class FSkeletalMeshVertexBuffer
         NumTexCoords = Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MULTIPLE_UVS_TO_SKELETAL_MESH ? Ar.Read<int>() : 1;
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedFullPrecisionUV) bUseFullPrecisionUVs = Ar.ReadBoolean();
 
-        if (Ar.Ver >= EUnrealEngineObjectUE4Version.SUPPORT_GPUSKINNING_8_BONE_INFLUENCES &&
-            FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.UseSeparateSkinWeightBuffer)
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.SUPPORT_GPUSKINNING_8_BONE_INFLUENCES && FSkeletalMeshCustomVersion.Get(Ar) < FSkeletalMeshCustomVersion.Type.UseSeparateSkinWeightBuffer)
         {
             bExtraBoneInfluences = Ar.ReadBoolean();
         }

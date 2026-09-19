@@ -702,6 +702,8 @@ namespace CUE4Parse.FileProvider
                     var dictdecrypted = new Dictionary<string, byte[]> { { file.Path, decryptedData } };
                     return dictdecrypted;
                 }
+
+                return new Dictionary<string, byte[]> { { file.Path, file.Read() } };
             }
 
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls, true);
