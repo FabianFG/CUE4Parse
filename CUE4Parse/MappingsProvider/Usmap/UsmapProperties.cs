@@ -5,6 +5,9 @@ public static class UsmapProperties
     public static Struct ParseStruct(TypeMappings context, FUsmapReader Ar, IReadOnlyList<string> nameLut)
     {
         var name = Ar.ReadName(nameLut)!;
+        if (Ar.Version >= EUsmapVersion.ExtendedPropertyMetadata)
+            _ = Ar.ReadName(nameLut); // owner package name (or null)
+
         var superType = Ar.ReadName(nameLut);
 
         var propertyCount = Ar.Read<ushort>();
@@ -27,7 +30,7 @@ public static class UsmapProperties
     public static PropertyInfo ParsePropertyInfo(FUsmapReader Ar, IReadOnlyList<string> nameLut)
     {
         var index = Ar.Read<ushort>();
-        var arrayDim = Ar.Read<byte>();
+        var arrayDim = Ar.Version >= EUsmapVersion.ExtendedPropertyMetadata ? Ar.Read<ushort>() : Ar.Read<byte>();
         var name = Ar.ReadName(nameLut)!;
         var type = ParsePropertyType(Ar, nameLut);
         var flags = Ar.ReadPropertyFlags(name);

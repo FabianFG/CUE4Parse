@@ -21,6 +21,7 @@ public class UsmapParser
     public readonly FPackageFileVersion PackageVersion;
     public readonly FCustomVersionContainer CustomVersions;
     public readonly uint NetCL;
+    public readonly FUsmapMetadata Metadata;
 
     public UsmapParser(string path, string name = "An unnamed usmap", StringComparer? comparer = null) : this(File.OpenRead(path), name, comparer) { }
     public UsmapParser(Stream data, string name = "An unnamed usmap", StringComparer? comparer = null) : this(new FStreamArchive(name, data), comparer) { }
@@ -40,6 +41,8 @@ public class UsmapParser
             throw new ParserException($"Usmap has invalid version ({(byte) Version})");
 
         var Ar = new FUsmapReader(archive, Version);
+
+        Metadata = Ar.Version >= EUsmapVersion.ExtendedPropertyMetadata ? new FUsmapMetadata(Ar) : default;
 
         HasVersioning = Ar.Version >= EUsmapVersion.PackageVersioning && Ar.ReadBoolean();
         if (HasVersioning)
@@ -100,6 +103,8 @@ public class UsmapParser
         for (var i = 0; i < enumCount; i++)
         {
             var enumName = Ar.ReadName(nameLut)!;
+            if (Ar.Version >= EUsmapVersion.ExtendedPropertyMetadata)
+                _ = Ar.ReadName(nameLut); // owner package name (or null)
 
             var enumNamesSize = Ar.Version >= EUsmapVersion.LargeEnums ? Ar.Read<ushort>() : Ar.Read<byte>();
             var enumNames = new Dictionary<long, string>(enumNamesSize);
@@ -126,7 +131,7 @@ public class UsmapParser
             enums.TryAdd(enumName, enumNames);
         }
 
-        if (Ar.Version >= EUsmapVersion.PropertyFlags)
+        if (Ar.Version >= EUsmapVersion.ExtendedPropertyMetadata)
         {
             var flagLutCount = Ar.Read<uint>();
             Ar.FlagLUT = flagLutCount == 0 ? [] : Ar.ReadArray<EPropertyFlags>((int) flagLutCount);
@@ -134,7 +139,6 @@ public class UsmapParser
 
         var structCount = Ar.Read<uint>();
         var structs = new Dictionary<string, Struct>(comparer ?? StringComparer.OrdinalIgnoreCase);
-
         var mappings = new TypeMappings(structs, enums);
 
         for (var i = 0; i < structCount; i++)

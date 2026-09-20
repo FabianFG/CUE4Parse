@@ -12,10 +12,10 @@ public class FUsmapReader(FArchive Ar, EUsmapVersion version) : FArchive(Ar.Vers
 
     public EPropertyFlags ReadPropertyFlags(string propertyName)
     {
-        if (Version < EUsmapVersion.PropertyFlags)
+        if (Version < EUsmapVersion.ExtendedPropertyMetadata)
             return EPropertyFlags.None;
 
-        var flagIndex = FlagLUT.Length <= byte.MaxValue ? Read<byte>() : Read<ushort>();
+        var flagIndex = Read<ushort>();
         if (flagIndex >= FlagLUT.Length)
             throw new ParserException(this, $"Usmap property '{propertyName}' has invalid flag index {flagIndex} (table size {FlagLUT.Length})");
         return FlagLUT[flagIndex];

@@ -20,8 +20,8 @@ public enum EUsmapVersion : byte
     /* Adds support for engine versioning information */
     EngineVersioning,
 
-    /* Adds a file-level EPropertyFlags dictionary */
-    PropertyFlags,
+    /* Property Flags, PackageOwnerName, and extends ArrayDim to ushort/uint16 */
+    ExtendedPropertyMetadata,
 
     LatestPlusOne,
     Latest = LatestPlusOne - 1
