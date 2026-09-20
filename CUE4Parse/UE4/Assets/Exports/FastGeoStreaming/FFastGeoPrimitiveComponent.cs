@@ -64,5 +64,6 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
         BodyInstance = Ar.Game < GAME_UE5_8 && Ar.Game is not GAME_GearsofWarEDay? new FStructFallback(Ar, "BodyInstance") : null;
         SceneProxyDesc = new FSceneProxyDesc(Ar);
         if (Ar.Game is GAME_GearsofWarEDay) Ar.Position += 41;
+        if (Ar.Game is GAME_Splitgate2) Ar.Position += 4;
     }
 }
