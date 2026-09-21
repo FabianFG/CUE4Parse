@@ -37,11 +37,11 @@ public class FPropertyTagData
                     StructGuid = Ar.Read<FGuid>();
                 break;
             case "BoolProperty":
-                Bool = Ar.Ver >= EUnrealEngineObjectUE3Version.PROPERTYTAG_BOOL_OPTIMIZATION ? Ar.ReadFlag() : Ar.ReadBoolean();
+                Bool = Ar.Ver >= EUnrealEngineObjectUE3Version.PROPERTYTAG_BOOL_OPTIMIZATION || (Ar.Game == GAME_APBReloaded && (int)Ar.LicenseeVer >= 33) ? Ar.ReadFlag() : Ar.ReadBoolean();
                 break;
             case "ByteProperty":
             case "EnumProperty":
-                if (Ar.Ver >= EUnrealEngineObjectUE3Version.BYTEPROP_SERIALIZE_ENUM)
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.BYTEPROP_SERIALIZE_ENUM || (Ar.Game == GAME_APBReloaded && (int)Ar.LicenseeVer >= 33))
                     EnumName = Ar.ReadFName().Text;
                 break;
             case "ArrayProperty":

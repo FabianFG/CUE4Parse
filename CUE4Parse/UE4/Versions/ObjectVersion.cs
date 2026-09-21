@@ -954,7 +954,6 @@ public enum EUnrealEngineObjectUE3Version
     LightMapScaleAddedToPoly = 106,
     Release119 = 119,
     AddedCppTextToUStruct = 120,
-    Release122 = 122,
     // only comments exist for these three
     // Merge in skeletal collision stuff for SVehicle support.
     temp1 = 122,
@@ -974,7 +973,6 @@ public enum EUnrealEngineObjectUE3Version
     temp8 = 128,
     // StaticMeshActor Socket Type Added
     temp9 = 128,
-    AddedIsValidToFBox = 146,
     MovedFriendlyNameToUFunction = 160,
     TextureDeprecatedFromPoly = 170,
     // Deprecated FCompactIndex

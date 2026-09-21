@@ -73,7 +73,7 @@ public readonly struct FByteBulkDataHeader
         if (Ar.Game == GAME_APBReloaded && (BulkDataFlags & (EBulkDataFlags) 0x100) != 0)
         {
             BulkDataFlags &= ~(EBulkDataFlags) 0x100;
-            BulkDataFlags |= BULKDATA_ForceInlinePayload;
+            BulkDataFlags |= BULKDATA_Unused;
         }
 
         ElementCount = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (int) Ar.Read<long>() : Ar.Read<int>();

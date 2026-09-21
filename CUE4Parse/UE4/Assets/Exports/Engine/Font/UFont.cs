@@ -15,7 +15,7 @@ public class UFont : UObject
     {
         base.Deserialize(Ar, validPos);
 
-        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release122)
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.temp1)
         {
             Pages = Ar.ReadArray(() => new FFontPage(Ar));
             CharactersPerPage = Ar.Read<int>();

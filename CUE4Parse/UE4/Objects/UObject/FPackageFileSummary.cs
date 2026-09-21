@@ -362,6 +362,11 @@ namespace CUE4Parse.UE4.Objects.UObject
                 ImportTypeHierarchiesOffset = 0;
             }
 
+            if (Ar.Game == GAME_APBReloaded && (int)FileVersionLicenseeUE >= 32)
+            {
+                Ar.Position += sizeof(uint) * 4; // Unknown, not guid
+            }
+
             if (FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
             {
                 Guid = Ar.Read<FGuid>();
@@ -390,7 +395,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             var Count = Ar.Read<int>();
 
-            if (Ar.Game == GAME_APBReloaded && (int)FileVersionLicenseeUE > 32)
+            if (Ar.Game == GAME_APBReloaded && (int)FileVersionLicenseeUE >= 32)
             {
                 Ar.Position += sizeof(uint) * 4; // FGuid
             }
