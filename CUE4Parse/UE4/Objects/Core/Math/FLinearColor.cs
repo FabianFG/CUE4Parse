@@ -20,7 +20,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public string Hex => ToFColor(true).Hex;
 
-        public FColor ToFColor(bool sRGB)
+        public readonly FColor ToFColor(bool sRGB)
         {
             var floatR = R.Clamp(0.0f, 1.0f);
             var floatG = G.Clamp(0.0f, 1.0f);

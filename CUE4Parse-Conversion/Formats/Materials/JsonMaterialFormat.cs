@@ -1,5 +1,3 @@
-﻿using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using Newtonsoft.Json;
@@ -12,19 +10,7 @@ public sealed class JsonMaterialFormat : IMaterialExportFormat
 
     public ExportFile Build(string objectName, CMaterialParams2 parameters, string packageDirectory = "")
     {
-        var json = JsonConvert.SerializeObject(new MaterialJsonPayload
-        {
-            Textures = parameters.Textures.ToDictionary(kv => kv.Key, kv => kv.Value.GetPathName()),
-            Parameters = parameters
-        }, Formatting.Indented);
-
+        var json = JsonConvert.SerializeObject(parameters, Formatting.Indented);
         return new ExportFile("json", Encoding.UTF8.GetBytes(json));
     }
-
-    private sealed class MaterialJsonPayload
-    {
-        public Dictionary<string, string>? Textures { get; init; }
-        public CMaterialParams2? Parameters { get; init; }
-    }
 }
-

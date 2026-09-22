@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Core.Misc;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -17,10 +18,8 @@ public class UMaterialInstanceTimeVarying : UMaterialInstance;
 
 public class UMaterialInstance : UMaterialInterface
 {
-    
-    private ResolvedObject? _parent;
     private bool bHasNonUPropertyStaticParameters = false;
-    public UUnrealMaterial? Parent => _parent?.Load<UUnrealMaterial>();
+    public FPackageIndex? Parent { get; private set; }
     public bool bHasStaticPermutationResource;
     public FMaterialInstanceBasePropertyOverrides? BasePropertyOverrides;
     public FStaticParameterSet? StaticParameters;
@@ -30,7 +29,7 @@ public class UMaterialInstance : UMaterialInterface
     {
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
-        _parent = GetOrDefault<ResolvedObject>(nameof(Parent));
+        Parent = GetOrDefault<FPackageIndex?>(nameof(Parent));
         bHasStaticPermutationResource = GetOrDefault<bool>("bHasStaticPermutationResource");
         BasePropertyOverrides = GetOrDefault<FMaterialInstanceBasePropertyOverrides>(nameof(BasePropertyOverrides));
         StaticParameters = GetOrDefault(nameof(StaticParameters), GetOrDefault<FStaticParameterSet>("StaticParametersRuntime"));
