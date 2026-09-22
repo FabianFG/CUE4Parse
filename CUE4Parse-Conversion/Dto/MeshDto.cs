@@ -267,7 +267,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
     }
 
-    public StaticMeshDto(UIRMesh mesh) : base(mesh, new MeshMaterialDto[mesh.Materials.Length])
+    public StaticMeshDto(UIRMesh mesh, EMeshQuality quality = EMeshQuality.Highest) : base(mesh, new MeshMaterialDto[mesh.Materials.Length])
     {
         for (var i = 0; i < Materials.Length; i++)
         {
@@ -276,7 +276,20 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
         if (mesh.MeshBuffers.Length > 0 && mesh.Sections.Length > 0)
         {
-            LODs.Add(MeshLodDto<MeshVertex>.FromIRMesh(this, mesh));
+            if (quality == EMeshQuality.All)
+            {
+                for (var bufferIndex = 0; bufferIndex < mesh.MeshBuffers.Length; bufferIndex++)
+                {
+                    if (mesh.Sections.Any(section => section.BufferIndex == bufferIndex))
+                    {
+                        LODs.Add(MeshLodDto<MeshVertex>.FromIRMesh(this, mesh, bufferIndex));
+                    }
+                }
+            }
+            else
+            {
+                LODs.Add(MeshLodDto<MeshVertex>.FromIRMesh(this, mesh));
+            }
         }
 
         Bounds = mesh.Bounds;

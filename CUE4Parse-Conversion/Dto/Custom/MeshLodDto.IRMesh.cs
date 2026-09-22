@@ -8,11 +8,22 @@ namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<MeshVertex> FromIRMesh(StaticMeshDto owner, UIRMesh mesh)
+    internal static MeshLodDto<MeshVertex> FromIRMesh(StaticMeshDto owner, UIRMesh mesh, int bufferIndex = -1)
     {
-        var vertexCount = mesh.MeshBuffers.Sum(x => x.VertexCount);
-        var indexCount = mesh.MeshBuffers.Sum(x => x.IndexCount);
-        var uvCount = Math.Min(int.MaxValue, Math.Max(0, mesh.MeshBuffers.Max(x => x.UVChannelCount) - 1));
+        var firstBuffer = bufferIndex < 0 ? 0 : bufferIndex;
+        var bufferCount = bufferIndex < 0 ? mesh.MeshBuffers.Length : 1;
+        var buffers = mesh.MeshBuffers.AsSpan(firstBuffer, bufferCount);
+        var vertexCount = 0;
+        var indexCount = 0;
+        var uvChannelCount = 0;
+        foreach (var buffer in buffers)
+        {
+            vertexCount += buffer.VertexCount;
+            indexCount += buffer.IndexCount;
+            uvChannelCount = Math.Max(uvChannelCount, buffer.UVChannelCount);
+        }
+
+        var uvCount = Math.Max(0, uvChannelCount - 1);
         var vertices = new MeshVertex[vertexCount];
         var indices = new uint[indexCount];
         var extraUVs = new FMeshUVFloat[uvCount][];
@@ -25,11 +36,11 @@ public partial class MeshLodDto<TVertex>
         var indexOffsets = new int[mesh.MeshBuffers.Length];
         var vertexOffset = 0;
         var indexOffset = 0;
-        for (var bufferIndex = 0; bufferIndex < mesh.MeshBuffers.Length; bufferIndex++)
+        for (var sourceBufferIndex = firstBuffer; sourceBufferIndex < firstBuffer + bufferCount; sourceBufferIndex++)
         {
-            var buffer = mesh.MeshBuffers[bufferIndex];
-            vertexOffsets[bufferIndex] = vertexOffset;
-            indexOffsets[bufferIndex] = indexOffset;
+            var buffer = mesh.MeshBuffers[sourceBufferIndex];
+            vertexOffsets[sourceBufferIndex] = vertexOffset;
+            indexOffsets[sourceBufferIndex] = indexOffset;
 
             var tangents = MemoryMarshal.Cast<byte, uint>(buffer.TangentData);
             var uvs = MemoryMarshal.Cast<byte, FMeshUVFloat>(buffer.UVData);
@@ -47,6 +58,7 @@ public partial class MeshLodDto<TVertex>
                     extraUVs[channel][vertexOffset + vertex] = uvs[uvOffset + channel + 1];
                 }
             }
+
             switch (buffer.IndexStride)
             {
                 case 2:
@@ -69,10 +81,11 @@ public partial class MeshLodDto<TVertex>
             indexOffset += buffer.IndexCount;
         }
 
-        var sections = new MeshSectionDto[mesh.Sections.Length];
-        for (var sectionIndex = 0; sectionIndex < mesh.Sections.Length; sectionIndex++)
+        var sourceSections = bufferIndex < 0 ? mesh.Sections : [.. mesh.Sections.Where(section => section.BufferIndex == bufferIndex)];
+        var sections = new MeshSectionDto[sourceSections.Length];
+        for (var sectionIndex = 0; sectionIndex < sourceSections.Length; sectionIndex++)
         {
-            var section = mesh.Sections[sectionIndex];
+            var section = sourceSections[sectionIndex];
             var baseVertex = vertexOffsets[section.BufferIndex] + section.MinVertexIndex;
             var firstIndex = indexOffsets[section.BufferIndex] + section.FirstIndex;
             foreach (ref var index in indices.AsSpan(firstIndex, section.NumTriangles * 3))
@@ -83,6 +96,6 @@ public partial class MeshLodDto<TVertex>
             sections[sectionIndex] = new MeshSectionDto(section.MaterialIndex, firstIndex, section.NumTriangles, true);
         }
 
-        return new MeshLodDto<MeshVertex>(owner, 0, indices, vertices, sections, extraUVs, vertexColors: (MeshVertexColorDto[]?) null);
+        return new MeshLodDto<MeshVertex>(owner, (uint) Math.Max(0, bufferIndex), indices, vertices, sections, extraUVs, vertexColors: (MeshVertexColorDto[]?) null);
     }
 }
