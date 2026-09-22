@@ -603,7 +603,7 @@ namespace CUE4Parse.FileProvider
 
             switch (file)
             {
-                case FPakEntry or OsGameFile:
+                case FPakEntry or VersionedGameFile:
                     return new Package(uasset, uexp?.CreateReader(), lazyUbulk, lazyUptnl, this, UseLazyPackageSerialization);
                 case FIoStoreEntry ioStoreEntry when this is IVfsFileProvider vfsFileProvider:
                     return new IoPackage(uasset, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, vfsFileProvider);
@@ -625,7 +625,7 @@ namespace CUE4Parse.FileProvider
 
             switch (file)
             {
-                case FPakEntry or OsGameFile:
+                case FPakEntry or VersionedGameFile:
                     var uexpAr = uexp != null ? await uexp.CreateReaderAsync().ConfigureAwait(false) : null;
                     return new Package(uasset, uexpAr, lazyUbulk, lazyUptnl, this, UseLazyPackageSerialization);
                 case FIoStoreEntry ioStoreEntry when this is IVfsFileProvider vfsFileProvider:

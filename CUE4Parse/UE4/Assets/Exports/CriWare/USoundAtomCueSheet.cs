@@ -1,10 +1,10 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.CriWare.Readers;
+using CUE4Parse.UE4.Criware.Readers;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Assets.Exports.CriWare;
+namespace CUE4Parse.UE4.Assets.Exports.Criware;
 
 public class USoundAtomCueSheet : UObject
 {
@@ -15,12 +15,10 @@ public class USoundAtomCueSheet : UObject
         base.Deserialize(Ar, validPos);
 
         var bulkData = new FByteBulkData(Ar);
-        var savedPosition = Ar.Position;
-
         if (bulkData.Data == null)
             return;
 
-        using var bulkAr = new FByteArchive("bulk", bulkData.Data);
+        using var bulkAr = new FByteArchive("AcbReader", bulkData.Data);
         AcbReader = new AcbReader(bulkAr);
     }
 

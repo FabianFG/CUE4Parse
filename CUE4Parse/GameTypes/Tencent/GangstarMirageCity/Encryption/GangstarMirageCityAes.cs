@@ -12,7 +12,7 @@ public static class GangstarMirageCityAes
         0xA6, 0xB3, 0xD8, 0xE1, 0x3F, 0x7C, 0x2B, 0x9A
     ];
 
-    public static byte[] GangstarMirageCityDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] GangstarMirageCityDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (beginOffset > bytes.Length - count)
             throw new ArgumentException("beginOffset + count is larger than the length of bytes");

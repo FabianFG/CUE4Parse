@@ -1,6 +1,4 @@
 using System.Runtime.Intrinsics;
-using CUE4Parse.Encryption.Aes;
-using CUE4Parse.UE4.VirtualFileSystem;
 using static System.Runtime.Intrinsics.X86.Aes;
 using static System.Runtime.Intrinsics.X86.Sse2;
 using static System.Runtime.Intrinsics.Vector128;
@@ -12,40 +10,6 @@ namespace CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 /// </summary>
 public static class PaxDeiAes
 {
-    private static void Decrypt16(Span<byte> input, FAesKey aes, Span<byte> output)
-    {
-        var roundkeys = KeyExpansion(aes.Key);
-        Vector128<byte> state = Create(input.ToArray());
-        state = Xor(state, roundkeys[0]);
-        for (var i = 1; i < 13; i++)
-        {
-            state = Decrypt(state, roundkeys[i]);
-        }
-
-        state = DecryptLast(state, roundkeys[13]);
-        state.CopyTo(output);
-    }
-
-    public static byte[] PaxDeiDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
-    {
-        if (bytes.Length < beginOffset + count)
-            throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");
-        if (count % 16 != 0)
-            throw new ArgumentException("count must be a multiple of 16");
-        if (reader.AesKey == null)
-            throw new NullReferenceException("reader.AesKey");
-
-        var output = new byte[count];
-        Array.Copy(bytes, beginOffset, output, 0, count);
-
-        for (var i = 0; i < count / 16; i++)
-        {
-            Decrypt16(output.AsSpan(i * 16, 16), reader.AesKey, output.AsSpan(i * 16, 16));
-        }
-
-        return output;
-    }
-
     public static Vector128<byte>[] KeyExpansion(byte[] key)
     {
         Vector128<byte>[] roundkeys =

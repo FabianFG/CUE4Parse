@@ -17,7 +17,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using CUE4Parse.UE4.CriWare.Readers;
+using CUE4Parse.UE4.Criware.Readers;
 using CUE4Parse.UE4.FMod;
 using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.Kismet;

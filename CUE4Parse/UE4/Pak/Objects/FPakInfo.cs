@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Numerics;
 using CUE4Parse.Compression;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.RSA;
@@ -204,16 +205,16 @@ public partial class FPakInfo
             }
         }
 
-        if (Ar.Game == GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is GAME_ArenaBreakoutInfinite)
         {
             EncryptionKeyGuid = Ar.Read<FGuid>();
+            Version = Ar.Read<EPakFileVersion>();
             Magic = Ar.Read<uint>();
             if (Magic != PAK_FILE_MAGIC_ArenaBreakoutInfinite) return;
             EncryptedIndex = Ar.Read<byte>() != 0;
-            IndexSize = Ar.Read<long>();
-            IndexOffset = Ar.Read<long>();
-            IndexHash = new FSHAHash(Ar);
-            Version = Ar.Read<EPakFileVersion>();
+            IndexHash = ABIDecryption.DecodeIndexHash(Ar.ReadBytes(FSHAHash.SIZE));
+            IndexOffset = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xD3A512UL);
+            IndexSize = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xB640093CUL);
             goto beforeCompression;
         }
 
@@ -534,6 +535,11 @@ public partial class FPakInfo
             }
         }
 
+        if (Ar.Game == GAME_RocoKingdomWorld)
+        {
+            CustomEncryptionData = offsetToTry != OffsetsToTry.Size8a ? Ar.ReadBytes(1) : [0];
+        }
+
         // Written at the tail so the trailer for older versions remains byte-compatible. Paks authored before
         // this version leave PakchunkIndex at INDEX_NONE, and the reader falls back to deriving it from the filename.
         if (Version >= EPakFileVersion.PakFile_Version_PakchunkIndex && Ar.Game >= GAME_UE6_0)
@@ -591,6 +597,7 @@ public partial class FPakInfo
         SizeQQ = Size8a + 26,
         SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
         SizeBack4Blood = Size9,
+        SizeRocoKingdomWorld = Size9, // extra strategy id byte
         SizeHotta = Size9a, // additional int for custom pak version
 
         SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
@@ -668,6 +675,7 @@ public partial class FPakInfo
                 GAME_ValorantSource => [OffsetsToTry.SizeValorantSource],
                 GAME_Overhit => [OffsetsToTry.SizeOverhit],
                 GAME_GangstarMirageCity => [OffsetsToTry.SizeGangstar],
+                GAME_RocoKingdomWorld => [OffsetsToTry.SizeRocoKingdomWorld, OffsetsToTry.Size8a],
                 _ => _offsetsToTry
             };
 

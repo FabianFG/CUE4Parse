@@ -236,6 +236,8 @@ public class FSkelMeshSection
                 OriginalDataSectionIndex = -1;
                 ChunkedParentSectionIndex = -1;
             }
+
+            if (Ar.Game is GAME_NewGundamBreaker) Ar.Position += 4;
         }
     }
 

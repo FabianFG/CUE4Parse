@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Writers;
 
 namespace CUE4Parse.UE4.Lua.Archives;
 
@@ -51,30 +52,36 @@ public class FLua54Archive(string name, byte[] data, VersionContainer? versions 
     }
 }
 
-public class FLua54ArchiveWriter(Stream stream) : BinaryWriter(stream)
+public class FLua54ArchiveWriter : FArchiveWriter
 {
-    public void WriteLuaInt(ulong v)
+    public void WriteLuaInt(ulong value)
     {
-        if (v == 0)
+        if (value == 0)
         {
             Write((byte) 0x80);
             return;
         }
 
-        var bytes = new List<byte>();
-        bool first = true;
-        while (v > 0 || first)
-        {
-            byte x = (byte) (v & 0x7F);
-            if (first)
-                x |= 0x80;
+        // Just so it's clear, max bytes needed to encode a 64-bit value using 7 bits per byte (it's 10 bytes)
+        const int MaxLuaIntBytes = (sizeof(ulong) * 8 + 6) / 7;
+        Span<byte> buffer = stackalloc byte[MaxLuaIntBytes];
+        var index = buffer.Length;
 
-            bytes.Add(x);
-            v >>= 7;
+        var first = true;
+        while (value > 0 || first)
+        {
+            var b = (byte) (value & 0x7F);
+
+            if (first)
+                b |= 0x80;
+
+            buffer[--index] = b;
+
+            value >>= 7;
             first = false;
         }
-        bytes.Reverse();
-        Write(bytes.ToArray());
+
+        Write(buffer[index..]);
     }
 
     public void WriteLuaString(string value)

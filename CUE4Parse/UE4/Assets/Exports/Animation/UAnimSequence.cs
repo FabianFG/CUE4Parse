@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 {
     public class UAnimSequence : UAnimSequenceBase
     {
-        
+
         public int NumFrames;
         public FTrackToSkeletonMap[]? TrackToSkeletonMapTable; // used for raw data
         public FRawAnimSequenceTrack[] RawAnimationData;
@@ -323,7 +323,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
                 CompressedDataStructure.Bind(serializedByteStream);
                 NumFrames = CompressedDataStructure.CompressedNumberOfFrames;
             }
-            else
+            else if (serializedByteStream.Length > 0)
             {
                 Log.Warning("Unknown bone compression codec {0}", BoneCodecDDCHandle);
             }

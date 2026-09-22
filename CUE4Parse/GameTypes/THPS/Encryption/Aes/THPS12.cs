@@ -8,7 +8,7 @@ namespace CUE4Parse.GameTypes.THPS.Encryption.Aes;
 /// </summary>
 public static class THPS12Aes
 {
-    public static byte[] THPS12Decrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] THPS12Decrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

@@ -1,4 +1,3 @@
-using System.Numerics.Tensors;
 using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
@@ -124,12 +123,7 @@ public class ValorantSourceLua
 
     public static byte[] DecryptLuaBytecode(string name, byte[] bytes)
     {
-        var Ar = new FValorantSourceLuaArchive(name, bytes);
-        using var msOut = new MemoryStream();
-        using var writer = new FLua54ArchiveWriter(msOut);
-        FLuaWriter54.Write(writer, FLua54Reader.ReadLuaBytecode(Ar, _opcodeMapping));
-        writer.Flush();
-
-        return msOut.ToArray();
+        using var Ar = new FValorantSourceLuaArchive(name, bytes);
+        return new FLuaWriter54(FLua54Reader.ReadLuaBytecode(Ar, _opcodeMapping)).GetBuffer();
     }
 }

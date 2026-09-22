@@ -7,16 +7,15 @@ using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
-using CUE4Parse.GameTypes.ChasingKaleidoRIDER.Encryption;
 using CUE4Parse.GameTypes.LordOfMysteries.UE4.Lua;
 using CUE4Parse.GameTypes.Netmarble.NiNoKuni.UE4.Encryption;
 using CUE4Parse.GameTypes.NFS.Mobile.Lua;
 using CUE4Parse.GameTypes.NTE.Encryption;
 using CUE4Parse.GameTypes.PUBG.UE4.Lua;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
-using CUE4Parse.GameTypes.RocoKingdomWorld.Lua;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Lua;
 using CUE4Parse.GameTypes.Strinova.Lua;
+using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Lua;
 using CUE4Parse.GameTypes.UDWN.Lua;
 using CUE4Parse.UE4.Assets.Objects;
@@ -73,29 +72,33 @@ public partial class PakFileReader : AbstractAesVfsReader
                 or GAME_TheDivisionResurgence or GAME_QQ or GAME_DreamStar
                 or GAME_EtheriaRestart or GAME_DeadByDaylight_Old or GAME_WorldofJadeDynasty
                 or GAME_EmbersofTheUncrowned or GAME_ValorantSource or GAME_PUBGMobile
-                or GAME_PUBGLite or GAME_DragonSwordAwakening => true,
+                or GAME_PUBGLite or GAME_DragonSwordAwakening or GAME_RocoKingdomWorld => true,
             _ => false
         };
     }
 
     public PakFileReader(string filePath, VersionContainer? versions = null)
-        : this(new FileInfo(filePath), versions) {}
+        : this(new FileInfo(filePath), versions) { }
     public PakFileReader(FileInfo file, VersionContainer? versions = null)
-        : this(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions) {}
+        : this(file.FullName, file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), versions) { }
     public PakFileReader(string filePath, Stream stream, VersionContainer? versions = null)
-        : this(new FStreamArchive(filePath, stream, versions)) {}
+        : this(new FStreamArchive(filePath, stream, versions)) { }
     public PakFileReader(string filePath, RandomAccessStream stream, VersionContainer? versions = null)
-        : this(new FRandomAccessStreamArchive(filePath, stream, versions)) {}
+        : this(new FRandomAccessStreamArchive(filePath, stream, versions)) { }
 
     public override byte[] Extract(VfsEntry entry, FByteBulkDataHeader? header = null)
     {
-        if (entry is not FPakEntry pakEntry || entry.Vfs != this) throw new ArgumentException($"Wrong pak file reader, required {entry.Vfs.Name}, this is {Name}");
+        if (entry is not FPakEntry pakEntry || entry.Vfs != this)
+            throw new ArgumentException($"Wrong pak file reader, required {entry.Vfs.Name}, this is {Name}");
         // If this reader is used as a concurrent reader create a clone of the main reader to provide thread safety
         var reader = IsConcurrent ? (FArchive) Ar.Clone() : Ar;
         var alignment = pakEntry.IsEncrypted ? Aes.ALIGN : 1;
 
-        if (Game is GAME_PUBGMobile or GAME_PUBGLite) // There's so many changes I'll just leave it here
-            return PUBGMobileExtract(reader, pakEntry, header);
+        switch (Game)
+        {
+            case GAME_PUBGMobile or GAME_PUBGLite:
+                return PUBGMobileExtract(reader, pakEntry, header);
+        }
 
         long offset = 0;
         var requestedSize = (int) pakEntry.UncompressedSize;
@@ -111,8 +114,6 @@ public partial class PakFileReader : AbstractAesVfsReader
             {
                 case GAME_MarvelRivals or GAME_OperationApocalypse or GAME_WutheringWaves or GAME_MindsEye or GAME_TamasShadowveil:
                     return PartialEncryptCompressedExtract(reader, pakEntry, header);
-                case GAME_GameForPeace:
-                    return GameForPeaceExtract(reader, pakEntry);
                 case GAME_Rennsport:
                     return RennsportCompressedExtract(reader, pakEntry);
                 case GAME_DragonQuestXI:
@@ -123,8 +124,6 @@ public partial class PakFileReader : AbstractAesVfsReader
                     return ABIExtract(reader, pakEntry);
                 case GAME_eBaseballProSpirit:
                     return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
-                case GAME_ChasingKaleidoRIDER:
-                    return CKRExtract(reader, pakEntry, header);
             }
 
             var compressionBlockSize = (int) pakEntry.CompressionBlockSize;
@@ -134,9 +133,9 @@ public partial class PakFileReader : AbstractAesVfsReader
             // blocks are full size, except potentially the last one
             var numBlocks = lastBlockIndex - firstBlockIndex + 1;
             var bufferSize = numBlocks * compressionBlockSize;
-            if (lastBlockIndex == (int)((pakEntry.UncompressedSize - 1) / compressionBlockSize))
+            if (lastBlockIndex == (int) ((pakEntry.UncompressedSize - 1) / compressionBlockSize))
             {
-                var lastBlockInFileSize = (int)(pakEntry.UncompressedSize % compressionBlockSize);
+                var lastBlockInFileSize = (int) (pakEntry.UncompressedSize % compressionBlockSize);
                 if (lastBlockInFileSize > 0)
                     bufferSize -= compressionBlockSize - lastBlockInFileSize;
             }
@@ -168,38 +167,13 @@ public partial class PakFileReader : AbstractAesVfsReader
                 uncompressedOff += uncompressedSize;
             }
 
-            switch (Ar.Game)
-            {
-                case GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
-                    return NRCLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
-                case GAME_NevernessToEverness when pakEntry.Extension is "ini":
-                    return NevernessToEvernessIniEncryption.DecryptIni(uncompressed, requestedSize);
-                case GAME_Snowbreak when pakEntry.Extension is "lua":
-                    return SnowbreakLua.DecryptLua(uncompressed, requestedSize);
-                case GAME_Undawn when pakEntry.Extension is "lua":
-                    return UndawnLua.DecryptLuaBytecode(pakEntry.Path, uncompressed);
-                case GAME_Strinova when pakEntry.Extension is "lua":
-                    uncompressed = StrinovaLua.DecryptLuaBytecode(uncompressed);
-                    break;
-                case GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
-                    return NFSLua.RestoreLuaBytecode(pakEntry.Path, uncompressed);
-                case GAME_LordOfMysteries when pakEntry.Extension is "luac":
-                    return LoMLua.DecryptLuaJITBytecode(pakEntry.Path, uncompressed);
-                case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
-                    return NiNoKuniCsv.DecryptCsv(pakEntry.Name, uncompressed);
-                case GAME_ValorantSource when pakEntry.Extension is "lua":
-                    return ValorantSourceLua.DecryptLuaBytecode(pakEntry.Name, uncompressed);
-                default:
-                    break;
-            }
-
             var offsetInFirstBlock = offset - firstBlockIndex * compressionBlockSize;
             if (offsetInFirstBlock == 0 && requestedSize == bufferSize)
-                return uncompressed;
+                return ProcessExtractedData(pakEntry, uncompressed);
 
             var result = new byte[requestedSize];
             Array.Copy(uncompressed, offsetInFirstBlock, result, 0, requestedSize);
-            return result;
+            return ProcessExtractedData(pakEntry, result);
         }
 
         switch (Game)
@@ -214,8 +188,6 @@ public partial class PakFileReader : AbstractAesVfsReader
                 return ABIExtract(reader, pakEntry);
             case GAME_eBaseballProSpirit:
                 return ProSpiExtract(reader, pakEntry, alignment, header, offset, requestedSize);
-            case GAME_ChasingKaleidoRIDER:
-                    return CKRExtract(reader, pakEntry, header);
         }
 
         // Pak Entry is written before the file data,
@@ -228,40 +200,33 @@ public partial class PakFileReader : AbstractAesVfsReader
         var data = ReadAndDecryptEntryAt(pakEntry.Offset + pakEntry.StructSize + readOffset, (int) readSize,
             reader, pakEntry, (ulong) readOffset);
 
-        switch (Ar.Game)
-        {
-            case GAME_RocoKingdomWorld when pakEntry.Extension is "luac":
-                return NRCLua.DecryptLuaBytecode(pakEntry.Path, data);
-            case GAME_NevernessToEverness when pakEntry.Extension is "ini":
-                return NevernessToEvernessIniEncryption.DecryptIni(data, requestedSize);
-            case GAME_Snowbreak when pakEntry.Extension is "lua":
-                return SnowbreakLua.DecryptLua(data, requestedSize);
-            case GAME_GameForPeace when pakEntry.Extension is "lua":
-                return GameForPeaceLua.DecryptLuaBytecode(pakEntry.Path, data);
-            case GAME_Undawn when pakEntry.Extension is "lua":
-                return UndawnLua.DecryptLuaBytecode(pakEntry.Path, data);
-            case GAME_Strinova when pakEntry.Extension is "lua":
-                data = StrinovaLua.DecryptLuaBytecode(data);
-                break;
-            case GAME_NeedForSpeedMobile when pakEntry.Extension is "lua":
-                return NFSLua.RestoreLuaBytecode(pakEntry.Path, data);
-            case GAME_LordOfMysteries when pakEntry.Extension is "luac":
-                return LoMLua.DecryptLuaJITBytecode(pakEntry.Path, data);
-            case GAME_NiNoKuniCrossWorlds when pakEntry.Extension is "csv":
-                return NiNoKuniCsv.DecryptCsv(pakEntry.Name, data);
-            case GAME_ValorantSource when pakEntry.Extension is "lua":
-                return ValorantSourceLua.DecryptLuaBytecode(pakEntry.Name, data);
-            default:
-                break;
-        }
-
         if (dataOffset == 0 && requestedSize == data.Length)
-            return data;
+            return ProcessExtractedData(pakEntry, data);
 
         var chunk = new byte[requestedSize];
         Array.Copy(data, dataOffset, chunk, 0, requestedSize);
-        return chunk;
+        return ProcessExtractedData(pakEntry, chunk);
     }
+
+    protected virtual byte[] ProcessExtractedData(FPakEntry entry, byte[] data) => (Game, entry.Extension) switch
+    {
+        (GAME_Snowbreak, "lua") => SnowbreakLua.DecryptLua(data, data.Length),
+        (GAME_GameForPeace, "lua") => GameForPeaceLua.DecryptLuaBytecode(entry.Path, data),
+        (GAME_Undawn, "lua") => UndawnLua.DecryptLuaBytecode(entry.Path, data),
+        (GAME_Strinova, "lua") => StrinovaLua.DecryptLuaBytecode(data),
+        (GAME_NeedForSpeedMobile, "lua") => NFSLua.RestoreLuaBytecode(entry.Path, data),
+        (GAME_ValorantSource, "lua") => ValorantSourceLua.DecryptLuaBytecode(entry.Name, data),
+        (GAME_LordOfMysteries, "luac") => LoMLua.DecryptLuaJITBytecode(entry.Path, data),
+
+        (GAME_NevernessToEverness, "ini") => NevernessToEvernessIniEncryption.DecryptIni(data, data.Length),
+        (GAME_GameForPeace, "ini") => DecryptGameForPeaceIni(data),
+
+        (GAME_NiNoKuniCrossWorlds, "csv") => NiNoKuniCsv.DecryptCsv(entry.Name, data),
+
+        (GAME_RocoKingdomWorld, _) => RocoKingdomWorldEncryption.DecryptFile(data, entry, AesKey),
+
+        _ => data
+    };
 
     public override void Mount(StringComparer pathComparer)
     {
@@ -361,11 +326,7 @@ public partial class PakFileReader : AbstractAesVfsReader
     {
         // Prepare primary index and decrypt if necessary
         Ar.Position = Info.IndexOffset;
-        var indexData = Ar.Game switch
-        {
-            GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt(Ar.ReadBytes((int) Info.IndexSize), 0, (int) Info.IndexSize, 0, Info.IndexOffset, this),
-            _ => ReadAndDecryptIndex((int) Info.IndexSize)
-        };
+        var indexData = ReadAndDecryptIndex((int) Info.IndexSize);
         using FArchive primaryIndex = new FByteArchive($"{Name} - Primary Index", indexData, Versions);
 
         var fileCount = 0;
@@ -400,17 +361,20 @@ public partial class PakFileReader : AbstractAesVfsReader
             throw new ParserException(primaryIndex, "No path hash index");
 
         primaryIndex.Position += 36; // PathHashIndexOffset (long) + PathHashIndexSize (long) + PathHashIndexHash (20 bytes)
-        if (Ar.Game == GAME_Rennsport) primaryIndex.Position += 16;
+        if (Ar.Game == GAME_Rennsport)
+            primaryIndex.Position += 16;
 
         if (!primaryIndex.ReadBoolean())
             throw new ParserException(primaryIndex, "No directory index");
 
-        if (Ar.Game == GAME_TheDivisionResurgence) primaryIndex.Position += 40; // duplicate entry
+        if (Ar.Game == GAME_TheDivisionResurgence)
+            primaryIndex.Position += 40; // duplicate entry
 
         var directoryIndexOffset = primaryIndex.Read<long>();
         var directoryIndexSize = primaryIndex.Read<long>();
         primaryIndex.Position += 20; // Directory Index hash
-        if (Ar.Game == GAME_Rennsport) primaryIndex.Position += 20;
+        if (Ar.Game == GAME_Rennsport)
+            primaryIndex.Position += 20;
         var encodedPakEntriesSize = primaryIndex.Read<int>();
         if (Ar.Game == GAME_Rennsport)
         {
@@ -437,8 +401,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         var data = Ar.Game switch
         {
             GAME_Rennsport => RennsportAes.RennsportDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, true, this, true),
-            GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt(Ar.ReadBytes((int) directoryIndexSize), 0, (int) directoryIndexSize, 0, directoryIndexOffset, this),
-            _ => ReadAndDecryptIndex((int) directoryIndexSize, Info.FullDirectoryIndexIv),
+            _ => ReadAndDecryptIndex((int) directoryIndexSize, Info.FullDirectoryIndexIv, directoryIndexOffset),
         };
 
         using var directoryIndex = new GenericBufferReader(data);
@@ -489,7 +452,7 @@ public partial class PakFileReader : AbstractAesVfsReader
                 else
                 {
                     var index = -offset - 1;
-                    if (index <0 || index >= NonEncodedEntries.Length)
+                    if (index < 0 || index >= NonEncodedEntries.Length)
                     {
                         Log.Warning("Invalid nonencoded pak entry with index {Index}, path {Path}", index, path);
                         continue;
@@ -655,39 +618,36 @@ public partial class PakFileReader : AbstractAesVfsReader
         return bytes.CryptCtr(beginOffset, count, key, Info.IndexIv.Bytes);
     }
 
-    private byte[] ReadAndDecryptIndex(int length, FIoStoreEncryptionIV? iv)
+    private byte[] ReadAndDecryptIndex(int length, FIoStoreEncryptionIV? iv, object? customData = null)
     {
         var bytes = Ar.ReadBytes(length);
-        return DecryptPakEncryptionUnit(bytes, IsEncrypted, iv, 0, true);
+        return DecryptPakEncryptionUnit(bytes, length, IsEncrypted, iv, 0, true, customData);
     }
 
-    private byte[] ReadAndDecryptEntryAt(byte[] buffer, long position, int length, FArchive reader,
-        FPakEntry entry, ulong offsetInEncryptionUnit)
+    private byte[] ReadAndDecryptEntryAt(byte[] buffer, long position, int length, FArchive reader, FPakEntry entry, ulong offsetInEncryptionUnit)
     {
         reader.ReadAt(position, buffer, 0, length);
-        return DecryptPakEncryptionUnit(buffer, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit);
+        return DecryptPakEncryptionUnit(buffer, length, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit, customData: new FPakCustomEncryptionData(entry, position));
     }
 
-    private byte[] ReadAndDecryptEntryAt(long position, int length, FArchive reader, FPakEntry entry,
-        ulong offsetInEncryptionUnit)
+    private byte[] ReadAndDecryptEntryAt(long position, int length, FArchive reader, FPakEntry entry, ulong offsetInEncryptionUnit)
     {
         var bytes = reader.ReadBytesAt(position, length);
-        return DecryptPakEncryptionUnit(bytes, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit);
+        return DecryptPakEncryptionUnit(bytes, length, entry.IsEncrypted, entry.EncryptionIV, offsetInEncryptionUnit, customData: new FPakCustomEncryptionData(entry, position));
     }
 
-    private byte[] DecryptPakEncryptionUnit(byte[] bytes, bool isEncrypted,
-        FIoStoreEncryptionIV? iv, ulong offsetInEncryptionUnit, bool isIndex = false)
+    private byte[] DecryptPakEncryptionUnit(byte[] bytes, int length, bool isEncrypted, FIoStoreEncryptionIV? iv, ulong offsetInEncryptionUnit, bool isIndex = false, object? customData = null)
     {
         if (!isEncrypted || Info.EncryptionMethod != EIoEncryptionMethod.AES_CTR)
-            return DecryptIfEncrypted(bytes, isEncrypted, isIndex);
+            return DecryptIfEncrypted(bytes, 0, length, isEncrypted, isIndex: isIndex, customData: customData);
         if (CustomEncryption is not null)
-            return CustomEncryption(bytes, 0, bytes.Length, isIndex, this);
+            return CustomEncryption(bytes, 0, length, isIndex, this, customData);
         if (iv is null)
             throw new ParserException("AES-CTR pak encryption unit is missing its IV");
         EnsureValidAesKey(AesKey);
         var initialBlockIndex = checked((uint) (offsetInEncryptionUnit / Aes.ALIGN));
         var initialBlockByteOffset = (int) (offsetInEncryptionUnit % Aes.ALIGN);
-        bytes.AsSpan().CryptCtrInPlace(AesKey!, iv.Bytes, initialBlockIndex, initialBlockByteOffset);
+        bytes.AsSpan(0, length).CryptCtrInPlace(AesKey!, iv.Bytes, initialBlockIndex, initialBlockByteOffset);
         return bytes;
     }
 

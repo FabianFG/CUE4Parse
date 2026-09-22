@@ -6,30 +6,27 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
 using CUE4Parse.GameTypes.BB3.Encryption.Aes;
+using CUE4Parse.GameTypes.ChasingKaleidoRIDER.Encryption;
 using CUE4Parse.GameTypes.DBD.Encryption.Aes;
 using CUE4Parse.GameTypes.DFHO.Encryption.Aes;
 using CUE4Parse.GameTypes.DragonSword.Encryption.Aes;
 using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
 using CUE4Parse.GameTypes.Embark.Encryption.Aes;
-using CUE4Parse.GameTypes.FSR.Encryption.Aes;
-using CUE4Parse.GameTypes.FunkoFusion.Encryption.Aes;
 using CUE4Parse.GameTypes.INikki.Encryption.Aes;
 using CUE4Parse.GameTypes.MindsEye.Encryption.Aes;
 using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
 using CUE4Parse.GameTypes.NFS.Mobile.Encryption.Aes;
 using CUE4Parse.GameTypes.NMZ.Encryption.Aes;
 using CUE4Parse.GameTypes.OPA.Encryption.Aes;
-using CUE4Parse.GameTypes.PAXDEI.Encryption.Aes;
 using CUE4Parse.GameTypes.PMA.Encryption.Aes;
 using CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
-using CUE4Parse.GameTypes.RocoKingdomWorld.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
 using CUE4Parse.GameTypes.SilverPalace.Encryption;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
-using CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
 using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Encryption;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.Aes;
+using CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Encryption.Aes;
 using CUE4Parse.GameTypes.Tencent.ValorantSource.Encryption.Aes;
 using CUE4Parse.GameTypes.THPS.Encryption.Aes;
 using CUE4Parse.GameTypes.UDWN.Encryption.Aes;
@@ -50,7 +47,6 @@ namespace CUE4Parse.FileProvider.Vfs
 {
     public abstract class AbstractVfsFileProvider : AbstractFileProvider, IVfsFileProvider
     {
-
         protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs => (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
 
@@ -78,22 +74,21 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             CustomEncryption = versions?.Game switch
             {
+                GAME_PaxDei or GAME_3on3FreeStyleRebound or GAME_FunkoFusion
+                    or GAME_Splitgate2 or GAME_Empulse => CustomAesKeyExpansion.DecryptWithRoundKeys,
+
                 GAME_ApexLegendsMobile => ApexLegendsMobileAes.DecryptApexMobile,
                 GAME_Snowbreak => SnowbreakAes.SnowbreakDecrypt,
                 GAME_MarvelRivals or GAME_TamasShadowveil => NetEaseAes.NetEaseDecrypt,
                 GAME_Undawn => ToaaAes.ToaaDecrypt,
                 GAME_DeadByDaylight or GAME_DeadByDaylight_Old => DBDAes.DbDDecrypt,
-                GAME_PaxDei => PaxDeiAes.PaxDeiDecrypt,
-                GAME_3on3FreeStyleRebound => FreeStyleReboundAes.FSRDecrypt,
                 GAME_DreamStar => DreamStarAes.DreamStarDecrypt,
                 GAME_DeltaForce => DeltaForceAes.DeltaForceDecrypt,
                 GAME_PromiseMascotAgency => PMAAes.PMADecrypt,
                 GAME_Rennsport => RennsportAes.RennsportDecrypt,
-                GAME_FunkoFusion => FunkoFusionAes.FunkoFusionDecrypt,
                 GAME_TonyHawkProSkater12 or GAME_TonyHawkProSkater34 => THPS12Aes.THPS12Decrypt,
                 GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
                 GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
-                GAME_Splitgate2 or GAME_Empulse => Aes1047Games.Decrypt1047Games,
                 GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
                 GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
                 GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
@@ -109,6 +104,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_ValorantSource => ValorantSourceAes.ValorantSourceDecrypt,
                 GAME_PUBGMobile or GAME_PUBGLite => PUBGMobileAes.PUBGMobileDecrypt,
                 GAME_GangstarMirageCity => GangstarMirageCityAes.GangstarMirageCityDecrypt,
+                GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt,
                 _ => null
             };
         }

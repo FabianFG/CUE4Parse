@@ -22,7 +22,7 @@ public static class ValorantSourceAes
     // key[17..20] ^= EncryptionKeyGuid.C
     // key[23..26] ^= EncryptionKeyGuid.D
     // and AES ECB decrypt using this key 0x984D74052F0E4C4AB00174A8106AFE8D92977E347E1CE5D99ACDFE3CB3B8E9A8, not per-pak RSA derived key
-    public static byte[] ValorantSourceDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] ValorantSourceDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

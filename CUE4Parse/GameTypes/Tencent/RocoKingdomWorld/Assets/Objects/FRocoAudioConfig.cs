@@ -1,7 +1,7 @@
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Wwise;
 
-namespace CUE4Parse.GameTypes.RocoKingdomWorld.Assets.Objects;
+namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Assets.Objects;
 
 public readonly struct FAudioEventEntry
 {

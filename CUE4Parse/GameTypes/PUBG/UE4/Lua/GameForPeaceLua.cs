@@ -2,12 +2,11 @@ using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.PUBG.UE4.Lua;
 
-public class FGFPLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLua53Archive(name, data, versions)
+public class FGFPLuaArchive(string name, byte[] data) : FLua53Archive(name, data)
 {
     private readonly byte[] _stringKey =
     [
@@ -41,18 +40,8 @@ public class GameForPeaceLua
 {
     public static byte[] DecryptLuaBytecode(string name, byte[] encryptedData)
     {
-        using var Ar = new FGFPLuaArchive(name, encryptedData, null);
-
-        var lua = ReadBytecode(Ar);
-
-        using var msOut = new MemoryStream();
-        using (var writer = new FLua53ArchiveWriter(msOut))
-        {
-            FLuaWriter53.Write(writer, lua);
-            writer.Flush();
-        }
-
-        return msOut.ToArray();
+        using var Ar = new FGFPLuaArchive(name, encryptedData);
+        return new FLuaWriter53(ReadBytecode(Ar)).GetBuffer();
     }
 
     private static LuaBytecode ReadBytecode(FGFPLuaArchive Ar)

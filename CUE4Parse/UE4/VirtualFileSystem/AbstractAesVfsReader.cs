@@ -88,23 +88,23 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count) =>
         DecryptIfEncrypted(bytes, beginOffset, count, IsEncrypted);
 
-    protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted, bool isIndex = false)
+    protected byte[] DecryptIfEncrypted(byte[] bytes, bool isEncrypted, bool isIndex = false, object? customData = null)
     {
         if (!isEncrypted) return bytes;
         if (CustomEncryption != null)
         {
-            return CustomEncryption(bytes, 0, bytes.Length, isIndex, this);
+            return CustomEncryption(bytes, 0, bytes.Length, isIndex, this, customData);
         }
 
         return Decrypt(bytes, 0, bytes.Length, AesKey, isIndex: isIndex);
     }
 
-    protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted, bool bypassMountPointCheck = false, bool isIndex = false)
+    protected byte[] DecryptIfEncrypted(byte[] bytes, int beginOffset, int count, bool isEncrypted, bool bypassMountPointCheck = false, bool isIndex = false, object? customData = null)
     {
         if (!isEncrypted) return bytes;
         if (CustomEncryption != null)
         {
-            return CustomEncryption(bytes, beginOffset, count, isIndex, this);
+            return CustomEncryption(bytes, beginOffset, count, isIndex, this, customData);
         }
 
         return Decrypt(bytes, beginOffset, count, AesKey, bypassMountPointCheck, isIndex);

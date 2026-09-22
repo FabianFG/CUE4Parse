@@ -168,6 +168,7 @@ public class FStaticMeshLODResources
                     GAME_ArenaBreakoutInfinite => 16,
                     GAME_StarWarsJediSurvivor or GAME_DeltaForce => 4, // bDropNormals
                     GAME_FateTrigger => 5,
+                    GAME_Splitgate2 or GAME_Empulse => 1,
                     _ => 0
                 };
             }

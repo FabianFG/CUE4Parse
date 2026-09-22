@@ -2,12 +2,11 @@ using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.UDWN.Lua;
 
-public class FUndawnLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLua53Archive(name, data, versions)
+public class FUndawnLuaArchive(string name, byte[] data) : FLua53Archive(name, data)
 {
     private readonly byte[] _stringKey =
     [
@@ -98,7 +97,7 @@ public class UndawnLua
 
         TensorUtils.Xor(encryptedData.AsSpan()[4..], XorKey); // Part of the header isn't encrypted but I don't care
 
-        using var Ar = new FUndawnLuaArchive(name, encryptedData, null);
+        using var Ar = new FUndawnLuaArchive(name, encryptedData);
         var lua = new LuaBytecode
         {
             Header = ReadHeader(Ar),
@@ -106,13 +105,7 @@ public class UndawnLua
             MainFunc = FLua53Reader.ReadFunction(Ar, null, _opcodeMapping),
         };
 
-        using var ms = new MemoryStream();
-        using var writer = new FLua53ArchiveWriter(ms);
-
-        FLuaWriter53.Write(writer, lua);
-        writer.Flush();
-
-        return ms.ToArray();
+        return new FLuaWriter53(lua).GetBuffer();
     }
 
     private static LuaHeader ReadHeader(FLua53Archive Ar)

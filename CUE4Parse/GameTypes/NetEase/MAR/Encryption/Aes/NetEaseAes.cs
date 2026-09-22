@@ -724,7 +724,7 @@ public static class NetEaseAes
         PUTU32(plaintext[12..], s3);
     }
 
-    public static byte[] NetEaseDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] NetEaseDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

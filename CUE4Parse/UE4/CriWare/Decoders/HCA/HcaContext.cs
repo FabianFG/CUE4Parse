@@ -1,7 +1,7 @@
 using System.Text;
-using static CUE4Parse.UE4.CriWare.Decoders.HCA.Constants;
+using static CUE4Parse.UE4.Criware.Decoders.HCA.Constants;
 
-namespace CUE4Parse.UE4.CriWare.Decoders.HCA;
+namespace CUE4Parse.UE4.Criware.Decoders.HCA;
 
 internal class HcaContext
 {
