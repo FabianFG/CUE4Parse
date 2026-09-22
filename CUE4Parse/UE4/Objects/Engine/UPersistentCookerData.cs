@@ -199,8 +199,8 @@ namespace CUE4Parse.UE4.Objects.Engine
 
     public class UPersistentCookerData : Assets.Exports.UObject
     {
-        public Dictionary<string, FPackageTreeEntry[]>? ClassMap;
-        public Dictionary<string, Dictionary<string, FPackageTreeEntry[]>>? LocalizationMap;
+        public Dictionary<string, FPackageTreeEntry[]>? CookedStartupObjects;
+        public Dictionary<string, Dictionary<string, FPackageTreeEntry[]>>? CookedStartupObjectsLoc;
         public string[]? AlreadyHandledStartupMaterials;
         public string[]? AlreadyHandledStartupMaterialInstances;
         public Dictionary<string, FCookedBulkDataInfo>? CookedBulkDataInfoMap;
@@ -223,8 +223,8 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             if (Ar.Ver > EUnrealEngineObjectUE3Version.RECALCULATE_MAXACTIVEPARTICLE)
             {
-                ClassMap = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadArray(() => new FPackageTreeEntry(Ar)));
-                LocalizationMap = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadMap(Ar.ReadFString, () => Ar.ReadArray(() => new FPackageTreeEntry(Ar))));
+                CookedStartupObjects = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadArray(() => new FPackageTreeEntry(Ar)));
+                CookedStartupObjectsLoc = Ar.ReadMap(Ar.ReadFString, () => Ar.ReadMap(Ar.ReadFString, () => Ar.ReadArray(() => new FPackageTreeEntry(Ar))));
                 AlreadyHandledStartupMaterials = Ar.ReadArray(Ar.ReadFString);
                 AlreadyHandledStartupMaterialInstances = Ar.ReadArray(Ar.ReadFString);
             }
@@ -262,16 +262,16 @@ namespace CUE4Parse.UE4.Objects.Engine
         {
             base.WriteJson(writer, serializer);
 
-            if (ClassMap != null)
+            if (CookedStartupObjects != null)
             {
-                writer.WritePropertyName("ClassMap");
-                serializer.Serialize(writer, ClassMap);
+                writer.WritePropertyName("CookedStartupObjects");
+                serializer.Serialize(writer, CookedStartupObjects);
             }
 
-            if (LocalizationMap != null)
+            if (CookedStartupObjectsLoc != null)
             {
-                writer.WritePropertyName("LocalizationMap");
-                serializer.Serialize(writer, LocalizationMap);
+                writer.WritePropertyName("CookedStartupObjectsLoc");
+                serializer.Serialize(writer, CookedStartupObjectsLoc);
             }
 
             if (AlreadyHandledStartupMaterials != null)
