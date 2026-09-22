@@ -77,7 +77,7 @@ public readonly struct FByteBulkDataHeader
         }
 
         ElementCount = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (int) Ar.Read<long>() : Ar.Read<int>();
-        SizeOnDisk = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (uint) Ar.Read<long>() : Ar.Read<uint>();
+        SizeOnDisk = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) || Ar.Game == GAME_LetItDie ? (uint) Ar.Read<long>() : Ar.Read<uint>();
         if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22)
         {
             if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
@@ -91,7 +91,7 @@ public readonly struct FByteBulkDataHeader
         }
         else
         {
-            OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
+            OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS || Ar.Game == GAME_LetItDie ? Ar.Read<long>() : Ar.Read<int>();
         }
         if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp)) // UE4.26 flag
         {
@@ -110,7 +110,5 @@ public readonly struct FByteBulkDataHeader
             Ar.Position += BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? sizeof(long) : sizeof(uint); // DuplicateSizeOnDisk
             Ar.Position += Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? sizeof(long) : sizeof(int); // DuplicateOffset
         }
-
-        if (Ar.Game == GAME_LetItDie) Ar.Position += 8;
     }
 }
