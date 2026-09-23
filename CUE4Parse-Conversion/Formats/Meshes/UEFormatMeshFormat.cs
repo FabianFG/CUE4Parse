@@ -6,7 +6,7 @@ using CUE4Parse.UE4.Writers;
 namespace CUE4Parse_Conversion.Formats.Meshes;
 
 /// <param name="bNaniteSeparate">UEFormat embed LODs into a single file but you may want the nanite lod written as a separate file</param>
-public sealed class UEFormatMeshFormat(bool bNaniteSeparate = false, bool bLodSeparate = false) : IMeshExportFormat
+public sealed class UEFormatMeshFormat(bool bNaniteSeparate = false) : IMeshExportFormat
 {
     public string DisplayName => "UEFormat (uemodel)";
 
@@ -25,9 +25,6 @@ public sealed class UEFormatMeshFormat(bool bNaniteSeparate = false, bool bLodSe
 
     private IReadOnlyList<ExportFile> Build<TVertex>(IList<MeshLodDto<TVertex>> lods, Func<Func<MeshLodDto<TVertex>, bool>?, UEModel> factory) where TVertex : struct, IMeshVertex
     {
-        if (bLodSeparate) // Special case when LODs aren't really LODs but separate meshes, needed for custom mesh format
-            return [.. lods.Select(lod => Save(factory(candidate => ReferenceEquals(candidate, lod)), lod._suffix))];
-
         var bHasNanite = false;
         var bHasRegular = false;
         if (bNaniteSeparate)

@@ -8,7 +8,6 @@ using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
-using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -47,6 +46,15 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
             Materials[i] = new MeshMaterialDto(mesh.StaticMaterials[i]);
         }
         Sockets = mesh.Sockets;
+    }
+
+    protected MeshDto(UIRMesh mesh, int meshIndex) : base(mesh, meshIndex > 0 ? $"{mesh.Name}_{meshIndex}" : mesh.Name)
+    {
+        Materials = new MeshMaterialDto[mesh.Materials.Length];
+        for (var i = 0; i < Materials.Length; i++)
+        {
+            Materials[i] = new MeshMaterialDto($"MaterialSlot_{i}", mesh.Materials[i]); // USD doesn't like empty materials
+        }
     }
 
     protected MeshDto(UGeometryCollection mesh) : base(mesh)
@@ -267,32 +275,11 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
     }
 
-    public StaticMeshDto(UIRMesh mesh, EMeshQuality quality = EMeshQuality.Highest) : base(mesh, new MeshMaterialDto[mesh.Materials.Length])
+    public StaticMeshDto(UIRMesh mesh, int meshIndex) : base(mesh, meshIndex)
     {
-        for (var i = 0; i < Materials.Length; i++)
-        {
-            Materials[i] = new MeshMaterialDto($"MaterialSlot_{i}"); // USD doesn't like empty materials
-        }
-
-        if (mesh.MeshBuffers.Length > 0 && mesh.Sections.Length > 0)
-        {
-            if (quality == EMeshQuality.All)
-            {
-                for (var bufferIndex = 0; bufferIndex < mesh.MeshBuffers.Length; bufferIndex++)
-                {
-                    if (mesh.Sections.Any(section => section.BufferIndex == bufferIndex))
-                    {
-                        LODs.Add(MeshLodDto<MeshVertex>.FromIRMesh(this, mesh, bufferIndex));
-                    }
-                }
-            }
-            else
-            {
-                LODs.Add(MeshLodDto<MeshVertex>.FromIRMesh(this, mesh));
-            }
-        }
-
-        Bounds = mesh.Bounds;
+        LODs.Add(MeshLodDto<MeshVertex>.FromIRMesh(this, mesh, meshIndex));
+        var bounds = LODs.FirstOrDefault()?.CalculateLodBounds();
+        Bounds = bounds ?? new FBox(FVector.ZeroVector, FVector.OneVector);
         SetLodSuffixes();
     }
 
