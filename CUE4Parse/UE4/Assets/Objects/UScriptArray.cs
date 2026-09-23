@@ -50,9 +50,10 @@ public class UScriptArray
             if (!Ar.HasUnversionedProperties &&
                 tagData?.Name is not null &&
                 Ar.Owner?.Provider?.MappingsForGame?.Types is { } mappingTypes &&
+                Ar.StructTypeStack.TryPeek(out var structType) &&
                 TryGetArrayInnerType(
                     mappingTypes,
-                    Ar.StructTypeStack.Peek(),
+                    structType,
                     tagData.Name,
                     out var innerType,
                     out var innerTagData))
@@ -124,13 +125,14 @@ public class UScriptArray
 
     private static bool TryGetArrayInnerType(
         IDictionary<string, MappingsProvider.Struct> mappingTypes,
-        string structName,
+        string? structName,
         FName propertyName,
         out string? innerType,
         out FPropertyTagData? innerTagData)
     {
         innerType = null;
         innerTagData = null;
+        if (string.IsNullOrEmpty(structName)) return false;
 
         var currentStructName = structName;
         while (mappingTypes.TryGetValue(currentStructName, out var mappingStruct))

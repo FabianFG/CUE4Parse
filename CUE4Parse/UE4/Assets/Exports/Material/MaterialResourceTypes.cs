@@ -40,7 +40,7 @@ public class FMaterialResource : FMaterial
 public class FMaterial
 {
     public FMaterialShaderMap? LoadedShaderMap;
-    public List<UTexture>? ReferencedTextures { get; set; } = [];
+    public FPackageIndex?[]? ReferencedTextures { get; set; } = [];
 
     public void Deserialize(FAssetArchive Ar)
     {
@@ -85,7 +85,7 @@ public class FMaterial
             }
             else
             {
-                ReferencedTextures = Ar.ReadArray(() => new FPackageIndex(Ar)).Select(i => i.TryLoad(out UTexture t) ? t : null).OfType<UTexture>().ToList(); // UniformExpressionTextures (ugly code)
+                ReferencedTextures = Ar.ReadArray(() => new FPackageIndex(Ar)); // UniformExpressionTextures
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.RENDERING_REFACTOR)

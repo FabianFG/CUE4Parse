@@ -76,6 +76,8 @@ public class UMaterialInstance : UMaterialInterface
                     QualityMask = Ar.Read<int>();
                 }
 
+                if (Ar.Game == GAME_APBReloaded) return;
+
                 for (int QualityIndex = 0; QualityIndex < (Ar.Ver > EUnrealEngineObjectUE3Version.FLASH_MERGE_TO_MAIN && Ar.Game < GAME_UE4_0 ? 2 : 1); QualityIndex++)
                 {
                     if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MATERIAL_QUALITY_LEVEL && (QualityMask & (1 << QualityIndex)) == 0)

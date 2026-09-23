@@ -179,9 +179,17 @@ public class UObject : AbstractPropertyHolder
                 return;
             }
 
-            Ar.StructTypeStack.Push(Class?.Super?.Name.Text ?? Class?.Name.Text);
-            DeserializePropertiesTagged(Properties = [], Ar, false);
-            Ar.StructTypeStack.Pop();
+            var structType = Class?.Super?.Name.Text ?? Class?.Name.Text;
+            var pushedStructType = !string.IsNullOrEmpty(structType);
+            if (pushedStructType) Ar.StructTypeStack.Push(structType!);
+            try
+            {
+                DeserializePropertiesTagged(Properties = [], Ar, false);
+            }
+            finally
+            {
+                if (pushedStructType) Ar.StructTypeStack.Pop();
+            }
         }
 
         if (Ar.Game >= GAME_UE4_0 && !Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
