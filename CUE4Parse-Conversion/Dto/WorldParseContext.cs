@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.Lights;
@@ -72,6 +71,7 @@ internal sealed class WorldParseContext
                         UDirectionalLightComponent directionalLight => new DirectionalLightComponentDto(directionalLight, owner),
                         _ => new SceneComponentDto(light, owner)
                     },
+                    UIRMeshComponent irmc => new IRMeshCComponentDto(irmc, owner),
                     // UAudioComponent audio => new AudioComponent(audio),
                     // UTextRenderComponent text => new TextRenderComponent(text),
                     // UCameraComponent camera => new CameraComponent(camera),

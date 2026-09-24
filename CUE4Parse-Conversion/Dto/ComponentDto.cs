@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Exports;
+﻿using CUE4Parse.GameTypes.Nascar.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
@@ -381,3 +382,5 @@ public class DirectionalLightComponentDto(UDirectionalLightComponent component, 
 }
 
 public class SkyLightComponentDto(USkyLightComponent component, ActorDto owner) : LightComponentBaseDto(component, owner);
+
+public class IRMeshCComponentDto(UIRMeshComponent component, ActorDto owner) : MeshComponentDto(component.Mesh, component, owner);

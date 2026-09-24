@@ -13,9 +13,12 @@ public partial class MeshLodDto<TVertex>
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(partIndex, originalMesh.Info.PartCount);
 
-        var sectionCount = originalMesh.Sections.Where(x => x.PartIndex == partIndex && x.LOD == 0).ToArray();
-        var vertCount = sectionCount.Max(x => x.MaxVertexIndex) + 1;
-        var triCount = sectionCount[^1].FirstIndex + sectionCount[^1].NumTriangles * 3;
+        var partSections = originalMesh.Sections.Where(x => x.PartIndex == partIndex).ToArray();
+        var minLod = partSections.Min(x => x.LOD);
+        partSections = partSections.Where(x => x.LOD == minLod).ToArray();
+
+        var vertCount = partSections.Max(x => x.MaxVertexIndex) + 1;
+        var triCount = partSections[^1].FirstIndex + partSections[^1].NumTriangles * 3;
 
         var part = originalMesh.PartsBuffers[partIndex];
         var numTexCoords = part.Info.NumCoords;
@@ -63,10 +66,10 @@ public partial class MeshLodDto<TVertex>
             }
         }
 
-        var sections = new MeshSectionDto[sectionCount.Length];
-        for (int i = 0; i < sectionCount.Length; i++)
+        var sections = new MeshSectionDto[partSections.Length];
+        for (int i = 0; i < partSections.Length; i++)
         {
-            var sec = sectionCount[i];
+            var sec = partSections[i];
             sections[i] = new MeshSectionDto(sec.MaterialIndex, sec.FirstIndex, sec.NumTriangles, true);
             if (sec.FirstIndex == 0) continue;
             var span = indexBuffer.AsSpan(sec.FirstIndex, sec.NumTriangles * 3);
