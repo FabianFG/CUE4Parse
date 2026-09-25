@@ -3,18 +3,30 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.MappingsProvider;
 
-public class Struct(TypeMappings? context, string name, int propertyCount)
+public class Struct
 {
-    public readonly TypeMappings? Context = context;
-    public string Name = name;
+    public readonly TypeMappings? Context;
+    public string Name;
     public string? SuperType;
     public Lazy<Struct?> Super = new((Struct?) null);
     public Dictionary<int, PropertyInfo> Properties = new();
-    public int PropertyCount = propertyCount;
+    private readonly int _propCountClassFlag;
+    public uint Flags;
 
     private Lazy<(Dictionary<int, PropertyInfo> Properties, int PropertyCount)>? _cookedSchema;
 
-    public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount) : this(context, name, propertyCount)
+    public int PropertyCount => _propCountClassFlag & 0xFFFFFF;
+    public bool IsClass => _propCountClassFlag >>> 24 == 0;
+
+    public Struct(TypeMappings? context, string name, int propCountClassFlag, uint flags = 0)
+    {
+        _propCountClassFlag = propCountClassFlag;
+        Context = context;
+        Name = name;
+        Flags = flags;
+    }
+
+    public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propCountClassFlag, uint flags = 0) : this(context, name, propCountClassFlag, flags)
     {
         SuperType = superType;
         Super = new Lazy<Struct?>(() =>
@@ -147,9 +159,9 @@ public class SerializedStruct : Struct
 
 public class PropertyInfo(int index, string name, PropertyType mappingType, int? arraySize = null, EPropertyFlags propertyFlags = EPropertyFlags.None) : ICloneable
 {
-    public int Index = index;
     public string Name = name;
-    public int? ArraySize = arraySize;
+    public int Index = index;
+    public int ArraySize = arraySize ?? 1;
     public PropertyType MappingType = mappingType;
     public EPropertyFlags PropertyFlags = propertyFlags;
 

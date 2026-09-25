@@ -2,20 +2,20 @@ namespace CUE4Parse.MappingsProvider.Usmap;
 
 public static class UsmapProperties
 {
-    public static Struct ParseStruct(TypeMappings context, FUsmapReader Ar, IReadOnlyList<string> nameLut)
+    public static Struct ParseStruct(TypeMappings context, FUsmapReader Ar)
     {
-        var name = Ar.ReadName(nameLut)!;
-        if (Ar.Version >= EUsmapVersion.ExtendedPropertyMetadata)
-            _ = Ar.ReadName(nameLut); // owner package name (or null)
+        if (Ar.Version >= EUsmapVersion.ExtendedMetadata)
+            _ = Ar.ReadName(); // owner package name (or null)
+        var name = Ar.ReadName()!;
+        var superType = Ar.ReadName();
+        var flags = Ar.Version >= EUsmapVersion.ExtendedMetadata ? Ar.Read<uint>() : 0;
 
-        var superType = Ar.ReadName(nameLut);
-
-        var propertyCount = Ar.Read<ushort>();
-        var serializablePropertyCount = Ar.Read<ushort>();
+        var propCountClassFlag = Ar.Version >= EUsmapVersion.ExtendedMetadata ? Ar.Read<int>() : Ar.Read<ushort>();
+        var serializablePropertyCount = Ar.Version >= EUsmapVersion.ExtendedMetadata ? Ar.Read<int>() : Ar.Read<ushort>();
         var properties = new Dictionary<int, PropertyInfo>();
         for (var i = 0; i < serializablePropertyCount; i++)
         {
-            var propInfo = ParsePropertyInfo(Ar, nameLut);
+            var propInfo = ParsePropertyInfo(Ar);
             for (var j = 0; j < propInfo.ArraySize; j++)
             {
                 var clone = (PropertyInfo) propInfo.Clone();
@@ -24,20 +24,20 @@ public static class UsmapProperties
             }
         }
 
-        return new Struct(context, name, superType, properties, propertyCount);
+        return new Struct(context, name, superType, properties, propCountClassFlag, flags);
     }
 
-    public static PropertyInfo ParsePropertyInfo(FUsmapReader Ar, IReadOnlyList<string> nameLut)
+    public static PropertyInfo ParsePropertyInfo(FUsmapReader Ar)
     {
         var index = Ar.Read<ushort>();
-        var arrayDim = Ar.Version >= EUsmapVersion.ExtendedPropertyMetadata ? Ar.Read<ushort>() : Ar.Read<byte>();
-        var name = Ar.ReadName(nameLut)!;
-        var type = ParsePropertyType(Ar, nameLut);
+        var arrayDim = Ar.Version >= EUsmapVersion.ExtendedMetadata ? Ar.Read<ushort>() : Ar.Read<byte>();
+        var name = Ar.ReadName()!;
+        var type = ParsePropertyType(Ar);
         var flags = Ar.ReadPropertyFlags(name);
         return new PropertyInfo(index, name, type, arrayDim, flags);
     }
 
-    public static PropertyType ParsePropertyType(FUsmapReader Ar, IReadOnlyList<string> nameLut)
+    public static PropertyType ParsePropertyType(FUsmapReader Ar)
     {
         var typeEnum = Ar.Read<EPropertyType>();
         var type = Enum.GetName(typeEnum) ?? string.Empty;
@@ -50,20 +50,20 @@ public static class UsmapProperties
         switch (typeEnum)
         {
             case EPropertyType.EnumProperty:
-                innerType = ParsePropertyType(Ar, nameLut);
-                enumName = Ar.ReadName(nameLut);
+                innerType = ParsePropertyType(Ar);
+                enumName = Ar.ReadName();
                 break;
             case EPropertyType.StructProperty:
-                structType = Ar.ReadName(nameLut);
+                structType = Ar.ReadName();
                 break;
             case EPropertyType.SetProperty:
             case EPropertyType.ArrayProperty:
             case EPropertyType.OptionalProperty:
-                innerType = ParsePropertyType(Ar, nameLut);
+                innerType = ParsePropertyType(Ar);
                 break;
             case EPropertyType.MapProperty:
-                innerType = ParsePropertyType(Ar, nameLut);
-                valueType = ParsePropertyType(Ar, nameLut);
+                innerType = ParsePropertyType(Ar);
+                valueType = ParsePropertyType(Ar);
                 break;
         }
 
