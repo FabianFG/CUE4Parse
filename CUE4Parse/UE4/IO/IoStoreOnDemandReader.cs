@@ -84,7 +84,7 @@ public class IoStoreOnDemandReader : IoStoreReader
             else
             {
                 var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
-                Compression.Compression.Decompress(compressedBuffer, 0, (int) rawSize, uncompressedBuffer, 0, (int) uncompressedSize, compressionMethod, game: Game);
+                Compression.Compression.Decompress(compressedBuffer, 0, (int) rawSize, uncompressedBuffer, 0, (int) uncompressedSize, compressionMethod);
                 src = uncompressedBuffer;
             }
 

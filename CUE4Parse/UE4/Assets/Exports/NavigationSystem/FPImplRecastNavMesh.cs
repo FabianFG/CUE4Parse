@@ -89,14 +89,11 @@ public class FCompressedTileCacheData
     public int UncompressedSize;
     public int CompressedSize;
     [JsonIgnore] public byte[] CompressedData = [];
-    [JsonIgnore] public EGame Game = EGame.GAME_UE4_LATEST;
 
     public bool IsValid => Header.HasValue;
 
     public FCompressedTileCacheData(FArchive Ar, int compressedDataSizeNoHeader)
     {
-        Game = Ar.Game;
-
         var bHasHeader = compressedDataSizeNoHeader >= 0;
         if (!bHasHeader) return;
 
@@ -119,7 +116,7 @@ public class FCompressedTileCacheData
             return [];
         }
         var decompressedData = new byte[UncompressedSize];
-        Compression.Compression.Decompress(CompressedData, 0, CompressedSize, decompressedData, 0, UncompressedSize, CompressionMethod.Oodle, game: Game);
+        Compression.Compression.Decompress(CompressedData, 0, CompressedSize, decompressedData, 0, UncompressedSize, CompressionMethod.Oodle);
         return decompressedData;
     }
 }
