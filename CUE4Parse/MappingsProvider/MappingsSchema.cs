@@ -8,18 +8,25 @@ public class Struct
     public readonly TypeMappings? Context;
     public string Name;
     public string? SuperType;
-    public Lazy<Struct?> Super;
-    public Dictionary<int, PropertyInfo> Properties;
-    public int PropertyCount;
+    public Lazy<Struct?> Super = new((Struct?) null);
+    public Dictionary<int, PropertyInfo> Properties = new();
+    private readonly int _propCountClassFlag;
+    public uint Flags;
 
-    public Struct(TypeMappings? context, string name, int propertyCount)
+    private Lazy<(Dictionary<int, PropertyInfo> Properties, int PropertyCount)>? _cookedSchema;
+
+    public int PropertyCount => _propCountClassFlag & 0xFFFFFF;
+    public bool IsClass => _propCountClassFlag >>> 24 == 0;
+
+    public Struct(TypeMappings? context, string name, int propCountClassFlag, uint flags = 0)
     {
+        _propCountClassFlag = propCountClassFlag;
         Context = context;
         Name = name;
-        PropertyCount = propertyCount;
+        Flags = flags;
     }
 
-    public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount) : this(context, name, propertyCount)
+    public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propCountClassFlag, uint flags = 0) : this(context, name, propCountClassFlag, flags)
     {
         SuperType = superType;
         Super = new Lazy<Struct?>(() =>
@@ -34,35 +41,85 @@ public class Struct
         Properties = properties;
     }
 
-    public bool TryGetValue(int i, out PropertyInfo info)
+    public bool TryGetValue(int i, out PropertyInfo info) => TryGetValue(i, false, out info);
+
+    public bool TryGetValue(int i, bool filterEditorOnly, out PropertyInfo info)
     {
-        if (!Properties.TryGetValue(i, out info))
+        var (properties, propertyCount) = GetSchema(filterEditorOnly);
+        if (!properties.TryGetValue(i, out info))
         {
-            return i >= PropertyCount && Super.Value != null &&
-                   Super.Value.TryGetValue(i - PropertyCount, out info);
+            return i >= propertyCount && Super.Value != null &&
+                   Super.Value.TryGetValue(i - propertyCount, filterEditorOnly, out info);
         }
 
         return true;
     }
 
-    public int CountProperties(bool includeSuper)
+    public int CountProperties(bool includeSuper, bool filterEditorOnly = false)
     {
-        int total = 0;
+        var total = 0;
         var current = this;
 
         while (current != null)
         {
-            total += current.PropertyCount;
+            total += current.GetSchema(filterEditorOnly).PropertyCount;
             current = includeSuper ? current.Super.Value : null;
         }
 
         return total;
     }
+
+    private (Dictionary<int, PropertyInfo> Properties, int PropertyCount) GetSchema(bool filterEditorOnly)
+    {
+        if (!filterEditorOnly)
+            return (Properties, PropertyCount);
+
+        var cooked = _cookedSchema;
+        if (cooked == null)
+        {
+            cooked = new Lazy<(Dictionary<int, PropertyInfo>, int)>(BuildCookedSchema, LazyThreadSafetyMode.ExecutionAndPublication);
+            var existing = Interlocked.CompareExchange(ref _cookedSchema, cooked, null);
+            if (existing != null)
+                cooked = existing;
+        }
+
+        return cooked.Value;
+    }
+
+    private (Dictionary<int, PropertyInfo> Properties, int PropertyCount) BuildCookedSchema()
+    {
+        var skipped = 0;
+        for (var origIndex = 0; origIndex < PropertyCount; origIndex++)
+        {
+            if (Properties.TryGetValue(origIndex, out var info) && info.IsEditorOnly)
+                skipped++;
+        }
+
+        if (skipped == 0)
+            return (Properties, PropertyCount);
+
+        var cooked = new Dictionary<int, PropertyInfo>(Math.Max(0, Properties.Count - skipped));
+        skipped = 0;
+        for (var origIndex = 0; origIndex < PropertyCount; origIndex++)
+        {
+            if (!Properties.TryGetValue(origIndex, out var info))
+                continue;
+
+            if (info.IsEditorOnly)
+            {
+                skipped++;
+                continue;
+            }
+
+            cooked[origIndex - skipped] = info;
+        }
+
+        return (cooked, PropertyCount - skipped);
+    }
 }
 
 public class SerializedStruct : Struct
 {
-
     public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
     {
         Super = new Lazy<Struct?>(() =>
@@ -78,7 +135,7 @@ public class SerializedStruct : Struct
                         return scriptStruct;
                     }
 
-                    Log.Warning("Missing prop mappings for type {0}", superStruct.Name);
+                    Log.Warning("Missing prop mappings for type {SuperName}", superStruct.Name);
                     return null;
                 }
 
@@ -91,7 +148,7 @@ public class SerializedStruct : Struct
         for (var i = 0; i < struc.ChildProperties.Length; i++)
         {
             var prop = (FProperty) struc.ChildProperties[i];
-            var propInfo = new PropertyInfo(Math.Min(i, prop.ArrayDim - 1), prop.Name.Text, new PropertyType(prop), prop.ArrayDim);
+            var propInfo = new PropertyInfo(Math.Min(i, prop.ArrayDim - 1), prop.Name.Text, new PropertyType(prop), prop.ArrayDim, prop.PropertyFlags);
             for (var j = 0; j < prop.ArrayDim; j++)
             {
                 Properties[i + j] = propInfo;
@@ -100,20 +157,15 @@ public class SerializedStruct : Struct
     }
 }
 
-public class PropertyInfo : ICloneable
+public class PropertyInfo(int index, string name, PropertyType mappingType, int? arraySize = null, EPropertyFlags propertyFlags = EPropertyFlags.None) : ICloneable
 {
-    public int Index;
-    public string Name;
-    public int? ArraySize;
-    public PropertyType MappingType;
+    public string Name = name;
+    public int Index = index;
+    public int ArraySize = arraySize ?? 1;
+    public PropertyType MappingType = mappingType;
+    public EPropertyFlags PropertyFlags = propertyFlags;
 
-    public PropertyInfo(int index, string name, PropertyType mappingType, int? arraySize = null)
-    {
-        Index = index;
-        Name = name;
-        ArraySize = arraySize;
-        MappingType = mappingType;
-    }
+    public bool IsEditorOnly => PropertyFlags.HasFlag(EPropertyFlags.EditorOnly);
 
     public override string ToString() => $"{Index + 1}/{ArraySize} -> {Name}";
     public object Clone() => MemberwiseClone();
