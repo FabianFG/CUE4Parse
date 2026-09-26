@@ -1,6 +1,8 @@
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 
+using System.Buffers;
+
 using K4os.Compression.LZ4;
 
 using OffiUtils;
@@ -58,6 +60,8 @@ public static class Compression
             .Build();
     }
 
+    private static volatile bool _nonStandardOodleHeaderLogged;
+
     public static byte[] Decompress(byte[] compressed, int uncompressedSize, CompressionMethod method, FArchive? reader = null)
         => Decompress(compressed, 0, compressed.Length, uncompressedSize, method, reader);
 
@@ -103,9 +107,55 @@ public static class Compression
             return;
         }
 
-        if (!_decompressor.TryDecompress(algorithm, compressed, uncompressed, out int bytesWritten) || bytesWritten != uncompressed.Length)
+        if (TryDecompress(algorithm, compressed, uncompressed, out int bytesWritten))
         {
-            throw new FileLoadException($"Failed to decompress {method} data (Expected: {uncompressed.Length}, Result: {bytesWritten})");
+            return;
         }
+
+        // Some UE 5.5 builds write a Leviathan block header with a sub-code older Oodle versions
+        // refuse (0x8C 0x14 instead of 0x8C 0x0C) even though the payload is plain Leviathan.
+        // Retry the very same payload with the standard sub-code before giving up.
+        if (algorithm == CompressionAlgorithm.Oodle && TryDecompressPatchedOodle(compressed, uncompressed, out bytesWritten))
+        {
+            return;
+        }
+
+        throw new FileLoadException($"Failed to decompress {method} data (Expected: {uncompressed.Length}, Result: {bytesWritten})");
+    }
+
+    private static bool TryDecompress(
+        CompressionAlgorithm algorithm,
+        ReadOnlySpan<byte> compressed,
+        Span<byte> uncompressed,
+        out int bytesWritten) =>
+        _decompressor.TryDecompress(algorithm, compressed, uncompressed, out bytesWritten) && bytesWritten == uncompressed.Length;
+
+    private static bool TryDecompressPatchedOodle(
+        ReadOnlySpan<byte> compressed,
+        Span<byte> uncompressed,
+        out int bytesWritten)
+    {
+        bytesWritten = 0;
+
+        if (OodleHelper.TryPatchNonStandardBlockHeader(compressed) is not { } patched) return false;
+        try
+        {
+            if (!TryDecompress(CompressionAlgorithm.Oodle, patched.AsSpan(0, compressed.Length), uncompressed, out bytesWritten))
+            {
+                return false;
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(patched);
+        }
+
+        if (!_nonStandardOodleHeaderLogged)
+        {
+            _nonStandardOodleHeaderLogged = true;
+            Log.Debug("Oodle block with a non-standard header (0x8C 0x14) decompressed using the standard Leviathan sub-code (0x8C 0x0C) instead");
+        }
+
+        return true;
     }
 }

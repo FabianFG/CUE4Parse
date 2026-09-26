@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
@@ -27,6 +28,22 @@ public static class OodleHelper
     private const string RELEASE_URL = "https://github.com/WorkingRobot/OodleUE/releases/download/2026-06-04-1357"; // 2.9.16
     private const string WINDOWS_ZIP = "clang-cl-x64-release.zip";
     private const string LINUX_ZIP = "gcc-x64-release.zip";
+
+    /// <summary>
+    /// First byte of a compressed block header, shared by every Oodle codec.
+    /// </summary>
+    private const byte BLOCK_HEADER_MARKER = 0x8C;
+
+    /// <summary>
+    /// Sub-code of a plain Leviathan block, what UE's Oodle wrapper writes by default.
+    /// </summary>
+    private const byte BLOCK_HEADER_LEVIATHAN = 0x0C;
+
+    /// <summary>
+    /// Leviathan sub-code written by some UE 5.5 builds. The payload is plain Leviathan but Oodle
+    /// versions predating the one bundled with the game reject the unknown sub-code.
+    /// </summary>
+    private const byte BLOCK_HEADER_LEVIATHAN_ALT = 0x14;
 
     public static string OodleFileName => OperatingSystem.IsLinux() ? OODLE_NAME_LINUX : OODLE_NAME_CURRENT;
     public static Oodle? Instance { get; private set; }
@@ -79,8 +96,22 @@ public static class OodleHelper
             ThrowDecompressionException(reader, "Oodle decompression failed: not initialized");
         }
 
-        var decodedSize = instance.Decompress(compressed.AsSpan(compressedOffset, compressedSize),
-            uncompressed.AsSpan(uncompressedOffset, uncompressedSize));
+        var compressedSpan = compressed.AsSpan(compressedOffset, compressedSize);
+        var uncompressedSpan = uncompressed.AsSpan(uncompressedOffset, uncompressedSize);
+
+        var decodedSize = instance.Decompress(compressedSpan, uncompressedSpan);
+
+        if (decodedSize <= 0 && TryPatchNonStandardBlockHeader(compressedSpan) is { } patched)
+        {
+            try
+            {
+                decodedSize = instance.Decompress(patched.AsSpan(0, compressedSize), uncompressedSpan);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(patched);
+            }
+        }
 
         if (decodedSize <= 0)
         {
@@ -92,6 +123,29 @@ public static class OodleHelper
             // Not sure whether this should be an exception or not
             Log.Warning("Oodle decompression just decompressed {0} bytes of the expected {1} bytes", decodedSize, uncompressedSize);
         }
+    }
+
+    /// <summary>
+    /// Whether <paramref name="compressed"/> starts with a block header using the alternate
+    /// Leviathan sub-code, which older Oodle versions refuse to decode.
+    /// </summary>
+    public static bool IsNonStandardBlockHeader(ReadOnlySpan<byte> compressed) =>
+        compressed.Length > 1 && compressed[0] == BLOCK_HEADER_MARKER && compressed[1] == BLOCK_HEADER_LEVIATHAN_ALT;
+
+    /// <summary>
+    /// Rents a copy of <paramref name="compressed"/> whose block header carries the standard
+    /// Leviathan sub-code, or <c>null</c> when the header is already standard. Only the first
+    /// <paramref name="compressed"/>.Length bytes are meaningful and the caller is responsible for
+    /// returning the buffer to <see cref="ArrayPool{T}.Shared"/>.
+    /// </summary>
+    public static byte[]? TryPatchNonStandardBlockHeader(ReadOnlySpan<byte> compressed)
+    {
+        if (!IsNonStandardBlockHeader(compressed)) return null;
+
+        var patched = ArrayPool<byte>.Shared.Rent(compressed.Length);
+        compressed.CopyTo(patched);
+        patched[1] = BLOCK_HEADER_LEVIATHAN;
+        return patched;
     }
 
     public static Task<bool> DownloadOodleDllAsync(CancellationToken cancellationToken = default)
