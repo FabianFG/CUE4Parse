@@ -599,6 +599,17 @@ namespace CUE4Parse.UE4.Readers
             return Encoding.Latin1.GetString(ReadSpan(length));
         }
 
+        public string ReadNullAnsiString()
+        {
+            var bytes = new List<byte>();
+            byte b;
+            while ((b = Read<byte>()) != 0)
+            {
+                bytes.Add(b);
+            }
+            return Encoding.Latin1.GetString(bytes.ToArray());
+        }
+
         public float ReadFReal() => Ver >= EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES ? (float)Read<double>() : Read<float>();
 
         public virtual FName ReadFName() => new(ReadFString());
@@ -763,7 +774,7 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ulong BYTESWAP_ORDER64(ulong value)
+        public static ulong BYTESWAP_ORDER64(ulong value)
         {
             value = ((value << 8) & 0xFF00FF00FF00FF00UL) | ((value >> 8) & 0x00FF00FF00FF00FFUL);
             value = ((value << 16) & 0xFFFF0000FFFF0000UL) | ((value >> 16) & 0x0000FFFF0000FFFFUL);

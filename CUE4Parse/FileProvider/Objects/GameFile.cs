@@ -11,7 +11,7 @@ namespace CUE4Parse.FileProvider.Objects;
 
 public abstract class GameFile
 {
-    public static readonly string[] LegacyUePackageExtensions = ["upk", "xxx", "XXX", "udk", "u", "mbamap", "sword", "rbd", "aa3", "ut3", "ut2", "utx", "unr", "umx", "uax", "usx", "ukx", "map", "lm", "s8m", "ccpk", "mo"];
+    public static readonly string[] LegacyUePackageExtensions = ["upk", "xxx", "XXX", "udk", "u", "mbamap", "sword", "mars", "apb", "rbd", "aa3", "ut3", "ut2", "utx", "unr", "umx", "uax", "usx", "ukx", "map", "lm", "s8m", "ccpk", "mo"];
     public static readonly string[] UePackageExtensions = ["uasset", "umap", ..LegacyUePackageExtensions];
     public static readonly string[] UePackagePayloadExtensions = ["uexp", "ubulk", "uptnl", "tfc"];
     public static readonly string[] UeKnownExtensions =

@@ -15,6 +15,8 @@ public class USoundNode : UObject
 
         ChildNodes = GetOrDefault<FPackageIndex[]>(nameof(ChildNodes), []);
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.COOKED_ASSETS_IN_EDITOR_SUPPORT)
+        {
             _ = new FStripDataFlags(Ar);
+        }
     }
 }

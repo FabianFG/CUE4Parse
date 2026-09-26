@@ -27,10 +27,11 @@ public class FSoftVertex : FSkelMeshVertexBase
         var len = FSkinWeightInfo.NUM_INFLUENCES_UE4;
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SUPPORT_8_BONE_INFLUENCES_SKELETAL_MESHES) len = FSkinWeightInfo.EXTRA_BONE_INFLUENCES;
         if (FAnimObjectVersion.Get(Ar) >= FAnimObjectVersion.Type.UnlimitedBoneInfluences) len = FSkinWeightInfo.MAX_TOTAL_INFLUENCES;
+        var bUse16BitBoneIndex = Ar.Game >= GAME_UE4_0;
         var bUse16BitBoneWeight = FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.IncreasedSkinWeightPrecision;
 
         Infs = !isRigid ?
-            new FSkinWeightInfo(Ar, len > FSkinWeightInfo.NUM_INFLUENCES_UE4, true, bUse16BitBoneWeight, len) :
+            new FSkinWeightInfo(Ar, len > FSkinWeightInfo.NUM_INFLUENCES_UE4, bUse16BitBoneIndex, bUse16BitBoneWeight, len) :
             new FSkinWeightInfo { BoneIndex = { [0] = Ar.Read<byte>() }, BoneWeight = { [0] = 255 } };
     }
 }

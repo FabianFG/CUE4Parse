@@ -112,10 +112,16 @@ public class UStaticMesh : UObject
                 Bounds = bounds
             };
 
-            Materials = new FPackageIndex[RenderData.LODs[0].Sections.Length];
+            StaticMaterials = new FStaticMaterial[RenderData.LODs[0].Sections.Length];
             for (var i = 0; i < RenderData.LODs[0].Sections.Length; i++)
             {
-                Materials[i] = RenderData.LODs[0].Sections[i].Material!;
+                StaticMaterials[i] = new FStaticMaterial(RenderData.LODs[0].Sections[i].Material!);
+            }
+
+            Materials = new FPackageIndex?[StaticMaterials.Length];
+            for (var i = 0; i < Materials.Length; i++)
+            {
+                Materials[i] = StaticMaterials[i].MaterialInterface;
             }
 
             Ar.Position += sizeof(int); // int - LODInfo
@@ -132,7 +138,7 @@ public class UStaticMesh : UObject
                  }
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERSION_18 && FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh && Ar.Game is not GAME_APBReloaded)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERSION_18 && FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh && Ar.Game is not GAME_APBReloaded && Ar.Game is not GAME_BorderlandsSequel)
             {
                 var Deprecated_HighResSourceMeshName = Ar.ReadFString();
                 var Deprecated_HighResSourceMeshCRC = Ar.Read<uint>();

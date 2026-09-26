@@ -1,7 +1,7 @@
+using CUE4Parse.GameTypes.BorderlandsSequel.Objects;
 using CUE4Parse.GameTypes.SuicideSquad.Objects;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.Meshes;
@@ -16,6 +16,13 @@ public class FPositionVertexBuffer
     public FPositionVertexBuffer()
     {
         Verts = [];
+    }
+
+    public FPositionVertexBuffer(FVector[] verts)
+    {
+        Verts = verts;
+        Stride = 12;
+        NumVertices = verts.Length;
     }
 
     public FPositionVertexBuffer(FArchive Ar)
@@ -101,6 +108,37 @@ public class FPositionVertexBuffer
 
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
+
+        if (Ar.Game == GAME_BorderlandsSequel)
+        {
+            var isPacked = Ar.Read<byte>();
+            var vectorType = Ar.Read<byte>();
+            var mins = Ar.Read<FVector>();
+            var extents = Ar.Read<FVector>();
+
+            if (isPacked != 0)
+            {
+                if (vectorType != 0)
+                {
+                    var vecs16x3 = Ar.ReadBulkArray<FVectorShort48>();
+                    Verts = new FVector[vecs16x3.Length];
+                    for (int i = 0; i < vecs16x3.Length; i++)
+                    {
+                        Verts[i] = vecs16x3[i].ToVector(mins, extents);
+                    }
+                }
+                else
+                {
+                    var vecs16x4 = Ar.ReadBulkArray<FVectorShort64>();
+                    Verts = new FVector[vecs16x4.Length];
+                    for (int i = 0; i < vecs16x4.Length; i++)
+                    {
+                        Verts[i] = vecs16x4[i].ToVector(mins, extents);
+                    }
+                }
+            }
+            return;
+        }
 
         if (Ar.Game is GAME_TamasShadowveil) Ar.Position += 4;
 

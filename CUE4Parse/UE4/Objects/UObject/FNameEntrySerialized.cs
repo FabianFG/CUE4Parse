@@ -29,7 +29,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             }
             else
             {
-                // todo: add ReadAnsi
+                Name = Ar.ReadNullAnsiString();
             }
 
             if (Ar.Game == GAME_PlayerUnknownsBattlegrounds)

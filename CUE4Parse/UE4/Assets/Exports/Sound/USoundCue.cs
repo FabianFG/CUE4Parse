@@ -28,7 +28,9 @@ public class USoundCue : USoundBase
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.COOKED_ASSETS_IN_EDITOR_SUPPORT)
+        {
             _ = new FStripDataFlags(Ar);
+        }
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
