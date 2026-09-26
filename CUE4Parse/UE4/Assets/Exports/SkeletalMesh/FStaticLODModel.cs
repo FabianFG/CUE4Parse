@@ -478,6 +478,8 @@ public class FStaticLODModel
                 {
                     AdditionalBuffer = new FMorphTargetVertexInfoBufferMK1(Ar);
                 }
+
+                if (Ar.Game is GAME_DeadIsland2) Ar.Position += 16;
             }
             else
             {

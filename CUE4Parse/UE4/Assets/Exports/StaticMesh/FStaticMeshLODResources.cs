@@ -14,10 +14,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 [JsonConverter(typeof(FStaticMeshLODResourcesConverter))]
 public class FStaticMeshLODResources
 {
-    public FStaticMeshSection[] Sections { get; }
+    public FStaticMeshSection[] Sections { get; protected set; } = [];
     public FBoxSphereBounds? SourceMeshBounds;
     public FCardRepresentationData? CardRepresentationData { get; set; }
-    public float MaxDeviation { get; }
+    public float MaxDeviation { get; protected set; }
     public int NumVertices { get; set; }
     public FPositionVertexBuffer? PositionVertexBuffer { get; set; }
     public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
@@ -41,6 +41,7 @@ public class FStaticMeshLODResources
         CDSF_StripIndexBuffers = 128 | 64 | 32
     }
 
+    protected FStaticMeshLODResources() { }
     public FStaticMeshLODResources(FArchive Ar)
     {
         var stripDataFlags = new FStripDataFlags(Ar);
