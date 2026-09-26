@@ -1,3 +1,4 @@
+using CUE4Parse.GameTypes.DeadIsland2.Assets.Objects;
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.GameTypes.MK1.Assets.Objects;
 using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
@@ -407,22 +408,28 @@ public class FStaticLODModel
     public void SerializeRenderItem(FAssetArchive Ar, bool bHasVertexColors, byte numVertexColorChannels = 0)
     {
         var stripDataFlags = new FStripDataFlags(Ar);
+
         var bIsLODCookedOut = false;
         if (Ar.Game != GAME_Splitgate)
             bIsLODCookedOut = Ar.ReadBoolean();
         var bInlined = Ar.ReadBoolean();
 
         RequiredBones = Ar.ReadArray<short>();
-        if (Ar.Game is GAME_GearsofWarEDay) Ar.SkipArray<short>();// another bones array
+
+        if (Ar.Game is GAME_GearsofWarEDay) Ar.SkipArray<short>(); // another bones array
         if (Ar.Game is GAME_NeedForSpeedMobile) Ar.Position += 4;
+
         if (!stripDataFlags.IsAudioVisualDataStripped() && !bIsLODCookedOut)
         {
-            Sections = new FSkelMeshSection[Ar.Read<int>()];
-            for (var i = 0; i < Sections.Length; i++)
+            Sections = Ar.ReadArray(() =>
             {
-                Sections[i] = new FSkelMeshSection();
-                Sections[i].SerializeRenderItem(Ar);
-            }
+                var section = new FSkelMeshSection();
+                section.SerializeRenderItem(Ar);
+                return section;
+            });
+
+            if (Ar.Game == GAME_DeadIsland2)
+                Sections = [.. Sections.Where(section => !section.bDisabled)];
 
             if (Ar.Game is GAME_LordOfMysteries)
             {
@@ -479,7 +486,7 @@ public class FStaticLODModel
                     AdditionalBuffer = new FMorphTargetVertexInfoBufferMK1(Ar);
                 }
 
-                if (Ar.Game is GAME_DeadIsland2) Ar.Position += 16;
+                if (Ar.Game is GAME_DeadIsland2) FDeadIsland2SkeletalMesh.SkipExtraVertexData(Ar);
             }
             else
             {
@@ -660,6 +667,8 @@ public class FStaticLODModel
         {
             VertexBufferGPUSkin.VertsFloat[i] = new FGPUVertFloat(positionVertexBuffer.Verts[i], skinWeightVertexBuffer.Weights[i], staticMeshVertexBuffer.UV[i]);
         }
+
+        if (Ar.Game == GAME_DeadIsland2) FDeadIsland2SkeletalMesh.ConvertIndices(Indices, Sections);
     }
 
     private void SerializeAvailabilityInfo(FArchive Ar, bool bAdjacencyData)
