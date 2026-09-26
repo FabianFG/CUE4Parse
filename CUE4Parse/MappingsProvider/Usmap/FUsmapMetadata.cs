@@ -10,7 +10,7 @@ public readonly struct FUsmapMetadata(FArchive Ar)
     public readonly EUsmapSource Source = Ar.Read<EUsmapSource>();
 }
 
-public enum EUsmapSource
+public enum EUsmapSource : byte
 {
     Runtime,
     MemoryDump,
