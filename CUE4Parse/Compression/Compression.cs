@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 using System.Buffers;
 
@@ -60,8 +61,6 @@ public static class Compression
             .Build();
     }
 
-    private static volatile bool _nonStandardOodleHeaderLogged;
-
     public static byte[] Decompress(byte[] compressed, int uncompressedSize, CompressionMethod method, FArchive? reader = null)
         => Decompress(compressed, 0, compressed.Length, uncompressedSize, method, reader);
 
@@ -75,17 +74,17 @@ public static class Compression
     public static void Decompress(
         byte[] compressed, int compressedOffset, int compressedSize,
         byte[] uncompressed, int uncompressedOffset, int uncompressedSize,
-        CompressionMethod method, FArchive? reader = null)
+        CompressionMethod method, FArchive? reader = null, EGame? game = null)
     {
         var src = new ReadOnlySpan<byte>(compressed, compressedOffset, compressedSize);
         var dst = new Span<byte>(uncompressed, uncompressedOffset, uncompressedSize);
-        Decompress(src, dst, method, reader);
+        Decompress(src, dst, method, reader, game);
     }
 
     public static void Decompress(
         ReadOnlySpan<byte> compressed,
         Span<byte> uncompressed,
-        CompressionMethod method, FArchive? reader = null)
+        CompressionMethod method, FArchive? reader = null, EGame? game = null)
     {
         CompressionAlgorithm algorithm = method switch
         {
@@ -107,55 +106,31 @@ public static class Compression
             return;
         }
 
-        if (TryDecompress(algorithm, compressed, uncompressed, out int bytesWritten))
-        {
-            return;
-        }
+        // GAME_SleeplessWilds marks plain Leviathan blocks with the 0x8C 0x14 sub-code, which Oodle
+        // builds predating the one shipped with the game refuse to decode. Rewriting it to the
+        // standard 0x8C 0x0C is a byte-level fix-up, so the block is still decoded exactly once.
+        var patched = algorithm == CompressionAlgorithm.Oodle && UsesNonStandardLeviathanSubCode(game ?? reader?.Game)
+            ? OodleHelper.TryPatchNonStandardBlockHeader(compressed)
+            : null;
 
-        // Some UE 5.5 builds write a Leviathan block header with a sub-code older Oodle versions
-        // refuse (0x8C 0x14 instead of 0x8C 0x0C) even though the payload is plain Leviathan.
-        // Retry the very same payload with the standard sub-code before giving up.
-        if (algorithm == CompressionAlgorithm.Oodle && TryDecompressPatchedOodle(compressed, uncompressed, out bytesWritten))
-        {
-            return;
-        }
-
-        throw new FileLoadException($"Failed to decompress {method} data (Expected: {uncompressed.Length}, Result: {bytesWritten})");
-    }
-
-    private static bool TryDecompress(
-        CompressionAlgorithm algorithm,
-        ReadOnlySpan<byte> compressed,
-        Span<byte> uncompressed,
-        out int bytesWritten) =>
-        _decompressor.TryDecompress(algorithm, compressed, uncompressed, out bytesWritten) && bytesWritten == uncompressed.Length;
-
-    private static bool TryDecompressPatchedOodle(
-        ReadOnlySpan<byte> compressed,
-        Span<byte> uncompressed,
-        out int bytesWritten)
-    {
-        bytesWritten = 0;
-
-        if (OodleHelper.TryPatchNonStandardBlockHeader(compressed) is not { } patched) return false;
         try
         {
-            if (!TryDecompress(CompressionAlgorithm.Oodle, patched.AsSpan(0, compressed.Length), uncompressed, out bytesWritten))
+            var source = patched is null ? compressed : patched.AsSpan(0, compressed.Length);
+
+            if (!_decompressor.TryDecompress(algorithm, source, uncompressed, out int bytesWritten) || bytesWritten != uncompressed.Length)
             {
-                return false;
+                throw new FileLoadException($"Failed to decompress {method} data (Expected: {uncompressed.Length}, Result: {bytesWritten})");
             }
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(patched);
+            if (patched is not null) ArrayPool<byte>.Shared.Return(patched);
         }
-
-        if (!_nonStandardOodleHeaderLogged)
-        {
-            _nonStandardOodleHeaderLogged = true;
-            Log.Debug("Oodle block with a non-standard header (0x8C 0x14) decompressed using the standard Leviathan sub-code (0x8C 0x0C) instead");
-        }
-
-        return true;
     }
+
+    /// <summary>
+    /// Whether <paramref name="game"/> is known to write plain Leviathan blocks behind the
+    /// non-standard 0x8C 0x14 sub-code, see <see cref="OodleHelper.TryPatchNonStandardBlockHeader"/>.
+    /// </summary>
+    private static bool UsesNonStandardLeviathanSubCode(EGame? game) => game is EGame.GAME_SleeplessWilds;
 }

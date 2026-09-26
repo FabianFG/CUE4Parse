@@ -40,8 +40,8 @@ public static class OodleHelper
     private const byte BLOCK_HEADER_LEVIATHAN = 0x0C;
 
     /// <summary>
-    /// Leviathan sub-code written by some UE 5.5 builds. The payload is plain Leviathan but Oodle
-    /// versions predating the one bundled with the game reject the unknown sub-code.
+    /// Leviathan sub-code written by <see cref="EGame.GAME_SleeplessWilds"/>. The payload is plain
+    /// Leviathan but Oodle versions predating the one bundled with the game reject the sub-code.
     /// </summary>
     private const byte BLOCK_HEADER_LEVIATHAN_ALT = 0x14;
 
@@ -96,22 +96,8 @@ public static class OodleHelper
             ThrowDecompressionException(reader, "Oodle decompression failed: not initialized");
         }
 
-        var compressedSpan = compressed.AsSpan(compressedOffset, compressedSize);
-        var uncompressedSpan = uncompressed.AsSpan(uncompressedOffset, uncompressedSize);
-
-        var decodedSize = instance.Decompress(compressedSpan, uncompressedSpan);
-
-        if (decodedSize <= 0 && TryPatchNonStandardBlockHeader(compressedSpan) is { } patched)
-        {
-            try
-            {
-                decodedSize = instance.Decompress(patched.AsSpan(0, compressedSize), uncompressedSpan);
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(patched);
-            }
-        }
+        var decodedSize = instance.Decompress(compressed.AsSpan(compressedOffset, compressedSize),
+            uncompressed.AsSpan(uncompressedOffset, uncompressedSize));
 
         if (decodedSize <= 0)
         {
@@ -127,7 +113,7 @@ public static class OodleHelper
 
     /// <summary>
     /// Whether <paramref name="compressed"/> starts with a block header using the alternate
-    /// Leviathan sub-code, which older Oodle versions refuse to decode.
+    /// Leviathan sub-code written by <see cref="EGame.GAME_SleeplessWilds"/>.
     /// </summary>
     public static bool IsNonStandardBlockHeader(ReadOnlySpan<byte> compressed) =>
         compressed.Length > 1 && compressed[0] == BLOCK_HEADER_MARKER && compressed[1] == BLOCK_HEADER_LEVIATHAN_ALT;

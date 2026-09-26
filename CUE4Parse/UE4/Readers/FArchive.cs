@@ -750,7 +750,7 @@ namespace CUE4Parse.UE4.Readers
                 // Decompress into dest pointer directly.
                 try
                 {
-                    Decompress(compressedBuffer.AsSpan(0, (int) chunk.CompressedSize), dest[destPos..(destPos + (int) chunk.UncompressedSize)], compressionFormat);
+                    Decompress(compressedBuffer.AsSpan(0, (int) chunk.CompressedSize), dest[destPos..(destPos + (int) chunk.UncompressedSize)], compressionFormat, this);
                 }
                 catch (Exception e)
                 {

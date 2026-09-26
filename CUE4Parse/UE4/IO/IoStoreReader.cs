@@ -312,7 +312,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
                 var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
                 Compression.Compression.Decompress(compressedBuffer, 0, (int)compressionBlock.CompressedSize, uncompressedBuffer, 0,
-                    (int) uncompressedSize, compressionMethod, reader);
+                    (int) uncompressedSize, compressionMethod, reader, Game);
                 src = uncompressedBuffer;
             }
 
@@ -428,7 +428,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
                 var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
                 Compression.Compression.Decompress(compressedBuffer, 0, (int) compressionBlock.CompressedSize, uncompressedBuffer, 0,
-                    (int) uncompressedSize, compressionMethod, reader);
+                    (int) uncompressedSize, compressionMethod, reader, Game);
                 src = uncompressedBuffer;
             }
 
