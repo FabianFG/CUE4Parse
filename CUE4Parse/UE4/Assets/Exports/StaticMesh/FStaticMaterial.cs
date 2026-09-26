@@ -24,7 +24,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
                 UVChannelData = new FMeshUVChannelInfo(Ar);
 
-            if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
+            if (Ar.Game is GAME_SleeplessWilds || FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
             {
                 OverlayMaterialInterface = new FPackageIndex(Ar);
             }

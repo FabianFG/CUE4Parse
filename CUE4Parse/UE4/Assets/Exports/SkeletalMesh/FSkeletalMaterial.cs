@@ -55,7 +55,7 @@ public class FSkeletalMaterial
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             UVChannelData = new FMeshUVChannelInfo(Ar);
 
-        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
+        if (Ar.Game is GAME_SleeplessWilds || FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
             OverlayMaterialInterface = new FPackageIndex(Ar);
 
         switch (Ar.Game)

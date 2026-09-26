@@ -311,6 +311,12 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 }
 
                 var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
+                if (Game is GAME_SleeplessWilds && compressionMethod is Compression.CompressionMethod.Oodle &&
+                    compressedBuffer.Length > 1 && compressedBuffer[0] == 0x8C && compressedBuffer[1] == 0x14)
+                {
+                    compressedBuffer[1] = 0x0C;
+                }
+
                 Compression.Compression.Decompress(compressedBuffer, 0, (int)compressionBlock.CompressedSize, uncompressedBuffer, 0,
                     (int) uncompressedSize, compressionMethod, reader);
                 src = uncompressedBuffer;
