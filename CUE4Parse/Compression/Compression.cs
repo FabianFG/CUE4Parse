@@ -1,8 +1,5 @@
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
-
-using System.Buffers;
 
 using K4os.Compression.LZ4;
 
@@ -74,17 +71,17 @@ public static class Compression
     public static void Decompress(
         byte[] compressed, int compressedOffset, int compressedSize,
         byte[] uncompressed, int uncompressedOffset, int uncompressedSize,
-        CompressionMethod method, FArchive? reader = null, EGame? game = null)
+        CompressionMethod method, FArchive? reader = null)
     {
         var src = new ReadOnlySpan<byte>(compressed, compressedOffset, compressedSize);
         var dst = new Span<byte>(uncompressed, uncompressedOffset, uncompressedSize);
-        Decompress(src, dst, method, reader, game);
+        Decompress(src, dst, method, reader);
     }
 
     public static void Decompress(
         ReadOnlySpan<byte> compressed,
         Span<byte> uncompressed,
-        CompressionMethod method, FArchive? reader = null, EGame? game = null)
+        CompressionMethod method, FArchive? reader = null)
     {
         CompressionAlgorithm algorithm = method switch
         {
@@ -106,31 +103,9 @@ public static class Compression
             return;
         }
 
-        // GAME_SleeplessWilds marks plain Leviathan blocks with the 0x8C 0x14 sub-code, which Oodle
-        // builds predating the one shipped with the game refuse to decode. Rewriting it to the
-        // standard 0x8C 0x0C is a byte-level fix-up, so the block is still decoded exactly once.
-        var patched = algorithm == CompressionAlgorithm.Oodle && UsesNonStandardLeviathanSubCode(game ?? reader?.Game)
-            ? OodleHelper.TryPatchNonStandardBlockHeader(compressed)
-            : null;
-
-        try
+        if (!_decompressor.TryDecompress(algorithm, compressed, uncompressed, out int bytesWritten) || bytesWritten != uncompressed.Length)
         {
-            var source = patched is null ? compressed : patched.AsSpan(0, compressed.Length);
-
-            if (!_decompressor.TryDecompress(algorithm, source, uncompressed, out int bytesWritten) || bytesWritten != uncompressed.Length)
-            {
-                throw new FileLoadException($"Failed to decompress {method} data (Expected: {uncompressed.Length}, Result: {bytesWritten})");
-            }
-        }
-        finally
-        {
-            if (patched is not null) ArrayPool<byte>.Shared.Return(patched);
+            throw new FileLoadException($"Failed to decompress {method} data (Expected: {uncompressed.Length}, Result: {bytesWritten})");
         }
     }
-
-    /// <summary>
-    /// Whether <paramref name="game"/> is known to write plain Leviathan blocks behind the
-    /// non-standard 0x8C 0x14 sub-code, see <see cref="OodleHelper.TryPatchNonStandardBlockHeader"/>.
-    /// </summary>
-    private static bool UsesNonStandardLeviathanSubCode(EGame? game) => game is EGame.GAME_SleeplessWilds;
 }

@@ -55,8 +55,6 @@ public class FSkeletalMaterial
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             UVChannelData = new FMeshUVChannelInfo(Ar);
 
-        // GAME_SleeplessWilds 的包里 FortniteMainBranch 自定义版本号落在 MeshMaterialSlotOverlayMaterialAdded 之下，
-        // 但数据里确实写了这个 4 字节的覆盖材质（拿 SK_Male001 逐字节验证过：每个材质槽 44 字节）。
         if (Ar.Game is GAME_SleeplessWilds || FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
             OverlayMaterialInterface = new FPackageIndex(Ar);
 
