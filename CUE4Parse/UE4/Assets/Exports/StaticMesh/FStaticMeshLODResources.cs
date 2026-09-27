@@ -56,6 +56,11 @@ public class FStaticMeshLODResources
             new FByteBulkData((FAssetArchive)Ar); // RawTriangles
         }
 
+        if (Ar.Game == GAME_TheLastRemnant)
+        {
+            new FByteBulkData((FAssetArchive)Ar); // unknown
+        }
+
         if (Ar.Game == GAME_TheDivisionResurgence) Ar.Position += 4;
 
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));

@@ -264,6 +264,11 @@ public partial class USkeletalMesh : USkinnedAsset
             }
         }
 
+        if (Ar.Game == GAME_FableAnniversary && (int) Ar.LicenseeVer >= 1007)
+        {
+            return;
+        }
+
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.APEX_CLOTHING && Ar.Game < GAME_UE4_0)
         {
             var ApexClothingAssets = Ar.Read<int>();

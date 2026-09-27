@@ -190,6 +190,9 @@ namespace CUE4Parse.UE4.Objects.Engine
         public int NumMaterialShaderMaps;
         public FShaderCacheShaderMap[] ShaderMaps;
 
+        public int NumShaders;
+        public FShaderCacheShader[] Shaders;
+
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
@@ -241,6 +244,18 @@ namespace CUE4Parse.UE4.Objects.Engine
 
                 ShaderMaps[i] = shaderMap;
             }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.GLOBAL_SHADER_FILE)
+            {
+                NumShaders = Ar.Read<int>();
+                Shaders = new FShaderCacheShader[NumShaders];
+
+                for (int i = 0; i < NumShaders; i++)
+                {
+                    Shaders[i] = new FShaderCacheShader { ShaderType = Ar.ReadFName(), ShaderId = Ar.Read<FGuid>() };
+                    Ar.ReadFName(); // ShaderType again
+                }
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -267,6 +282,22 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             writer.WritePropertyName(nameof(ShaderMaps));
             serializer.Serialize(writer, ShaderMaps);
+
+            writer.WritePropertyName(nameof(Shaders));
+            writer.WriteStartArray();
+
+            foreach (var shader in Shaders)
+            {
+                writer.WriteStartObject();
+
+                writer.WritePropertyName(nameof(FShaderCacheShader.ShaderType));
+                serializer.Serialize(writer, shader.ShaderType);
+
+                writer.WritePropertyName(nameof(FShaderCacheShader.ShaderId));
+                serializer.Serialize(writer, shader.ShaderId);
+
+                writer.WriteEndObject();
+            }
         }
     }
 }

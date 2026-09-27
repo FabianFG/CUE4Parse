@@ -23,6 +23,8 @@ public enum EGame : uint
         GAME_Mars = GAME_UE3_0 + 13,
         GAME_Borderlands2 = GAME_UE3_0 + 14,
         GAME_BorderlandsSequel = GAME_UE3_0 + 15,
+        GAME_FableAnniversary = GAME_UE3_0 + 16,
+        GAME_TheLastRemnant = GAME_UE3_0 + 17,
 
     GAME_UE4_0 = GameUtils.GameUe4Base + (0 << 16),
     GAME_UE4_1 = GameUtils.GameUe4Base + (1 << 16),
