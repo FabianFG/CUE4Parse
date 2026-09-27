@@ -231,6 +231,8 @@ namespace CUE4Parse.UE4.Objects.Engine
             CookedBulkDataInfoMap = Ar.ReadMap(Ar.ReadFString, () => new FCookedBulkDataInfo(Ar));
             FilenameToTimeMap = Ar.ReadMap(Ar.ReadFString, Ar.Read<double>);
             TextureFileCacheWaste = Ar.Read<long>();
+            // is this needed?
+            // if (Ar.Ver <= EUnrealEngineObjectUE3Version.UTVEHICLEFACTORY_USE_STRING_CLASS) return;
             if (Ar.Ver <= EUnrealEngineObjectUE3Version.ADDED_FOLIAGE_PARAMETERS) Ar.Position += 8; // unknown
             FilenameToCookedVersion = Ar.ReadMap(Ar.ReadFString, Ar.Read<int>);
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_FILECACHE_GUIDS)
