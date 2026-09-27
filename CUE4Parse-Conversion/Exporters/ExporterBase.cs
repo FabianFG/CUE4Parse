@@ -128,7 +128,10 @@ public abstract class ExporterBase : IExporter
         var owner = obj.Owner;
         var pathName = obj.GetPathName();
         var rawPath = owner?.Name ?? pathName;
-        var basePath = (owner?.Provider?.FixPath(rawPath) ?? rawPath).SubstringBeforeLast('.');
+        var basePath = owner?.Provider?.FixPath(rawPath) ?? rawPath;
+
+        if (basePath.SubstringAfterLast('/').Contains('.'))
+            basePath = basePath.SubstringBeforeLast('.');
 
         if (pathName.IndexOf(':') is > 0 and var colonIdx)
         {
