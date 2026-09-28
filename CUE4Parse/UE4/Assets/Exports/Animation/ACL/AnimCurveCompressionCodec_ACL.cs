@@ -28,11 +28,18 @@ public class AnimCurveCompressionCodec_ACL : UAnimCurveCompressionCodec
             }
         }
 
+        var timeValues = new float[numSamples];
+        for (var sampleIndex = 0; sampleIndex < numSamples; sampleIndex++)
+        {
+            timeValues[sampleIndex] = sampleIndex / header.SampleRate;
+        }
+
         var numCurves = Math.Min(numTracks, names.Length);
         var floatCurves = new FFloatCurve[numCurves];
         for (var curveIndex = 0; curveIndex < numCurves; curveIndex++)
         {
-            var offset = curveIndex * numSamples;
+            var curveKeys = floatKeys.AsSpan(curveIndex * numSamples, numSamples);
+
             var floatCurve = new FFloatCurve
             {
                 CurveName = names[curveIndex].DisplayName,
@@ -46,8 +53,8 @@ public class AnimCurveCompressionCodec_ACL : UAnimCurveCompressionCodec
             {
                 floatCurve.FloatCurve.Keys[sampleIndex] = new FRichCurveKey
                 {
-                    Value = floatKeys[offset + sampleIndex],
-                    Time = sampleIndex / header.SampleRate
+                    Value = curveKeys[sampleIndex],
+                    Time = timeValues[sampleIndex]
                 };
             }
 
