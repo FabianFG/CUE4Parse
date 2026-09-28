@@ -3,7 +3,6 @@ using CUE4Parse.GameTypes.DuneAwakening.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Objects;
@@ -11,7 +10,6 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(UScriptSetConverter))]
 public class UScriptSet
 {
-    
     public readonly List<FPropertyTagType> Properties;
 
     public UScriptSet() => Properties = [];
@@ -54,6 +52,7 @@ public class UScriptSet
                 GAME_ChasingKaleidoRIDER when tagData.Name is "DialogueEntityInstances" => new FPropertyTagData("Guid"),
                 GAME_NeedForSpeedMobile when tagData.Name is "ReferencedAssetsPath" or "ReferencedMeshMergeAssets" or "FilterWhiteList" or "Paths"=> new FPropertyTagData("SoftObjectPath"),
                 GAME_DuneAwakening => DAStructs.ResolveSetPropertyInnerTypeData(tagData),
+                GAME_DeadIsland2 => new FPropertyTag(Ar, false).TagData,
                 _ => tagData.InnerTypeData
             };
         }
