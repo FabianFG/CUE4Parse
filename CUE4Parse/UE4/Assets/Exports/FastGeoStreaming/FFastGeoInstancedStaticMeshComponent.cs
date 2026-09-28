@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Objects.Engine.InstanceData;
 
 namespace CUE4Parse.UE4.Assets.Exports.FastGeoStreaming;
 
@@ -54,22 +54,8 @@ public class FFastGeoInstancedStaticMeshComponent : FFastGeoStaticMeshComponentB
         }
         NavigationBounds = new FBox(Ar);
         SceneProxyDesc.InstancedStaticMeshSceneProxyDesc = new FInstancedStaticMeshSceneProxyDesc(Ar);
-        SpatialHashes = Ar.Game >= GAME_UE5_8 ? Ar.ReadBulkArray<FCompressedSpatialHashItem>() : [] ;
+        SpatialHashes = Ar.Game >= GAME_UE5_8 ? Ar.ReadBulkArray(() => new FCompressedSpatialHashItem(Ar)) : [];
         PerInstanceRandomIDs = Ar.Game >= GAME_UE5_8 ? Ar.ReadBulkArray<float>() : [] ;
     }
 }
 
-[StructLayout(LayoutKind.Sequential)]
-public struct FCompressedSpatialHashItem
-{
-    //using FLocation64 = TLocation<int64>;
-    public TLocation<long> Location;
-    public int NumInstances;
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public struct TLocation<T>
-{
-    public TIntVector3<T> Coord;
-    public int Level;
-}
