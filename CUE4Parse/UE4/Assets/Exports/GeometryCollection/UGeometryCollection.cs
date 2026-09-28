@@ -24,7 +24,7 @@ public class UGeometryCollection : UObject
         base.Deserialize(Ar, validPos);
         RootProxyData = GetOrDefault<FGeometryCollectionProxyMeshData?>(nameof(RootProxyData));
         AutoInstanceMeshes = GetOrDefault<FGeometryCollectionAutoInstanceMesh[]?>(nameof(AutoInstanceMeshes));
-        Materials = GetOrDefault<FPackageIndex[]>(nameof(Materials), []);
+        Materials = GetOrDefault<FPackageIndex[]>(nameof(Materials), [], StringComparison.OrdinalIgnoreCase);
 
 #if DEBUG
         Log.Warning(nameof(UGeometryCollection));
@@ -69,7 +69,6 @@ public class UGeometryCollection : UObject
             }
         }
     }
-
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {

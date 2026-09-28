@@ -28,6 +28,10 @@ public class UHoudiniStaticMesh : UObject
     {
         base.Deserialize(Ar, validPos);
 
+#if DEBUG
+        Log.Debug(nameof(UHoudiniStaticMesh));
+#endif
+
         bHasNormals = GetOrDefault<bool>(nameof(bHasNormals));
         bHasTangents = GetOrDefault<bool>(nameof(bHasTangents));
         bHasColors = GetOrDefault<bool>(nameof(bHasColors));
