@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
@@ -15,6 +16,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse_Conversion.Exporters;
+using CUE4Parse_Conversion.Exporters.Custom;
 using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion;
@@ -50,6 +52,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             UMaterialInterface material => Add(new MaterialExporter(material)),
             USkinnedAsset skinnedAsset => Add(new SkinnedAssetExporter(skinnedAsset)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
+            UIRMesh irMesh => Add(new IRMeshExporter(irMesh)),
             UGeometryCollection geometryCollection => Add(new GeometryCollectionExporter(geometryCollection)),
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
             UPoseAsset poseAsset => Add(new PoseAssetExporter(poseAsset)),
