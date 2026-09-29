@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
@@ -101,6 +102,23 @@ public class FTexturePlatformData
             var unk0 = Ar.Read<int>();
             var unk1 = Ar.Read<int>();
             var mapNum = Ar.Read<int>();
+        }
+
+        if (Ar.Game is GAME_DeadIsland2)
+        {
+            if ((PackedData & (1u << 28)) != 0)
+            {
+                var scale = Ar.Read<FVector2D>();
+            }
+            else if (HasCpuCopy())
+            {
+                FirstMipToSerialize = Ar.Read<int>();
+                Mips = Ar.ReadArray(() => new FTexture2DMipMap(Ar, bSerializeMipData));
+                var bIsVirtual = Ar.ReadBoolean();
+                SizeX = Mips[0].SizeX;
+                SizeY = Mips[0].SizeY;
+                return;
+            }
         }
 
         if (HasOptData())

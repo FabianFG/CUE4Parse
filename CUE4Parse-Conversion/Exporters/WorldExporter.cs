@@ -1,3 +1,4 @@
+using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
@@ -86,6 +87,12 @@ public sealed class WorldExporter(UWorld export) : ExporterBase(export)
                     {
                         paths.SplineMeshes[splineComp] = Resolve(splineComp._component, Extension);
                         Session.Add(splineComp._component);
+                    }
+                    else if (meshComp is IRMeshCComponentDto irmComp && meshComp.MeshPtr.Load<UIRMesh>() is { } irmesh)
+                    {
+                        irmesh.SetMaterials(irmComp.OverrideMaterials);
+                        paths.Assets[meshComp.MeshPtr] = Resolve(irmesh, Extension);
+                        Session.Add(irmesh);
                     }
                     else if (paths.Assets.TryAdd(meshComp.MeshPtr, "") && meshComp.MeshPtr.Load<UObject>() is { } mesh)
                     {

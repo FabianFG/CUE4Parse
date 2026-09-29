@@ -6,6 +6,7 @@ public class UAnimCurveCompressionCodec_UniformlySampled : UAnimCurveCompression
 {
     public override FFloatCurve[] ConvertCurves(FSmartName[] names, byte[] data)
     {
+        Log.Error($"{nameof(UAnimCurveCompressionCodec_UniformlySampled)} not supported");
         return []; // TODO
     }
 }

@@ -297,6 +297,11 @@ public class FSkelMeshSection
         }
 
         if (Ar.Game is GAME_InfinityNikki) CustomData = Ar.Read<int>();
+        if (Ar.Game is GAME_DeadIsland2)
+        {
+            Ar.SkipFixedArray(18);
+            Ar.Position += 2;
+        }
 
         Ar.Position += Ar.Game switch
         {
@@ -304,10 +309,10 @@ public class FSkelMeshSection
             GAME_RogueCompany or GAME_BladeAndSoul or GAME_SYNCED or
                 GAME_StarWarsHunters or GAME_NeedForSpeedMobile or GAME_ValorantSource => 4,
             GAME_FragPunk or GAME_InfinityNikki => 8,
-            GAME_MortalKombat1 => 12,
-            GAME_FateTrigger => 19,
-            GAME_Strinova => 18,
             GAME_SuicideSquad => 11,
+            GAME_MortalKombat1 => 12,
+            GAME_Strinova => 18,
+            GAME_FateTrigger => 19,
             GAME_LordOfMysteries => 32,
             _ => 0,
         };

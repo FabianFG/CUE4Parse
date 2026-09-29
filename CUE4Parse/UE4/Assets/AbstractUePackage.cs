@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Assets;
 [JsonConverter(typeof(PackageConverter))]
 public abstract class AbstractUePackage : UObject, IPackage
 {
-    
+
     public IFileProvider? Provider { get; }
     public TypeMappings? Mappings => Provider?.MappingsForGame;
 
@@ -42,6 +42,9 @@ public abstract class AbstractUePackage : UObject, IPackage
         Flags |= EObjectFlags.RF_WasLoaded;
     }
 
+    /// <summary>
+    /// TODO: make this protected and use <see cref="LoadableObjectExtensions.IsA{T}"/> to type check instead
+    /// </summary>
     public UObject ConstructObject(ResolvedObject? struc, IPackage? owner = null, EObjectFlags flags = EObjectFlags.RF_NoFlags)
     {
         UObject? obj = null;
@@ -124,7 +127,7 @@ public abstract class AbstractUePackage : UObject, IPackage
 }
 
 [JsonConverter(typeof(ResolvedObjectConverter))]
-public abstract class ResolvedObject(IPackage package, int exportIndex = -1) : IObject
+public abstract class ResolvedObject(IPackage package, int exportIndex = -1) : ILoadableObject
 {
     public readonly IPackage Package = package;
 
@@ -136,6 +139,29 @@ public abstract class ResolvedObject(IPackage package, int exportIndex = -1) : I
     public virtual Lazy<UObject>? Object => ExportIndex >= 0 && ExportIndex < Package.ExportsLazy.Length
         ? Package.ExportsLazy[ExportIndex]
         : null;
+
+    // same walk as ConstructObject (class, supers, then mappings)
+    public Type? GetObjectType()
+    {
+        var cls = Class;
+        var name = cls?.Name.Text;
+        while (!string.IsNullOrEmpty(name))
+        {
+            if (ObjectTypeRegistry.Get(name) is { } type) return type;
+
+            cls = cls?.Super;
+            if (cls != null)
+            {
+                name = cls.Name.Text;
+                continue;
+            }
+
+            if (Package.Mappings?.Types.TryGetValue(name, out var struc) != true || struc.SuperType == name) break;
+            name = struc.SuperType;
+        }
+
+        return Class != null ? typeof(UObject) : null;
+    }
 
     public string GetFullName(bool includeOuterMostName = true, bool includeClassPackage = false)
     {
@@ -176,52 +202,37 @@ public abstract class ResolvedObject(IPackage package, int exportIndex = -1) : I
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T? Load<T>() where T : UObject => Object?.Value as T;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UObject? Load() => Object?.Value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryLoad<T>([MaybeNullWhen(false)] out T export) where T : UObject
-    {
-        try
-        {
-            export = Load<T>();
-        }
-        catch
-        {
-            export = null;
-        }
-        return export != null;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryLoad([MaybeNullWhen(false)] out UObject export)
     {
         try
         {
-            export = Load();
+            export = Object?.Value;
         }
-        catch
+        catch (Exception e)
         {
+            Log.Error(e, "Could not load {0} named {1} correctly", Class?.Name, Name);
             export = null;
         }
         return export != null;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public async Task<UObject?> LoadAsync() => await Task.FromResult(Object?.Value);
+    public Task<UObject?> LoadAsync() => Task.FromResult(Object?.Value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public async Task<UObject?> TryLoadAsync()
+    public Task<UObject?> TryLoadAsync()
     {
         try
         {
-            return await Task.FromResult(Object?.Value);
+            return Task.FromResult(Object?.Value);
         }
-        catch
+        catch (Exception e)
         {
-            return await Task.FromResult<UObject?>(null);
+            Log.Error(e, "Could not load {0} named {1} correctly", Class?.Name, Name);
+            return Task.FromResult<UObject?>(null);
         }
     }
 

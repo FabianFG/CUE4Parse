@@ -16,7 +16,6 @@ public class UBinkMediaTexture : UTexture;
 
 public class UTexture : UUnrealMaterial, IAssetUserData
 {
-    
     public FGuid LightingGuid { get; private set; }
     public TextureCompressionSettings CompressionSettings { get; private set; }
     public TextureGroup LODGroup { get; private set; }
@@ -69,7 +68,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
         LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
         CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);
         LODGroup = GetOrDefault(nameof(LODGroup), TextureGroup.TEXTUREGROUP_World);
-        Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Nearest);
+        Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Default);
         SRGB = GetOrDefault(nameof(SRGB), true);
         AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
         CookPlatformTilingSettings = GetOrDefault<ETextureCookPlatformTilingSettings>(nameof(CookPlatformTilingSettings));

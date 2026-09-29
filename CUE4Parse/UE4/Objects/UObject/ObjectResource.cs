@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// array index will be (-FPackageIndex - 1)
     /// </summary>
     [JsonConverter(typeof(FPackageIndexConverter))]
-    public class FPackageIndex : IEquatable<FPackageIndex>
+    public class FPackageIndex : ILoadableObject, IEquatable<FPackageIndex>
     {
         /// <summary>
         /// Values greater than zero indicate that this is an index into the ExportMap.  The
@@ -103,7 +103,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         protected internal void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            if (TryLoad<UProperty>(out var property))
+            if (this.TryLoad<UProperty>(out var property))
             {
                 serializer.Serialize(writer, property);
             }
@@ -115,27 +115,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         #region Loading Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T? Load<T>() where T : UExport => Owner?.FindObject(this)?.Value as T;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad<T>([MaybeNullWhen(false)] out T export) where T : UExport
-        {
-            if (!TryLoad(out var genericExport) || genericExport is not T cast)
-            {
-                export = default;
-                return false;
-            }
-
-            export = cast;
-            return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> LoadAsync<T>() where T : UExport =>
-            await LoadAsync() as T ?? throw new ParserException($"Loaded {ToString()} but it was of wrong type");
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T?> TryLoadAsync<T>() where T : UExport => await TryLoadAsync() as T;
+        public Type? GetObjectType() => ResolvedObject?.GetObjectType();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UExport? Load() => ResolvedObject?.Load();
@@ -155,19 +135,14 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             if (ResolvedObject != null)
                 return await ResolvedObject.LoadAsync();
-            throw new ParserException($"{ToString()} could not be loaded");
+            return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport?> TryLoadAsync()
         {
             if (ResolvedObject != null)
-            {
-                var loadedObj = await ResolvedObject.TryLoadAsync();
-                if (loadedObj != null)
-                    return loadedObj;
-            }
-
+                return await ResolvedObject.TryLoadAsync();
             return null;
         }
         #endregion
@@ -192,7 +167,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// contained within the same package)
     /// </summary>
     [JsonConverter(typeof(FObjectResourceConverter))]
-    public abstract class FObjectResource : IObject
+    public abstract class FObjectResource
     {
         public FName ObjectName;
         public FPackageIndex? OuterIndex;
