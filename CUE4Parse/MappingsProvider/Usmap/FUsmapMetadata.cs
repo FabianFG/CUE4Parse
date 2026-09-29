@@ -15,6 +15,6 @@ public enum EUsmapSource: uint
     Runtime,
     MemoryDump,
     StaticAnalysis,
-    Jmap,
+    Conversion,
     Custom
 }
