@@ -255,7 +255,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             var nameIndex = Ar.Read<int>(); //ACL thing - KeyEncodingFormat FName
             Ar.Position -= 4;
-            if (nameIndex >= 0 && nameIndex < Ar.Owner?.NameMap.Length)
+            if (nameIndex >= 0 && nameIndex < Ar.NameMap?.Length)
             {
                 var format = Ar.ReadFName();
                 if ("AKF_" + format.Text != compressedData.KeyEncodingFormat.ToString() && !format.Text.StartsWith("ACL")) Ar.Position -= 8;

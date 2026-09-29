@@ -35,22 +35,35 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public readonly IPackage? Owner;
 
+        /// <summary>
+        /// Ordinal of the save realm this index was read from, base realm first. Both maps are local to
+        /// the realm an export was serialized from (Unreal resolves them against the realm's own
+        /// <c>HeaderData-&gt;ExportsView</c> / <c>HeaderData-&gt;ImportMap</c>), so the same raw value can
+        /// point at a different object depending on which realm it came from.
+        /// </summary>
+        internal readonly int RealmIndex;
+
         private WeakReference<ResolvedObject?>? _resolvedObject;
-        public ResolvedObject? ResolvedObject {
-            get {
+        public ResolvedObject? ResolvedObject
+        {
+            get
+            {
                 var resolvedObject = _resolvedObject != null && _resolvedObject.TryGetTarget(out var target) ? target : null;
                 if (resolvedObject == null)
                 {
                     if (Owner == null) return null;
                     resolvedObject = Owner.ResolvePackageIndex(this);
-                    _resolvedObject = new(resolvedObject);
+                    _resolvedObject = new WeakReference<ResolvedObject?>(resolvedObject);
                 }
+
                 return resolvedObject;
             }
         }
 
-        public ResolvedObject? ResolvedObjectNoCache {
-            get {
+        public ResolvedObject? ResolvedObjectNoCache
+        {
+            get
+            {
                 if (Owner == null) return null;
                 var resolvedObject = _resolvedObject != null && _resolvedObject.TryGetTarget(out var target) ? target : null;
                 if (resolvedObject != null) return resolvedObject;
@@ -61,20 +74,20 @@ namespace CUE4Parse.UE4.Objects.UObject
         public bool IsNull => Index == 0;
         public bool IsExport => Index > 0;
         public bool IsImport => Index < 0;
-
-        private string? _name;
-        public string Name => _name ??= ResolvedObject?.Name.Text ?? "None";
+        public string Name => field ??= ResolvedObject?.Name.Text ?? "None";
 
         public FPackageIndex(FAssetArchive Ar, int index)
         {
             Index = index;
             Owner = Ar.Owner;
+            RealmIndex = Ar.RealmIndex;
         }
 
         public FPackageIndex(FAssetArchive Ar)
         {
             Index = Ar.Read<int>();
             Owner = Ar.Owner;
+            RealmIndex = Ar.RealmIndex;
         }
 
         public FPackageIndex(FKismetArchive Ar)
@@ -82,6 +95,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             Index = Ar.Read<int>();
             Owner = Ar.Owner;
             Ar.Index += 4;
+            RealmIndex = Ar.RealmIndex;
         }
 
         public FPackageIndex(IPackage owner, int index)
@@ -147,16 +161,17 @@ namespace CUE4Parse.UE4.Objects.UObject
         }
         #endregion
 
+        public override bool Equals(object? obj) => Equals(obj as FPackageIndex);
         public bool Equals(FPackageIndex? other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Index == other.Index && Owner != null && Owner.Equals(other.Owner);
+            return Index == other.Index && RealmIndex == other.RealmIndex && Owner != null && Owner.Equals(other.Owner);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Index, Owner);
+            return HashCode.Combine(Index, Owner, RealmIndex);
         }
     }
 
@@ -220,7 +235,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             ObjectName = Ar.ReadFName();
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedArcheType && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_ARCHETYPE_INDEX_FROM_LINKER_TABLES)
             {
-                new FPackageIndex(Ar); // Archetype
+                _ = new FPackageIndex(Ar); // Archetype
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag && Ar.Game < GAME_UE4_0)

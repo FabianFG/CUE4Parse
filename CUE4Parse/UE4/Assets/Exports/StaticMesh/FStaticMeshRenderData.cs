@@ -237,8 +237,12 @@ public class FStaticMeshRenderData
                 ScreenSize[i] = Ar.Read<float>();
             }
 
-            if (Ar.Game == GAME_HogwartsLegacy) Ar.Position += 8;
-            if (Ar.Game is GAME_VisionsofMana or GAME_ValorantSource) Ar.Position += 4;
+            Ar.Position += Ar.Game switch
+            {
+                GAME_HogwartsLegacy => 8,
+                GAME_VisionsofMana or GAME_ValorantSource => 4,
+                _ => 0
+            };
         }
 
         if (Ar.Game == GAME_Borderlands3)

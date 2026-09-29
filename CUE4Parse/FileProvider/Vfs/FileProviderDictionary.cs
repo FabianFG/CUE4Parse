@@ -10,11 +10,13 @@ namespace CUE4Parse.FileProvider.Vfs
 {
     public class FileProviderDictionary : IReadOnlyDictionary<string, GameFile>
     {
-        private readonly ConcurrentBag<KeyValuePair<long, IReadOnlyDictionary<string, GameFile>>> _indicesBag = new ();
+        private readonly ConcurrentBag<KeyValuePair<long, IReadOnlyDictionary<string, GameFile>>> _indicesBag = [];
 
         private ConcurrentDictionary<FPackageId, GameFile>? _byId;
+        private ConcurrentDictionary<FPackageId, GameFile>? _optionalById;
         private int _count;
         public IReadOnlyDictionary<FPackageId, GameFile> ById => GetPackageIndex();
+        public IReadOnlyDictionary<FPackageId, GameFile> OptionalById => GetOptionalSegmentPackageIndex();
 
         private readonly KeyEnumerable _keys;
         public IEnumerable<string> Keys => _keys;
@@ -33,8 +35,7 @@ namespace CUE4Parse.FileProvider.Vfs
             if (capacity <= 0 || Volatile.Read(ref _byId) is not null)
                 return;
 
-            var packageIndex = new ConcurrentDictionary<FPackageId, GameFile>(
-                Environment.ProcessorCount, capacity);
+            var packageIndex = new ConcurrentDictionary<FPackageId, GameFile>(Environment.ProcessorCount, capacity);
             Interlocked.CompareExchange(ref _byId, packageIndex, null);
         }
 
@@ -46,6 +47,30 @@ namespace CUE4Parse.FileProvider.Vfs
 
             var newPackageIndex = new ConcurrentDictionary<FPackageId, GameFile>();
             return Interlocked.CompareExchange(ref _byId, newPackageIndex, null) ?? newPackageIndex;
+        }
+
+        private ConcurrentDictionary<FPackageId, GameFile> GetOptionalSegmentPackageIndex()
+        {
+            var packageIndex = Volatile.Read(ref _optionalById);
+            if (packageIndex is not null)
+                return packageIndex;
+
+            var newPackageIndex = new ConcurrentDictionary<FPackageId, GameFile>();
+            return Interlocked.CompareExchange(ref _optionalById, newPackageIndex, null) ?? newPackageIndex;
+        }
+
+        /// <summary>
+        /// Tries to find the optional segment package ("Foo.o.uasset") cooked for the package
+        /// with the given id. Unreal Engine loads and merges it together with the package.
+        /// </summary>
+        public bool TryGetOptionalSegmentPackage(FPackageId packageId, [MaybeNullWhen(false)] out GameFile file)
+        {
+            var packageIndex = Volatile.Read(ref _optionalById);
+            if (packageIndex is not null && packageIndex.TryGetValue(packageId, out file))
+                return true;
+
+            file = null;
+            return false;
         }
 
         public void FindPayloads(GameFile file, out GameFile? uexp, out IReadOnlyList<GameFile> ubulks, out IReadOnlyList<GameFile> uptnls, bool cookedIndexLookup = false)
@@ -62,7 +87,12 @@ namespace CUE4Parse.FileProvider.Vfs
             {
                 // dedicated to FBulkDataCookedIndex payloads but should work fine for anything coming from IoStore
                 // hitting IoStore Files like that is quite slow, but it's the only way to get the correct payloads
-                foreach (var payload in entry.IoStoreReader.Files.Values.Where(x => x.IsUePackagePayload && x is FIoStoreEntry y && y.ChunkId.ChunkId == entry.ChunkId.ChunkId))
+                // payloads of the package and of its optional segment share the package id, so the multi
+                // output index is what tells the two save realms apart (see FIoChunkId)
+                foreach (var payload in entry.IoStoreReader.Files.Values.Where(x => x.IsUePackagePayload
+                                                                                    && x is FIoStoreEntry y
+                                                                                    && y.ChunkId.ChunkId == entry.ChunkId.ChunkId
+                                                                                    && y.ChunkId._chunkIndex == entry.ChunkId._chunkIndex))
                 {
                     switch (payload.Extension)
                     {
@@ -75,7 +105,7 @@ namespace CUE4Parse.FileProvider.Vfs
                     }
                 }
             }
-            else if (file is VfsEntry {Vfs: { } vfs})
+            else if (file is VfsEntry { Vfs: AbstractVfsReader vfs })
             {
                 // file comes from a specific archive
                 // this ensure that its payloads are also from the same archive
@@ -97,7 +127,8 @@ namespace CUE4Parse.FileProvider.Vfs
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddFiles(IReadOnlyDictionary<string, GameFile> newFiles, long readOrder = 0,
-            IReadOnlyDictionary<FPackageId, GameFile>? packageFiles = null)
+            IReadOnlyDictionary<FPackageId, GameFile>? packageFiles = null,
+            IReadOnlyDictionary<FPackageId, GameFile>? optionalSegmentPackageFiles = null)
         {
             if (packageFiles is null)
             {
@@ -120,7 +151,23 @@ namespace CUE4Parse.FileProvider.Vfs
             }
 
             _indicesBag.Add(new KeyValuePair<long, IReadOnlyDictionary<string, GameFile>>(readOrder, newFiles));
-            Interlocked.Add(ref _count, newFiles.Count);
+            Interlocked.Add(ref _count, CountVisible(newFiles));
+
+            if (optionalSegmentPackageFiles is { Count: > 0 })
+            {
+                var optionalSegmentIndex = GetOptionalSegmentPackageIndex();
+                foreach (var (packageId, file) in optionalSegmentPackageFiles)
+                    optionalSegmentIndex[packageId] = file;
+            }
+        }
+
+        /// <summary>
+        /// Number of files that are actually listed. Files cooked as part of another file (see
+        /// <see cref="GameFile.IsHidden"/>) stay resolvable by path but are not enumerated.
+        /// </summary>
+        private static int CountVisible(IReadOnlyDictionary<string, GameFile> files)
+        {
+            return files.Values.Count(file => !file.IsHidden);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,19 +175,14 @@ namespace CUE4Parse.FileProvider.Vfs
         {
             _indicesBag.Clear();
             Volatile.Read(ref _byId)?.Clear();
+            Volatile.Read(ref _optionalById)?.Clear();
             Interlocked.Exchange(ref _count, 0);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsKey(string key)
         {
-            foreach (var files in _indicesBag)
-            {
-                if (files.Value.ContainsKey(key))
-                    return true;
-            }
-
-            return false;
+            return _indicesBag.Any(files => files.Value.ContainsKey(key));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -175,13 +217,7 @@ namespace CUE4Parse.FileProvider.Vfs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerator<KeyValuePair<string, GameFile>> GetEnumerator()
         {
-            foreach (var index in _indicesBag.OrderByDescending(kvp => kvp.Key))
-            {
-                foreach (var entry in index.Value)
-                {
-                    yield return entry;
-                }
-            }
+            return (from index in _indicesBag.OrderByDescending(kvp => kvp.Key) from entry in index.Value where !entry.Value.IsHidden select entry).GetEnumerator();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -200,13 +236,7 @@ namespace CUE4Parse.FileProvider.Vfs
 
             public IEnumerator<string> GetEnumerator()
             {
-                foreach (var index in _orig._indicesBag.OrderByDescending(kvp => kvp.Key))
-                {
-                    foreach (var key in index.Value.Keys)
-                    {
-                        yield return key;
-                    }
-                }
+                return (from index in _orig._indicesBag.OrderByDescending(kvp => kvp.Key) from entry in index.Value where !entry.Value.IsHidden select entry.Key).GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -223,13 +253,7 @@ namespace CUE4Parse.FileProvider.Vfs
 
             public IEnumerator<GameFile> GetEnumerator()
             {
-                foreach (var index in _orig._indicesBag.OrderByDescending(kvp => kvp.Key))
-                {
-                    foreach (var key in index.Value.Values)
-                    {
-                        yield return key;
-                    }
-                }
+                return (from index in _orig._indicesBag.OrderByDescending(kvp => kvp.Key) from value in index.Value.Values where !value.IsHidden select value).GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
