@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
+using CUE4Parse.UE4.Assets.Exports.Houdini;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -52,6 +53,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             UMaterialInterface material => Add(new MaterialExporter(material)),
             USkinnedAsset skinnedAsset => Add(new SkinnedAssetExporter(skinnedAsset)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
+            UHoudiniAsset houdiniAsset => Add(new HoudiniAssetExporter(houdiniAsset)),
             UIRMesh irMesh => Add(new IRMeshExporter(irMesh)),
             UGeometryCollection geometryCollection => Add(new GeometryCollectionExporter(geometryCollection)),
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
