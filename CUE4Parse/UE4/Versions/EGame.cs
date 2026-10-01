@@ -238,7 +238,7 @@ public enum EGame : uint
         GAME_Directive8020 = GAME_UE5_5 + 4,
         GAME_Stalker2 = GAME_UE5_5 + 5,
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
-        GAME_NevernessToEverness_CBT2 = GAME_UE5_5 + 7, // keep for now, will be removed later
+        GAME_SleeplessWilds = GAME_UE5_5 + 7,
         GAME_FateTrigger = GAME_UE5_5 + 8,
         GAME_MARVELTokonFightingSouls = GAME_UE5_5 + 9,
         GAME_Borderlands4 = GAME_UE5_5 + 10,
@@ -248,7 +248,6 @@ public enum EGame : uint
         GAME_HighOnLife2 = GAME_UE5_5 + 14,
         GAME_MongilStarDive = GAME_UE5_5 + 15,
         GAME_TheBloodofDawnwalker = GAME_UE5_5 + 16,
-        GAME_SleeplessWilds = GAME_UE5_5 + 17,
     GAME_UE5_6 = GameUtils.GameUe5Base + (6 << 16),
         GAME_Grounded2 = GAME_UE5_6 + 1,
         GAME_AshesOfCreation = GAME_UE5_6 + 2,

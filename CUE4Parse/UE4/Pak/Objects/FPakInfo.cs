@@ -429,7 +429,7 @@ public partial class FPakInfo
         if (Ar.Game == GAME_Farlight84) Ar.Position += 8; // unknown long
         if (Ar.Game == GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
         if (Ar.Game == GAME_KartRiderDrift) IndexOffset ^= 0x3009EB;
-        if (Ar.Game is GAME_NevernessToEverness or GAME_NevernessToEverness_CBT2) IndexOffset -= 1;
+        if (Ar.Game is GAME_NevernessToEverness) IndexOffset -= 1;
         IndexSize = Ar.Read<long>();
         IndexHash = new FSHAHash(Ar);
 
