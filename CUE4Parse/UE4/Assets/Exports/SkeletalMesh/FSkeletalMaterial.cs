@@ -55,7 +55,7 @@ public class FSkeletalMaterial
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
             UVChannelData = new FMeshUVChannelInfo(Ar);
 
-        if (Ar.Game is GAME_SleeplessWilds || FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
+        if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
             OverlayMaterialInterface = new FPackageIndex(Ar);
 
         switch (Ar.Game)
@@ -63,7 +63,7 @@ public class FSkeletalMaterial
             case GAME_MarvelRivals:
                 _ = new FGameplayTagContainer(Ar);
                 break;
-            case GAME_FragPunk or GAME_DaysGone or GAME_WorldofJadeDynasty or GAME_AssaultFireFuture:
+            case GAME_FragPunk or GAME_DaysGone or GAME_WorldofJadeDynasty or GAME_AssaultFireFuture or GAME_SleeplessWilds:
                 Ar.Position += 4;
                 break;
             case GAME_Strinova:

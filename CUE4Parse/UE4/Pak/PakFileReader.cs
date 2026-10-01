@@ -159,6 +159,11 @@ public partial class PakFileReader : AbstractAesVfsReader
                     (block.CompressedStart - pakEntry.CompressionBlocks[0].CompressedStart));
                 var compressed = ReadAndDecryptEntryAt(compressedBuffer, block.CompressedStart, srcSize, reader,
                     pakEntry, offsetInEncryptionUnit);
+                if (Game is GAME_SleeplessWilds && pakEntry.CompressionMethod is CompressionMethod.Oodle &&
+                    compressedBuffer.Length > 1 && compressedBuffer[0] == 0x8C && compressedBuffer[1] == 0x14)
+                {
+                    compressedBuffer[1] = 0x0C;
+                }                    
                 // Calculate the uncompressed size,
                 // its either just the compression block size,
                 // or if it's the last block, it's the remaining data size

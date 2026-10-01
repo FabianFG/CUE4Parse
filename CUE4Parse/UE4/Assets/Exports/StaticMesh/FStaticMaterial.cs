@@ -24,12 +24,12 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.TextureStreamingMeshUVChannelData)
                 UVChannelData = new FMeshUVChannelInfo(Ar);
 
-            if (Ar.Game is GAME_SleeplessWilds || FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
+            if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.MeshMaterialSlotOverlayMaterialAdded)
             {
                 OverlayMaterialInterface = new FPackageIndex(Ar);
             }
 
-            if (Ar.Game is GAME_FragPunk or GAME_WorldofJadeDynasty) Ar.Position += 4;
+            if (Ar.Game is GAME_FragPunk or GAME_WorldofJadeDynasty or GAME_SleeplessWilds) Ar.Position += 4;
         }
 
         public FStaticMaterial(FPackageIndex? material)
