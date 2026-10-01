@@ -218,7 +218,7 @@ public enum EGame : uint
         GAME_Gothic1Remake = GAME_UE5_4 + 4,
         GAME_SplitFiction = GAME_UE5_4 + 5,
         GAME_WildAssault = GAME_UE5_4 + 6,
-        GAME_Placeholder8 = GAME_UE5_4 + 7,
+        GAME_AceCombat8WingsofTheve = GAME_UE5_4 + 7,
         GAME_TempestRising = GAME_UE5_4 + 8,
         GAME_MindsEye = GAME_UE5_4 + 9,
         GAME_Placeholder1 = GAME_UE5_4 + 10,
