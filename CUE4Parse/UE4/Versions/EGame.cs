@@ -170,6 +170,7 @@ public enum EGame : uint
         GAME_TheFirstBerserkerKhazan = GAME_UE4_27 + 37,
         GAME_AliensFireteamElite2 = GAME_UE4_27 + 38,
         GAME_GangstarMirageCity = GAME_UE4_27 + 39,
+        GAME_ArcheAgeWar = GAME_UE4_27 + 40,
     GAME_UE4_28 = GameUtils.GameUe4Base + (28 << 16),
 
     GAME_UE4_LATEST = GAME_UE4_28,
@@ -217,7 +218,7 @@ public enum EGame : uint
         GAME_Gothic1Remake = GAME_UE5_4 + 4,
         GAME_SplitFiction = GAME_UE5_4 + 5,
         GAME_WildAssault = GAME_UE5_4 + 6,
-        GAME_Placeholder8 = GAME_UE5_4 + 7,
+        GAME_AceCombat8WingsofTheve = GAME_UE5_4 + 7,
         GAME_TempestRising = GAME_UE5_4 + 8,
         GAME_MindsEye = GAME_UE5_4 + 9,
         GAME_Placeholder1 = GAME_UE5_4 + 10,
@@ -237,7 +238,7 @@ public enum EGame : uint
         GAME_Directive8020 = GAME_UE5_5 + 4,
         GAME_Stalker2 = GAME_UE5_5 + 5,
         GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
-        GAME_NevernessToEverness_CBT2 = GAME_UE5_5 + 7, // keep for now, will be removed later
+        GAME_SleeplessWilds = GAME_UE5_5 + 7,
         GAME_FateTrigger = GAME_UE5_5 + 8,
         GAME_MARVELTokonFightingSouls = GAME_UE5_5 + 9,
         GAME_Borderlands4 = GAME_UE5_5 + 10,
