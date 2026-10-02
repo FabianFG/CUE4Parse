@@ -109,7 +109,15 @@ public abstract class AbstractUePackage : UObject, IPackage
             {
                 throw new ParserException($"Could not read {obj.ExportType} named {obj.Name} correctly", e);
             }
-            Log.Error(e, "Could not read {0} named {1} correctly", obj.ExportType, obj.Name);
+
+            if (e is ParserException)
+            {
+                Log.Error(e, "Could not read {0} named {1} correctly", obj.ExportType, obj.Name);
+            }
+            else
+            {
+                Log.Error(e, "Could not read {0} named {1} correctly ({2})", obj.ExportType, obj.Name, Ar.Name);
+            }
         }
     }
 

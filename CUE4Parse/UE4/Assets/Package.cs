@@ -19,7 +19,6 @@ namespace CUE4Parse.UE4.Assets
     [SkipObjectRegistration]
     public sealed class Package : AbstractUePackage
     {
-
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
         public override int ImportMapLength => ImportMap.Length;
@@ -372,13 +371,11 @@ namespace CUE4Parse.UE4.Assets
             {
                 if (package is IoPackage ioPackage)
                 {
-                    for (int i = 0; i < ioPackage.ExportMap.Length; i++)
+                    // GetExportIndex also covers the exports of a merged optional segment
+                    var exportIndex = ioPackage.GetExportIndex(import.ObjectName.Text);
+                    if (exportIndex != -1)
                     {
-                        FExportMapEntry export = ioPackage.ExportMap[i];
-                        if (ioPackage.CreateFNameFromMappedName(export.ObjectName).Text == import.ObjectName.Text)
-                        {
-                            return ioPackage.ResolvePackageIndex(new FPackageIndex(ioPackage, i + 1));
-                        }
+                        return ioPackage.ResolvePackageIndex(new FPackageIndex(ioPackage, exportIndex + 1));
                     }
 #if DEBUG
                     Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, ioPackage.GetFullName());
