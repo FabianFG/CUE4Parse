@@ -12,6 +12,23 @@ public class FReferenceSkeleton
     public readonly FTransform[] FinalRefBonePose;
     public readonly Dictionary<string, int> FinalNameToIndexMap;
 
+    /// <summary>Builds a reference skeleton from bone data instead of reading one out of a package.</summary>
+    /// <remarks>
+    /// The archive constructor is otherwise the only way this type can come into existence, which
+    /// leaves anything that wants to exercise skeleton handling without a package — tests, tooling,
+    /// procedurally built rigs — with nothing to hand it.
+    /// </remarks>
+    public FReferenceSkeleton(FMeshBoneInfo[] boneInfo, FTransform[] bonePose)
+    {
+        FinalRefBoneInfo = boneInfo;
+        FinalRefBonePose = bonePose;
+        FinalNameToIndexMap = new Dictionary<string, int>(boneInfo.Length);
+        for (var i = 0; i < boneInfo.Length; i++)
+        {
+            FinalNameToIndexMap[boneInfo[i].Name.Text] = i;
+        }
+    }
+
     public FReferenceSkeleton(FAssetArchive Ar)
     {
         FinalRefBoneInfo = Ar.ReadArray(() => new FMeshBoneInfo(Ar));
