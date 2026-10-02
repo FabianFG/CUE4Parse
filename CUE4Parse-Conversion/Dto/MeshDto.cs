@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
+using CUE4Parse.UE4.Assets.Exports.Houdini;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
@@ -53,7 +54,16 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         Materials = new MeshMaterialDto[mesh.Materials.Length];
         for (var i = 0; i < Materials.Length; i++)
         {
-            Materials[i] = new MeshMaterialDto($"MaterialSlot_{i}", mesh.Materials[i]); // USD doesn't like empty materials
+            Materials[i] = new MeshMaterialDto($"{i}", mesh.Materials[i]); // USD doesn't like empty materials
+        }
+    }
+
+    protected MeshDto(UHoudiniStaticMesh mesh) : base(mesh)
+    {
+        Materials = new MeshMaterialDto[mesh.Materials.Length];
+        for (var i = 0; i < Materials.Length; i++)
+        {
+            Materials[i] = new MeshMaterialDto($"{i}", mesh.Materials[i]);
         }
     }
 
@@ -280,6 +290,13 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         LODs.Add(MeshLodDto<MeshVertex>.FromIRMesh(this, mesh, meshIndex));
         var bounds = LODs.FirstOrDefault()?.CalculateLodBounds();
         Bounds = bounds ?? new FBox(FVector.ZeroVector, FVector.OneVector);
+        SetLodSuffixes();
+    }
+
+    public StaticMeshDto(UHoudiniStaticMesh mesh) : base(mesh)
+    {
+        LODs.Add(MeshLodDto<MeshVertex>.FromHoudiniStaticMesh(this, mesh));
+        Bounds = LODs.First().CalculateLodBounds();
         SetLodSuffixes();
     }
 

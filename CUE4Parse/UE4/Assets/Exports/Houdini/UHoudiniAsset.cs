@@ -15,6 +15,11 @@ public class UHoudiniAsset : UObject
     {
         base.Deserialize(Ar, validPos);
 
+        HdaBuffer = GetOrDefault<byte[]>("AssetBytes", []);
+
+        if (Ar.Position == validPos)
+            return;
+
         FileFormatVersion = Ar.Read<uint>();
         HdaBuffer = Ar.ReadArray<byte>();
         AssetFlags = Ar.Read<uint>();

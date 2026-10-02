@@ -54,6 +54,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             USkinnedAsset skinnedAsset => Add(new SkinnedAssetExporter(skinnedAsset)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
             UHoudiniAsset houdiniAsset => Add(new HoudiniAssetExporter(houdiniAsset)),
+            UHoudiniStaticMesh houdiniMesh => Add(new HoudiniStaticMeshExporter(houdiniMesh)),
             UIRMesh irMesh => Add(new IRMeshExporter(irMesh)),
             UGeometryCollection geometryCollection => Add(new GeometryCollectionExporter(geometryCollection)),
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
