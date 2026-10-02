@@ -82,6 +82,76 @@ public static class PUBGMobileSM4
         [44] = "48750e47caff0540e2ee"
     };
 
+    private static readonly Dictionary<uint, string> _builtInDynamicKeySalts = new(_dynamicKeySalts);
+    private static readonly object DynamicKeySaltsLock = new();
+
+    /// <summary>Optional callback for a missing dynamic key.</summary>
+    public static Func<uint, string?>? DynamicKeySaltResolver { get; set; }
+
+    /// <summary>Optional callback after a dynamic key produces unreadable content.</summary>
+    public static Func<uint, string?>? DynamicKeySaltReplacementResolver { get; set; }
+
+    public static void RegisterDynamicKeySalt(uint index, string salt)
+    {
+        if (string.IsNullOrWhiteSpace(salt) || salt.Length > 128 || salt.Any(char.IsControl))
+            throw new ArgumentException("Dynamic key salt is invalid", nameof(salt));
+
+        lock (DynamicKeySaltsLock)
+            _dynamicKeySalts[index] = salt.Trim();
+    }
+
+    public static bool TryGetDynamicKeySalt(uint index, out string? salt)
+    {
+        lock (DynamicKeySaltsLock)
+            return _dynamicKeySalts.TryGetValue(index, out salt);
+    }
+
+    public static uint[] GetAvailableDynamicKeyIndices()
+    {
+        lock (DynamicKeySaltsLock)
+            return _dynamicKeySalts.Keys.Order().ToArray();
+    }
+
+    public static bool ResetDynamicKeySalt(uint index)
+    {
+        lock (DynamicKeySaltsLock)
+        {
+            if (_builtInDynamicKeySalts.TryGetValue(index, out var builtInSalt))
+            {
+                if (_dynamicKeySalts.TryGetValue(index, out var currentSalt) && currentSalt == builtInSalt)
+                    return false;
+
+                _dynamicKeySalts[index] = builtInSalt;
+                return true;
+            }
+
+            return _dynamicKeySalts.Remove(index);
+        }
+    }
+
+    public static bool TryReplaceDynamicKeySalt(uint index)
+    {
+        var replacement = DynamicKeySaltReplacementResolver?.Invoke(index);
+        if (string.IsNullOrWhiteSpace(replacement))
+            return false;
+
+        RegisterDynamicKeySalt(index, replacement);
+        return true;
+    }
+
+    private static string? ResolveDynamicKeySalt(uint index)
+    {
+        if (TryGetDynamicKeySalt(index, out var salt))
+            return salt;
+
+        var resolvedSalt = DynamicKeySaltResolver?.Invoke(index);
+        if (string.IsNullOrWhiteSpace(resolvedSalt))
+            return null;
+
+        RegisterDynamicKeySalt(index, resolvedSalt);
+        return resolvedSalt.Trim();
+    }
+
     public static byte[] Decrypt(byte[] bytes, int beginOffset, int count, string path, EPUBGMobileEncryptionMethod encryptionMethod, uint encryptionKeyId)
     {
         if (beginOffset > bytes.Length - count)
@@ -135,7 +205,8 @@ public static class PUBGMobileSM4
                 if (isDynamicallyEncrypted)
                 {
                     var encryptionKeyIndex = encryptionKeyId & 0xFFFFFF;
-                    if (!_dynamicKeySalts.TryGetValue(encryptionKeyIndex, out var keySalt))
+                    var keySalt = ResolveDynamicKeySalt(encryptionKeyIndex);
+                    if (keySalt is null)
                         throw new ParserException($"Dynamic encryption key with index {encryptionKeyIndex} is not available");
 
                     Span<byte> hash = stackalloc byte[SHA1.HashSizeInBytes];

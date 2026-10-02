@@ -71,7 +71,7 @@ public partial class PakFileReader
             InitializePUBGMobileZstdDictionary();
     }
 
-    private byte[] PUBGMobileExtract(FArchive Ar, FPakEntry entry, FByteBulkDataHeader? header)
+    private byte[] PUBGMobileExtract(FArchive Ar, FPakEntry entry, FByteBulkDataHeader? header, bool retriedDynamicKey = false)
     {
         if (entry is not FPUBGMobilePakEntry pakEntry)
             throw new ParserException("Invalid PUBG Mobile pak entry type");
@@ -152,7 +152,21 @@ public partial class PakFileReader
             }
             else
             {
-                UECompression.Decompress(compressed.AsSpan(0, compressedSize), destination, pakEntry.CompressionMethod, Ar);
+                try
+                {
+                    UECompression.Decompress(compressed.AsSpan(0, compressedSize), destination, pakEntry.CompressionMethod, Ar);
+                }
+                catch (FileLoadException exception) when (isDynamicallyEncrypted && !retriedDynamicKey &&
+                                                        PUBGMobileSM4.TryReplaceDynamicKeySalt(pakEntry.EncryptionKeyId & 0xFFFFFF))
+                {
+                    return PUBGMobileExtract(Ar, entry, header, retriedDynamicKey: true);
+                }
+                catch (FileLoadException exception) when (isDynamicallyEncrypted)
+                {
+                    var keyIndex = pakEntry.EncryptionKeyId & 0xFFFFFF;
+                    throw new ParserException($"PUBG Mobile dynamic key slot {keyIndex} could not decrypt this archive. " +
+                                              "Replace the stored key and try again.", exception);
+                }
             }
         }
 
