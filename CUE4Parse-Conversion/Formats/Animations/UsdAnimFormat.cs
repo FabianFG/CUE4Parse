@@ -17,9 +17,6 @@ public class UsdAnimFormat : IAnimExportFormat
         var dto = new SkeletonDto(animSet.Skeleton);
         var root = dto.ToSkelRoot();
 
-        foreach (var sequence in animSet.Sequences)
-            sequence.RetargetTracks(animSet.Skeleton);
-
         var numBones = dto.Bones.Length;
 
         var fps = animSet.Sequences.Count > 0 ? animSet.Sequences[0].NumFrames / animSet.Sequences[0].AnimEndTime : 30f;
