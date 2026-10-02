@@ -3,13 +3,17 @@ using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.UE4.Versions;
 
-// Custom serialization version for all packages containing DNAAsset types
+// Custom serialization version for all packages containing DNAAsset / DNA types
 public class FDNAAssetCustomVersion
 {
     public enum Type
     {
         // Before any version changes were made in the plugin
         BeforeCustomVersionWasAdded = 0,
+        UnifiedReaderVersion = 1,
+        IntroduceOptimizedSerializationDuringCooking = 2,
+        GeneralizedCoordinateSystemConversion = 3,
+        UserModifiableDNAConfig = 4,
 
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
