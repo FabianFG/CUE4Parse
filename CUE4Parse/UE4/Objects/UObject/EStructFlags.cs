@@ -78,6 +78,12 @@ public enum EStructFlags : uint
     /** If set, this struct will have Visit on it to allow custom property visiting implementation */
     STRUCT_Visitor = 0x04000000,
 
+    /** If set, this struct will have PostLoad on it in the editor. */
+    STRUCT_PostLoad = 0x08000000, // UE_INTERNAL
+
+    /** If set, this struct will be move-assigned using the CPP operator=(T&&) */
+    STRUCT_MoveAssignNative = 0x10000000,
+
     /** Struct flags that are automatically inherited */
     STRUCT_Inherit = STRUCT_HasInstancedReference | STRUCT_Atomic,
 
