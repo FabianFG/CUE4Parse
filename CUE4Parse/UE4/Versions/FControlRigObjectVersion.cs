@@ -158,6 +158,11 @@ public static class FControlRigObjectVersion
         // (UControlRigRuntimeAsset::InjectDynamicImportsFor) - that path only runs for older assets.
         OverridesStoreOwnerStructAsHardImport,
 
+        // Controls store how a layered rig should combine their sequencer value with the value from the
+        // backwards solve. See ERigControlLayeredCombineMode. Assets saved before this version load with
+        // ERigControlLayeredCombineMode::Default, which keeps the previous behaviour.
+        ControlLayeredCombineMode,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1,
