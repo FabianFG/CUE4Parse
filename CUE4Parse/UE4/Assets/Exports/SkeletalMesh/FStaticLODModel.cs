@@ -251,7 +251,11 @@ public class FStaticLODModel
             Ar.SkipFixedArray(16); // Edges
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.BonesAsBytes && Ar.Game < GAME_UE4_0)
+        if (Ar.Game == GAME_DevilMayCry && (int) Ar.LicenseeVer >= 3)
+        {
+            RequiredBones = Ar.ReadArray<short>();
+        }
+        else if (Ar.Ver >= EUnrealEngineObjectUE3Version.BonesAsBytes && Ar.Game < GAME_UE4_0)
         {
             var byteBones = Ar.ReadArray<byte>();
             RequiredBones = new short[byteBones.Length];
