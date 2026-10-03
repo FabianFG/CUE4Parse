@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.ACL;
 using CUE4Parse.UE4.Objects.Engine.Animation;
-using CUE4Parse.UE4.Objects.Engine.Curves;
 
 namespace CUE4Parse.UE4.Assets.Exports.Animation.ACL;
 
@@ -28,40 +27,8 @@ public class AnimCurveCompressionCodec_ACL : UAnimCurveCompressionCodec
             }
         }
 
-        var timeValues = new float[numSamples];
-        for (var sampleIndex = 0; sampleIndex < numSamples; sampleIndex++)
-        {
-            timeValues[sampleIndex] = sampleIndex / header.SampleRate;
-        }
-
-        var numCurves = Math.Min(numTracks, names.Length);
-        var floatCurves = new FFloatCurve[numCurves];
-        for (var curveIndex = 0; curveIndex < numCurves; curveIndex++)
-        {
-            var curveKeys = floatKeys.AsSpan(curveIndex * numSamples, numSamples);
-
-            var floatCurve = new FFloatCurve
-            {
-                CurveName = names[curveIndex].DisplayName,
-                FloatCurve = new FRichCurve
-                {
-                    Keys = new FRichCurveKey[numSamples]
-                }
-            };
-
-            for (var sampleIndex = 0; sampleIndex < numSamples; sampleIndex++)
-            {
-                floatCurve.FloatCurve.Keys[sampleIndex] = new FRichCurveKey
-                {
-                    Value = curveKeys[sampleIndex],
-                    Time = timeValues[sampleIndex]
-                };
-            }
-
-            floatCurves[curveIndex] = floatCurve;
-        }
-
-        return floatCurves;
+        return UAnimCurveCompressionCodec_UniformIndexable.ExtractUniformFloatCurves(names, Math.Min(numTracks, names.Length),
+            floatKeys, numSamples, header.SampleRate);
     }
 
     [DllImport(ACLNative.LIB_NAME)]

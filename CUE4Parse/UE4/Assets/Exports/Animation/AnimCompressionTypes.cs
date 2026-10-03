@@ -73,7 +73,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
     {
         /* Common data */
         public int CompressedNumberOfFrames { get; set; } // CompressedNumberOfKeys in UE5
-        //public FAnimationErrorStats BoneCompressionErrorStats; //editor
+        //public FAnimationErrorStats BoneCompressionErrorStats { get; set; } //editor
 
         public void SerializeCompressedData(FAssetArchive Ar)
         {
@@ -83,10 +83,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         internal void BaseSerializeCompressedData(FAssetArchive Ar)
         {
             CompressedNumberOfFrames = Ar.Read<int>();
-            /*if (!Ar.Owner.HasFlags(EPackageFlags.PKG_FilterEditorOnly))
+            if (!Ar.IsFilterEditorOnly)
             {
-                BoneCompressionErrorStats = new FAnimationErrorStats(Ar);
-            }*/
+                _ = Ar.Read<FAnimationErrorStats>(); // BoneCompressionErrorStats
+            }
+        }
+
+        public struct FAnimationErrorStats
+        {
+            /** Average world-space translation error across all end-effectors **/
+            public float AverageError;
+            /** The worst error encountered across all end effectors **/
+            public float MaxError;
+            /** Time at which the worst error occurred */
+            public float MaxErrorTime;
+            /** Bone on which the worst error occurred */
+            public int MaxErrorBone;
         }
 
         public void Bind(byte[] bulkData);
