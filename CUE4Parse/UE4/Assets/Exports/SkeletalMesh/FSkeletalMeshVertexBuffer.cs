@@ -32,7 +32,7 @@ public class FSkeletalMeshVertexBuffer
     {
         var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));
 
-        NumTexCoords = Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MULTIPLE_UVS_TO_SKELETAL_MESH ? Ar.Read<int>() : 1;
+        NumTexCoords = Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MULTIPLE_UVS_TO_SKELETAL_MESH || (Ar.Game == GAME_MirrorEdge && (int) Ar.LicenseeVer >= 15) ? Ar.Read<int>() : 1;
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.USE_FLOAT16_SKELETAL_MESH_UVS)
         {

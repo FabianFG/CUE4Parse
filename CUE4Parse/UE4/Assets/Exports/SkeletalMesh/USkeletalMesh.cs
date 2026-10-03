@@ -45,6 +45,11 @@ public partial class USkeletalMesh : USkinnedAsset
             Ar.Position += sizeof(float); // float - m_fRadius
         }
 
+        if (Ar.Game == GAME_MirrorEdge && (int) Ar.LicenseeVer >= 15)
+        {
+            Ar.Position += sizeof(int);
+        }
+
         ImportedBounds = new FBoxSphereBounds(Ar);
         Bounds = ImportedBounds;
 

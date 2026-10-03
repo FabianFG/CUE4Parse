@@ -353,6 +353,8 @@ public class FStaticLODModel
                     }
                 }
 
+                if (Ar.Game == GAME_MirrorEdge && (int) Ar.LicenseeVer >= 15) return;
+
                 if (bHasVertexColors)
                 {
                     if (skelMeshVer < FSkeletalMeshCustomVersion.Type.UseSharedColorBufferFormat)

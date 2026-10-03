@@ -143,6 +143,12 @@ public class UStaticMesh : UObject
                  }
             }
 
+            if (Ar.Game == GAME_MirrorEdge)
+            {
+                LightingGuid = FGuid.Random();
+                return; // some weird changes so just ignore
+            }
+
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERSION_18 && FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.DeprecatedHighResSourceMesh && Ar.Game is not GAME_APBReloaded && Ar.Game is not GAME_BorderlandsSequel)
             {
                 var Deprecated_HighResSourceMeshName = Ar.ReadFString();

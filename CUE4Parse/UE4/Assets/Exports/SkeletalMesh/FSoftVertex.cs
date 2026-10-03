@@ -17,6 +17,8 @@ public class FSoftVertex : FSkelMeshVertexBase
         SerializeForEditor(Ar);
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MULTIPLE_UVS_TO_SKELETAL_MESH) MAX_SKELETAL_UV_SETS = 4;
+        if (Ar.Game == GAME_MirrorEdge && (int) Ar.LicenseeVer >= 13) MAX_SKELETAL_UV_SETS = 3;
+
         UVs = Ar.ReadArray<FMeshUVFloat>(MAX_SKELETAL_UV_SETS);
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_SKELETAL_MESH_VERTEX_COLORS)
