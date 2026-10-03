@@ -55,6 +55,12 @@ public partial class USkeletalMesh : USkinnedAsset
 
         if (Ar.Game < GAME_UE4_0)
         {
+            if (Ar.Game == GAME_BatmanArkhamAsylum && (int) Ar.LicenseeVer >= 15)
+            {
+                Ar.Position += sizeof(float); // ConservativeBounds
+                Ar.SkipFixedArray(28); // BoneBounds
+            }
+
             Materials = Ar.ReadArray(() => new FPackageIndex(Ar));
 
             SkeletalMaterials = new FSkeletalMaterial[Materials.Length];

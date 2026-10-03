@@ -109,6 +109,15 @@ public class FPositionVertexBuffer
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
 
+        if (Ar.Game == GAME_BatmanArkhamAsylum)
+        {
+            if ((int) Ar.LicenseeVer >= 17) Ar.Position += sizeof(int);
+            Verts = Stride == 8
+                ? Ar.ReadBulkArray<FVector>(() => Ar.Read<FHalfVector4>())
+                : Ar.ReadBulkArray<FVector>();
+            return;
+        }
+
         if (Ar.Game is GAME_BorderlandsSequel or GAME_BioshockInfinite)
         {
             var isPacked = Ar.Read<byte>();

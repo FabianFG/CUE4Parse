@@ -27,6 +27,7 @@ public enum EGame : uint
         GAME_TheLastRemnant = GAME_UE3_0 + 17,
         GAME_BioshockInfinite = GAME_UE3_0 + 18,
         GAME_DevilMayCry = GAME_UE3_0 + 19,
+        GAME_BatmanArkhamAsylum = GAME_UE3_0 + 20,
 
     GAME_UE4_0 = GameUtils.GameUe4Base + (0 << 16),
     GAME_UE4_1 = GameUtils.GameUe4Base + (1 << 16),

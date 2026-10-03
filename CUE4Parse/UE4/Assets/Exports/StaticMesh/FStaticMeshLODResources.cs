@@ -300,7 +300,7 @@ public class FStaticMeshLODResources
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
-                Ar.SkipBulkArrayData(16); // LegacyEdges
+                Ar.SkipBulkArrayData(Ar.Game == GAME_BatmanArkhamAsylum && (int) Ar.LicenseeVer >= 5 ? 8 : 16); // LegacyEdges
                 Ar.SkipArray<byte>(); // LegacyShadowTriangleDoubleSided
             }
 

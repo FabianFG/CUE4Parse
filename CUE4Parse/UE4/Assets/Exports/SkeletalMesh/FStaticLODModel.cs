@@ -248,7 +248,7 @@ public class FStaticLODModel
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
         {
-            Ar.SkipFixedArray(16); // Edges
+            Ar.SkipFixedArray(Ar.Game == GAME_BatmanArkhamAsylum && (int) Ar.LicenseeVer >= 5 ? 8 : 16); // Edges
         }
 
         if (Ar.Game == GAME_DevilMayCry && (int) Ar.LicenseeVer >= 3)
