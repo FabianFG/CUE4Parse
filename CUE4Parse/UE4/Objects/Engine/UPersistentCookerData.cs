@@ -191,7 +191,7 @@ namespace CUE4Parse.UE4.Objects.Engine
                 ExternGCompressorDstBytes = Ar.Read<ulong>();
                 ExternGArchiveSerializedCompressedSavingTime = Ar.Read<double>();
             }
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.IPHONE_COMPRESSED_SOUNDS_MS_ADPCM) Ar.Position += 32; // unknown
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.WIIU_COMPRESSED_SOUNDS) Ar.Position += 32; // unknown
         }
     }
 

@@ -270,7 +270,7 @@ public partial class USkeletalMesh : USkinnedAsset
             }
         }
 
-        if (Ar.Game == GAME_FableAnniversary && (int) Ar.LicenseeVer >= 1007)
+        if (Ar.Game == GAME_FableAnniversary && (int) Ar.LicenseeVer >= 1007 || Ar.Game == GAME_DevilMayCry)
         {
             return;
         }
