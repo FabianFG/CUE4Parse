@@ -109,7 +109,7 @@ public class FPositionVertexBuffer
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
 
-        if (Ar.Game == GAME_BorderlandsSequel)
+        if (Ar.Game is GAME_BorderlandsSequel or GAME_BioshockInfinite)
         {
             var isPacked = Ar.Read<byte>();
             var vectorType = Ar.Read<byte>();

@@ -54,17 +54,25 @@ public class UStaticMesh : UObject
         {
             var bShortCollisionData = Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedShortProperties || Ar.Ver > EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE;
 
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.COMPACTKDOPSTATICMESH || Ar.Game == GAME_Dishonored)
+            if (Ar.Game == GAME_BioshockInfinite)
             {
-                Ar.SkipBulkArrayData(bShortCollisionData ? 24 + 4 + 4 : 24 + 4 + 8);
+                Ar.Position += 12 * 4; // vectors
+                Ar.SkipArray<int>();
             }
             else
             {
-                Ar.Position += 24;
-                Ar.SkipBulkArrayData(6); // bound
-            }
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.COMPACTKDOPSTATICMESH || Ar.Game == GAME_Dishonored)
+                {
+                    Ar.SkipBulkArrayData(bShortCollisionData ? 24 + 4 + 4 : 24 + 4 + 8);
+                }
+                else
+                {
+                    Ar.Position += 24;
+                    Ar.SkipBulkArrayData(6); // bound
+                }
 
-            Ar.SkipBulkArrayData(bShortCollisionData ? 8 : 16); // Collision Triangle
+                Ar.SkipBulkArrayData(bShortCollisionData ? 8 : 16); // Collision Triangle
+            }
 
             var InternalVersion = Ar.Read<int>();
             var STATICMESH_VERSION_CONTENT_TAGS = 17; // Content tags were introduced in SM version 17

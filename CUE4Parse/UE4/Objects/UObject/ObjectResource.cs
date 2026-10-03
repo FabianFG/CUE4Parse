@@ -287,7 +287,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Ar.Read<int>(); // ExportFlags
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP)
+            if (!(Ar.Game == GAME_BioshockInfinite && Ar.Read<int>() == 0) && Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP)
             {
                 if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
                 {

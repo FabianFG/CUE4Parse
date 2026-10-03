@@ -83,6 +83,8 @@ namespace CUE4Parse.UE4.Objects.Engine
             {
                 Platform = Ar.Read<EShaderPlatform>();
 
+                if (Ar.Game == GAME_BioshockInfinite) Ar.Position += 4;
+
                 if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_AUTO_SHADER_VERSIONING)
                 {
                     ShaderTypeMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
@@ -283,20 +285,23 @@ namespace CUE4Parse.UE4.Objects.Engine
             writer.WritePropertyName(nameof(ShaderMaps));
             serializer.Serialize(writer, ShaderMaps);
 
-            writer.WritePropertyName(nameof(Shaders));
-            writer.WriteStartArray();
-
-            foreach (var shader in Shaders)
+            if (Shaders?.Length > 0)
             {
-                writer.WriteStartObject();
+                writer.WritePropertyName(nameof(Shaders));
+                writer.WriteStartArray();
 
-                writer.WritePropertyName(nameof(FShaderCacheShader.ShaderType));
-                serializer.Serialize(writer, shader.ShaderType);
+                foreach (var shader in Shaders)
+                {
+                    writer.WriteStartObject();
 
-                writer.WritePropertyName(nameof(FShaderCacheShader.ShaderId));
-                serializer.Serialize(writer, shader.ShaderId);
+                    writer.WritePropertyName(nameof(FShaderCacheShader.ShaderType));
+                    serializer.Serialize(writer, shader.ShaderType);
 
-                writer.WriteEndObject();
+                    writer.WritePropertyName(nameof(FShaderCacheShader.ShaderId));
+                    serializer.Serialize(writer, shader.ShaderId);
+
+                    writer.WriteEndObject();
+                }
             }
         }
     }

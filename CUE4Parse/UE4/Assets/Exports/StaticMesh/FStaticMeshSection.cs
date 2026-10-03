@@ -51,6 +51,7 @@ public class FStaticMeshSection
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERSION_16) MaterialIndex = Ar.Read<int>();
             if (Ar.Game == GAME_FableAnniversary && (int) Ar.LicenseeVer >= 1007) Ar.Position += 4;
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_FRAGMENTINDEX) Ar.SkipFixedArray(8); // Fragment
+            if (Ar.Game == GAME_BioshockInfinite) Ar.SkipFString();
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_PLATFORMMESHDATA)
             {
                 var bLoadPlatformData = Ar.ReadFlag();

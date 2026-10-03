@@ -245,6 +245,7 @@ public class ULevel : Assets.Exports.UObject, IAssetUserData
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRECOOK_PHYS_STATICMESH_CACHE && Ar.Game < GAME_UE4_0)
             {
                 Ar.ReadMap(() => new FPackageIndex(Ar), () => new FCachedPhysSMData(Ar)); // CachedPhysSMDataMap
+                if (Ar.Game == GAME_BioshockInfinite) return;
                 Ar.ReadArray(() => Ar.ReadArray(() => Ar.ReadBulkArray<byte>())); // CachedPhysSMDataStore
             }
 

@@ -301,6 +301,11 @@ public class FStaticLODModel
             Ar.Read<int>();
         }
 
+        if (Ar.Game == GAME_BioshockInfinite)
+        {
+            Ar.Read<int>();
+        }
+
         if (Ar.Game != GAME_StateOfDecay2 && Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_SKELMESH_MESHTOIMPORTVERTEXMAP)
         {
             MeshToImportVertexMap = Ar.ReadArray<int>();

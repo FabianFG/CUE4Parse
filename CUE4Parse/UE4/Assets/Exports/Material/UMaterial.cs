@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
@@ -99,6 +100,18 @@ public class UMaterial : UMaterialInterface
         }
         else if (Ar.Game < GAME_UE4_0) // test UE4 then remove
         {
+            if (Ar.Game == GAME_BioshockInfinite)
+            {
+                Ar.Read<FGuid>();
+                for (var i = 0; i < 5; i++)
+                {
+                    var textures = Ar.ReadArray(() => new FPackageIndex(Ar));
+                    if (ReferencedTextures.Count == 0 && textures.Length > 0)
+                        ReferencedTextures.AddRange(textures);
+                }
+                return;
+            }
+
             var QualityMask = 1;
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MATERIAL_QUALITY_LEVEL)
             {

@@ -51,26 +51,29 @@ public class UTexture2D : UTexture
                 Ar.Position += 16; // hash?
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_FILECACHE_GUIDS)
+            if (Ar.Game != GAME_BioshockInfinite)
             {
-                Ar.Position += sizeof(uint) * 4; // FGuid - TextureFileCacheGuid_DEPRECATED
-            }
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_TEXTURE_FILECACHE_GUIDS)
+                {
+                    Ar.Position += sizeof(uint) * 4; // FGuid - TextureFileCacheGuid_DEPRECATED
+                }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_IPHONE_DATA)
-            {
-                Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedPVRTCMips
-            }
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_CACHED_IPHONE_DATA)
+                {
+                    Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedPVRTCMips
+                }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.VERSION_NUMBER_FIX_FOR_FLASH_TEXTURES)
-            {
-                Ar.Position += sizeof(int); // int - CachedFlashMipsMaxResolution
-                Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedATITCMips
-                new FByteBulkData(Ar); // CachedFlashMips
-            }
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.VERSION_NUMBER_FIX_FOR_FLASH_TEXTURES)
+                {
+                    Ar.Position += sizeof(int); // int - CachedFlashMipsMaxResolution
+                    Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedATITCMips
+                    new FByteBulkData(Ar); // CachedFlashMips
+                }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ANDROID_ETC_SEPARATED)
-            {
-                Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedETCMips
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.ANDROID_ETC_SEPARATED)
+                {
+                    Ar.ReadArray(() => new FTexture2DMipMap(Ar)); // CachedETCMips
+                }
             }
 
             Format = GetOrDefault(nameof(Format), EPixelFormat.PF_Unknown);

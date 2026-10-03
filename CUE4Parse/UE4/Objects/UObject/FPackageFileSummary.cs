@@ -248,6 +248,11 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Ar.LicenseeVer = FileVersionLicenseeUE;
             }
 
+            if (Ar.Game == GAME_BioshockInfinite && (int) Ar.LicenseeVer >= 66)
+            {
+                Ar.Read<int>();
+            }
+
             if (FileVersionUE >= EUnrealEngineObjectUE3Version.MOVED_EXPORTIMPORTMAPS_ADDED_TOTALHEADERSIZE && FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
             {
                 TotalHeaderSize = Ar.Read<int>();
@@ -339,7 +344,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SearchableNamesOffset = Ar.Read<int>();
             }
 
-            if (FileVersionUE >= EUnrealEngineObjectUE3Version.ADDED_CROSSLEVEL_REFERENCES && Ar.Game < GAME_UE4_0)
+            if (FileVersionUE >= EUnrealEngineObjectUE3Version.ADDED_CROSSLEVEL_REFERENCES && Ar.Game < GAME_UE4_0 && Ar.Game != GAME_BioshockInfinite)
             {
                 ImportExportGuidsOffset = Ar.Read<int>();
                 ImportGuidsCount = Ar.Read<int>();
@@ -472,7 +477,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             // Keeping the serialization code for backwards compatibility without bumping the package version
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDITIONAL_COOK_PACKAGE_SUMMARY)
             {
-                var additionalPackagesToCook = Ar.ReadArray(Ar.ReadFString);
+                if (Ar.Game == GAME_BioshockInfinite)
+                {
+                    var additionalPackagesToCook = Ar.ReadMap(Ar.ReadFString, Ar.Read<byte>);
+                }
+                else
+                {
+                    var additionalPackagesToCook = Ar.ReadArray(Ar.ReadFString);
+                }
             }
 
             if (legacyFileVersion > -7)

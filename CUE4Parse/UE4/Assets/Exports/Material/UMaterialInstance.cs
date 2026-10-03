@@ -70,6 +70,16 @@ public class UMaterialInstance : UMaterialInterface
             }
             else if (Ar.Game < GAME_UE4_0) // test UE4 then remove
             {
+                if (Ar.Game == GAME_BioshockInfinite)
+                {
+                    Ar.Read<FGuid>();
+                    for (var i = 0; i < 5; i++)
+                    {
+                        Ar.ReadArray(() => new FPackageIndex(Ar));
+                    }
+                    return;
+                }
+
                 var QualityMask = 1;
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MATERIAL_QUALITY_LEVEL)
                 {
