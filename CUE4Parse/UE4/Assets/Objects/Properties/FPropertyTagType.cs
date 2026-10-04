@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Reflection;
+using CUE4Parse.GameTypes.BioshockInfinite.Assets.Objects.Properties;
 using CUE4Parse.GameTypes.Borderlands4.Assets.Objects.Properties;
 using CUE4Parse.GameTypes.FN.Assets.Exports;
 using CUE4Parse.GameTypes.OuterWorlds2.Properties;
@@ -81,7 +82,8 @@ public abstract class FPropertyTagType
                 var values = type.GetEnumNames();
                 var idx = Array.FindIndex(values, it => it == search);
                 return idx == -1 ? null : type.GetEnumValues().GetValue(idx);
-            //TODO There are also Enums stored as ByteProperty but UModel uses them nowhere besides in UE2
+            case ByteProperty byteProp when type.IsEnum:
+                return Enum.ToObject(type, byteProp.Value);
             case FPropertyTagType<UScriptMap> mapProp when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>):
                 return CreateDictionary(type, mapProp.Value!.Properties);
             case OptionalProperty optionalProperty:
@@ -196,6 +198,7 @@ public abstract class FPropertyTagType
             "VerseDynamicProperty" => new ObjectProperty(Ar, type), // idk, but for now read as ObjectProperty
             "VerseClassProperty" => new VerseClassProperty(Ar, type),
 
+            "XWeakReferenceProperty" when Ar.Game == GAME_BioshockInfinite => new XWeakReferenceProperty(Ar, type),
             "CustomProperty_FD" or "GbxDefPtrProperty" when Ar.Game == GAME_Borderlands4 => new GbxDefPtrProperty(Ar, type),
             "CustomProperty_FE" or "GameDataHandleProperty" when Ar.Game == GAME_Borderlands4 => new GameDataHandleProperty(Ar, type),
 

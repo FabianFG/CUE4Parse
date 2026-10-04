@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.Atmosphere;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
@@ -73,7 +74,7 @@ public class UCableComponent : UMeshComponent;
 public class UCameraComponent : USceneComponent;
 public class UCameraShakeSourceComponent : USceneComponent;
 public class UCapsuleComponent : UShapeComponent;
-public class UCylinderComponent : UPrimitiveComponent;
+public class UCylinderComponent : UShapeComponent;
 public class UChaosDebugDrawComponent : UActorComponent;
 public class UChaosDestructionListener : USceneComponent;
 public class UChaosEventListenerComponent : UActorComponent;
@@ -359,7 +360,20 @@ public class USceneCaptureCubeMapComponent : UComponent;
 public class UDrawLightConeComponent : UComponent;
 public class UVisConeComponent : UComponent;
 public class UDrawLightRadiusComponent : UActorComponent;
-public class UFracturedStaticMeshComponent : UStaticMeshComponent;
+
+public class UFracturedStaticMeshComponent : UStaticMeshComponent
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.FRAGMENT_INTERIOR_INDEX)
+        {
+            Ar.ReadArray(() => new FRawStaticIndexBuffer(Ar)); // Dummy
+        }
+    }
+};
+
 public class UFracturedSkinnedMeshComponent : UStaticMeshComponent;
 public class USmartNavLinkComponent : UNavLinkCustomComponent;
 public class USparseVolumeTextureViewerComponent : UPrimitiveComponent;

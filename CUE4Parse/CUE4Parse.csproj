@@ -31,6 +31,8 @@
   <ItemGroup>
     <None Remove="Resources\ACE7Key.bin" />
     <EmbeddedResource Include="Resources\ACE7Key.bin" />
+    <None Remove="Resources\MarsKey.bin" />
+    <EmbeddedResource Include="Resources\MarsKey.bin" />
     <None Remove="Resources\PUBGNameHashMap.json" />
     <EmbeddedResource Include="Resources\PUBGNameHashMap.json" />
     <None Remove="Resources\BL4SoundTagsMap.json" />

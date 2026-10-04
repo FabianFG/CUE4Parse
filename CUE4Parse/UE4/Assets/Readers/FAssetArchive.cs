@@ -12,8 +12,9 @@ namespace CUE4Parse.UE4.Assets.Readers
 {
     public class FAssetArchive : FArchive
     {
-        
         private readonly Dictionary<PayloadType, Func<FByteBulkDataHeader?, FAssetArchive?>> _payloads;
+        // hacky way to provide Context to propertytags
+        public Stack<string> StructTypeStack { get; } = new();
         private FArchive _baseArchive;
 
         public readonly IPackage? Owner;

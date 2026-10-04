@@ -93,6 +93,10 @@ namespace CUE4Parse.UE4.Versions
             Options["ByteProperty.TMap16Bit"] = false;
             Options["ByteProperty.TMap8Bit"] = false;
 
+            // UE3 Platform Overrides
+            Options["Platform.IOS"] = false;
+            Options["Platform.Android"] = false;
+
             // defaults
             Options["StripAdditiveRefPose"] = false;
             Options["SkeletalMesh.KeepMobileMinLODSettingOnDesktop"] = false;
