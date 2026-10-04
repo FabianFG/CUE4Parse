@@ -16,6 +16,11 @@ public class UModelComponent : UPrimitiveComponent
     /** The nodes which this component renders. */
     public ushort[] Nodes;
 
+    public UModelComponent()
+    {
+        CastShadow = true;
+    }
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);

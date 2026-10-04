@@ -12,15 +12,20 @@ public class ULightComponentBase : USceneComponent
 {
     public float Intensity { get; protected set; } = MathF.PI;
     public FColor LightColor { get; private set; } = new(255, 255, 255, 255);
-    public bool CastShadows { get; private set; }
+    public bool CastShadows { get; private set; } = true;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
-        Intensity = GetOrDefault(nameof(Intensity), GetOrDefault("Brightness", Intensity));
+        Intensity = GetOrDefault(nameof(Intensity), Intensity);
         LightColor = GetOrDefault(nameof(LightColor), LightColor);
         CastShadows = GetOrDefault(nameof(CastShadows), CastShadows);
+
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.INVERSE_SQUARED_LIGHTS_DEFAULT)
+        {
+            Intensity = GetOrDefault("Brightness", MathF.PI);
+        }
     }
 
     public FLinearColor GetLightColor()
@@ -278,15 +283,29 @@ public class URectLightComponent : ULocalLightComponent
 
 public class UDirectionalLightComponent : ULightComponent
 {
-    public float LightSourceAngle { get; private set; }
+    public float LightSourceAngle { get; private set; } = 0.5357f;
     public float LightSourceSoftAngle { get; private set; }
+    public bool bAtmosphereSunLight { get; private set; } = true;
+    public int AtmosphereSunLightIndex { get; private set; }
+
+    public UDirectionalLightComponent()
+    {
+        Intensity = 10.0f; // kill PI from ULightComponentBase
+    }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
-        LightSourceAngle = GetOrDefault(nameof(LightSourceAngle), 0.5357f);
-        LightSourceSoftAngle = GetOrDefault(nameof(LightSourceSoftAngle), 0.0f);
+        LightSourceAngle = GetOrDefault(nameof(LightSourceAngle), LightSourceAngle);
+        LightSourceSoftAngle = GetOrDefault(nameof(LightSourceSoftAngle), LightSourceSoftAngle);
+        bAtmosphereSunLight = GetOrDefault(nameof(bAtmosphereSunLight), bAtmosphereSunLight);
+        AtmosphereSunLightIndex = GetOrDefault(nameof(AtmosphereSunLightIndex), AtmosphereSunLightIndex);
+
+        if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.DirLightsAreAtmosphereLightsByDefault)
+        {
+            bAtmosphereSunLight = GetOrDefault("bUsedAsAtmosphereSunLight", false);
+        }
     }
 }
 

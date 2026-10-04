@@ -293,7 +293,13 @@ public class USceneCaptureReflectComponent : USceneCaptureComponent;
 public class USceneCaptureComponent2D : USceneCaptureComponent;
 public class USceneCaptureComponentCube : USceneCaptureComponent;
 public class USensingComponent : UPawnSensingComponent;
-public class UShapeComponent : UPrimitiveComponent;
+public class UShapeComponent : UPrimitiveComponent
+{
+    public UShapeComponent()
+    {
+        bCastDynamicShadow = false;
+    }
+}
 public class USingleAnimSkeletalComponent : USkeletalMeshComponent;
 public class USkeletalMeshReplicatedComponent : USkeletalMeshComponent;
 public class UFPSSkeletalMeshComponent : USkeletalMeshComponent;
