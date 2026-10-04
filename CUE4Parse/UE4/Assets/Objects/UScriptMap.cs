@@ -39,6 +39,12 @@ public class UScriptMap
         if (tagData.InnerType == null || tagData.ValueType == null)
             throw new ParserException(Ar, "Can't serialize UScriptMap without key or value type");
 
+        if (Ar.Game is GAME_DeadIsland2)
+        {
+            if (tagData.InnerType is "StructProperty") tagData.InnerTypeData = new FPropertyTag(Ar, false).TagData;
+            if (tagData.ValueType is "StructProperty") tagData.ValueTypeData = new FPropertyTag(Ar, false).TagData;
+        }
+
         if (!Ar.HasUnversionedProperties && tagData.Name is not null && Ar.Versions.MapStructTypes.TryGetValue(tagData.Name, out var mapStructTypes))
         {
             if (!string.IsNullOrEmpty(mapStructTypes.Key)) tagData.InnerTypeData = new FPropertyTagData(mapStructTypes.Key);

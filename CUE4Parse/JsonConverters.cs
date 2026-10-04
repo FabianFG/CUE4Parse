@@ -2632,6 +2632,12 @@ public class FAssetPackageDataConverter : JsonConverter<FAssetPackageData>
             serializer.Serialize(writer, value.CookedHash);
         }
 
+        if (value.SourceFileMD5 != null)
+        {
+            writer.WritePropertyName("SourceFileMD5");
+            serializer.Serialize(writer, value.SourceFileMD5);
+        }
+
         if (value.FileVersionUE.FileVersionUE4 != 0 || value.FileVersionUE.FileVersionUE5 != 0)
         {
             writer.WritePropertyName("FileVersionUE");

@@ -15,6 +15,7 @@ public class FInstancedStaticMeshInstanceData
 
         Ar.Position += Ar.Game switch
         {
+            GAME_DeadIsland2 => 1,
             GAME_HogwartsLegacy => Ar.Read<int>() * sizeof(int) + 4,
             GAME_AWayOut or GAME_PlayerUnknownsBattlegrounds or GAME_SeaOfThieves or GAME_AceCombat7 or GAME_Overhit
                 or GAME_DaysGone or GAME_InfinityNikki or GAME_NarutotoBorutoShinobiStriker or GAME_eFootball

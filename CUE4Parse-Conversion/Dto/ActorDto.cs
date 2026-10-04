@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Exports;
+﻿using CUE4Parse.GameTypes.OtherGames.Objects;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -78,6 +79,7 @@ public class ActorDto : ObjectDto
     internal static ActorDto Create(UObject actor, WorldParseContext ctx) => actor switch
     {
         AWorldSettings ws => new WorldSettingsDto(ws),
+        AGeneratedMeshActor gma => new GeneratedMeshActorDto(gma, ctx),
         _ => new ActorDto(actor, ctx)
     };
 
@@ -123,5 +125,25 @@ public class ActorDto : ObjectDto
     public override void Dispose()
     {
         RootComponent?.Dispose();
+    }
+}
+
+// Minecraft Dungeons 2
+public class GeneratedMeshActorDto : ActorDto
+{
+    internal GeneratedMeshActorDto(AGeneratedMeshActor generatedMeshActor, WorldParseContext ctx) : base(generatedMeshActor)
+    {
+        RootComponent = new SceneComponentDto(FTransform.Identity, "SceneComponent", this);
+
+        foreach (var component in generatedMeshActor.ComponentsSplit.Values)
+        {
+            if (!component.TryLoad<UGeneratedMeshActorComponentSplit>(out var componentSplit)) continue;
+            foreach (var subMesh in componentSplit.SubMeshes)
+            {
+                var c = ctx.GetOrCreate(subMesh, this);
+                if (c is SceneComponentDto scd)
+                    RootComponent.AddChildComponent(scd);
+            }
+        }
     }
 }

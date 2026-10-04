@@ -53,6 +53,11 @@ public class UMaterialInstance : UMaterialInterface
                 if (Ar is { Game: >= GAME_UE4_25, Owner.Provider.ReadShaderMaps: true })
                 {
                     var saved = Ar.Position;
+                    if (Ar.Game is GAME_DeadIsland2)
+                    {
+                        CustomGameData = new FSHAHash(Ar);
+                        return;
+                    }
                     try
                     {
                         DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);

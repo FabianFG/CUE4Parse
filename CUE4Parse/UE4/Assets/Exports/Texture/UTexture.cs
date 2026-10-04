@@ -69,7 +69,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
         LightingGuid = GetOrDefault(nameof(LightingGuid), new FGuid((uint) GetFullName().GetHashCode()));
         CompressionSettings = GetOrDefault(nameof(CompressionSettings), TextureCompressionSettings.TC_Default);
         LODGroup = GetOrDefault(nameof(LODGroup), TextureGroup.TEXTUREGROUP_World);
-        Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Nearest);
+        Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Default);
         SRGB = GetOrDefault(nameof(SRGB), true);
         AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
         CookPlatformTilingSettings = GetOrDefault<ETextureCookPlatformTilingSettings>(nameof(CookPlatformTilingSettings));

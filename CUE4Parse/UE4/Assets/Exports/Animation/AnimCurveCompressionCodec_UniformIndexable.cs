@@ -6,6 +6,7 @@ public class UAnimCurveCompressionCodec_UniformIndexable : UAnimCurveCompression
 {
     public override FFloatCurve[] ConvertCurves(FSmartName[] names, byte[] data)
     {
+        Log.Error($"{nameof(UAnimCurveCompressionCodec_UniformIndexable)} not supported");
         return []; // TODO
     }
 }

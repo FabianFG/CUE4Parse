@@ -183,7 +183,7 @@ namespace CUE4Parse_Conversion.Animations
                 }
                 case FACLCompressedAnimData aclData:
                 {
-                    var tracks = aclData.GetCompressedTracks();
+                    using var tracks = aclData.GetCompressedTracks();
                     var tracksHeader = tracks.GetTracksHeader();
                     var numSamples = (int) tracksHeader.NumSamples;
 
@@ -261,6 +261,8 @@ namespace CUE4Parse_Conversion.Animations
             => animSeq.ConvertAdditive(animSeq.OriginalSequence.RefPoseSeq?.Load<UAnimSequence>(), skeleton);
         public static CAnimSequence ConvertAdditive(this CAnimSequence animSeq, UAnimSequence? refPoseSeq, USkeleton skeleton)
         {
+            animSeq._hasAdditiveTracks = false; // the tracks become full poses now
+
             var refFrameIndex = animSeq.OriginalSequence.RefFrameIndex;
             var refPoseType = animSeq.OriginalSequence.RefPoseType;
 

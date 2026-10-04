@@ -34,6 +34,7 @@ using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.ChaosCaching;
 using CUE4Parse.UE4.Objects.ControlRig;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -217,6 +218,7 @@ public class FScriptStruct
             "EdGraphPinType" => new FEdGraphPinType(Ar),
             "ControlRigOverrideContainer" => type == ReadType.ZERO ? new FControlRigOverrideContainer() : new FControlRigOverrideContainer(Ar),
             "ChaosClothSimulationLodModel" => type == ReadType.ZERO ? new FStructFallback() : new FChaosClothSimulationLodModel(Ar),
+            "ManagedArrayCollection" when FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.AddManagedArrayCollectionPropertySerialization=> type == ReadType.ZERO ? new FManagedArrayCollection() : new FManagedArrayCollection(new(Ar)),
 
             // Custom struct types for simple structs in tagged TMap
             "UInt32Property" => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),

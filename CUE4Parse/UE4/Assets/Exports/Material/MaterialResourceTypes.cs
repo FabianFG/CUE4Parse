@@ -313,6 +313,23 @@ public class FShader
 
     public FShader(FMemoryImageArchive Ar)
     {
+        if (Ar.Game is GAME_DeadIsland2)
+        {
+            Bindings = new FShaderParameterBindings(Ar);
+            ParameterMapInfo = new FShaderParameterMapInfo(Ar);
+            UniformBufferParameterStructs = Ar.ReadArrayDI2(() => new FHashedName(Ar), true);
+            UniformBufferParameters = Ar.ReadArrayDI2(Ar.Read<FShaderUniformBufferParameter>);
+
+            var type1 = Ar.Read<ulong>() >> 1;
+            Type = Ar.PointerTable is FShaderMapPointerTable pointerTable2 && type1 < (ulong)pointerTable2.Types.Length ? pointerTable2.Types[type1] : new(type1);
+            var vfType1 = Ar.Read<ulong>() >> 1;
+            VFType = Ar.PointerTable is FShaderMapPointerTable pointerTable3 && vfType1 < (ulong)pointerTable3.VFTypes.Length ? pointerTable3.VFTypes[vfType1] : new(vfType1);
+            Target = Ar.Read<FShaderTarget>();
+            ResourceIndex = Ar.Read<int>();
+            NumInstructions = Ar.Read<uint>();
+            return;
+        }
+
         Bindings = new FShaderParameterBindings(Ar);
         ParameterMapInfo = new FShaderParameterMapInfo(Ar);
         UniformBufferParameterStructs = Ar.ReadArray(() => new FHashedName(Ar));
@@ -352,8 +369,24 @@ public class FShaderParameterBindings
 
     public FShaderParameterBindings(FMemoryImageArchive Ar)
     {
+        if (Ar.Game is GAME_DeadIsland2)
+        {
+            Parameters = Ar.ReadArrayDI2(Ar.Read<FParameter>, true);
+            Textures = Ar.ReadArrayDI2(() => new FResourceParameter(Ar));
+            SRVs = Ar.ReadArrayDI2(() => new FResourceParameter(Ar));
+            UAVs = Ar.ReadArrayDI2(() => new FResourceParameter(Ar));
+            Samplers = Ar.ReadArrayDI2(() => new FResourceParameter(Ar));
+            GraphTextures = Ar.ReadArrayDI2(() => new FResourceParameter(Ar));
+            GraphSRVs = Ar.ReadArrayDI2(() => new FResourceParameter(Ar));
+            GraphUAVs = Ar.ReadArrayDI2(() => new FResourceParameter(Ar));
+            ParameterReferences = Ar.ReadArrayDI2(Ar.Read<FParameterStructReference>);
+            StructureLayoutHash = Ar.Read<uint>();
+            RootParameterBufferIndex = Ar.Read<ushort>();
+            Ar.Position = Ar.Position.Align(4);
+            return;
+        }
         Parameters = Ar.ReadArray<FParameter>();
-        if (Ar.Game>= GAME_UE4_26)
+        if (Ar.Game >= GAME_UE4_26)
         {
             ResourceParameters = Ar.ReadArray(() => new FResourceParameter(Ar));
         }
@@ -480,6 +513,15 @@ public class FShaderParameterMapInfo
 
     public FShaderParameterMapInfo(FMemoryImageArchive Ar)
     {
+        if (Ar.Game is GAME_DeadIsland2)
+        {
+            UniformBuffers = Ar.ReadArrayDI2(() => new FShaderParameterInfo(Ar), false);
+            TextureSamplers = Ar.ReadArrayDI2(() => new FShaderParameterInfo(Ar), false);
+            SRVs = Ar.ReadArrayDI2(() => new FShaderParameterInfo(Ar), false);
+            LooseParameterBuffers = Ar.ReadArrayDI2(() => new FShaderLooseParameterBufferInfo(Ar), true);
+            return;
+        }
+
         if (Ar.Game >= GAME_UE5_1)
         {
             UniformBuffers = Ar.ReadArray(() => new FShaderUniformBufferParameterInfo(Ar), false);

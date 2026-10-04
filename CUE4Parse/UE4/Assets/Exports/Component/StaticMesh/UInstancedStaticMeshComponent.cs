@@ -92,6 +92,9 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                     else
                         PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
                     break;
+                case GAME_DeadIsland2:
+                    PerInstanceSMData = Ar.ReadArray(() => new FInstancedStaticMeshInstanceData(Ar));
+                    break;
                 default:
                     PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
                     break;
@@ -128,7 +131,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                 Ar.Position += 4;
                 Ar.Position += Ar.Read<int>() * 4;
                 Ar.Position += 4;
-            }    
+            }
             return;
         }
 

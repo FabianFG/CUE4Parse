@@ -136,6 +136,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             if (CompressedCurveData == null && CompressedCurveByteStream is { Length: > 0 } && CompressedCurveNames is { Length: > 0 })
             {
+                // To-Do: Uncomment once we support older ACL
+                //if (Ar.Game is GAME_DeadIsland2 && CurveCompressionSettings == null)
+                //{
+                //    CurveCompressionSettings = new ResolvedLoadedObject(Owner!.Provider!.LoadPackageObject("/Game/DSCore/Animation/DA_AnimCurveCompressionSettings.DA_AnimCurveCompressionSettings"));
+                //}
+
                 if (!string.IsNullOrEmpty(CurveCodecPath) && CurveCompressionSettings?.Load<UAnimCurveCompressionSettings>()?.GetCodec(CurveCodecPath) is { } codec)
                 {
                     CompressedCurveData = new FRawCurveTracks(codec.ConvertCurves(CompressedCurveNames, CompressedCurveByteStream));

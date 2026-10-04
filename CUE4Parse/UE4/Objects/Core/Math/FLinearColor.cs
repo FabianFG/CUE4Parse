@@ -117,6 +117,30 @@ namespace CUE4Parse.UE4.Objects.Core.Math
                 A);
         }
 
+        public static FLinearColor MakeFromColorTemperature(float temp)
+        {
+            temp = temp.Clamp(1000.0f, 15000.0f);
+
+            float u = ( 0.860117757f + 1.54118254e-4f * temp + 1.28641212e-7f * temp*temp ) / ( 1.0f + 8.42420235e-4f * temp + 7.08145163e-7f * temp*temp );
+            float v = ( 0.317398726f + 4.22806245e-5f * temp + 4.20481691e-8f * temp*temp ) / ( 1.0f - 2.89741816e-5f * temp + 1.61456053e-7f * temp*temp );
+
+            float x = 3.0f * u / ( 2.0f * u - 8.0f * v + 4.0f );
+            float y = 2.0f * v / ( 2.0f * u - 8.0f * v + 4.0f );
+            float z = 1.0f - x - y;
+
+            float Y = 1.0f;
+            float X = Y/y * x;
+            float Z = Y/y * z;
+
+            // XYZ to RGB with BT.709 primaries
+            float R =  3.2404542f * X + -1.5371385f * Y + -0.4985314f * Z;
+            float G = -0.9692660f * X +  1.8760108f * Y +  0.0415560f * Z;
+            float B =  0.0556434f * X + -0.2040259f * Y +  1.0572252f * Z;
+
+            // The XYZ to RGB transform can result in negative values, so we need to clamp here.
+            return new FLinearColor(Max(0.0f, R), Max(0.0f, G), Max(0.0f, B), 1.0f);
+        }
+
         public static implicit operator Vector4(FLinearColor color) => new(color.R, color.G, color.B, color.A);
         public static implicit operator Vector3(FLinearColor color) => new(color.R, color.G, color.B);
     }

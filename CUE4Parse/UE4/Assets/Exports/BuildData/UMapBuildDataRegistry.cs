@@ -250,6 +250,7 @@ public class FVolumeLightingSample
             DirectionalLightShadowing = Ar.Read<float>();
         }
         if (Ar.Game is GAME_RocoKingdomWorld) Ar.Position += 116;
+        if (Ar.Game is GAME_DeadIsland2) Ar.Position += 8;
     }
 }
 
@@ -278,6 +279,7 @@ public class FPrecomputedLightVolumeData
             }
 
             HighQualitySamples = Ar.ReadArray(() => new FVolumeLightingSample(Ar, NumSHSamples is 9 ? 3 : 2));
+            if (Ar.Game is GAME_DeadIsland2) Ar.Position += 4;
             if (Ar.Ver >= EUnrealEngineObjectUE4Version.VOLUME_SAMPLE_LOW_QUALITY_SUPPORT)
             {
                 LowQualitySamples = Ar.ReadArray(() => new FVolumeLightingSample(Ar, NumSHSamples is 9 ? 3 : 2));
@@ -312,7 +314,7 @@ public class FPrecomputedVolumetricLightmapData
 
     public FPrecomputedVolumetricLightmapData(FArchive Ar)
     {
-        var bValid = Ar.ReadBoolean();
+        var bValid = Ar.Game is GAME_DeadIsland2 || Ar.ReadBoolean();
 
         if (bValid)
         {
@@ -389,7 +391,7 @@ public class FVolumetricLightmapBrickLayer : FVolumetricLightmapBasicBrickDataLa
 
 public class FVolumetricLightmapDataLayer(FArchive Ar)
 {
-    public byte[] Data = Ar.ReadArray<byte>();
+    public byte[] Data = Ar.Game is GAME_DeadIsland2 ? new FByteBulkData((FAssetArchive)Ar).Data! : Ar.ReadArray<byte>();
     public string PixelFormatString = Ar.ReadFString();
 }
 

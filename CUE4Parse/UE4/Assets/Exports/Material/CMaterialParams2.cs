@@ -48,7 +48,7 @@ public class CMaterialParams2
             "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Base Color Map", "DesatTexture",
             "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "BaseColor_Tex", "UDR",
             "DiffuseLayer1", "1 - Albedo", "albedo", "Albedo", "Aldebo", "ALB", "TextureAlbedo", "AlbedoTex", "Color_Texture", "color", "Base_D", "Tex_BaseColor",
-            "AlbedoColour", "BCR", "Base Texture", "BaseColour",
+            "AlbedoColour", "BCR", "Base Texture", "BaseColour", "Color Map", "Base Color - Texture",
             "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "BaseColor", "Basecolor", "Tex_BC", "TexA_BC", "BaseDiffuse",
             "Base Texture Color", "BaseColorA", "BC", "BCA", "BC_Map", "Base Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework", "Bc",
             "BaseColorVT", "Tex_Color", "Color Tex", "TexColor", "AlbedMap", "Tex_Colormap", "ColorMap", "Main_T_BaseColor", "BaseColour", "Base_Texture",
@@ -105,7 +105,7 @@ public class CMaterialParams2
             "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask", "Packed Tex", "Packed Texture",
             "Cliff Spec Texture", "PhysicalMap", "KizokMap", "Roughness_MAIN", "Main_T_MGA", "Tex_CH", "TexA_CH", "ARMMap", "REM",
             "Primary ARME", "CombineTex(HRA)", "ORN", "TPA_SpecColorTex", "Tex_RME", "CompVT", "MetalRoughOcc_Tex",
-            "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture",
+            "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture", "MRO - Texture",
             "Simple_OcclRoughMet_Texture", "P (NoneVT)", "Pack Tex1", "CASR", "Roughness_VT", "OcclusionRoughnessMetallicTexture",
             "Clothing ORM", "ORC [Standard]", "ORME_Tex", "Roughness VT", "RMAO VT", "Mix(AO,Rough,Mask,Metal)", "Texture_S",
             "MetallicRoughnessOcclusionSpecularTexture", "Virtual Texture ORM", "L01.Normal.Metallic.Roughness", "Char_Specular"
