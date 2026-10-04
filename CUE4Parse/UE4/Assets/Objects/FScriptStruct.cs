@@ -230,6 +230,7 @@ public class FScriptStruct
             "FortActorRecord" => new FFortActorRecord(Ar),
             "GameplayEventFunction" => new FGameplayEventFunction(Ar),
             "GameplayEventDescriptor" => new FGameplayEventDescriptor(Ar),
+            "RemoteServerId" => Ar.Read<FRawUIntStruct>(),
 
             // Train Sim World
             "DistanceQuantity" => Ar.Read<FDistanceQuantity>(),
