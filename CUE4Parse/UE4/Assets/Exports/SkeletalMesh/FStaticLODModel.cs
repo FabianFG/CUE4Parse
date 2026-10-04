@@ -1,6 +1,7 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.GameTypes.MK1.Assets.Objects;
 using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
+using CUE4Parse.GameTypes.TransformersFallofCybertron.Objects;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -221,7 +222,17 @@ public class FStaticLODModel
                 Ar.SkipArray<short>(); // ShadowIndices
             }
 
-            ActiveBoneIndices = Ar.ReadArray<short>();
+            if (Ar.Game == GAME_TransformersFallofCybertron && Ar.Ver >= EUnrealEngineObjectUE3Version.DeprecatedOldLodformat)
+            {
+                var byteBones = Ar.ReadArray<byte>();
+                ActiveBoneIndices = new short[byteBones.Length];
+                for (var i = 0; i < byteBones.Length; i++)
+                    ActiveBoneIndices[i] = byteBones[i];
+            }
+            else
+            {
+                ActiveBoneIndices = Ar.ReadArray<short>();
+            }
 
             if (!stripDataFlags.IsEditorDataStripped() && FUE5MainStreamObjectVersion.Get(Ar) >= FUE5MainStreamObjectVersion.Type.SkeletalMeshLODModelMeshInfo)
             {
@@ -251,11 +262,7 @@ public class FStaticLODModel
             Ar.SkipFixedArray(Ar.Game == GAME_BatmanArkhamAsylum && (int) Ar.LicenseeVer >= 5 ? 8 : 16); // Edges
         }
 
-        if (Ar.Game == GAME_DevilMayCry && (int) Ar.LicenseeVer >= 3)
-        {
-            RequiredBones = Ar.ReadArray<short>();
-        }
-        else if (Ar.Ver >= EUnrealEngineObjectUE3Version.BonesAsBytes && Ar.Game < GAME_UE4_0)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.BonesAsBytes && Ar.Game < GAME_UE4_0 && !(Ar.Game == GAME_DevilMayCry && (int) Ar.LicenseeVer >= 3))
         {
             var byteBones = Ar.ReadArray<byte>();
             RequiredBones = new short[byteBones.Length];
@@ -302,12 +309,12 @@ public class FStaticLODModel
 
         if (Ar.Game == GAME_LifeIsStrange && (int) Ar.LicenseeVer >= 19)
         {
-            Ar.Read<int>();
+            Ar.Position += sizeof(int);
         }
 
         if (Ar.Game == GAME_BioshockInfinite)
         {
-            Ar.Read<int>();
+            Ar.Position += sizeof(int);
         }
 
         if (Ar.Game != GAME_StateOfDecay2 && Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_SKELMESH_MESHTOIMPORTVERTEXMAP)
@@ -351,6 +358,12 @@ public class FStaticLODModel
                             }
                         }
                     }
+                }
+
+                if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 73)
+                {
+                    AdditionalBuffer = new FTRMeshUnkStream(Ar);
+                    return;
                 }
 
                 if (Ar.Game == GAME_MirrorEdge && (int) Ar.LicenseeVer >= 15) return;

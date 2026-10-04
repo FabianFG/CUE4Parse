@@ -1,5 +1,6 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
+using CUE4Parse.GameTypes.TransformersFallofCybertron.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -84,7 +85,7 @@ public class FStaticMeshLODResources
 
         if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
         {
-            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_MinLodData))
+            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
             {
                 SerializeBuffersLegacy(Ar, stripDataFlags);
             }
@@ -200,6 +201,42 @@ public class FStaticMeshLODResources
     // Pre-UE4.23 code
     public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
     {
+        if (Ar.Game == GAME_TransformersFallofCybertron)
+        {
+            PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+            VertexBuffer = new FStaticMeshVertexBuffer(Ar);
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDITIONAL_COOK_PACKAGE_SUMMARY)
+            {
+                ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            }
+
+            if ((int) Ar.LicenseeVer >= 71)
+            {
+                new FTRMeshUnkStream(Ar);
+            }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_PREFAB_SEQUENCES) // 536
+            {
+                // FStaticMeshShadowVolumeStream - ShadowExtrusionVertexBuffer (FColorVertexBuffer but uses floats)
+                Ar.Position += sizeof(int); // int - Stride
+                if (Ar.Read<int>() > 0) Ar.SkipBulkArrayData(sizeof(float)); // NumVertices, VertexData
+            }
+
+            NumVertices = Ar.Read<int>();
+            IndexBuffer = new FRawStaticIndexBuffer(Ar);
+            WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
+
+            if ((int) Ar.LicenseeVer >= 58) Ar.Position += sizeof(int);
+            if ((int) Ar.LicenseeVer >= 181) Ar.Position += sizeof(int);
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_PREFAB_SEQUENCES)
+            {
+                Ar.SkipBulkArrayData(16); // Edges
+                Ar.SkipArray<byte>();
+            }
+        }
+
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE)
         {
             if (Ar.Game is GAME_Abzu) Ar.Position += 4;

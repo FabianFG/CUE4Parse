@@ -250,7 +250,19 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Ar.Game == GAME_BioshockInfinite && (int) Ar.LicenseeVer >= 66)
             {
-                Ar.Read<int>();
+                Ar.Position += sizeof(int);
+            }
+
+            if (Ar.Game == GAME_TransformersFallofCybertron)
+            {
+                if ((int) Ar.LicenseeVer >= 181)
+                {
+                    Ar.Position += sizeof(int) * 4;
+                    Ar.Ver = FPackageFileVersion.CreateUE3Version(566); // override as it's an old engine
+                    FileVersionUE = Ar.Ver;
+                }
+
+                if ((int) Ar.LicenseeVer >= 55) Ar.Read<int>(); // unk8
             }
 
             if (FileVersionUE >= EUnrealEngineObjectUE3Version.MOVED_EXPORTIMPORTMAPS_ADDED_TOTALHEADERSIZE && FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
@@ -351,7 +363,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 ExportGuidsCount = Ar.Read<int>();
             }
 
-            if (FileVersionUE >= EUnrealEngineObjectUE3Version.ASSET_THUMBNAILS_IN_PACKAGES)
+            if (FileVersionUE >= EUnrealEngineObjectUE3Version.ASSET_THUMBNAILS_IN_PACKAGES || Ar.Game == GAME_TransformersFallofCybertron && Ar.Ver >= EUnrealEngineObjectUE3Version.UNIFORM_DISTRIBUTION_BAKING_UPDATE)
             {
                 ThumbnailTableOffset = Ar.Read<int>();
             }
@@ -472,6 +484,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 Ar.Position += 8;
             }
+            if (Ar.Game == GAME_TransformersFallofCybertron) return;
 
             // No longer used: List of additional packages that are needed to be cooked for this package (ie streaming levels)
             // Keeping the serialization code for backwards compatibility without bumping the package version

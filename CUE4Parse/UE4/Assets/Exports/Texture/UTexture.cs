@@ -76,6 +76,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
         Palette = GetOrDefault(nameof(Palette), new FPackageIndex());
 
         if (Ar.Game == GAME_BioshockInfinite) return;
+        if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 100) return;
         if (Ar.Game == GAME_APBReloaded || Ar.Game == GAME_Borderlands2 || Ar.Game == GAME_BorderlandsSequel) // borderlands might be a hash instead of bulkdata
         {
             Ar.Position += 8 * 2; // Bulkdata headers

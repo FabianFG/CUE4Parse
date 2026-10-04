@@ -53,6 +53,12 @@ public class FSkelMeshChunk
         {
             MaxBoneInfluences = Ar.Read<int>();
         }
+
+        if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 55)
+        {
+            Ar.Position += sizeof(int); // NumTexCoords
+        }
+
         HasClothData = false;
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.APEX_CLOTH)

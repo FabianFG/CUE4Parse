@@ -277,7 +277,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 NotForServer = Ar.ReadBoolean();
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentMapToExports && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_MAP)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentMapToExports && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_MAP && !(Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 37))
             {
                 Ar.ReadMap(Ar.ReadFName, () => new FPackageIndex(Ar)); // LegacyComponentMap
             }
@@ -287,7 +287,19 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Ar.Read<int>(); // ExportFlags
             }
 
-            if (!(Ar.Game == GAME_BioshockInfinite && Ar.Read<int>() == 0) && Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP)
+            var bStrippedTail = false;
+
+            if (Ar.Game == GAME_BioshockInfinite)
+            {
+                bStrippedTail = Ar.Read<int>() == 0;
+            }
+
+            if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 116)
+            {
+                bStrippedTail = Ar.Read<byte>() == 0;
+            }
+
+            if (!bStrippedTail && Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP)
             {
                 if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
                 {

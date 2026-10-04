@@ -31,6 +31,28 @@ public class UStaticMesh : UObject
         bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR && Ar.ReadBoolean();
         HasTangents = Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE;
 
+        if (Ar.Game == GAME_TransformersFallofCybertron && (int)Ar.LicenseeVer >= 50)
+        {
+            var bShortCollisionData = Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedShortProperties || Ar.Ver > EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE;
+            Ar.SkipBulkArrayData(bShortCollisionData ? 24 + 4 + 4 : 24 + 4 + 8);
+            Ar.SkipBulkArrayData(bShortCollisionData ? 8 : 16);
+            RenderData = new FStaticMeshRenderData(Ar); // needs bounds hm
+
+            StaticMaterials = new FStaticMaterial[RenderData.LODs[0].Sections.Length];
+            for (var i = 0; i < RenderData.LODs[0].Sections.Length; i++)
+            {
+                StaticMaterials[i] = new FStaticMaterial(RenderData.LODs[0].Sections[i].Material!);
+            }
+
+            Materials = new FPackageIndex?[StaticMaterials.Length];
+            for (var i = 0; i < Materials.Length; i++)
+            {
+                Materials[i] = StaticMaterials[i].MaterialInterface;
+            }
+
+            return;
+        }
+
         var Bounds = new FBoxSphereBounds();
         if (!stripDataFlags.IsEditorDataStripped() && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
         {
@@ -77,7 +99,7 @@ public class UStaticMesh : UObject
             var InternalVersion = Ar.Read<int>();
             var STATICMESH_VERSION_CONTENT_TAGS = 17; // Content tags were introduced in SM version 17
 
-            if (InternalVersion >= STATICMESH_VERSION_CONTENT_TAGS && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_LEGACY_CONTENT_TAGS)
+            if (Ar.Game != GAME_TransformersFallofCybertron && InternalVersion >= STATICMESH_VERSION_CONTENT_TAGS && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_LEGACY_CONTENT_TAGS)
             {
                 Ar.SkipArray(Ar.SkipFName); // ContentTags
             }

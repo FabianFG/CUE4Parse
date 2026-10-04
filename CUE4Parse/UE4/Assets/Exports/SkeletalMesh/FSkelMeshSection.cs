@@ -100,7 +100,7 @@ public class FSkelMeshSection
 
         if (Ar.Game == GAME_BioshockInfinite)
         {
-            Ar.Read<byte>();
+            Ar.Position += sizeof(byte);
         }
 
         if (Ar.Game == GAME_LifeIsStrange && (int)Ar.LicenseeVer >= 17)

@@ -29,6 +29,7 @@ public enum EGame : uint
         GAME_DevilMayCry = GAME_UE3_0 + 19,
         GAME_BatmanArkhamAsylum = GAME_UE3_0 + 20,
         GAME_MirrorEdge = GAME_UE3_0 + 21,
+        GAME_TransformersFallofCybertron = GAME_UE3_0 + 22,
 
     GAME_UE4_0 = GameUtils.GameUe4Base + (0 << 16),
     GAME_UE4_1 = GameUtils.GameUe4Base + (1 << 16),

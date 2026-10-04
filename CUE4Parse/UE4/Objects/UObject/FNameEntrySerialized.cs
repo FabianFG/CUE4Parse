@@ -3,6 +3,7 @@ using System.Resources;
 using System.Runtime.InteropServices;
 using System.Text;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
@@ -22,7 +23,11 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             var bHasNameHashes = Ar.Ver >= EUnrealEngineObjectUE4Version.NAME_HASHES_SERIALIZED || Ar.Game is GAME_GearsOfWar4 or GAME_DaysGone;
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release64)
+            if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 181)
+            {
+                Name = Ar.ReadFAnsiString();
+            }
+            else if (Ar.Ver >= EUnrealEngineObjectUE3Version.Release64)
             {
                 Name = Ar.ReadFString().Trim();
                 if (Ar.Game == GAME_AvaGlobal) Ar.Position += (Name.Length ^ 7) & 0xF;
@@ -47,7 +52,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Ar.Game < GAME_UE4_0)
             {
-                _ = (Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag)
+                _ = (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 181 || Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag)
                     ? (EObjectFlags)Ar.Read<long>()
                     : Ar.Read<EObjectFlags>(); // flags
             }
