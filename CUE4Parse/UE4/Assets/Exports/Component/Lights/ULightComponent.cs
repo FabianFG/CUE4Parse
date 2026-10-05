@@ -309,8 +309,17 @@ public class UDirectionalLightComponent : ULightComponent
     }
 }
 
+public enum ESkyLightSourceType : byte
+{
+    SLS_CapturedScene,
+    SLS_SpecifiedCubemap,
+    SLS_MAX
+}
+
 public class USkyLightComponent : ULightComponentBase
 {
+    public ESkyLightSourceType SourceType { get; private set; } = ESkyLightSourceType.SLS_CapturedScene;
+    public FPackageIndex? Cubemap { get; private set; }
     public bool bLowerHemisphereIsBlack { get; private set; } = true;
     public FLinearColor LowerHemisphereColor { get; private set; } = new(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -323,6 +332,8 @@ public class USkyLightComponent : ULightComponentBase
     {
         base.Deserialize(Ar, validPos);
 
+        SourceType = GetOrDefault(nameof(SourceType), SourceType);
+        Cubemap = GetOrDefault(nameof(Cubemap), Cubemap);
         bLowerHemisphereIsBlack = GetOrDefault(nameof(bLowerHemisphereIsBlack), bLowerHemisphereIsBlack);
         LowerHemisphereColor = GetOrDefault(nameof(LowerHemisphereColor), LowerHemisphereColor);
 
