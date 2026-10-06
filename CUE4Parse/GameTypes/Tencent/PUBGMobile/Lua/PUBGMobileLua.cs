@@ -1,4 +1,3 @@
-using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
@@ -18,22 +17,22 @@ public static class PUBGMobileLua
             0x15, 0x07, 0xD0, 0x2C, 0x1E, 0x8F, 0xF6, 0xC8
         ];
 
-        public override string ReadLuaString()
+        public override byte[] ReadLuaStringBytes()
         {
             var sizeByte = Read<byte>();
             if (sizeByte == 0)
-                return string.Empty;
+                return [];
 
             var size = sizeByte == 0xFF ? Read<int>() : sizeByte;
             var length = size - 1;
             if (length <= 0)
-                return string.Empty;
+                return [];
 
             var buffer = ReadBytes(length);
             for (var i = 0; i < buffer.Length; i++)
                 buffer[i] ^= _stringKey[i % _stringKey.Length];
 
-            return Encoding.UTF8.GetString(buffer);
+            return buffer;
         }
     }
 

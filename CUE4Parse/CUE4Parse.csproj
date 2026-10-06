@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Berrysoft.XXTea" />
     <PackageReference Include="Blake3" />
     <PackageReference Include="BouncyCastle.Cryptography" />
     <PackageReference Include="FixedMathSharp" />
