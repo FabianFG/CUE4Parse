@@ -27,7 +27,7 @@ public class UGeometryCollection : UObject
         Materials = GetOrDefault<FPackageIndex[]>(nameof(Materials), [], StringComparison.OrdinalIgnoreCase);
 
 #if DEBUG
-        Log.Warning(nameof(UGeometryCollection));
+        Log.Debug(nameof(UGeometryCollection));
 #endif
         var bIsCookedOrCooking = FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDC && Ar.ReadBoolean();
         if (FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDCAndAsset)
