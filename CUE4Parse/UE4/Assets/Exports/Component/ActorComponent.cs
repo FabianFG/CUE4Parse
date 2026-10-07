@@ -70,7 +70,6 @@ public class UBoxReflectionCaptureComponent : UReflectionCaptureComponent;
 public class UBrainComponent : UActorComponent;
 public class UAudioOverlapComponent : UActorComponent;
 public class UCableComponent : UMeshComponent;
-public class UCameraComponent : USceneComponent;
 public class UCameraShakeSourceComponent : USceneComponent;
 public class UCapsuleComponent : UShapeComponent;
 public class UCylinderComponent : UPrimitiveComponent;
