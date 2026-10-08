@@ -68,7 +68,6 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [JsonConverter(typeof(FScriptStructConverter))]
 public class FScriptStruct
 {
-
     public readonly IUStruct StructType;
 
     public FScriptStruct(FAssetArchive Ar, string? structName, UStruct? struc, ReadType? type)
@@ -88,7 +87,7 @@ public class FScriptStruct
             "DateTime" => type == ReadType.ZERO ? new FDateTime() : Ar.Read<FDateTime>(),
             "ExpressionInput" => type == ReadType.ZERO ? new FExpressionInput() : new FExpressionInput(Ar),
             "FrameNumber" => type == ReadType.ZERO ? new FFrameNumber() : Ar.Read<FFrameNumber>(),
-            "Guid" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
+            "Guid" or "GUID" => type == ReadType.ZERO ? new FGuid() : Ar.Read<FGuid>(),
             "NavAgentSelector" => type == ReadType.ZERO ? new FNavAgentSelector() : Ar.Read<FNavAgentSelector>(),
             "SmartName" => type == ReadType.ZERO ? new FSmartName() : new FSmartName(Ar),
             "NameCurveKey" => type == ReadType.ZERO ? new FNameCurveKey() : new FNameCurveKey(Ar),
