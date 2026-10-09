@@ -1,159 +1,68 @@
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Assets.Exports.Rig.RigLogic;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
-public class UDNAAsset : UObject
+public abstract class UDNAObject : UObject, IDnaAsset
 {
-    
-    public DNAVersion Version;
-    public DNAVersion LayerVersion;
-    public Dictionary<string, IRawBase> Sections;
-    public Dictionary<string, IRawBase> Layers;
-    public Lazy<byte[]>? DNAData;
-    public string? DnaFileName;
+    public DNAVersion? Version { get; protected set; }
+    public Dictionary<string, IRawBase>? Layers { get; protected set; }
+    public Lazy<byte[]>? DNAData { get; protected set; }
+    public string? DnaFileName { get; protected set; }
+    public RigLogicSnapshot? Snapshot { get; protected set; }
 
-    private readonly byte[] _signature = "DNA"u8.ToArray();
-    private readonly byte[] _eof = "AND"u8.ToArray();
-    private long dnaStartPos;
+    public int GetRawControlCount() => GetRawControlNames().Length;
 
-    public override void Deserialize(FAssetArchive Ar, long validPos)
+    public string[] GetRawControlNames() => DnaAssetQueries.GetRawControlNames(Layers);
+
+    public string GetRawControlName(int index)
     {
-        base.Deserialize(Ar, validPos);
-        DnaFileName = GetOrDefault<string>(nameof(DnaFileName));
-
-        if (FDNAAssetCustomVersion.Get(Ar) >= FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
-        {
-            dnaStartPos = Ar.Position;
-            DNAData = new Lazy<byte[]>(() =>
-            {
-                Ar.Position = dnaStartPos;
-                return Ar.ReadBytes((int) (validPos - dnaStartPos));
-            });
-
-            Ar.Position = dnaStartPos;
-            var startPos = Ar.Position;
-            var endianAr = new FArchiveBigEndian(Ar);
-
-            var signature = endianAr.ReadBytes(3);
-            if (!signature.SequenceEqual(_signature))
-                throw new InvalidDataException("Invalid file start signature");
-
-            Version = new DNAVersion(endianAr);
-#if DEBUG
-            Log.Warning("DNAAsset Version {0}", Version.FileVersion.ToString());
-#endif
-            if (Version.FileVersion < FileVersion.v23)
-            {
-                var sectionLookupTable = new SectionLookupTable(endianAr);
-                var indexTable = new IndexTable(sectionLookupTable, Version);
-                if (!ReadLayers(endianAr, Version.FileVersion, indexTable, startPos, out Sections, false))
-                    return;
-
-                var eof = endianAr.ReadBytes(3);
-                if (!eof.SequenceEqual(_eof))
-                    throw new InvalidDataException("Invalid end of file signature");
-
-                if (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile)
-                    return;
-                if (Ar.Game is GAME_AliensFireteamElite2)
-                {
-                    startPos = endianAr.Position;
-
-                    signature = endianAr.ReadBytes(3);
-                    if (!signature.SequenceEqual(_signature))
-                        throw new InvalidDataException("Invalid layer start signature");
-
-                    LayerVersion = new DNAVersion(endianAr);
-                    sectionLookupTable = new SectionLookupTable(endianAr);
-                    indexTable = new IndexTable(sectionLookupTable, Version);
-                    ReadLayers(endianAr, LayerVersion.FileVersion, indexTable, startPos, out Layers, false);
-                    eof = endianAr.ReadBytes(3);
-                    if (!eof.SequenceEqual(_eof))
-                        throw new InvalidDataException("Invalid end of file signature");
-                    return;
-                }
-            }
-            else if (Version.FileVersion >= FileVersion.v26)
-            {
-                var indexTable = new IndexTable(endianAr);
-                ReadLayers(endianAr, Version.FileVersion, indexTable, startPos, out Sections);
-                return;
-            }
-            else
-            {
-                var indexTable = new IndexTable(endianAr);
-                if (!ReadLayers(endianAr, Version.FileVersion, indexTable, startPos, out Sections))
-                    return;
-            }
-
-            startPos = endianAr.Position;
-
-            signature = endianAr.ReadBytes(3);
-            if (!signature.SequenceEqual(_signature))
-                throw new InvalidDataException("Invalid layer start signature");
-
-            LayerVersion = new DNAVersion(endianAr);
-            var layersIndexTable = new IndexTable(endianAr);
-            ReadLayers(endianAr, LayerVersion.FileVersion, layersIndexTable, startPos, out Layers);
-        }
+        var names = GetRawControlNames();
+        return index >= names.Length
+            ? throw new IndexOutOfRangeException($"Index {index} is greater than total raw control count")
+            : names[index];
     }
 
-    private bool ReadLayers(FArchiveBigEndian endianAr, FileVersion fileVersion, IndexTable indexTable, long startPos, out Dictionary<string, IRawBase> layers, bool validateSizes = true)
+    public int GetJointCount() => GetJointNames().Length;
+
+    public string[] GetJointNames() => DnaAssetQueries.GetJointNames(Layers);
+
+    public string GetJointName(int index)
     {
-        bool result = true;
-        layers = new Dictionary<string, IRawBase>(indexTable.Entries.Length);
-        foreach (var entry in indexTable.Entries)
+        var names = GetJointNames();
+        return index >= names.Length
+            ? throw new IndexOutOfRangeException($"Index {index} is greater than total joint count")
+            : names[index];
+    }
+
+    public RawBehavior? GetBehavior() => DnaAssetQueries.GetBehavior(Layers);
+
+    protected void ApplyDocument(DnaBinaryDocument doc, byte[] dnaBytes)
+    {
+        Version = doc.Version;
+        Layers = doc.Layers;
+        DNAData = new Lazy<byte[]>(() => dnaBytes);
+    }
+
+    protected static void ParseDnaStream(FAssetArchive Ar, long limitPos, UDNAObject dest, bool parseTrailingSnapshot)
+    {
+        var dnaStart = Ar.Position;
+        var endianAr = new FArchiveBigEndian(Ar);
+        var doc = DnaBinaryParser.Parse(endianAr, dnaStart);
+        var dnaBytes = Ar.ReadBytesAt(dnaStart, (int) doc.ByteLength);
+        dest.ApplyDocument(doc, dnaBytes);
+        Ar.Position = dnaStart + doc.ByteLength;
+
+        if (parseTrailingSnapshot && Ar.Position < limitPos)
         {
-            endianAr.Position = startPos + entry.Offset;
-            var layerStartPos = endianAr.Position;
-            try
-            {
-                layers[entry.Id] = entry.Id switch
-                {
-                    "desc" => new RawDescriptor(endianAr),
-                    "defn" => new RawDefinition(endianAr),
-                    "dsce" => new RawDescriptorExt(endianAr, fileVersion), // v27
-                    "bhvr" => new RawBehavior(endianAr),
-                    "geom" => new RawGeometry(endianAr),
-                    "mlbe" => new RawMachineLearnedBehaviorExt(endianAr), // v26
-                    "mlbh" => new RawMachineLearnedBehavior(endianAr), // v23
-                    "rbfb" => new RawRBFBehavior(endianAr), // v24
-                    "rbfe" => new RawRBFBehaviorExt(endianAr), // v25
-                    "jbmd" => new RawJointBehaviorMetadata(endianAr),  // v24
-                    "twsw" => new RawTwistSwingBehavior(endianAr), // v24
-                    _ => throw new NotSupportedException($"Type '{entry.Id}' is currently not supported")
-                };
-            }
-            catch (Exception e)
-            {
-                result = false;
-                Log.Error(e, "Failed to read DNA layer '{0}' correctly.", entry.Id);
-            }
-            finally
-            {
-                if (validateSizes)
-                {
-                    var readSize = endianAr.Position - layerStartPos;
-                    var remaining = entry.Size - readSize;
-                    endianAr.Position = layerStartPos + entry.Size;
-
-                    switch (remaining)
-                    {
-                        case > 0:
-                            Log.Debug("Did not read layer '{0}' correctly. {1} bytes remaining", entry.Id, remaining);
-                            break;
-                        case < 0:
-                            Log.Debug("Did not read layer '{0}' correctly. Read {1} extra bytes", entry.Id, Math.Abs(remaining));
-                            break;
-                    }
-                }
-            }
+            var remaining = (int) (limitPos - Ar.Position);
+            var snapshotBytes = Ar.ReadBytes(remaining);
+            dest.Snapshot = RigLogicSnapshot.Read(snapshotBytes, requireFullConsume: false);
         }
-
-        return result;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -163,28 +72,91 @@ public class UDNAAsset : UObject
         writer.WritePropertyName(nameof(Version));
         serializer.Serialize(writer, Version);
 
-        if (Sections is not null && Sections.TryGetValue("desc", out var descriptor))
+        if (Layers is not null && DnaAssetQueries.TryGet(Layers, "desc", out RawDescriptor descriptor))
         {
             writer.WritePropertyName("Descriptor");
             serializer.Serialize(writer, descriptor);
         }
+    }
+}
 
-        //writer.WritePropertyName("Definition");
-        //serializer.Serialize(writer, Definition);
+public class UDNAAsset : UDNAObject
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+        DnaFileName = GetOrDefault(nameof(DnaFileName), GetOrDefault<string>("DnaFileName_DEPRECATED"));
 
-        //writer.WritePropertyName("Behavior");
-        //serializer.Serialize(writer, Behavior);
+        var customVer = FDNAAssetCustomVersion.Get(Ar);
+        if (customVer < FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded) return;
 
-        //writer.WritePropertyName("Geometry");
-        //serializer.Serialize(writer, Geometry);
+        if (customVer == FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
+        {
+            ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
+            if (Ar.Position < validPos && DnaBinaryParser.LooksLikeDna(Ar))
+                ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
+            return;
+        }
 
-        //writer.WritePropertyName("LayerVersion");
-        //serializer.Serialize(writer, LayerVersion);
+        ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
+    }
+}
 
-        //writer.WritePropertyName("IndexTable");
-        //serializer.Serialize(writer, IndexTable);
+public class UDNA : UDNAObject
+{
+    public FDNAConfig DNAConfig;
+    public bool bKeepDNAAfterInitialization;
+    public bool bUseOptimizedCooking = true;
+    public FRigLogicConfiguration RigLogicConfiguration;
 
-        //writer.WritePropertyName("Layers");
-        //serializer.Serialize(writer, Layers);
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+        
+        DNAConfig = GetOrDefault<FDNAConfig>(nameof(DNAConfig));
+        bKeepDNAAfterInitialization = GetOrDefault<bool>(nameof(bKeepDNAAfterInitialization));
+        bUseOptimizedCooking = GetOrDefault(nameof(bUseOptimizedCooking), true);
+        RigLogicConfiguration = GetOrDefault<FRigLogicConfiguration>(nameof(RigLogicConfiguration));
+        
+
+        if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))
+            return;
+
+        var customVer = FDNAAssetCustomVersion.Get(Ar);
+        if (customVer < FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
+            return;
+
+        if (customVer == FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
+        {
+            ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
+            if (Ar.Position < validPos && DnaBinaryParser.LooksLikeDna(Ar))
+                ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
+            return;
+        }
+
+        var optimized = bUseOptimizedCooking
+                        && Ar.IsLoadingFromCookedPackage
+                        && customVer >= FDNAAssetCustomVersion.Type.IntroduceOptimizedSerializationDuringCooking;
+
+        if (optimized)
+        {
+            if (!Ar.ReadBoolean())
+                return;
+            ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: true);
+            return;
+        }
+
+        ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: Ar.Position < validPos && !DnaBinaryParser.LooksLikeDna(Ar));
+    }
+}
+
+public class UDNAAssetUserData : UObject
+{
+    public UDNA? DNAAsset;
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+        DNAAsset = GetOrDefault<UDNA>(nameof(DNAAsset));
     }
 }
