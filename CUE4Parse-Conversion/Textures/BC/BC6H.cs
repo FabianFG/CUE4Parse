@@ -7,29 +7,43 @@ namespace CUE4Parse_Conversion.Textures.BC;
 
 public static partial class BCDecoder
 {
+    public const int BC6HBlockSize = 16;
+
     // only unsigned variant
     public static byte[] BC6H(byte[] input, int sizeX, int sizeY, int sizeZ)
     {
-        var expectedSize = sizeX * sizeY * sizeZ;
-        if (input.Length < expectedSize)
-            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {expectedSize}");
-        var output = new byte[expectedSize * 4];
-        BC6H(input, sizeX, sizeY, sizeZ, output);
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, out byte[] output, BC6HBlockSize);
+
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
+        {
+            BC6H(input.AsSpan(inputOffset, inputLayerSize), sizeX, sizeY, output.AsSpan(outputOffset, outputLayerSize));
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
+        }
+
         return output;
     }
 
     // only unsigned variant
     public static void BC6H(ReadOnlySpan<byte> input, int sizeX, int sizeY, int sizeZ, Span<byte> output)
     {
-        var expectedSize = sizeX * sizeY * sizeZ;
-        var outputSize = expectedSize * 4;
-        if (input.Length < expectedSize)
-            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {expectedSize}");
-        if (output.Length < outputSize)
-            throw new ArgumentException($"Output length {output.Length} is smaller than expected size {outputSize}");
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, output, BC6HBlockSize);
 
-        var inputSpan = input[..expectedSize].Cast<byte, ulong>();
-        var outputSpan = output[..outputSize].Cast<byte, uint>();
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
+        {
+            BC6H(input.Slice(inputOffset, inputLayerSize), sizeX, sizeY, output.Slice(outputOffset, outputLayerSize));
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
+        }
+    }
+
+    // only unsigned variant
+    public static void BC6H(ReadOnlySpan<byte> input, int sizeX, int sizeY, Span<byte> output)
+    {
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, 1, output, BC6HBlockSize);
+
+        var inputSpan = input[..inputLayerSize].Cast<byte, ulong>();
+        var outputSpan = output[..outputLayerSize].Cast<byte, uint>();
 
         Span<Half> halfs = stackalloc Half[16 * 4];
         var resultSpan = halfs.Cast<Half, ulong>();
@@ -40,36 +54,47 @@ public static partial class BCDecoder
         var row1 = uints[4..8];
         var row2 = uints[8..12];
         var row3 = uints[12..];
+        var incompleteBlocks = (sizeX & 3) != 0 || (sizeY & 3) != 0;
 
         var index = 0;
-        var zPixelLoc = 0;
-
-        for (int z = 0; z < sizeZ; z++)
+        var yPixelOffset = 0;
+        for (int y = 0; y < sizeY; y += 4)
         {
-            var yPixelLoc = zPixelLoc;
-            for (int y = 0; y < sizeY / 4; y++)
+            var xPixelOffset = yPixelOffset;
+            for (int x = 0; x < sizeX; x += 4)
             {
-                var xPixelLoc = yPixelLoc;
-                for (int x = 0; x < sizeX / 4; x++)
+                DecodeBC6HBlock(inputSpan[index++], inputSpan[index++], resultSpan);
+                TensorPrimitives.ConvertToSingle(halfs, floats);
+                TensorPrimitives.Multiply(floats, 255.0f, floats);
+                TensorPrimitives.ConvertSaturating(floats, bytes);
+
+                if (incompleteBlocks && (x + 4 > sizeX || y + 4 > sizeY))
                 {
-                    DecodeBC6HBlock(inputSpan[index++], inputSpan[index++], resultSpan);
-                    TensorPrimitives.ConvertToSingle(halfs, floats);
-                    TensorPrimitives.Multiply(floats, 255.0f, floats);
-                    TensorPrimitives.ConvertSaturating(floats, bytes);
+                    int width = Math.Min(4, sizeX - x);
+                    int height = Math.Min(4, sizeY - y);
 
-                    row0.CopyTo(outputSpan.Slice(xPixelLoc, 4));
-                    row1.CopyTo(outputSpan.Slice(xPixelLoc + sizeX, 4));
-                    row2.CopyTo(outputSpan.Slice(xPixelLoc + 2 * sizeX, 4));
-                    row3.CopyTo(outputSpan.Slice(xPixelLoc + 3 * sizeX, 4));
+                    var offset = xPixelOffset;
+                    for (int row = 0; row < height; row++)
+                    {
+                        int srcOffset = row * 4;
+                        for (int col = 0; col < width; col++)
+                            outputSpan[offset + col] = uints[srcOffset + col];
 
-                    xPixelLoc += 4;
+                        offset += sizeX;
+                    }
                 }
-                yPixelLoc += 4 * sizeX;
+                else
+                {
+                    row0.CopyTo(outputSpan.Slice(xPixelOffset, 4));
+                    row1.CopyTo(outputSpan.Slice(xPixelOffset + sizeX, 4));
+                    row2.CopyTo(outputSpan.Slice(xPixelOffset + 2 * sizeX, 4));
+                    row3.CopyTo(outputSpan.Slice(xPixelOffset + 3 * sizeX, 4));
+                }
+                xPixelOffset += 4;
             }
-            zPixelLoc += sizeX * sizeY;
+            yPixelOffset += 4 * sizeX;
         }
     }
-
 
     // http://graphics.stanford.edu/~seander/bithacks.html#VariableSignExtend
     public static uint ExtendSign(uint val, int bits)

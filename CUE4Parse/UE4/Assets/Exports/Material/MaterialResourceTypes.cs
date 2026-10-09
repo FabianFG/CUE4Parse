@@ -1545,8 +1545,16 @@ public class FMaterialShaderMap : TShaderMap<FMaterialShaderMapContent, FShaderM
 
     public new void Deserialize(FMaterialResourceProxyReader Ar)
     {
-        ShaderMapId = new FMaterialShaderMapId(Ar);
-        base.Deserialize(Ar);
+        if (Ar.Game >= GAME_UE6_0)
+        {
+            base.Deserialize(Ar);
+            ShaderMapId = new FMaterialShaderMapId(Ar);
+        }
+        else
+        {
+            ShaderMapId = new FMaterialShaderMapId(Ar);
+            base.Deserialize(Ar);
+        }
     }
 }
 

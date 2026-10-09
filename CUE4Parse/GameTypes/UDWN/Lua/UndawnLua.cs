@@ -1,4 +1,3 @@
-using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
@@ -17,22 +16,22 @@ public class FUndawnLuaArchive(string name, byte[] data) : FLua53Archive(name, d
     ];
 
     // Strings are encrypted
-    public override string ReadLuaString()
+    public override byte[] ReadLuaStringBytes()
     {
         var sizeByte = Read<byte>();
         if (sizeByte == 0)
-            return string.Empty;
+            return [];
 
         var size = sizeByte == 0xFF ? Read<int>() : sizeByte;
         var length = size - 1;
 
         if (length <= 0)
-            return string.Empty;
+            return [];
 
         var buffer = ReadBytes(length);
         TensorUtils.Xor(buffer, _stringKey);
 
-        return Encoding.UTF8.GetString(buffer);
+        return buffer;
     }
 }
 

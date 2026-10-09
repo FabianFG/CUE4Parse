@@ -143,20 +143,73 @@ public struct FRigElementWeight(float value)
     public float Scale = value;
 }
 
-public struct FRigElementParentConstraint
+public struct FRigElementParentConstraints
 {
-    public FRigTransformElement ParentElement;
-    public FRigElementWeight Weight;
-    public FRigElementWeight InitialWeight;
-    public FName DisplayLabel;
-    // mutable FRigComputedTransform Cache;
-    public bool bCacheIsDirty;
+    public int NumParents;
+    public FRigElementParentConstraint[]? ParentConstraints_Deprecated;
+    public FRigElementParentConstraintTopology[]? ParentConstraints;
+    public FRigElementParentConstraintData[]? ParentConstraintsData;
+
+    public FRigElementParentConstraints(FArchive Ar)
+    {
+        NumParents = Ar.Read<int>();
+    }
+
+    public struct FRigElementParentConstraintTopology(FArchive Ar)
+    {
+        public FRigElementKey ParentKey = new FRigElementKey(Ar);
+        public FName DisplayLabel = Ar.ReadFName();
+    }
+
+    public struct FRigElementParentConstraintData
+    {
+        public FRigElementWeight Weight;
+        public FRigElementWeight InitialWeight;
+    }
+
+    public struct FRigElementParentConstraint
+    {
+        public FRigElementKey ParentKey;
+        public FRigElementWeight Weight;
+        public FRigElementWeight InitialWeight;
+        public FName DisplayLabel;
+        public bool bCacheIsDirty;
+
+        public FRigElementParentConstraint(FArchive Ar)
+        {
+            ParentKey = new FRigElementKey(Ar);
+            bCacheIsDirty = true;
+        }
+
+        public void Load(FArchive Ar)
+        {
+            if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyMultiParentConstraints)
+            {
+                InitialWeight = Ar.Read<FRigElementWeight>();
+                Weight = Ar.Read<FRigElementWeight>();
+            }
+            else
+            {
+                InitialWeight = new FRigElementWeight(Ar.Read<float>());
+                Weight = new FRigElementWeight(Ar.Read<float>());
+            }
+
+            if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.RigHierarchyParentContraintWithLabel)
+            {
+                DisplayLabel = new FName("None");
+            }
+            else
+            {
+                DisplayLabel = Ar.ReadFName();
+            }
+        }
+    }
 }
 
 public class FRigMultiParentElement : FRigTransformElement
 {
     public FRigCurrentAndInitialTransform Parent;
-    public FRigElementParentConstraint[] ParentConstraints;
+    public FRigElementParentConstraints ParentConstraints;
     public Dictionary<FRigElementKey, int> IndexLookup = [];
 
     public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
@@ -170,41 +223,31 @@ public class FRigMultiParentElement : FRigTransformElement
                 Parent = new FRigCurrentAndInitialTransform(Ar, inSettings);
             }
 
-            var numParents = Ar.Read<int>();
-            ParentConstraints = new FRigElementParentConstraint[numParents];
+            ParentConstraints = new FRigElementParentConstraints(Ar);
         }
         else if (inSettings.SerializationPhase == ESerializationPhase.InterElementData)
         {
-            for (var parentIndex = 0; parentIndex < ParentConstraints.Length; parentIndex++)
+            if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyTopology)
             {
-                var parentKey = new FRigElementKey(Ar);
-                FRigElementParentConstraint constraint = new() { bCacheIsDirty = true };
-
-                if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchyMultiParentConstraints)
+                ParentConstraints.ParentConstraints = new FRigElementParentConstraints.FRigElementParentConstraintTopology[ParentConstraints.NumParents];
+                ParentConstraints.ParentConstraintsData = new FRigElementParentConstraints.FRigElementParentConstraintData[ParentConstraints.NumParents];
+                for(var parentIndex = 0; parentIndex < ParentConstraints.NumParents; parentIndex++)
                 {
-                    constraint.InitialWeight = Ar.Read<FRigElementWeight>();
-                    constraint.Weight = Ar.Read<FRigElementWeight>();
+                    ParentConstraints.ParentConstraints[parentIndex] = new (Ar);
+                    ParentConstraints.ParentConstraintsData[parentIndex] = Ar.Read<FRigElementParentConstraints.FRigElementParentConstraintData>();
+                    IndexLookup.Add(ParentConstraints.ParentConstraints[parentIndex].ParentKey, parentIndex);
                 }
-                else
+            }
+            else
+            {
+                ParentConstraints.ParentConstraints_Deprecated = new FRigElementParentConstraints.FRigElementParentConstraint[ParentConstraints.NumParents];
+                for (var parentIndex = 0; parentIndex < ParentConstraints.NumParents; parentIndex++)
                 {
-                    var initialWeight = Ar.Read<float>();
-                    constraint.InitialWeight = new FRigElementWeight(initialWeight);
-
-                    var weight = Ar.Read<float>();
-                    constraint.Weight = new FRigElementWeight(weight);
+                    FRigElementParentConstraints.FRigElementParentConstraint constraint = new(Ar);
+                    constraint.Load(Ar);
+                    ParentConstraints.ParentConstraints_Deprecated[parentIndex] = constraint;
+                    IndexLookup.Add(ParentConstraints.ParentConstraints_Deprecated[parentIndex].ParentKey, parentIndex);
                 }
-
-                if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.RigHierarchyParentContraintWithLabel)
-                {
-                    constraint.DisplayLabel = new FName("None");
-                }
-                else
-                {
-                    constraint.DisplayLabel = Ar.ReadFName();
-                }
-
-                ParentConstraints[parentIndex] = constraint;
-                IndexLookup.Add(parentKey, parentIndex);
             }
         }
     }
@@ -360,6 +403,7 @@ public struct FRigControlSettings
 {
     public ERigControlAnimationType AnimationType;
     public ERigControlType ControlType;
+    public ERigControlLayeredCombineMode LayeredCombineMode;
     public FName DisplayName;
     /** the primary axis to use for float controls */
     public ERigControlAxis PrimaryAxis;
@@ -382,8 +426,7 @@ public struct FRigControlSettings
     /** If the control is transient and only visible in the control rig editor */
     public bool bIsTransientControl;
     /** If the control is integer it can use this enum to choose values */
-    //TObjectPtr<UEnum> ControlEnum;
-
+    public string ControlEnumPath;
     // The User interface customization used for a control
     // This will be used as the default content for the space picker and other widgets
     public FRigControlElementCustomization Customization;
@@ -404,9 +447,6 @@ public struct FRigControlSettings
 
     public FRigControlSettings(FArchive Ar)
     {
-        FName AnimationTypeName, ControlTypeName, ShapeVisibilityName, PrimaryAxisName;
-        string ControlEnumPathName;
-
         bool bLimitTranslation_DEPRECATED = false;
         bool bLimitRotation_DEPRECATED = false;
         bool bLimitScale_DEPRECATED = false;
@@ -415,12 +455,12 @@ public struct FRigControlSettings
 
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.ControlAnimationType)
         {
-            AnimationTypeName = Ar.ReadFName();
+            AnimationType = EnumUtils.GetValueByName<ERigControlAnimationType>(Ar.ReadFName().Text);
         }
 
-        ControlTypeName = Ar.ReadFName();
+        ControlType = EnumUtils.GetValueByName<ERigControlType>(Ar.ReadFName().Text);
         DisplayName = Ar.ReadFName();
-        PrimaryAxisName = Ar.ReadFName();
+        PrimaryAxis = EnumUtils.GetValueByName<ERigControlAxis>(Ar.ReadFName().Text);
         bIsCurve = Ar.ReadBoolean();
 
         if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.ControlAnimationType)
@@ -453,25 +493,29 @@ public struct FRigControlSettings
             MaximumTransform = new FTransform(Ar);
         }
 
-        ControlType = EnumUtils.GetValueByName<ERigControlType>(ControlTypeName.Text);
-
         if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.ControlAnimationType)
         {
             bShapeEnabledDeprecated = Ar.ReadBoolean();
-            //SetAnimationTypeFromDeprecatedData(bAnimatableDeprecated, bShapeEnabledDeprecated);
-            //AnimationTypeName = AnimationTypeEnum->GetNameByValue((int64)AnimationType);
+            AnimationType = SetAnimationTypeFromDeprecatedData(bAnimatableDeprecated, bShapeEnabledDeprecated, ControlType);
+
+            ERigControlAnimationType SetAnimationTypeFromDeprecatedData(bool bAnimatable, bool bShapeEnabled, ERigControlType controlType)
+            {
+                return bAnimatable ? bShapeEnabled && (controlType != ERigControlType.Bool)
+                        ? ERigControlAnimationType.AnimationControl
+                        : ERigControlAnimationType.AnimationChannel
+                    : ERigControlAnimationType.ProxyControl;
+            }
         }
 
         bShapeVisible = Ar.ReadBoolean();
 
         if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.ControlAnimationType)
         {
-            ShapeVisibilityName = ERigControlVisibility.UserDefined.ToString();
-            //ShapeVisibilityName = ShapeVisibilityEnum->GetNameByValue((int64) ERigControlVisibility::UserDefined);
+            ShapeVisibility = ERigControlVisibility.UserDefined;
         }
         else
         {
-            ShapeVisibilityName = Ar.ReadFName();
+            ShapeVisibility = EnumUtils.GetValueByName<ERigControlVisibility>(Ar.ReadFName().Text);
         }
 
         ShapeName = Ar.ReadFName();
@@ -486,11 +530,7 @@ public struct FRigControlSettings
 
         ShapeColor = Ar.Read<FLinearColor>();
         bIsTransientControl = Ar.ReadBoolean();
-        ControlEnumPathName = Ar.ReadFString();
-
-        //AnimationType = (ERigControlAnimationType)AnimationTypeEnum->GetValueByName(AnimationTypeName);
-        //PrimaryAxis = (ERigControlAxis)ControlAxisEnum->GetValueByName(PrimaryAxisName);
-        //ShapeVisibility = (ERigControlVisibility)ShapeVisibilityEnum->GetValueByName(ShapeVisibilityName);
+        ControlEnumPath = Ar.ReadFString();
 
         if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.StorageMinMaxValuesAsFloatStorage)
         {
@@ -498,29 +538,12 @@ public struct FRigControlSettings
             //	MaximumValue.SetFromTransform(MaximumTransform, ControlType, PrimaryAxis);
         }
 
-        //ControlEnum = nullptr;
-        //if(!ControlEnumPathName.IsEmpty())
-        //{
-        //	if (IsInGameThread())
-        //	{
-        //		ControlEnum = LoadObject<UEnum>(nullptr, *ControlEnumPathName);
-        //	}
-        //	else
-        //	{
-        //		ControlEnum = FindObject<UEnum>(nullptr, *ControlEnumPathName);
-        //	}
-        //}
-
-
         Customization = new FRigControlElementCustomization(Ar);
 
+        DrivenControls = [];
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.ControlAnimationType)
         {
             DrivenControls = Ar.ReadArray(() => new FRigElementKey(Ar));
-        }
-        else
-        {
-            DrivenControls = [];
         }
 
         PreviouslyDrivenControls = [];
@@ -536,13 +559,10 @@ public struct FRigControlSettings
         }
         else
         {
-            //bGroupWithParentControl = IsAnimatable() && (
-            //	ControlType == ERigControlType::Bool ||
-            //	ControlType == ERigControlType::Float ||
-            //	ControlType == ERigControlType::ScaleFloat ||
-            //	ControlType == ERigControlType::Integer ||
-            //	ControlType == ERigControlType::Vector2D
-            //);
+            bGroupWithParentControl =
+                AnimationType is ERigControlAnimationType.AnimationControl or ERigControlAnimationType.AnimationChannel &&
+                ControlType is ERigControlType.Bool or ERigControlType.Float or ERigControlType.ScaleFloat
+                    or ERigControlType.Integer or ERigControlType.Vector2D;
         }
 
         bRestrictSpaceSwitching = false;
@@ -568,6 +588,9 @@ public struct FRigControlSettings
         {
             bUsePreferredRotationOrder = Ar.ReadBoolean();
         }
+
+        //if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.ControlLayeredCombineMode)
+        //    LayeredCombineMode = EnumUtils.GetValueByName<ERigControlLayeredCombineMode>(Ar.ReadFName().Text);
     }
 }
 
@@ -578,13 +601,97 @@ public struct FRigPreferredEulerAngles(FArchive Ar)
     FVector Initial = new FVector(Ar);
 }
 
+public enum ERigControlLayeredCombineMode : byte
+{
+    Default,
+    Override,
+}
+
+public struct FControlSettingsTopology
+{
+    public ERigControlAnimationType AnimationType;
+    public ERigControlType ControlType;
+    public ERigControlLayeredCombineMode LayeredCombineMode;
+    public FName DisplayName;
+    public ERigControlAxis PrimaryAxis;
+    public bool bIsCurve;
+    public FRigControlLimitEnabled[] LimitEnabled;
+    public bool bDrawLimits;
+    public FRigControlValue MinimumValue;
+    public FRigControlValue MaximumValue;
+    public bool bShapeVisible;
+    public bool bIsTransientControl;
+    public string ControlEnumPath;
+    public bool bGroupWithParentControl;
+    public bool bRestrictSpaceSwitching;
+    public ERigControlTransformChannel[] FilteredChannels;
+    public EEulerRotationOrder PreferredRotationOrder;
+    public bool bUsePreferredRotationOrder;
+
+    public FControlSettingsTopology(FArchive Ar)
+    {
+        AnimationType = EnumUtils.GetValueByName<ERigControlAnimationType>(Ar.ReadFName().Text);
+        ControlType = EnumUtils.GetValueByName<ERigControlType>(Ar.ReadFName().Text);
+        DisplayName = Ar.ReadFName();
+        PrimaryAxis = EnumUtils.GetValueByName<ERigControlAxis>(Ar.ReadFName().Text);
+        bIsCurve = Ar.ReadBoolean();
+        LimitEnabled = Ar.ReadArray(() => new FRigControlLimitEnabled(Ar));
+        bDrawLimits = Ar.ReadBoolean();
+        MinimumValue = Ar.Read<FRigControlValue>();
+        MaximumValue = Ar.Read<FRigControlValue>();
+        bIsTransientControl = Ar.ReadBoolean();
+        ControlEnumPath = Ar.ReadFString();
+        //Ar << Customization.AvailableSpaces;
+        bGroupWithParentControl = Ar.ReadBoolean();
+        bRestrictSpaceSwitching = Ar.ReadBoolean();
+        FilteredChannels = Ar.ReadArray<ERigControlTransformChannel>();
+        PreferredRotationOrder = Ar.Read<EEulerRotationOrder>();
+        bUsePreferredRotationOrder = Ar.ReadBoolean();
+        //if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.ControlLayeredCombineMode)
+            //LayeredCombineMode = EnumUtils.GetValueByName<ERigControlLayeredCombineMode>(Ar.ReadFName().Text);
+    }
+}
+
+public struct FControlSettingsData
+{
+    public FRigElementKey[] DrivenControls;
+    public FRigControlElementCustomization Customization;
+    public FRigControlShapeData ShapeSettings;
+
+    public FControlSettingsData(FArchive Ar)
+    {
+
+        DrivenControls = Ar.ReadArray(() => new FRigElementKey(Ar));
+        Customization = new FRigControlElementCustomization(Ar);
+        ShapeSettings = new FRigControlShapeData(Ar);
+    }
+}
+
+public struct FRigControlShapeData
+{
+    public FName ShapeName;
+    public FLinearColor ShapeColor;
+    public ERigControlVisibility ShapeVisibility;
+    public bool bShapeVisible;
+
+    public FRigControlShapeData(FArchive Ar)
+    {
+        ShapeName = Ar.ReadFName();
+        ShapeColor = Ar.Read<FLinearColor>();
+        ShapeVisibility = EnumUtils.GetValueByName<ERigControlVisibility>(Ar.ReadFName().Text);
+        bShapeVisible = Ar.ReadBoolean();
+    }
+}
+
 public class FRigNullElement : FRigMultiParentElement;
 public class FRigControlElement : FRigMultiParentElement
 {
-    FRigControlSettings Settings;
-    FRigCurrentAndInitialTransform Offset;
-    FRigCurrentAndInitialTransform Shape;
-    FRigPreferredEulerAngles? PreferredEulerAngles;
+    public FRigControlSettings? Settings;
+    public FControlSettingsTopology? TopologyControlSettings;
+    public FControlSettingsData? ControlSettingsShapeData;
+    public FRigCurrentAndInitialTransform Offset;
+    public FRigCurrentAndInitialTransform Shape;
+    public FRigPreferredEulerAngles? PreferredEulerAngles;
 
     public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
     {
@@ -592,7 +699,16 @@ public class FRigControlElement : FRigMultiParentElement
 
         if (inSettings.SerializationPhase != ESerializationPhase.StaticData) return;
 
-        Settings = new FRigControlSettings(Ar);
+        if (FControlRigObjectVersion.Get(Ar) < FControlRigObjectVersion.Type.RigHierarchyTopology)
+        {
+            Settings = new FRigControlSettings(Ar);
+        }
+        else
+        {
+            TopologyControlSettings = new FControlSettingsTopology(Ar);
+            ControlSettingsShapeData = new FControlSettingsData(Ar);
+        }
+
         Offset = new FRigCurrentAndInitialTransform(Ar, inSettings);
         Shape = new FRigCurrentAndInitialTransform(Ar, inSettings);
         if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.PreferredEulerAnglesForControls)
@@ -702,7 +818,38 @@ public class FRigConnectorElement : FRigBaseElement
     }
 }
 
-public class FRigSocketElement : FRigSingleParentElement;
+public class FRigSocketElement : FRigSingleParentElement
+{
+    public FRigSocketSettings Settings;
+
+    public override void Load(FArchive Ar, URigHierarchy hierarchy, FRigHierarchySerializationSettings inSettings)
+    {
+        base.Load(Ar, hierarchy, inSettings);
+
+        if (inSettings.SerializationPhase != ESerializationPhase.StaticData) return;
+        if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchySocketSettings)
+        {
+            Settings = new FRigSocketSettings(Ar);
+        }
+    }
+}
+
+public struct FRigSocketSettings
+{
+    public FName Name;
+    public FLinearColor Color;
+    public FRigElementKey Parent;
+
+    public FRigSocketSettings(FArchive Ar)
+    {
+        if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.RigHierarchySocketSettings)
+        {
+            Name = Ar.ReadFName();
+            Color = Ar.Read<FLinearColor>();
+            Parent = new FRigElementKey(Ar);
+        }
+    }
+}
 
 public enum ERigElementType : byte
 {

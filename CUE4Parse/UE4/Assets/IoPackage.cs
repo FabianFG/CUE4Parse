@@ -23,6 +23,7 @@ public sealed record IoOptionalSegment(FArchive Archive, Func<FByteBulkDataHeade
 public sealed class IoPackage : AbstractUePackage
 {
     private readonly IoGlobalData _globalData;
+    private readonly EGame _game;
 
     public override FPackageFileSummary Summary { get; }
     public override FNameEntrySerialized[] NameMap { get; }
@@ -95,6 +96,7 @@ public sealed class IoPackage : AbstractUePackage
         _globalData = provider?.GlobalData ?? throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
 
         var baseRealm = ReadRealm(uasset, containerHeader, provider, false, 0);
+        _game = baseRealm.Archive.Game;
         var optionalRealm = optionalSegment is null
             ? null
             : ReadRealm(optionalSegment.Archive, optionalSegment.ContainerHeader ?? containerHeader, provider, true, 1);
@@ -213,8 +215,15 @@ public sealed class IoPackage : AbstractUePackage
             }
 
             // Imported public export hashes
-            uassetAr.Position = summary.ImportedPublicExportHashesOffset;
-            realm.ImportedPublicExportHashes = uassetAr.ReadArray<ulong>((summary.ImportMapOffset - summary.ImportedPublicExportHashesOffset) / sizeof(ulong));
+            if (uassetAr.Game is not (GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens))
+            {
+                uassetAr.Position = summary.ImportedPublicExportHashesOffset;
+                realm.ImportedPublicExportHashes = uassetAr.ReadArray<ulong>((summary.ImportMapOffset - summary.ImportedPublicExportHashesOffset) / sizeof(ulong));
+            }
+            else
+            {
+                realm.ImportedPublicExportHashes = null;
+            }
 
             // Import map
             uassetAr.Position = summary.ImportMapOffset;
@@ -598,6 +607,25 @@ public sealed class IoPackage : AbstractUePackage
                                 }
 
                                 break;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (_game is GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens)
+            {
+                // Pre-finalization Zen: the low 32 bits of a package import reference are the target export's 32-bit export hash.
+                var packageImportRef = index.AsPackageImportRef;
+                if (packageImportRef.ImportedPackageIndex < importedPackages.Length)
+                {
+                    var pkg = importedPackages[packageImportRef.ImportedPackageIndex];
+                    if (pkg != null)
+                    {
+                        for (var exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                        {
+                            if (pkg.ExportMap[exportIndex].PublicExportHash == packageImportRef.ImportedPublicExportHashIndex) // ExportHash
+                            {
+                                return pkg.CreateResolvedExport(exportIndex);
                             }
                         }
                     }

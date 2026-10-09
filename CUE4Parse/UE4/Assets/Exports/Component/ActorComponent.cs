@@ -70,7 +70,6 @@ public class UBoxReflectionCaptureComponent : UReflectionCaptureComponent;
 public class UBrainComponent : UActorComponent;
 public class UAudioOverlapComponent : UActorComponent;
 public class UCableComponent : UMeshComponent;
-public class UCameraComponent : USceneComponent;
 public class UCameraShakeSourceComponent : USceneComponent;
 public class UCapsuleComponent : UShapeComponent;
 public class UCylinderComponent : UPrimitiveComponent;
@@ -109,7 +108,6 @@ public class UEditorAutomationActorComponent : UEditorUtilityActorComponent;
 public class UEditorUtilityActorComponent : UActorComponent;
 public class UEnhancedInputComponent : UInputComponent;
 public class UEnvelopeFollowerListener : UActorComponent;
-public class UExponentialHeightFogComponent : USceneComponent;
 public class UHeightFogComponent : USceneComponent;
 public class UFXSystemComponent : UPrimitiveComponent;
 public class UFieldNodeBase : UActorComponent;
@@ -294,7 +292,13 @@ public class USceneCaptureReflectComponent : USceneCaptureComponent;
 public class USceneCaptureComponent2D : USceneCaptureComponent;
 public class USceneCaptureComponentCube : USceneCaptureComponent;
 public class USensingComponent : UPawnSensingComponent;
-public class UShapeComponent : UPrimitiveComponent;
+public class UShapeComponent : UPrimitiveComponent
+{
+    public UShapeComponent()
+    {
+        bCastDynamicShadow = false;
+    }
+}
 public class USingleAnimSkeletalComponent : USkeletalMeshComponent;
 public class USkeletalMeshReplicatedComponent : USkeletalMeshComponent;
 public class UFPSSkeletalMeshComponent : USkeletalMeshComponent;

@@ -10,12 +10,17 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
 {
     public FInstancedStaticMeshInstanceData[]? PerInstanceSMData;
     public float[]? PerInstanceSMCustomData;
+    public int InstanceStartCullDistance { get; private set; }
+    public int InstanceEndCullDistance { get; private set; }
 
     public FVector4[][]? MotoGP24Data; // PackedData
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        InstanceStartCullDistance = GetOrDefault(nameof(InstanceStartCullDistance), InstanceStartCullDistance);
+        InstanceEndCullDistance = GetOrDefault(nameof(InstanceEndCullDistance), InstanceEndCullDistance);
 
         var bCooked = false;
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData ||
