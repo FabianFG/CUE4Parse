@@ -47,16 +47,16 @@ namespace CUE4Parse.FileProvider.Vfs
 {
     public abstract class AbstractVfsFileProvider : AbstractFileProvider, IVfsFileProvider
     {
-        protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new ();
+        protected readonly ConcurrentDictionary<IAesVfsReader, object?> _unloadedVfs = new();
         public IReadOnlyCollection<IAesVfsReader> UnloadedVfs => (IReadOnlyCollection<IAesVfsReader>) _unloadedVfs.Keys;
 
-        private readonly ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs = new ();
+        private readonly ConcurrentDictionary<IAesVfsReader, object?> _mountedVfs = new();
         public IReadOnlyCollection<IAesVfsReader> MountedVfs => (IReadOnlyCollection<IAesVfsReader>) _mountedVfs.Keys;
 
-        private readonly ConcurrentDictionary<FGuid, FAesKey> _keys = new ();
+        private readonly ConcurrentDictionary<FGuid, FAesKey> _keys = new();
         public IReadOnlyDictionary<FGuid, FAesKey> Keys => _keys;
 
-        protected readonly ConcurrentDictionary<FGuid, object?> _requiredKeys = new ();
+        protected readonly ConcurrentDictionary<FGuid, object?> _requiredKeys = new();
         public IReadOnlyCollection<FGuid> RequiredKeys => (IReadOnlyCollection<FGuid>) _requiredKeys.Keys;
 
         public IoGlobalData? GlobalData { get; private set; }
@@ -172,8 +172,7 @@ namespace CUE4Parse.FileProvider.Vfs
             try
             {
                 pakOrUtocArchive.Versions = Versions;
-                if (utocArchive is not null)
-                    utocArchive.Versions = Versions;
+                utocArchive?.Versions = Versions;
 
                 AbstractAesVfsReader reader;
                 switch (pakOrUtocArchive.Name.SubstringAfterLast('.').ToUpper())
@@ -336,12 +335,11 @@ namespace CUE4Parse.FileProvider.Vfs
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int SubmitKey(FGuid guid, FAesKey key) => SubmitKeys(new Dictionary<FGuid, FAesKey> {{ guid, key }});
+        public int SubmitKey(FGuid guid, FAesKey key) => SubmitKeys(new Dictionary<FGuid, FAesKey> { { guid, key } });
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int SubmitKeys(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys) => SubmitKeysAsync(keys).Result;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<int> SubmitKeyAsync(FGuid guid, FAesKey key)
-            => await SubmitKeysAsync(new Dictionary<FGuid, FAesKey> {{ guid, key }}).ConfigureAwait(false);
+        public async Task<int> SubmitKeyAsync(FGuid guid, FAesKey key) => await SubmitKeysAsync(new Dictionary<FGuid, FAesKey> { { guid, key } }).ConfigureAwait(false);
         public async Task<int> SubmitKeysAsync(IEnumerable<KeyValuePair<FGuid, FAesKey>> keys)
         {
             var countNewMounts = 0;
@@ -379,6 +377,7 @@ namespace CUE4Parse.FileProvider.Vfs
                         {
                             Log.Warning(e, "Uncaught exception while loading pak file {FileName}", reader.Path.SubstringAfterLast('/'));
                         }
+
                         return null;
                     }));
                 }
@@ -503,7 +502,7 @@ namespace CUE4Parse.FileProvider.Vfs
             if (workingAes || DefaultGame.EncryptionKeyGuid is null) return;
 
             var vfsToVerify = _mountedVfs.Keys
-                .Where(it => it is {IsEncrypted: false, EncryptedFileCount: > 0})
+                .Where(it => it is { IsEncrypted: false, EncryptedFileCount: > 0 })
                 .GroupBy(it => it.EncryptionKeyGuid);
 
             foreach (var group in vfsToVerify)
@@ -564,7 +563,7 @@ namespace CUE4Parse.FileProvider.Vfs
             var refList = new List<GameFile>();
             foreach (var reader in MountedVfs)
             {
-                if (reader is not IoStoreReader ioReader || ioReader.ContainerHeader is not { StoreEntries.Length: > 0 } header)
+                if (reader is not IoStoreReader { ContainerHeader: { StoreEntries.Length: > 0 } header } ioReader)
                     continue;
                 for (var i = 0; i < header.StoreEntries.Length; i++)
                 {
@@ -582,7 +581,7 @@ namespace CUE4Parse.FileProvider.Vfs
             FFilePackageStoreEntry? storeEntry = null;
             foreach (var reader in MountedVfs)
             {
-                if (reader is not IoStoreReader ioReader || ioReader.ContainerHeader is not { StoreEntries.Length: > 0 } header)
+                if (reader is not IoStoreReader { ContainerHeader: { StoreEntries.Length: > 0 } header })
                     continue;
 
                 var idx = Array.IndexOf(header.PackageIds, packageId);
@@ -591,8 +590,30 @@ namespace CUE4Parse.FileProvider.Vfs
                     storeEntry = header.StoreEntries[idx];
                     break;
                 }
-
             }
+            return storeEntry;
+        }
+
+        /// <summary>
+        /// Finds the store entry of the optional segment of a package, which lives
+        /// in the dedicated optional segment arrays of a container header.
+        /// </summary>
+        public FFilePackageStoreEntry? TryFindOptionalSegmentStoreEntry(FPackageId packageId)
+        {
+            FFilePackageStoreEntry? storeEntry = null;
+            foreach (var reader in MountedVfs)
+            {
+                if (reader is not IoStoreReader { ContainerHeader: { OptionalSegmentStoreEntries.Length: > 0 } header })
+                    continue;
+
+                var idx = Array.IndexOf(header.OptionalSegmentPackageIds, packageId);
+                if (idx != -1)
+                {
+                    storeEntry = header.OptionalSegmentStoreEntries[idx];
+                    break;
+                }
+            }
+
             return storeEntry;
         }
 

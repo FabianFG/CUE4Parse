@@ -30,7 +30,6 @@ public abstract class GameFile
     private static readonly ConcurrentDictionary<string, string> _internedExtensions = new(StringComparer.OrdinalIgnoreCase);
     private static readonly ConcurrentDictionary<string, string> _internedDirectories = new(StringComparer.Ordinal);
 
-    private string _path;
     private string? _directory;
     private string? _pathWithoutExtension;
     private string? _name;
@@ -49,10 +48,10 @@ public abstract class GameFile
 
     public string Path
     {
-        get => _path;
+        get;
         protected internal set
         {
-            _path = value;
+            field = value;
 
             _directory = null;
             _pathWithoutExtension = null;
@@ -61,6 +60,7 @@ public abstract class GameFile
             _extension = null;
         }
     }
+
     public long Size { get; protected init; }
 
     public string Directory => _directory ??= Intern(_internedDirectories, Path.SubstringBeforeLast('/'));
@@ -83,6 +83,12 @@ public abstract class GameFile
 
     public bool IsUePackage => UePackageExtensionsSet.Contains(Extension);
     public bool IsUePackagePayload => UePackagePayloadExtensionsSet.Contains(Extension);
+
+    /// <summary>
+    /// Whether this file is cooked as part of another file rather than being a package of its own,
+    /// and must therefore not be listed on its own.
+    /// </summary>
+    public virtual bool IsHidden => false;
 
     public abstract byte[] Read(FByteBulkDataHeader? header = null);
     public abstract FArchive CreateReader(FByteBulkDataHeader? header = null);

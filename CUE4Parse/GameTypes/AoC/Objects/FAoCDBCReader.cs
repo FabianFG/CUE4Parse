@@ -26,8 +26,7 @@ public struct FAoCDataChunk
 [JsonConverter(typeof(FAoCDBCReaderConverter))]
 public sealed class FAoCDBCReader : FAssetArchive
 {
-    
-    private Dictionary<int, string> NameMap = [];
+    private Dictionary<int, string> _nameMap = [];
     public FAoCDataChunk[] Chunks = [];
 
     public FAoCDBCReader(byte[] data, TypeMappings? mappings, VersionContainer versions) : base(new FByteArchive("CacheDB", data, versions), new FakePackage("CacheDB", mappings))
@@ -47,7 +46,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         Position = stringsOffset;
         while (Position < Length)
         {
-            NameMap[(int)(Position- stringsOffset)] = ReadFString();
+            _nameMap[(int)(Position- stringsOffset)] = ReadFString();
         }
 
         FRawHeader.FullRead = new([(0, -1)], ERawHeaderFlags.RawProperties | ERawHeaderFlags.SuperStructs);
@@ -114,7 +113,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         return null;
     }
 
-    public override FName ReadFName() => NameMap.TryGetValue(Read<int>(), out var name) ? new FName(name) : new FName("None");
+    public override FName ReadFName() => _nameMap.TryGetValue(Read<int>(), out var name) ? new FName(name) : new FName("None");
     public override bool TestReadFName()
     {
         if (HasUnversionedProperties) return false;
@@ -122,7 +121,7 @@ public sealed class FAoCDBCReader : FAssetArchive
         if (Position + sizeof(int) >= Length) return false;
         var nameIndex = Read<int>();
         Position = savedPos;
-        return nameIndex >= 0 && nameIndex < NameMap.Count;
+        return nameIndex >= 0 && nameIndex < _nameMap.Count;
     }
 
     private Dictionary<ulong, string> TypeMap = new()

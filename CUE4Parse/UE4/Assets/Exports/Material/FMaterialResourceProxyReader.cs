@@ -23,7 +23,7 @@ public class FMaterialResourceProxyReader : FArchive
 
         if (!bReadNameMap && Ar is FAssetArchive assetArchive)
         {
-            _nameMap = assetArchive.Owner?.NameMap;
+            _nameMap = assetArchive.NameMap;
             _readNameMap = true;
             return;
         }
