@@ -17,8 +17,8 @@ namespace CUE4Parse.UE4.Assets;
 [SkipObjectRegistration]
 public sealed class IoPackage : AbstractUePackage
 {
-    
     private readonly IoGlobalData _globalData;
+    private readonly EGame _game;
 
     public override FPackageFileSummary Summary { get; }
     public override FNameEntrySerialized[] NameMap { get; }
@@ -52,6 +52,7 @@ public sealed class IoPackage : AbstractUePackage
         _globalData = provider?.GlobalData ?? throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
 
         var uassetAr = new FAssetArchive(uasset, this);
+        _game = uassetAr.Game;
 
         FExportBundleHeader[]? exportBundleHeaders;
         FExportBundleEntry[] exportBundleEntries;
@@ -122,8 +123,15 @@ public sealed class IoPackage : AbstractUePackage
             }
 
             // Imported public export hashes
-            uassetAr.Position = summary.ImportedPublicExportHashesOffset;
-            ImportedPublicExportHashes = uassetAr.ReadArray<ulong>((summary.ImportMapOffset - summary.ImportedPublicExportHashesOffset) / sizeof(ulong));
+            if (uassetAr.Game is not (GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens))
+            {
+                uassetAr.Position = summary.ImportedPublicExportHashesOffset;
+                ImportedPublicExportHashes = uassetAr.ReadArray<ulong>((summary.ImportMapOffset - summary.ImportedPublicExportHashesOffset) / sizeof(ulong));
+            }
+            else
+            {
+                ImportedPublicExportHashes = null;
+            }
 
             // Import map
             uassetAr.Position = summary.ImportMapOffset;
@@ -442,7 +450,7 @@ public sealed class IoPackage : AbstractUePackage
                     var pkg = importedPackages[packageImportRef.ImportedPackageIndex];
                     if (pkg != null)
                     {
-                        for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                        for (var exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
                         {
                             if (pkg.ExportMap[exportIndex].PublicExportHash == ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex])
                             {
@@ -458,7 +466,7 @@ public sealed class IoPackage : AbstractUePackage
                     {
                         if (asset is IoPackage ioPackage)
                         {
-                            for (int exportIndex = 0; exportIndex < ioPackage.ExportMap.Length; ++exportIndex)
+                            for (var exportIndex = 0; exportIndex < ioPackage.ExportMap.Length; ++exportIndex)
                             {
                                 if (ioPackage.ExportMap[exportIndex].PublicExportHash == ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex])
                                 {
@@ -468,7 +476,7 @@ public sealed class IoPackage : AbstractUePackage
                         }
                         else if (asset is Package package)
                         {
-                            for (int exportIndex = 0; exportIndex < package.ExportMap.Length; ++exportIndex)
+                            for (var exportIndex = 0; exportIndex < package.ExportMap.Length; ++exportIndex)
                             {
                                 if (package.ExportMap[exportIndex].GetPublicExportHash() == ImportedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex])
                                 {
@@ -479,12 +487,32 @@ public sealed class IoPackage : AbstractUePackage
                     }
                 }
             }
+            else if (_game is GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens)
+            {
+                // Pre-finalization Zen: the low 32 bits of a package import reference are the target export's 32-bit export hash.
+                var packageImportRef = index.AsPackageImportRef;
+                var importedPackages = ImportedPackages.Value;
+                if (packageImportRef.ImportedPackageIndex < importedPackages.Length)
+                {
+                    var pkg = importedPackages[packageImportRef.ImportedPackageIndex];
+                    if (pkg != null)
+                    {
+                        for (var exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                        {
+                            if (pkg.ExportMap[exportIndex].PublicExportHash == packageImportRef.ImportedPublicExportHashIndex) // ExportHash
+                            {
+                                return new ResolvedExportObject(exportIndex, pkg);
+                            }
+                        }
+                    }
+                }
+            }
             else
             {
                 foreach (var pkg in ImportedPackages.Value)
                 {
                     if (pkg == null) continue;
-                    for (int exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
+                    for (var exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
                     {
                         if (pkg.ExportMap[exportIndex].GlobalImportIndex == index)
                         {
@@ -500,7 +528,7 @@ public sealed class IoPackage : AbstractUePackage
                     {
                         if (asset is IoPackage ioPackage)
                         {
-                            for (int exportIndex = 0; exportIndex < ioPackage.ExportMap.Length; ++exportIndex)
+                            for (var exportIndex = 0; exportIndex < ioPackage.ExportMap.Length; ++exportIndex)
                             {
                                 if (ioPackage.ExportMap[exportIndex].GlobalImportIndex == index)
                                 {
@@ -510,7 +538,7 @@ public sealed class IoPackage : AbstractUePackage
                         }
                         else if (asset is Package package)
                         {
-                            for (int exportIndex = 0; exportIndex < package.ExportMap.Length; ++exportIndex)
+                            for (var exportIndex = 0; exportIndex < package.ExportMap.Length; ++exportIndex)
                             {
                                 if (package.ExportMap[exportIndex].GetGlobalImportIndex() == index)
                                 {

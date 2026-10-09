@@ -101,7 +101,7 @@ public class CMaterialParams2
             "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side",
             "MG", "ORM", "MRAE", "MRAS", "MRAO", "MRA", "MRAO_Map", "MRA A", "MRS", "LP", "LP_1", "Base_LP", "Base_R*", "MRO_Tex",
             "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "MRO Map", "MROA Map", "MRO",
-            "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map", "AO",
+            "Base_ORM", "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map", "AO",
             "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask", "Packed Tex", "Packed Texture",
             "Cliff Spec Texture", "PhysicalMap", "KizokMap", "Roughness_MAIN", "Main_T_MGA", "Tex_CH", "TexA_CH", "ARMMap", "REM",
             "Primary ARME", "CombineTex(HRA)", "ORN", "TPA_SpecColorTex", "Tex_RME", "CompVT", "MetalRoughOcc_Tex",

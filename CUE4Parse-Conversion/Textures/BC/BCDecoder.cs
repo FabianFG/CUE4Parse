@@ -5,6 +5,73 @@ namespace CUE4Parse_Conversion.Textures.BC;
 
 public static partial class BCDecoder
 {
+    public delegate void LayerDecoder(ReadOnlySpan<byte> input, int sizeX, int sizeY, Span<byte> output);
+
+    public static byte[] DecodeBC(byte[] input, int sizeX, int sizeY, int sizeZ, LayerDecoder layerDecoder, int blockSize)
+    {
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, out byte[] output, blockSize);
+
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
+        {
+            layerDecoder(input.AsSpan(inputOffset, inputLayerSize), sizeX, sizeY, output.AsSpan(outputOffset, outputLayerSize));
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
+        }
+
+        return output;
+    }
+
+    public static void DecodeBC(ReadOnlySpan<byte> input, int sizeX, int sizeY, int sizeZ, Span<byte> output, LayerDecoder layerDecoder, int blockSize)
+    {
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, output, blockSize);
+
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
+        {
+            layerDecoder(input.Slice(inputOffset, inputLayerSize), sizeX, sizeY, output.Slice(outputOffset, outputLayerSize));
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static (int InputLayerSize, int OutputLayerSize) ValidateAndGetLayerSizes(ReadOnlySpan<byte> input, int sizeX, int sizeY, int sizeZ, out byte[] output, int blockSize)
+    {
+        var inputLayerSize = BCLayerSize(sizeX, sizeY, blockSize);
+        var inputSize = inputLayerSize * sizeZ;
+        if (input.Length < inputSize)
+            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {inputSize}");
+
+        var outputLayerSize = sizeX * sizeY * sizeof(uint);
+        var outputSize = outputLayerSize * sizeZ;
+        output = new byte[outputSize];
+
+        return (inputLayerSize, outputLayerSize);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static (int InputLayerSize, int OutputLayerSize) ValidateAndGetLayerSizes(ReadOnlySpan<byte> input, int sizeX, int sizeY, int sizeZ, Span<byte> output, int blockSize)
+    {
+        var inputLayerSize = BCLayerSize(sizeX, sizeY, blockSize);
+        var inputSize = inputLayerSize * sizeZ;
+        if (input.Length < inputSize)
+            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {inputSize}");
+
+        var outputLayerSize = sizeX * sizeY * sizeof(uint);
+        var outputSize = outputLayerSize * sizeZ;
+        if (output.Length < outputSize)
+            throw new ArgumentException($"Output length {output.Length} is smaller than expected size {outputSize}");
+
+        return (inputLayerSize, outputLayerSize);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static int BCLayerSize(int sizeX, int sizeY, int blockSize)
+    {
+        var blocksX = (sizeX + 3) >> 2;
+        var blocksY = (sizeY + 3) >> 2;
+        return blocksX * blocksY * blockSize;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte GetZNormal(byte x, byte y)
     {

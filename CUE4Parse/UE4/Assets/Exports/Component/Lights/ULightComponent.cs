@@ -10,17 +10,22 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.Lights;
 
 public class ULightComponentBase : USceneComponent
 {
-    public float Intensity { get; protected set; }
-    public FColor LightColor { get; private set; }
-    public bool CastShadows { get; private set; }
+    public float Intensity { get; protected set; } = MathF.PI;
+    public FColor LightColor { get; private set; } = new(255, 255, 255, 255);
+    public bool CastShadows { get; private set; } = true;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
-        Intensity = GetOrDefault(nameof(Intensity), GetOrDefault("Brightness", MathF.PI));
-        LightColor = GetOrDefault(nameof(LightColor), new FColor(255, 255, 255, 255));
-        CastShadows = GetOrDefault(nameof(CastShadows), false);
+        Intensity = GetOrDefault(nameof(Intensity), Intensity);
+        LightColor = GetOrDefault(nameof(LightColor), LightColor);
+        CastShadows = GetOrDefault(nameof(CastShadows), CastShadows);
+
+        if (Ar.Ver < EUnrealEngineObjectUE4Version.INVERSE_SQUARED_LIGHTS_DEFAULT)
+        {
+            Intensity = GetOrDefault("Brightness", MathF.PI);
+        }
     }
 
     public FLinearColor GetLightColor()
@@ -278,23 +283,59 @@ public class URectLightComponent : ULocalLightComponent
 
 public class UDirectionalLightComponent : ULightComponent
 {
-    public float LightSourceAngle { get; private set; }
+    public float LightSourceAngle { get; private set; } = 0.5357f;
     public float LightSourceSoftAngle { get; private set; }
+    public bool bAtmosphereSunLight { get; private set; } = true;
+    public int AtmosphereSunLightIndex { get; private set; }
+
+    public UDirectionalLightComponent()
+    {
+        Intensity = 10.0f; // kill PI from ULightComponentBase
+    }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
-        LightSourceAngle = GetOrDefault(nameof(LightSourceAngle), 0.5357f);
-        LightSourceSoftAngle = GetOrDefault(nameof(LightSourceSoftAngle), 0.0f);
+        LightSourceAngle = GetOrDefault(nameof(LightSourceAngle), LightSourceAngle);
+        LightSourceSoftAngle = GetOrDefault(nameof(LightSourceSoftAngle), LightSourceSoftAngle);
+        bAtmosphereSunLight = GetOrDefault(nameof(bAtmosphereSunLight), bAtmosphereSunLight);
+        AtmosphereSunLightIndex = GetOrDefault(nameof(AtmosphereSunLightIndex), AtmosphereSunLightIndex);
+
+        if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.DirLightsAreAtmosphereLightsByDefault)
+        {
+            bAtmosphereSunLight = GetOrDefault("bUsedAsAtmosphereSunLight", false);
+        }
     }
+}
+
+public enum ESkyLightSourceType : byte
+{
+    SLS_CapturedScene,
+    SLS_SpecifiedCubemap,
+    SLS_MAX
 }
 
 public class USkyLightComponent : ULightComponentBase
 {
+    public ESkyLightSourceType SourceType { get; private set; } = ESkyLightSourceType.SLS_CapturedScene;
+    public FPackageIndex? Cubemap { get; private set; }
+    public bool bLowerHemisphereIsBlack { get; private set; } = true;
+    public FLinearColor LowerHemisphereColor { get; private set; } = new(0.0f, 0.0f, 0.0f, 1.0f);
+
+    public USkyLightComponent()
+    {
+        Intensity = 1.0f; // kill PI from ULightComponentBase
+    }
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        SourceType = GetOrDefault(nameof(SourceType), SourceType);
+        Cubemap = GetOrDefault(nameof(Cubemap), Cubemap);
+        bLowerHemisphereIsBlack = GetOrDefault(nameof(bLowerHemisphereIsBlack), bLowerHemisphereIsBlack);
+        LowerHemisphereColor = GetOrDefault(nameof(LowerHemisphereColor), LowerHemisphereColor);
 
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.SKYLIGHT_MOBILE_IRRADIANCE_MAP && !(FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.SkyLightRemoveMobileIrradianceMap))
         {
