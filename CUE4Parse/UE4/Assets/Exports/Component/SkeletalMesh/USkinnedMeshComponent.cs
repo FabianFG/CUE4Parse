@@ -1,9 +1,19 @@
-﻿using CUE4Parse.UE4.Objects.UObject;
+﻿using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 
 public class USkinnedMeshComponent : UMeshComponent
 {
+    public FPackageIndex? LeaderPoseComponent { get; private set; }
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        LeaderPoseComponent = GetOrDefault(nameof(LeaderPoseComponent), GetOrDefault<FPackageIndex?>("MasterPoseComponent"));
+    }
+
     public FPackageIndex GetSkeletalMesh()
     {
         var skeletalMesh = GetSkeletalMesh("SkeletalMesh"); // deprecated in 5.1 so fallback below
