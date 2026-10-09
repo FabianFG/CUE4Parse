@@ -11,10 +11,23 @@ public partial class MeshLodDto<TVertex>
     {
         ArgumentNullException.ThrowIfNull(lod.IndexBuffer?.Buffer, "LOD has no index buffer");
         ArgumentNullException.ThrowIfNull(lod.VertexBuffer, "LOD has no vertex buffer");
-        ArgumentNullException.ThrowIfNull(lod.PositionVertexBuffer, "LOD has no position vertex buffer");
+        if (lod.bisPositionBufferNormal) ArgumentNullException.ThrowIfNull(lod.PositionVertexBuffer, "LOD has no position vertex buffer");
+
+        var positionBuffer = lod.PositionVertexBuffer;
+        if (!lod.bisPositionBufferNormal)
+        {
+            var verticesCount = lod.VertexBuffer.NumVertices;
+            var positions = new FVector[verticesCount];
+            for (var i = 0; i < verticesCount; i++)
+            {
+                positions[i] = lod.VertexBuffer.UV[i].Position;
+            }
+            positionBuffer = new FPositionVertexBuffer(positions);
+        }
+
 
         var extraUvs = new FMeshUVFloat[Math.Max(0, lod.VertexBuffer.NumTexCoords - 1)][];
-        var vertices = new MeshVertex[lod.PositionVertexBuffer.Verts.Length];
+        var vertices = new MeshVertex[positionBuffer!.Verts.Length];
 
         for (var i = 0; i < extraUvs.Length; i++)
         {
@@ -30,7 +43,7 @@ public partial class MeshLodDto<TVertex>
 
         for (var i = 0; i < vertices.Length; i++)
         {
-            var pos = lod.PositionVertexBuffer.Verts[i];
+            var pos = positionBuffer.Verts[i];
             if (spline != null) // TODO normals
             {
                 var distanceAlong = USplineMeshComponent.GetAxisValueRef(ref pos, spline.ForwardAxis);

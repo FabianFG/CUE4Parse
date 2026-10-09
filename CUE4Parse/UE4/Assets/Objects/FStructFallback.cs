@@ -27,7 +27,17 @@ public class FStructFallback : AbstractPropertyHolder, IUStruct
         }
         else
         {
-            UObject.DeserializePropertiesTagged(Properties = [], Ar, true);
+            var structTypeName = structType?.Name;
+            var pushedStructType = !string.IsNullOrEmpty(structTypeName);
+            if (pushedStructType) Ar.StructTypeStack.Push(structTypeName!);
+            try
+            {
+                UObject.DeserializePropertiesTagged(Properties = [], Ar, true);
+            }
+            finally
+            {
+                if (pushedStructType) Ar.StructTypeStack.Pop();
+            }
         }
     }
 

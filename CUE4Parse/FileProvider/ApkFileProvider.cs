@@ -46,9 +46,23 @@ public class ApkFileProvider : DefaultFileProvider
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         using var apkStream = File.OpenRead(apkFile.FullName);
-        using var apk = new ZipArchive(apkStream, ZipArchiveMode.Read);
+        using var apk = TryOpenZip(apkStream, apkFile.Name);
+        if (apk == null) return 0;
 
         return LoadArchive(apk, provider, osFiles);
+    }
+
+    private static ZipArchive? TryOpenZip(Stream stream, string name)
+    {
+        try
+        {
+            return new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+        }
+        catch (Exception e) when (e is InvalidDataException or IOException or NotSupportedException)
+        {
+            Log.Warning("'{File}' isn't a valid zip archive, Error: {Message}", name, e.Message);
+            return null;
+        }
     }
 
     private static int LoadArchive(ZipArchive apk, DefaultFileProvider provider, Dictionary<string, GameFile> osFiles)
@@ -57,14 +71,18 @@ public class ApkFileProvider : DefaultFileProvider
         foreach (var nestedApkEntry in apk.Entries.Where(x => x.FullName.EndsWith(".apk", StringComparison.OrdinalIgnoreCase)))
         {
             using var nestedApkStream = CopyEntry(nestedApkEntry);
-            using var nestedApk = new ZipArchive(nestedApkStream, ZipArchiveMode.Read);
+            using var nestedApk = TryOpenZip(nestedApkStream, nestedApkEntry.FullName);
+            if (nestedApk == null) continue;
+
             packageCount += LoadArchive(nestedApk, provider, osFiles);
         }
 
         foreach (var obbEntry in apk.Entries.Where(x => x.FullName.EndsWith("main.obb.png", StringComparison.OrdinalIgnoreCase) || x.FullName.EndsWith(".obb", StringComparison.OrdinalIgnoreCase)))
         {
             using var obbStream = CopyEntry(obbEntry);
-            using var obb = new ZipArchive(obbStream, ZipArchiveMode.Read);
+            using var obb = TryOpenZip(obbStream, obbEntry.FullName);
+            if (obb == null) continue;
+
             packageCount += LoadEntries(obb, provider, osFiles);
         }
 

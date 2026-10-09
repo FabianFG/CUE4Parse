@@ -166,7 +166,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
     internal string ResolveOutputPath(string savePath, string ext, string? nameSuffix = null)
     {
-        var fullPath = Path.Combine(BaseDirectory.FullName, savePath) + nameSuffix + '.' + ext.ToLower();
+        var fullPath = Path.Combine(BaseDirectory.FullName, savePath) + nameSuffix + (string.IsNullOrEmpty(ext) ? "" : "." + ext.ToLower());
         var dir = Path.GetDirectoryName(fullPath) ?? throw new InvalidOperationException($"Cannot determine directory for path: {fullPath}");
         Directory.CreateDirectory(dir);
         return fullPath.Replace('/', '\\');
