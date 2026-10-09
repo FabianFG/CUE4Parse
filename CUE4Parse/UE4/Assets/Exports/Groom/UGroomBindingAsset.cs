@@ -6,14 +6,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Groom;
 
 public class UGroomBindingAsset : UObject
 {
-    /* UGroomAsset::EGroomClassStripFlags */
-    public const uint CDSF_ImportedStrands = 1;
-    public const uint CDSF_MinLodData = 2;
-    public const uint CDSF_StrandsStripped = 4;
-    public const uint CDSF_CardsStripped = 8;
-    public const uint CDSF_MeshesStripped = 16;
-
-    public uint StripFlags;
     public FHairGroupBulkData[]? HairGroupBulkDatas;
     public FHairGroupData[]? HairGroupDatas;
 
@@ -29,7 +21,7 @@ public class UGroomBindingAsset : UObject
         }
         else
         {
-            StripFlags = Ar.Read<uint>();
+            var StripFlags = Ar.Read<EGroomClassStripFlags>();
             HairGroupBulkDatas = Ar.ReadArray(() => new FHairGroupBulkData(Ar, StripFlags));
         }
     }
@@ -45,10 +37,18 @@ public class UGroomBindingAsset : UObject
             return;
         }
 
-        writer.WritePropertyName(nameof(StripFlags));
-        writer.WriteValue(StripFlags);
-
         writer.WritePropertyName(nameof(HairGroupBulkDatas));
         serializer.Serialize(writer, HairGroupBulkDatas);
     }
+}
+
+/* UGroomAsset::EGroomClassStripFlags */
+[Flags]
+public enum EGroomClassStripFlags : uint
+{
+    CDSF_ImportedStrands = 1,
+    CDSF_MinLodData = 2,
+    CDSF_StrandsStripped = 4,
+    CDSF_CardsStripped = 8,
+    CDSF_MeshesStripped = 16
 }

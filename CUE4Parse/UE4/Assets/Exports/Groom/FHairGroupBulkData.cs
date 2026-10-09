@@ -9,10 +9,10 @@ public class FHairGroupBulkData
     public FHairStrandsRootBulkData? RenRootBulkData;
     public FHairStrandsRootBulkData[]? CardsRootBulkData;
 
-    public FHairGroupBulkData(FAssetArchive Ar, uint flags)
+    public FHairGroupBulkData(FAssetArchive Ar, EGroomClassStripFlags flags)
     {
         SimRootBulkData = new FHairStrandsRootBulkData(Ar);
-        if ((flags & UGroomBindingAsset.CDSF_StrandsStripped) == 0)
+        if (!flags.HasFlag(EGroomClassStripFlags.CDSF_ImportedStrands))
         {
             RenRootBulkData = new FHairStrandsRootBulkData(Ar);
         }
