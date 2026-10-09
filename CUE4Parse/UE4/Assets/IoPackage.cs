@@ -123,7 +123,7 @@ public sealed class IoPackage : AbstractUePackage
             }
 
             // Imported public export hashes
-            if (uassetAr.Game is not GAME_UE5_EA_Legacy)
+            if (uassetAr.Game is not (GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens))
             {
                 uassetAr.Position = summary.ImportedPublicExportHashesOffset;
                 ImportedPublicExportHashes = uassetAr.ReadArray<ulong>((summary.ImportMapOffset - summary.ImportedPublicExportHashesOffset) / sizeof(ulong));
@@ -487,7 +487,7 @@ public sealed class IoPackage : AbstractUePackage
                     }
                 }
             }
-            else if (_game is GAME_UE5_EA_Legacy)
+            else if (_game is GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens)
             {
                 // Pre-finalization Zen: the low 32 bits of a package import reference are the target export's 32-bit export hash.
                 var packageImportRef = index.AsPackageImportRef;

@@ -73,7 +73,7 @@ public class FTexturePlatformData
                 throw new NotImplementedException("FTexturePlatformData deserialization using derived data is not implemented.");
             Ar.Position += PlaceholderDerivedDataSize - 1;
         }
-        else if (Ar is { Game: >= GAME_UE5_0, IsFilterEditorOnly: true })
+        else if (Ar is { Game: >= GAME_UE5_0, IsFilterEditorOnly: true } && Ar.Game is not (GAME_UE5_EA_Legacy or GAME_UE5_EA or GAME_TheMatrixAwakens))
         {
             Ar.Position += PlaceholderDerivedDataSize;
         }

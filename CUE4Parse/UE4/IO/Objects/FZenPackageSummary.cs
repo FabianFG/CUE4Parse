@@ -58,7 +58,7 @@ public readonly struct FZenPackageSummary
 
     public FZenPackageSummary(FArchive Ar)
     {
-        if (Ar.Game is GAME_UE5_EA_Legacy)
+        if (Ar.Game is GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens)
         {
             // Pre-CL-17014898 / cf116088 Zen summary: no versioning info and no imported public export hashes.
             HeaderSize = Ar.Read<uint>();

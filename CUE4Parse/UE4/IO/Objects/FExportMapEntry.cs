@@ -31,7 +31,7 @@ public readonly struct FExportMapEntry
         SuperIndex = Ar.Read<FPackageObjectIndex>();
         TemplateIndex = Ar.Read<FPackageObjectIndex>();
         GlobalImportIndex = Ar.Game >= GAME_UE5_0 ? FPackageObjectIndex.InvalidObjectIndex : Ar.Read<FPackageObjectIndex>();
-        PublicExportHash = Ar.Game is GAME_UE5_EA_Legacy ? Ar.Read<uint>() : Ar.Game >= GAME_UE5_0 ? Ar.Read<ulong>() : 0;
+        PublicExportHash = Ar.Game is GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens ? Ar.Read<uint>() : Ar.Game >= GAME_UE5_0 ? Ar.Read<ulong>() : 0;
         ObjectFlags = Ar.Read<EObjectFlags>();
         FilterFlags = Ar.Read<byte>();
         Ar.Position = start + Size;

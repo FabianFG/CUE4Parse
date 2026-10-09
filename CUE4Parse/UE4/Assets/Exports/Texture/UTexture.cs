@@ -118,6 +118,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
             var skipOffset = Ar.Game switch
             {
                 GAME_WutheringWaves => Ar.AbsolutePosition + Ar.Read<long>(),
+                GAME_UE5_EA_Legacy or GAME_UE5_EA or GAME_TheMatrixAwakens => Ar.Read<long>(),
                 >= GAME_UE5_0 => Ar.AbsolutePosition + Ar.Read<long>(),
                 >= GAME_UE4_20 => Ar.Read<long>(),
                 _ => Ar.Read<int>()

@@ -77,7 +77,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
         public FIoContainerHeader(FArchive Ar)
         {
-            Version = Ar.Game >= GAME_UE5_0 ? Ar.Game is GAME_UE5_EA_Legacy ? EIoContainerHeaderVersion.EarlyAccess : EIoContainerHeaderVersion.Initial : EIoContainerHeaderVersion.BeforeVersionWasAdded;
+            Version = Ar.Game >= GAME_UE5_0 ? Ar.Game is GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens ? EIoContainerHeaderVersion.EarlyAccess : EIoContainerHeaderVersion.Initial : EIoContainerHeaderVersion.BeforeVersionWasAdded;
             if (Version == EIoContainerHeaderVersion.Initial)
             {
                 var signature = Ar.Read<uint>();
