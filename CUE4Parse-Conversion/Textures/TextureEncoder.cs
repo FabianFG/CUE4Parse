@@ -5,13 +5,18 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using OffiUtils;
 using SkiaSharp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Tga;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureEncoder
 {
-    public static byte[] Encode(this CTexture bitmap, ExportOptions options, out string ext) => bitmap.Encode(options.TextureFormat, options.ExportHdrTexturesAsHdr, out ext, options.TextureQuality);
-    public static byte[] Encode(this CTexture bitmap, ETextureFormat format, bool saveHdrAsHdr, out string ext, int quality = 100)
+    public static byte[] Encode(this CTexture bitmap, ExportOptions options, out string ext)
+        => bitmap.Encode(options.TextureFormat, options.ExportHdrTexturesAsHdr, out ext, options.TextureQuality, options.PngCompressionLevel, options.TgaRleCompression);
+
+    public static byte[] Encode(this CTexture bitmap, ETextureFormat format, bool saveHdrAsHdr, out string ext, int quality = 100, int pngCompressionLevel = 3, bool tgaRleCompression = true)
     {
         if (saveHdrAsHdr && PixelFormatUtils.IsHDR(bitmap.PixelFormat))
         {
@@ -25,7 +30,8 @@ public static class TextureEncoder
             {
                 ext = "png";
                 using var bmp = bitmap.ToSkBitmap();
-                using var data = bmp.Encode(SKEncodedImageFormat.Png, quality);
+                using var pixels = bmp.PeekPixels();
+                using var data = pixels.Encode(new SKPngEncoderOptions(SKPngEncoderFilterFlags.AllFilters, Math.Clamp(pngCompressionLevel, 0, 9)));
                 return data.ToArray();
             }
             case ETextureFormat.Jpeg:
@@ -44,51 +50,32 @@ public static class TextureEncoder
             }
             case ETextureFormat.Tga:
                 ext = "tga";
-                return EncodeTga(bitmap);
+                return EncodeTga(bitmap, tgaRleCompression);
             default: throw new NotImplementedException("Unsupported texture format: " + format);
             //TODO: ETextureFormat.Dds
         }
     }
 
-    private static byte[] EncodeTga(CTexture bitmap)
+    private static byte[] EncodeTga(CTexture bitmap, bool compress)
     {
         using var skBitmap = bitmap.ToSkBitmap();
-        int width = skBitmap.Width;
-        int height = skBitmap.Height;
-        int pixelDataSize = width * height * 4;
-        int totalSize = 18 + pixelDataSize;
-
-        byte[] output = new byte[totalSize];
-
-        //TGA header
-        output[2] = 2; // Uncompressed
-        output[12] = (byte)(width & 0xFF);
-        output[13] = (byte)(width >> 8);
-        output[14] = (byte)(height & 0xFF);
-        output[15] = (byte)(height >> 8);
-        output[16] = 32; // 32-bit
-        output[17] = 8;  // 8 bits of alpha
-
-        unsafe
+        using var pixels = skBitmap.PeekPixels();
+        using Image image = skBitmap.ColorType switch
         {
-            fixed (byte* ptr = output)
-            {
-                byte* pixelPtr = ptr + 18; //Start writing after header
+            SKColorType.Bgra8888 => Image.LoadPixelData<Bgra32>(pixels.GetPixelSpan(), skBitmap.Width, skBitmap.Height),
+            SKColorType.Rgba8888 => Image.LoadPixelData<Rgba32>(pixels.GetPixelSpan(), skBitmap.Width, skBitmap.Height),
+            SKColorType.Gray8 => Image.LoadPixelData<L8>(pixels.GetPixelSpan(), skBitmap.Width, skBitmap.Height),
+            _ => throw new NotSupportedException("Unsupported TGA color type: " + skBitmap.ColorType)
+        };
 
-                for (int y = height - 1; y >= 0; y--)//TGA stores pixels bottom-up
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        var color = skBitmap.GetPixel(x, y);
-                        *pixelPtr++ = color.Blue;
-                        *pixelPtr++ = color.Green;
-                        *pixelPtr++ = color.Red;
-                        *pixelPtr++ = color.Alpha;
-                    }
-                }
-            }
-        }
-        return output;
+        using var stream = new MemoryStream();
+        image.Save(stream, new TgaEncoder
+        {
+            BitsPerPixel = TgaBitsPerPixel.Pixel32,
+            Compression = compress ? TgaCompression.RunLength : TgaCompression.None
+        });
+
+        return stream.ToArray();
     }
 
 #region Hdr

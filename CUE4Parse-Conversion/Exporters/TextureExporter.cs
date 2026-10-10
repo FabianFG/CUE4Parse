@@ -47,8 +47,8 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
             CTexture?[]? decoded = texture switch
             {
                 UTexture2DArray array => array.DecodeTextureArray(index, platform),
-                UTextureCube => texture.DecodeMip(index, platform)?.ToPanorama() is { } panorama ? [panorama] : null,
-                _ => texture.DecodeMip(index, platform) is { } single ? [single] : null
+                UTextureCube => DecodeMip(index)?.ToPanorama() is { } panorama ? [panorama] : null,
+                _ => DecodeMip(index) is { } single ? [single] : null
             };
 
             if (decoded is not { Length: > 0 })
@@ -66,11 +66,22 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
             var layered = texture is UTexture2DArray;
             for (var i = 0; i < decoded.Length; i++)
             {
-                if (decoded[i] is not { } slice) continue;
+                if (decoded[i] is not { } slice)
+                    continue;
 
-                var data = slice.Encode(Session.Options, out var ext);
-                files.Add(new ExportFile(ext, data, layered ? $"{mipSuffix}_LAYER{i}" : mipSuffix));
+                files.Add(Encode(slice) with { NameSuffix = layered ? $"{mipSuffix}_LAYER{i}" : mipSuffix });
             }
         }
+    }
+
+    private CTexture? DecodeMip(int index) => Session.TextureCache is { } cache ? cache.Decode(texture, index) : texture.DecodeMip(index, Session.Options.TexturePlatform);
+
+    private ExportFile Encode(CTexture decoded)
+    {
+        if (Session.TextureCache is { } cache)
+            return cache.Encode(decoded, Session.Options);
+
+        var data = decoded.Encode(Session.Options, out var extension);
+        return new ExportFile(extension, data);
     }
 }

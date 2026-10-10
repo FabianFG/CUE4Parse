@@ -17,7 +17,9 @@ public class ExportOptions(
     bool exportMaterials = true,
     bool exportMorphTargets = true,
     ESocketFormat socketFormat = ESocketFormat.Bone,
-    EFileCompressionFormat compressionFormat = EFileCompressionFormat.None)
+    EFileCompressionFormat compressionFormat = EFileCompressionFormat.None,
+    int pngCompressionLevel = 3,
+    bool tgaRleCompression = true)
 {
     public readonly EMeshFormat MeshFormat = meshFormat;
     public readonly ENaniteMeshFormat NaniteMeshFormat = naniteMeshFormat;
@@ -26,6 +28,8 @@ public class ExportOptions(
     public readonly ETexturePlatform TexturePlatform = texturePlatform;
     public readonly ETextureFormat TextureFormat = meshFormat == EMeshFormat.USD ? ETextureFormat.Png : textureFormat; // USD pipeline requires PNG textures
     public readonly int TextureQuality = Math.Clamp(textureQuality, 1, 100);
+    public readonly int PngCompressionLevel = Math.Clamp(pngCompressionLevel, 0, 9);
+    public readonly bool TgaRleCompression = tgaRleCompression;
     public readonly bool ExportHdrTexturesAsHdr = exportHdrTexturesAsHdr;
     public readonly bool ExportAllTextureMips = exportAllTextureMips;
 

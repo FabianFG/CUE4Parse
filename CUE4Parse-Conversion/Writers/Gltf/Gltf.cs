@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using System.Text.Json.Nodes;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
+using CUE4Parse_Conversion.Textures;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Writers;
 using CUE4Parse.Utils;
 using SharpGLTF.Geometry;
 using SharpGLTF.Geometry.VertexTypes;
-using SharpGLTF.IO;
 using SharpGLTF.Materials;
 using SharpGLTF.Scenes;
 using SharpGLTF.Schema2;
@@ -26,72 +23,79 @@ public class Gltf
 
     public readonly ModelRoot Model;
 
-    public Gltf(string name, MeshLodDto<MeshVertex> lod)
+    public Gltf(string name, MeshLodDto<MeshVertex> lod, ExportOptions? options = null) : this(name, lod, options ?? new ExportOptions(), null) { }
+
+    internal Gltf(string name, MeshLodDto<MeshVertex> lod, ExportOptions options, GltfMaterialExporter? materials)
     {
+        var rules = new MeshExportRules(lod.Owner.Game, options.ExportMaterials);
         var sceneBuilder = new SceneBuilder();
         var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(name);
 
-        ExportMeshSections(meshBuilder, lod);
-        sceneBuilder.AddRigidMesh(meshBuilder, Matrix4x4.CreateTranslation(0, 0, 0));
+        ExportMeshSections(meshBuilder, lod, rules, materials ?? CreateMaterials(options));
+        sceneBuilder.AddRigidMesh(meshBuilder, Matrix4x4.Identity);
 
         Model = sceneBuilder.ToGltf2();
     }
 
-    public Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, bool exportMorphTargets)
+    public Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, ExportOptions? options = null)
+        : this(name, lod, options ?? new ExportOptions(), null) { }
+
+    internal Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, ExportOptions options, GltfMaterialExporter? materials)
     {
         if (lod.Owner is not SkeletalMeshDto mesh)
             throw new ArgumentException("LOD owner must be a SkeletalMeshDto for skeletal meshes.", nameof(lod));
 
+        var rules = new MeshExportRules(lod.Owner.Game, options.ExportMaterials);
         var sceneBuilder = new SceneBuilder();
         var armatureRoot = new NodeBuilder(string.IsNullOrEmpty(lod._suffix) ? $"{name}.ao" : $"{name}.ao{lod._suffix}");
         var armature = CreateGltfSkeleton(mesh.Bones, armatureRoot);
 
         var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(name);
-        ExportMeshSections(meshBuilder, lod);
-        sceneBuilder.AddSkinnedMesh(meshBuilder, Matrix4x4.CreateTranslation(0, 0, 0), armature);
+        List<(IPrimitiveBuilder Primitive, int Index)>?[]? vertexMap = null;
+        if (options.ExportMorphTargets && mesh.MorphTargets is { Length: > 0 })
+            vertexMap = new List<(IPrimitiveBuilder Primitive, int Index)>?[lod.Vertices.Length];
 
-        if (exportMorphTargets && mesh.MorphTargets is { Length: > 0 } morphTargets)
+        ExportMeshSections(meshBuilder, lod, rules, materials ?? CreateMaterials(options), vertexMap);
+        sceneBuilder.AddSkinnedMesh(meshBuilder, Matrix4x4.Identity, armature);
+
+        if (vertexMap != null && mesh.MorphTargets is { Length: > 0 } morphTargets)
         {
-            var targetNames = "{\"targetNames\": [";
-            for (var j = 0; j < morphTargets.Length; j++)
+            var targetNames = new JsonArray();
+            foreach (var reference in morphTargets)
             {
-                var morphTarget = morphTargets[j].Load<UMorphTarget>();
-                if (morphTarget?.MorphLODModels == null || morphTarget.MorphLODModels.Length < lod.SourceLodIndex || morphTarget.MorphLODModels[lod.SourceLodIndex].Vertices.Length == 0)
+                var morphTarget = reference.Load<UMorphTarget>();
+                if (morphTarget?.MorphLODModels is not { } lodModels || lod.SourceLodIndex >= lodModels.Length)
                     continue;
 
-                var morphBuilder = meshBuilder.UseMorphTarget(j);
-                var morphModel = morphTarget.MorphLODModels[lod.SourceLodIndex];
+                var morphModel = lodModels[lod.SourceLodIndex];
+                if (morphModel.Vertices.Length == 0)
+                    continue;
 
-                targetNames += $"\"{morphTarget.Name}\"";
-                targetNames += j != morphTargets.Length - 1 ? "," : "";
+                var targetIndex = targetNames.Count;
+                targetNames.Add(morphTarget.Name);
 
-                var verts = morphBuilder.Vertices.ToArray();
                 foreach (var delta in morphModel.Vertices)
                 {
-                    var vert = lod.Vertices[delta.SourceIdx];
-                    var srcVert = new VertexPositionNormalTangent(SwapYZ(vert.Position * UnitScale),SwapYZAndNormalize((FVector)vert.Normal) , SwapYZAndNormalize((Vector4)vert.Tangent));
-                    var index = FindVert(srcVert, verts);
-                    if (index == -1)  continue;
+                    if (delta.SourceIdx >= vertexMap.Length || vertexMap[delta.SourceIdx] is not { } vertices)
+                        continue;
 
-                    morphBuilder.SetVertexDelta(morphBuilder.Vertices.ElementAt(index), new VertexGeometryDelta(SwapYZ(delta.PositionDelta * UnitScale), Vector3.Zero, SwapYZAndNormalize(delta.TangentZDelta)));
+                    var geometryDelta = new VertexGeometryDelta(SwapYZ(delta.PositionDelta * UnitScale), SwapYZ(delta.TangentZDelta), Vector3.Zero);
+                    foreach (var (primitive, index) in vertices)
+                    {
+                        primitive.SetVertexDelta(targetIndex, index, geometryDelta, default);
+                    }
                 }
             }
 
-            targetNames += "]}";
-            meshBuilder.Extras = JsonNode.Parse(targetNames);
+            if (targetNames.Count > 0)
+            {
+                meshBuilder.UseMorphTarget(targetNames.Count - 1);
+            }
+
+            meshBuilder.Extras = new JsonObject { ["targetNames"] = targetNames };
         }
 
         Model = sceneBuilder.ToGltf2();
-    }
-
-    private static int FindVert(VertexPositionNormalTangent a, VertexPositionNormalTangent[] b)
-    {
-        for (int i = 0; i < b.Length; i++)
-        {
-            if (b[i].GetPosition() == a.GetPosition()) // not a good idea but i don't see any other way
-                return i;
-        }
-        return -1;
     }
 
     public void Save(FArchiveWriter Ar)
@@ -139,7 +143,9 @@ public class Gltf
     }
 
 
-    private void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLodDto<TVertex> lod) where TVertex : struct, IMeshVertex
+    private static GltfMaterialExporter CreateMaterials(ExportOptions options) => new(options, new TextureExportCache(options.TexturePlatform));
+
+    private static void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLodDto<TVertex> lod, MeshExportRules rules, GltfMaterialExporter materials, List<(IPrimitiveBuilder Primitive, int Index)>?[]? vertexMap = null) where TVertex : struct, IMeshVertex
     {
         FColor[]? colors = null;
         if (lod.VertexColors is { Length: > 0 })
@@ -155,8 +161,12 @@ public class Gltf
         for (var i = 0; i < lod.Sections.Length; i++)
         {
             var section = lod.Sections[i];
-            var mat = new MaterialBuilder().WithBaseColor(Vector4.One);
-            mat.Name = lod.Owner.GetMaterial(section)?.SlotName ?? $"MaterialSlot_{i}";
+            var slot = lod.Owner.GetMaterial(section);
+
+            if (!rules.ShouldExportSection(slot))
+                continue;
+
+            var mat = materials.Build(slot, $"MaterialSlot_{i}");
 
             var prim = builder.UsePrimitive(mat);
             for (var j = 0; j < section.NumFaces; j++)
@@ -182,9 +192,15 @@ public class Gltf
                     uvList3[k + 1] = (Vector2)lod.ExtraUvs[k][idx2];
                 }
 
-                var c1 = new VertexColorXTextureX(uvList1, colors?[idx0]);
-                var c2 = new VertexColorXTextureX(uvList2, colors?[idx1]);
-                var c3 = new VertexColorXTextureX(uvList3, colors?[idx2]);
+                var c1 = new VertexColorXTextureX(uvList1, colors?[idx0], rules.PreserveVertexColorMasks);
+                var c2 = new VertexColorXTextureX(uvList2, colors?[idx1], rules.PreserveVertexColorMasks);
+                var c3 = new VertexColorXTextureX(uvList3, colors?[idx2], rules.PreserveVertexColorMasks);
+                if (vertexMap != null)
+                {
+                    c1.SourceIndex = idx0;
+                    c2.SourceIndex = idx1;
+                    c3.SourceIndex = idx2;
+                }
 
                 IVertexBuilder a, b, c;
                 if (isSkinned && vert1 is SkinnedMeshVertex j1 && vert2 is SkinnedMeshVertex j2 && vert3 is SkinnedMeshVertex j3)
@@ -201,7 +217,23 @@ public class Gltf
                     c = new VertexBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(v3, c3);
                 }
 
-                prim.AddTriangle(a, b, c);
+                var (aIndex, bIndex, cIndex) = prim.AddTriangle(a, b, c);
+                MapVertex(idx0, prim, aIndex);
+                MapVertex(idx1, prim, bIndex);
+                MapVertex(idx2, prim, cIndex);
+            }
+        }
+
+        void MapVertex(uint sourceIndex, IPrimitiveBuilder primitive, int index)
+        {
+            if (vertexMap == null || index < 0)
+                return;
+
+            var vertices = vertexMap[sourceIndex] ??= [];
+            var destination = (primitive, index);
+            if (!vertices.Contains(destination))
+            {
+                vertices.Add(destination);
             }
         }
     }
@@ -227,9 +259,9 @@ public class Gltf
 
     private static (VERTEX, VERTEX, VERTEX) PrepareTris(IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3)
     {
-        var v1 = new VertexPositionNormalTangent(SwapYZ(vert1.Position * UnitScale),SwapYZAndNormalize((FVector)vert1.Normal) , SwapYZAndNormalize((Vector4)vert1.Tangent));
-        var v2 = new VertexPositionNormalTangent(SwapYZ(vert2.Position * UnitScale), SwapYZAndNormalize((FVector)vert2.Normal), SwapYZAndNormalize((Vector4)vert2.Tangent));
-        var v3 = new VertexPositionNormalTangent(SwapYZ(vert3.Position * UnitScale), SwapYZAndNormalize((FVector)vert3.Normal), SwapYZAndNormalize((Vector4)vert3.Tangent));
+        var v1 = new VERTEX(SwapYZ(vert1.Position * UnitScale),SwapYZAndNormalize((FVector)vert1.Normal) , SwapYZAndNormalize((Vector4)vert1.Tangent));
+        var v2 = new VERTEX(SwapYZ(vert2.Position * UnitScale), SwapYZAndNormalize((FVector)vert2.Normal), SwapYZAndNormalize((Vector4)vert2.Tangent));
+        var v3 = new VERTEX(SwapYZ(vert3.Position * UnitScale), SwapYZAndNormalize((FVector)vert3.Normal), SwapYZAndNormalize((Vector4)vert3.Tangent));
 
         return (v1, v2, v3);
     }

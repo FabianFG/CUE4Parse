@@ -1,18 +1,24 @@
-﻿using System.Numerics;
+using System.Numerics;
 using SharpGLTF.Geometry.VertexTypes;
 using SharpGLTF.Memory;
 using SharpGLTF.Schema2;
 
 namespace CUE4Parse_Conversion.Writers.Gltf;
 
-public struct VertexColorXTextureX : IVertexMaterial, IEquatable<VertexColorXTextureX>
+public struct VertexColorXTextureX : IVertexMaterial, IVertexCustom, IEquatable<VertexColorXTextureX>
 {
-    public int MaxColors => 1; // Do we need more?
-    public int MaxTextCoords => Constants.MAX_MESH_UV_SETS;
+    // Preserves vertex color masks without affecting the material's color or opacity
+    // Custom attributes must start with an underscore!!!
+    private const string ShaderMaskAttribute = "_UE_COLOR_0";
+    private readonly bool _shaderMask;
+
+    internal uint? SourceIndex { readonly get; set; }
+
+    public readonly int MaxColors => _shaderMask ? 0 : 1;
+    public readonly int MaxTextCoords => Constants.MAX_MESH_UV_SETS;
 
     public Vector4 Color;
 
-    // public List<Vector2> TexCoords;
     public Vector2 TexCoord0;
     public Vector2 TexCoord1;
     public Vector2 TexCoord2;
@@ -22,9 +28,10 @@ public struct VertexColorXTextureX : IVertexMaterial, IEquatable<VertexColorXTex
     public Vector2 TexCoord6;
     public Vector2 TexCoord7;
 
-    public VertexColorXTextureX(Vector2[] texCoords, Vector4? color = null)
+    public VertexColorXTextureX(Vector2[] texCoords, Vector4? color = null, bool shaderMask = false)
     {
-        Color = color ?? Vector4.Zero;
+        _shaderMask = shaderMask;
+        Color = color ?? Vector4.One;
         TexCoord0 = texCoords.Length > 0 ? texCoords[0] : Vector2.Zero;
         TexCoord1 = texCoords.Length > 1 ? texCoords[1] : Vector2.Zero;
         TexCoord2 = texCoords.Length > 2 ? texCoords[2] : Vector2.Zero;
@@ -64,60 +71,69 @@ public struct VertexColorXTextureX : IVertexMaterial, IEquatable<VertexColorXTex
         TexCoord3 += delta.GetTexCoord(3);
     }
 
-    public VertexMaterialDelta Subtract(IVertexMaterial baseValue)
+    public readonly VertexMaterialDelta Subtract(IVertexMaterial baseValue)
     {
         return new VertexMaterialDelta(this).Subtract(new VertexMaterialDelta(baseValue));
     }
 
-    public IEnumerable<KeyValuePair<string, AttributeFormat>> GetEncodingAttributes()
+    public readonly IEnumerable<KeyValuePair<string, AttributeFormat>> GetEncodingAttributes()
     {
-        yield return new KeyValuePair<string, AttributeFormat>("COLOR_0", new AttributeFormat(DimensionType.VEC4, EncodingType.UNSIGNED_BYTE, true));
-        yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_0", new AttributeFormat(DimensionType.VEC2));
-        yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_1", new AttributeFormat(DimensionType.VEC2));
-        yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_2", new AttributeFormat(DimensionType.VEC2));
-        yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_3", new AttributeFormat(DimensionType.VEC2));
-        yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_4", new AttributeFormat(DimensionType.VEC2));
-        yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_5", new AttributeFormat(DimensionType.VEC2));
-        yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_6", new AttributeFormat(DimensionType.VEC2));
-        yield return new KeyValuePair<string, AttributeFormat>("TEXCOORD_7", new AttributeFormat(DimensionType.VEC2));
+        // glTF COLOR_0 multiplies base color and opacity, shader masks use a custom attribute
+        var colorAttribute = _shaderMask ? ShaderMaskAttribute : "COLOR_0";
+        yield return new(colorAttribute, new AttributeFormat(DimensionType.VEC4, EncodingType.UNSIGNED_BYTE, true));
+        for (var i = 0; i < MaxTextCoords; i++)
+            yield return new($"TEXCOORD_{i}", new AttributeFormat(DimensionType.VEC2));
     }
 
-    public Vector2 GetTexCoord(int index)
+    readonly IEnumerable<string> IVertexCustom.CustomAttributes
     {
-        switch (index)
+        get { if (_shaderMask) yield return ShaderMaskAttribute; }
+    }
+
+    readonly bool IVertexCustom.TryGetCustomAttribute(string attributeName, out object value)
+    {
+        value = null!;
+        if (!_shaderMask || attributeName != ShaderMaskAttribute)
+            return false;
+
+        value = Color;
+        return true;
+    }
+
+    void IVertexCustom.SetCustomAttribute(string attributeName, object value)
+    {
+        if (_shaderMask && attributeName == ShaderMaskAttribute && value is Vector4 color) Color = color;
+    }
+
+    readonly void IVertexCustom.Validate()
+    {
+        if (Color != Vector4.Clamp(Color, Vector4.Zero, Vector4.One))
+            throw new ArgumentOutOfRangeException(nameof(Color));
+    }
+
+    public readonly Vector2 GetTexCoord(int index)
+    {
+        return index switch
         {
-            case 0: return TexCoord0;
-            case 1: return TexCoord1;
-            case 2: return TexCoord2;
-            case 3: return TexCoord3;
-            case 4: return TexCoord4;
-            case 5: return TexCoord5;
-            case 6: return TexCoord6;
-            case 7: return TexCoord7;
-            default: throw new ArgumentOutOfRangeException(nameof(index));
-        }
+            0 => TexCoord0,
+            1 => TexCoord1,
+            2 => TexCoord2,
+            3 => TexCoord3,
+            4 => TexCoord4,
+            5 => TexCoord5,
+            6 => TexCoord6,
+            7 => TexCoord7,
+            _ => throw new ArgumentOutOfRangeException(nameof(index)),
+        };
     }
 
-    public Vector4 GetColor(int index)
-    {
-        if (index != 0)
-            throw new ArgumentOutOfRangeException(nameof(index));
-        return Color;
-    }
+    public readonly Vector4 GetColor(int index)
+        => index != 0 ? throw new ArgumentOutOfRangeException(nameof(index)) : Color;
 
-    private static void Resize<T>(List<T> list, int size, T val)
-    {
-        if (size > list.Count)
-            while (size - list.Count > 0)
-                list.Add(val);
-        else if (size < list.Count)
-            while (list.Count - size > 0)
-                list.RemoveAt(list.Count-1);
-    }
 
-    public bool Equals(VertexColorXTextureX other)
+    public readonly bool Equals(VertexColorXTextureX other)
     {
-        return other.Color == Color &&
+        return other.SourceIndex == SourceIndex && other._shaderMask == _shaderMask && other.Color == Color &&
             other.TexCoord0 == TexCoord0 &&
             other.TexCoord1 == TexCoord1 &&
             other.TexCoord2 == TexCoord2 &&
@@ -126,5 +142,25 @@ public struct VertexColorXTextureX : IVertexMaterial, IEquatable<VertexColorXTex
             other.TexCoord5 == TexCoord5 &&
             other.TexCoord6 == TexCoord6 &&
             other.TexCoord7 == TexCoord7;
+    }
+
+    public override readonly bool Equals(object? obj)
+    {
+        return obj is VertexColorXTextureX x && Equals(x);
+    }
+
+    public override readonly int GetHashCode()
+    {
+        throw new NotImplementedException();
+    }
+
+    public static bool operator ==(VertexColorXTextureX left, VertexColorXTextureX right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(VertexColorXTextureX left, VertexColorXTextureX right)
+    {
+        return !(left == right);
     }
 }

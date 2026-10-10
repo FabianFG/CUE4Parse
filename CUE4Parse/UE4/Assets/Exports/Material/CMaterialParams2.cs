@@ -20,7 +20,7 @@ public class CMaterialParams2
     public const string FallbackSpecularMasks = "PM_SpecularMasks";
     public const string FallbackEmissive = "PM_Emissive";
 
-    public const string RegexDiffuse = ".*(?:Diff|_Tex|_?Albedo|_?Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM|_DS|_DA)$";
+    public const string RegexDiffuse = ".*(?:Diff|_?Albedo|_?Base_?Colou?r).*|(?:^|[_ ])Colou?r(?:[_ ]|$)|(?:_Tex|_D|_DIF|_DM|_C|_CM|_DS|_DA)$";
     public const string RegexNormals = "^NO_|.*Norm.*|(?:_N|_NM|_NRM)$";
     public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_|MR|(?<!no)RM).*|(?:_S|_LP|_PAK)$";
     public const string RegexEmissive = ".*Emiss.*|(?:_E|_EM)$";
@@ -122,7 +122,7 @@ public class CMaterialParams2
     public static readonly string[][] Emissive =
     [
         [
-            "Emissive", "EmissiveTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
+            "Emissive", "EmissiveTexture", "EmmisiveColorTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
             "EmmisiveColor_A", "TextureEmissive", "TexEm", "Main_T_Emissive", "VT Emissive"
         ],
         ["L1_Emissive", "EmmisiveColor_B"],
@@ -326,15 +326,15 @@ public class CMaterialParams2
     public bool VerifyTexture(string name, ILoadableObject texture, bool appendToDictionary = true, EMaterialSamplerType samplerType = EMaterialSamplerType.SAMPLERTYPE_Color)
     {
         var fallback = "";
-        if (Regex.IsMatch(name, RegexDiffuse, RegexOptions.IgnoreCase))
-            fallback = FallbackDiffuse;
-        else if (samplerType == EMaterialSamplerType.SAMPLERTYPE_Normal ||
-                 Regex.IsMatch(name, RegexNormals, RegexOptions.IgnoreCase))
+        if (samplerType is EMaterialSamplerType.SAMPLERTYPE_Normal or EMaterialSamplerType.SAMPLERTYPE_VirtualNormal ||
+            Regex.IsMatch(name, RegexNormals, RegexOptions.IgnoreCase))
             fallback = FallbackNormals;
         else if (Regex.IsMatch(name, RegexSpecularMasks, RegexOptions.IgnoreCase))
             fallback = FallbackSpecularMasks;
         else if (Regex.IsMatch(name, RegexEmissive, RegexOptions.IgnoreCase))
             fallback = FallbackEmissive;
+        else if (Regex.IsMatch(name, RegexDiffuse, RegexOptions.IgnoreCase))
+            fallback = FallbackDiffuse;
 
         var ret = !string.IsNullOrEmpty(fallback);
         if (ret) Textures[fallback] = texture;

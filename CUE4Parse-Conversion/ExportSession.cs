@@ -19,6 +19,7 @@ using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse_Conversion.Exporters;
 using CUE4Parse_Conversion.Exporters.Custom;
 using CUE4Parse_Conversion.Options;
+using CUE4Parse_Conversion.Textures;
 
 namespace CUE4Parse_Conversion;
 
@@ -35,6 +36,8 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     private ExportOptions? _options;
     internal ExportOptions Options => _options ?? throw new InvalidOperationException("Session is not currently running.");
 
+    internal TextureExportCache? TextureCache { get; private set; }
+
     private int _totalQueued;
     public int TotalQueued => Volatile.Read(ref _totalQueued);
     public bool HasQueuedItems => TotalQueued > 0;
@@ -42,7 +45,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     private int _running;
     public bool IsRunning => Volatile.Read(ref _running) == 1;
 
-    private readonly ConcurrentQueue<IExporter> _roots = new();
+    private readonly ConcurrentQueue<ExporterBase> _roots = new();
     private readonly ConcurrentDictionary<string, byte> _paths = new(StringComparer.OrdinalIgnoreCase);
 
     public ExportSession Add(UObject export)
@@ -75,9 +78,8 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         if (!_paths.TryAdd(exporter.ObjectPath, 0)) return this;
 
         exporter._session = this;
-        _roots.Enqueue(exporter);
-
         Interlocked.Increment(ref _totalQueued);
+        _roots.Enqueue(exporter);
         OnPropertyChanged(nameof(TotalQueued));
         OnPropertyChanged(nameof(HasQueuedItems));
         exporter.Log.Debug("Queued for export");
@@ -114,21 +116,29 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         _baseDirectory = new DirectoryInfo(baseDirectory);
         _options = options;
 
+        // Only glTF embeds materials as of now
+        var embedMaterials = options.MeshFormat is EMeshFormat.Gltf2 && options.ExportMaterials;
+        if (embedMaterials) TextureCache = new TextureExportCache(options.TexturePlatform);
+
         var results = new ConcurrentQueue<ExportResult>();
         try
         {
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
-            var current = new List<IExporter>();
+            var current = new List<ExporterBase>();
             while (true)
             {
                 current.Clear();
-                while (_roots.TryDequeue(out var exporter))
+                DrainQueue(current, ct);
+                if (current.Count == 0)
+                    break;
+
+                // Textures are processed first so we don't end up decoding the same texture multiple times when embedding materials
+                if (embedMaterials)
                 {
-                    ct.ThrowIfCancellationRequested();
-                    if (_paths.ContainsKey(exporter.ObjectPath)) // false = exporter was added but then manually removed
-                        current.Add(exporter);
+                    CollectDependencies(current, ct);
+                    await Parallel.ForEachAsync(current.OfType<TextureExporter>(), parallelOptions, Process).ConfigureAwait(false);
+                    current.RemoveAll(exporter => exporter is TextureExporter);
                 }
-                if (current.Count == 0) break;
 
                 await Parallel.ForEachAsync(current, parallelOptions, Process).ConfigureAwait(false);
             }
@@ -143,13 +153,14 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
             _options = null;
             _baseDirectory = null;
+            TextureCache = null;
             Interlocked.Exchange(ref _running, 0);
             OnPropertyChanged(nameof(IsRunning));
         }
 
         return [.. results];
 
-        async ValueTask Process(IExporter exporter, CancellationToken token)
+        async ValueTask Process(ExporterBase exporter, CancellationToken token)
         {
             var result = await exporter.ExportAsync(token).ConfigureAwait(false);
             results.Enqueue(result);
@@ -160,7 +171,38 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             OnPropertyChanged(nameof(HasQueuedItems));
 
             progress?.Report(new ExportProgress(count, count + stillQueued, result));
+        }
+    }
 
+    // Appended materials can add textures, visit them before processing batch
+    private void CollectDependencies(List<ExporterBase> exporters, CancellationToken ct)
+    {
+        for (var i = 0; i < exporters.Count; i++)
+        {
+            var exporter = exporters[i];
+            try
+            {
+                foreach (var dependency in exporter.GetDependencies(ct))
+                {
+                    Add(dependency);
+                }
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                exporter.Log.Warning(ex, "Could not collect export dependencies");
+            }
+
+            DrainQueue(exporters, ct);
+        }
+    }
+
+    private void DrainQueue(List<ExporterBase> exporters, CancellationToken ct)
+    {
+        while (_roots.TryDequeue(out var exporter))
+        {
+            ct.ThrowIfCancellationRequested();
+            if (_paths.ContainsKey(exporter.ObjectPath)) // false = exporter was added but then manually removed
+                exporters.Add(exporter);
         }
     }
 
