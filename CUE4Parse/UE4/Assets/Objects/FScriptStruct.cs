@@ -127,7 +127,7 @@ public class FScriptStruct
             "LevelSequenceObjectReferenceMap" => type == ReadType.ZERO ? new FLevelSequenceObjectReferenceMap() : new FLevelSequenceObjectReferenceMap(Ar),
             "LinearColor" => type == ReadType.ZERO ? new FLinearColor() : Ar.Read<FLinearColor>(),
             "NiagaraVariable" => new FNiagaraVariable(Ar),
-            "NiagaraVariableBase" or "NiagaraDataChannelVariable" => new FNiagaraVariableBase(Ar),
+            "NiagaraVariableBase" or "NiagaraDataChannelVariable" => new FNiagaraVariableBase(Ar, structName),
             "NiagaraVariableWithOffset" => new FNiagaraVariableWithOffset(Ar),
             "NiagaraDataInterfaceGPUParamInfo" => new FNiagaraDataInterfaceGPUParamInfo(Ar),
             "MaterialOverrideNanite" => type == ReadType.ZERO ? new FMaterialOverrideNanite() : new FMaterialOverrideNanite(Ar),

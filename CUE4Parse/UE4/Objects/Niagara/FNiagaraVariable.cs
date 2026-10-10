@@ -9,10 +9,10 @@ public class FNiagaraVariable : FNiagaraVariableBase
 {
     public byte[] VarData;
 
-    public FNiagaraVariable(FAssetArchive Ar) : base(Ar)
+    public FNiagaraVariable(FAssetArchive Ar) : base(Ar, "NiagaraVariable")
     {
         if (Ar.Game == GAME_FinalFantasy7Rebirth) Ar.Position += 8;
-        if (Ar.Game == GAME_HellLetLoose && FallbackStruct is not null)
+        if (FallbackStruct is not null)
         {
             VarData =  FallbackStruct.GetOrDefault<byte[]>(nameof(VarData));
             return;

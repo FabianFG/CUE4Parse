@@ -9,9 +9,9 @@ public class FNiagaraVariableWithOffset : FNiagaraVariableBase
 {
     public int Offset;
 
-    public FNiagaraVariableWithOffset(FAssetArchive Ar) : base(Ar)
+    public FNiagaraVariableWithOffset(FAssetArchive Ar) : base(Ar, "NiagaraVariableWithOffset")
     {
-        if (Ar.Game == GAME_HellLetLoose && FallbackStruct is not null)
+        if (FallbackStruct is not null)
         {
             Offset = FallbackStruct.GetOrDefault<int>(nameof(Offset));
             return;

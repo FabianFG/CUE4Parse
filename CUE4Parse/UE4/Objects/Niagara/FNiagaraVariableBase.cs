@@ -11,15 +11,18 @@ public class FNiagaraVariableBase : IUStruct
     public FStructFallback TypeDef;
     protected FStructFallback? FallbackStruct;
 
-    public FNiagaraVariableBase(FAssetArchive Ar)
+    public FNiagaraVariableBase(FAssetArchive Ar) : this(Ar, "NiagaraVariableBase") { }
+
+    public FNiagaraVariableBase(FAssetArchive Ar, string? structName)
     {
-        if (Ar.Game == GAME_HellLetLoose)
+        if (FNiagaraCustomVersion.Get(Ar) < FNiagaraCustomVersion.Type.VariablesUseTypeDefRegistry)
         {
-            FallbackStruct = new FStructFallback(Ar);
+            FallbackStruct = new FStructFallback(Ar, structName);
             Name = FallbackStruct.GetOrDefault<FName>(nameof(Name));
             TypeDef  = FallbackStruct.GetOrDefault<FStructFallback>(nameof(TypeDef));
             return;
         }
+
         Name = Ar.ReadFName();
         TypeDef = new FStructFallback(Ar, "NiagaraTypeDefinition");
     }
