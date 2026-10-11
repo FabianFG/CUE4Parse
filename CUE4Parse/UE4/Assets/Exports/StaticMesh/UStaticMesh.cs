@@ -196,7 +196,7 @@ public class UStaticMesh : UObject
                 GAME_DeltaForce => new FDeltaForceStaticMeshRenderData(Ar),
                 GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
                 GAME_WeHappyFew => new GFPStaticMeshRenderData(Ar, true),
-                _ => RenderData = new FStaticMeshRenderData(Ar)
+                _ => new FStaticMeshRenderData(Ar)
             };
         }
 
