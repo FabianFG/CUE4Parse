@@ -187,7 +187,7 @@ namespace CUE4Parse.FileProvider
                 : throw new KeyNotFoundException($"There is no game file with the path \"{path}\"");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetGameFile(string path, [MaybeNullWhen(false)] out GameFile file) => 
+        public bool TryGetGameFile(string path, [MaybeNullWhen(false)] out GameFile file) =>
             TryGetGameFile(path, Files, out file);
 
         public int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default)
@@ -610,13 +610,14 @@ namespace CUE4Parse.FileProvider
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
 
+            var archiveName = (file as VfsEntry)?.Vfs.Name;
             var uasset = file.CreateReader();
             var (lazyUbulk, lazyUptnl) = GetPayloadReaders(ubulks, uptnls);
 
             return file switch
             {
-                FPakEntry or VersionedGameFile => new Package(uasset, uexp?.CreateReader(), lazyUbulk, lazyUptnl, this, UseLazyPackageSerialization),
-                FIoStoreEntry ioStoreEntry when this is IVfsFileProvider vfsFileProvider => new IoPackage(uasset, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, vfsFileProvider, FindOptionalSegment(ioStoreEntry)),
+                FPakEntry or VersionedGameFile => new Package(uasset, uexp?.CreateReader(), lazyUbulk, lazyUptnl, this, UseLazyPackageSerialization, archiveName),
+                FIoStoreEntry ioStoreEntry when this is IVfsFileProvider vfsFileProvider => new IoPackage(uasset, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, vfsFileProvider, FindOptionalSegment(ioStoreEntry), archiveName),
                 _ => throw new NotImplementedException($"type {file.GetType()} is not supported")
             };
         }
@@ -653,6 +654,7 @@ namespace CUE4Parse.FileProvider
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
 
+            var archiveName = (file as VfsEntry)?.Vfs.Name;
             var uasset = await file.CreateReaderAsync().ConfigureAwait(false);
             var (lazyUbulk, lazyUptnl) = GetPayloadReaders(ubulks, uptnls);
 
@@ -660,9 +662,9 @@ namespace CUE4Parse.FileProvider
             {
                 case FPakEntry or VersionedGameFile:
                     var uexpAr = uexp != null ? await uexp.CreateReaderAsync().ConfigureAwait(false) : null;
-                    return new Package(uasset, uexpAr, lazyUbulk, lazyUptnl, this, UseLazyPackageSerialization);
+                    return new Package(uasset, uexpAr, lazyUbulk, lazyUptnl, this, UseLazyPackageSerialization, archiveName);
                 case FIoStoreEntry ioStoreEntry when this is IVfsFileProvider vfsFileProvider:
-                    return new IoPackage(uasset, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, vfsFileProvider, FindOptionalSegment(ioStoreEntry));
+                    return new IoPackage(uasset, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, vfsFileProvider, FindOptionalSegment(ioStoreEntry), archiveName);
                 default:
                     throw new NotImplementedException($"type {file.GetType()} is not supported");
             }

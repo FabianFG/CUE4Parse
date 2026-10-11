@@ -61,8 +61,9 @@ namespace CUE4Parse.UE4.Assets
             Func<FByteBulkDataHeader?, FArchive?>? ubulk = null,
             Func<FByteBulkDataHeader?, FArchive?>? uptnl = null,
             IFileProvider? provider = null,
-            bool useLazySerialization = true)
-            : base(uasset.Name.SubstringBeforeLast('.'), provider)
+            bool useLazySerialization = true,
+            string? archiveName = null)
+            : base(uasset.Name.SubstringBeforeLast('.'), provider, archiveName)
         {
             // We clone the version container because it can be modified with package specific versions when reading the summary
             uasset.Versions = (VersionContainer) uasset.Versions.Clone();

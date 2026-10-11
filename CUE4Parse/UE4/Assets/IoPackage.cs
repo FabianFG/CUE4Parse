@@ -90,8 +90,9 @@ public sealed class IoPackage : AbstractUePackage
         Func<FByteBulkDataHeader?, FArchive?>? ubulk = null,
         Func<FByteBulkDataHeader?, FArchive?>? uptnl = null,
         IVfsFileProvider? provider = null,
-        IoOptionalSegment? optionalSegment = null)
-        : base(uasset.Name.SubstringBeforeLast('.'), provider)
+        IoOptionalSegment? optionalSegment = null,
+        string? archiveName = null)
+        : base(uasset.Name.SubstringBeforeLast('.'), provider, archiveName)
     {
         _globalData = provider?.GlobalData ?? throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
 
