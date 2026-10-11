@@ -14,16 +14,17 @@ public abstract class GameFile
     public static readonly string[] LegacyUePackageExtensions = ["upk", "xxx", "XXX", "udk", "u", "mbamap", "sword", "rbd", "aa3", "ut3", "ut2", "utx", "unr", "umx", "uax", "usx", "ukx", "map", "lm", "s8m", "ccpk", "mo"];
     public static readonly string[] UePackageExtensions = ["uasset", "umap", ..LegacyUePackageExtensions];
     public static readonly string[] UePackagePayloadExtensions = ["uexp", "ubulk", "uptnl", "tfc"];
+    public static readonly string[] CustomUePackagePayloadExtensions = ["uhd"]; // GAME_DeltaForce
     public static readonly string[] UeKnownExtensions =
     [
-        ..UePackageExtensions, ..UePackagePayloadExtensions,
+        ..UePackageExtensions, ..UePackagePayloadExtensions, ..CustomUePackagePayloadExtensions,
         "bin", "ini", "uplugin", "upluginmanifest", "locres", "locmeta",
         "wem", "ewem", "bnk", "pck", "bank", "awb", "acb"
     ];
 
     // Immutable lookup tables optimized once during startup.
     public static readonly FrozenSet<string> UePackageExtensionsSet = UePackageExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
-    public static readonly FrozenSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+    public static readonly FrozenSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.Concat(CustomUePackagePayloadExtensions).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
     public static readonly FrozenSet<string> UeKnownExtensionsSet = UeKnownExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     // Avoid retaining duplicate extension and directory strings for every file.
