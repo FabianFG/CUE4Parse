@@ -25,8 +25,12 @@ public sealed class RawDataExporter(GameFile gameFile, IFileProvider provider) :
 
     protected override (string, string) ResolveOutputPath(ExportFile file)
     {
-        var parts = file.Extension.Split('.');
-        var path = Session.ResolveOutputPath(parts[0], parts[1], file.NameSuffix);
-        return (file.Extension.SubstringAfterLast('/'), path);
+        var name = file.Extension.SubstringAfterLast('/');
+        var extension = name.SubstringAfterLast('.');
+        var hasExtension = extension != name;
+        var savePath = hasExtension ? file.Extension.SubstringBeforeLast('.') : file.Extension;
+
+        var path = Session.ResolveOutputPath(savePath, hasExtension ? extension : string.Empty, file.NameSuffix);
+        return (name, path);
     }
 }

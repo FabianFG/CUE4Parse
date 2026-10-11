@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse_Conversion.Textures;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Exporters;
 
@@ -47,7 +48,7 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
             CTexture?[]? decoded = texture switch
             {
                 UTexture2DArray array => array.DecodeTextureArray(index, platform),
-                UTextureCube => texture.DecodeMip(index, platform)?.ToPanorama() is { } panorama ? [panorama] : null,
+                UTextureCube cube => DecodeCube(cube, index, platform),
                 _ => texture.DecodeMip(index, platform) is { } single ? [single] : null
             };
 
@@ -71,6 +72,34 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
                 var data = slice.Encode(Session.Options, out var ext);
                 files.Add(new ExportFile(ext, data, layered ? $"{mipSuffix}_LAYER{i}" : mipSuffix));
             }
+        }
+        CTexture?[]? DecodeCube(UTextureCube cube, int index, ETexturePlatform platform)
+        {
+            CTexture? LoadFace(FPackageIndex face) =>
+                face?.Load() is UTexture tex ? tex.Decode(platform) : null;
+
+            var faces = new[]
+            {
+                LoadFace(cube.FacePosX),
+                LoadFace(cube.FaceNegX),
+                LoadFace(cube.FacePosY),
+                LoadFace(cube.FaceNegY),
+                LoadFace(cube.FacePosZ),
+                LoadFace(cube.FaceNegZ)
+            };
+
+            if (faces.All(f => f != null))
+            {
+                return new[]
+                {
+                    CubemapConverter.ToPanoramaFromFaces(
+                        faces[0], faces[1], faces[2],
+                        faces[3], faces[4], faces[5])
+                };
+            }
+
+            var fallback = texture.DecodeMip(index, platform)?.ToPanorama();
+            return fallback is not null ? new[] { fallback } : null;
         }
     }
 }

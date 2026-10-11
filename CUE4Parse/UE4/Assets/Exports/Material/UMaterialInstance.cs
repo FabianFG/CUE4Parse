@@ -73,14 +73,25 @@ public class UMaterialInstance : UMaterialInterface
                     Ar.Position = validPos;
                 }
             }
-            else
+            else if (Ar.Game < GAME_UE4_0) // test UE4 then remove
             {
-                /*
+                if (Ar.Game == GAME_BioshockInfinite)
+                {
+                    Ar.Read<FGuid>();
+                    for (var i = 0; i < 5; i++)
+                    {
+                        Ar.ReadArray(() => new FPackageIndex(Ar));
+                    }
+                    return;
+                }
+
                 var QualityMask = 1;
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_MATERIAL_QUALITY_LEVEL)
                 {
                     QualityMask = Ar.Read<int>();
                 }
+
+                if (Ar.Game == GAME_APBReloaded) return;
 
                 for (int QualityIndex = 0; QualityIndex < (Ar.Ver > EUnrealEngineObjectUE3Version.FLASH_MERGE_TO_MAIN && Ar.Game < GAME_UE4_0 ? 2 : 1); QualityIndex++)
                 {
@@ -88,10 +99,26 @@ public class UMaterialInstance : UMaterialInterface
                     {
                         continue;
                     }
+
+                    var loadedResource = new FMaterialResource();
+                    loadedResource.Deserialize(Ar);
+
+                    StaticParameters = new FStaticParameterSet(Ar);
+                    bHasNonUPropertyStaticParameters = true;
                 }
 
-                //new FMaterialShaderMapId(Ar); // if PKG_ContainsInlinedShaders and specific ue3
-                */
+                //new FMaterialShaderMapId(Ar); // if PKG_ContainsInlinedShaders and specific ue3 ver
+
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADER_MODEL_2)
+                {
+                    var loadedResource = new FMaterialResource();
+                    loadedResource.Deserialize(Ar);
+                    StaticParameters = new FStaticParameterSet(Ar);
+                }
+                if (Ar.Ver >= EUnrealEngineObjectUE4Version.MATERIAL_INSTANCE_BASE_PROPERTY_OVERRIDES)
+                {
+                    new FMaterialInstanceBasePropertyOverrides(Ar);
+                }
             }
         }
 

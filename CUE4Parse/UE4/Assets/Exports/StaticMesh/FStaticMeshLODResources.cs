@@ -1,5 +1,6 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
+using CUE4Parse.GameTypes.TransformersFallofCybertron.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -28,7 +29,9 @@ public class FStaticMeshLODResources
     public FRawStaticIndexBuffer? ReversedDepthOnlyIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? WireframeIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? AdjacencyIndexBuffer { get; private set; }
-    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null || PositionVertexBuffer == null;
+
+    public bool bisPositionBufferNormal = true;
+    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null || bisPositionBufferNormal && PositionVertexBuffer == null;
 
     public enum EClassDataStripFlag : byte
     {
@@ -55,6 +58,11 @@ public class FStaticMeshLODResources
             new FByteBulkData((FAssetArchive)Ar); // RawTriangles
         }
 
+        if (Ar.Game == GAME_TheLastRemnant)
+        {
+            new FByteBulkData((FAssetArchive)Ar); // unknown
+        }
+
         if (Ar.Game == GAME_TheDivisionResurgence) Ar.Position += 4;
 
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
@@ -78,7 +86,7 @@ public class FStaticMeshLODResources
 
         if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
         {
-            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_MinLodData))
+            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
             {
                 SerializeBuffersLegacy(Ar, stripDataFlags);
             }
@@ -194,13 +202,53 @@ public class FStaticMeshLODResources
     // Pre-UE4.23 code
     public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
     {
+        if (Ar.Game == GAME_TransformersFallofCybertron)
+        {
+            PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+            VertexBuffer = new FStaticMeshVertexBuffer(Ar);
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDITIONAL_COOK_PACKAGE_SUMMARY)
+            {
+                ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            }
+
+            if ((int) Ar.LicenseeVer >= 71)
+            {
+                new FTRMeshUnkStream(Ar);
+            }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_PREFAB_SEQUENCES) // 536
+            {
+                // FStaticMeshShadowVolumeStream - ShadowExtrusionVertexBuffer (FColorVertexBuffer but uses floats)
+                Ar.Position += sizeof(int); // int - Stride
+                if (Ar.Read<int>() > 0) Ar.SkipBulkArrayData(sizeof(float)); // NumVertices, VertexData
+            }
+
+            NumVertices = Ar.Read<int>();
+            IndexBuffer = new FRawStaticIndexBuffer(Ar);
+            WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
+
+            if ((int) Ar.LicenseeVer >= 58) Ar.Position += sizeof(int);
+            if ((int) Ar.LicenseeVer >= 181) Ar.Position += sizeof(int);
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_PREFAB_SEQUENCES)
+            {
+                Ar.SkipBulkArrayData(16); // Edges
+                Ar.SkipArray<byte>();
+            }
+        }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE)
         {
             if (Ar.Game is GAME_Abzu) Ar.Position += 4;
+
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS)
             {
                 PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+            }
+            else
+            {
+                bisPositionBufferNormal = false;
             }
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
             if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS || Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS && Ar.Ver < EUnrealEngineObjectUE3Version.MovedColorFromUVItem) goto skipStreams;
@@ -285,12 +333,12 @@ public class FStaticMeshLODResources
             {
                 Ar.Position += 8; // bulkdata
             }
-            else if (!stripDataFlags.IsEditorDataStripped())
+            else if (!stripDataFlags.IsEditorDataStripped() && Ar.Game != GAME_Borderlands2 && Ar.Game != GAME_BorderlandsSequel)
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
-                Ar.SkipBulkArrayData(16); // LegacyEdges
+                Ar.SkipBulkArrayData(Ar.Game == GAME_BatmanArkhamAsylum && (int) Ar.LicenseeVer >= 5 ? 8 : 16); // LegacyEdges
                 Ar.SkipArray<byte>(); // LegacyShadowTriangleDoubleSided
             }
 

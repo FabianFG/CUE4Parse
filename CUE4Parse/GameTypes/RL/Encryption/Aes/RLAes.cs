@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Readers;
 
 namespace CUE4Parse.GameTypes.RL.Encryption.Aes;
 
@@ -24,6 +23,7 @@ public static class RocketLeagueAes
 
     private static readonly HttpClient HttpClient = new();
     private static readonly byte[][] KeyList = LoadKeys();
+    private static byte[] _lastSuccessfulKey;
 
     private static byte[][] LoadKeys()
     {
@@ -101,23 +101,33 @@ public static class RocketLeagueAes
 
     private static bool ValidateChecksum(byte[] data, int offset, int length)
     {
-        var ar = new FByteArchive("Rocket League - Checksum", data);
-        ar.Position = offset;
+        if (offset < 0 || offset >= data.Length || length <= 0 || offset + length > data.Length)
+            return false;
 
-        byte prev = ar.Read<byte>();
-        long end = Math.Min(offset + length, ar.Length);
-
-        for (long i = offset + 1; i < end; i++)
+        bool bFullZero = true;
+        for (int i = offset; i < offset + length; i++)
         {
-            byte curr = ar.Read<byte>();
-
-            if (curr != (byte) ((prev + 1) % 255))
-                return false;
-
-            prev = curr;
+            if (data[i] != 0)
+            {
+                bFullZero = false;
+                break;
+            }
         }
 
-        return true;
+        bool bCounting = true;
+        if (length > 1)
+        {
+            for (int i = offset + 1; i < offset + length; i++)
+            {
+                if (data[i] != (byte) ((data[i - 1] + 1) % 255))
+                {
+                    bCounting = false;
+                    break;
+                }
+            }
+        }
+
+        return bCounting || bFullZero;
     }
 
     public static void DecryptCoalesced(byte[] inputData, out byte[] outputData)
@@ -137,5 +147,82 @@ public static class RocketLeagueAes
         }
 
         throw new InvalidAesKeyException("No valid decryption key found");
+    }
+
+    private static bool TryDecryptWithKeyCTR(
+        byte[] inputData,
+        byte[] key,
+        int checkSumDataOffset,
+        int checkSumDataSize,
+        byte[] nonce,
+        bool validateChecksum,
+        out byte[]? outputData)
+    {
+        outputData = null;
+
+        try
+        {
+            using var aes = System.Security.Cryptography.Aes.Create();
+            aes.Key = key;
+            aes.Mode = CipherMode.ECB;
+            aes.Padding = PaddingMode.None;
+            var encryptor = aes.CreateEncryptor();
+
+            var decrypted = new byte[inputData.Length];
+            int blockIndex = 0;
+            int offset = 0;
+
+            while (offset < inputData.Length)
+            {
+                byte[] counterBlock = new byte[16];
+                Array.Copy(nonce, 0, counterBlock, 0, 12);
+                counterBlock[12] = (byte) (blockIndex >> 24);
+                counterBlock[13] = (byte) (blockIndex >> 16);
+                counterBlock[14] = (byte) (blockIndex >> 8);
+                counterBlock[15] = (byte) blockIndex;
+
+                byte[] keystream = new byte[16];
+                encryptor.TransformBlock(counterBlock, 0, 16, keystream, 0);
+
+                int bytesToProcess = Math.Min(16, inputData.Length - offset);
+                for (int i = 0; i < bytesToProcess; i++)
+                {
+                    decrypted[offset + i] = (byte) (inputData[offset + i] ^ keystream[i]);
+                }
+
+                offset += 16;
+                blockIndex++;
+            }
+
+            if (validateChecksum && !ValidateChecksum(decrypted, checkSumDataOffset, checkSumDataSize - 16))
+                return false;
+
+            _lastSuccessfulKey = key;
+            outputData = decrypted;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static bool DecryptCTR(byte[] inputData, int checkSumDataOffset, int checkSumDataSize, byte[] nonce, out byte[] outputData)
+    {
+        foreach (var key in KeyList)
+        {
+            if (!TryDecryptWithKeyCTR(inputData, key, checkSumDataOffset, checkSumDataSize, nonce, true, out var result))
+                continue;
+
+            outputData = result!;
+            return true;
+        }
+
+        throw new InvalidAesKeyException("No valid decryption key found");
+    }
+
+    public static void DecryptCTRWithLastKey(byte[] inputData, byte[] nonce, out byte[] outputData)
+    {
+        TryDecryptWithKeyCTR(inputData, _lastSuccessfulKey, 0, 0, nonce, false, out outputData!);
     }
 }

@@ -45,6 +45,11 @@ public partial class USkeletalMesh : USkinnedAsset
             Ar.Position += sizeof(float); // float - m_fRadius
         }
 
+        if (Ar.Game == GAME_MirrorEdge && (int) Ar.LicenseeVer >= 15)
+        {
+            Ar.Position += sizeof(int);
+        }
+
         ImportedBounds = new FBoxSphereBounds(Ar);
         Bounds = ImportedBounds;
 
@@ -55,6 +60,12 @@ public partial class USkeletalMesh : USkinnedAsset
 
         if (Ar.Game < GAME_UE4_0)
         {
+            if (Ar.Game == GAME_BatmanArkhamAsylum && (int) Ar.LicenseeVer >= 15)
+            {
+                Ar.Position += sizeof(float); // ConservativeBounds
+                Ar.SkipFixedArray(28); // BoneBounds
+            }
+
             Materials = Ar.ReadArray(() => new FPackageIndex(Ar));
 
             SkeletalMaterials = new FSkeletalMaterial[Materials.Length];
@@ -262,6 +273,11 @@ public partial class USkeletalMesh : USkinnedAsset
             {
                 Ar.SkipArray<int>(); // BoneBreakOptions
             }
+        }
+
+        if (Ar.Game == GAME_FableAnniversary && (int) Ar.LicenseeVer >= 1007 || Ar.Game == GAME_DevilMayCry)
+        {
+            return;
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.APEX_CLOTHING && Ar.Game < GAME_UE4_0)

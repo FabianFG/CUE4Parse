@@ -8,6 +8,7 @@ namespace CUE4Parse.UE4.Assets.Objects
         public readonly int UncompressedSize;
         public readonly int CompressedOffset;
         public readonly int CompressedSize;
+        public readonly byte[] Nonce;
 
         public FCompressedChunk(FArchive Ar)
         {
@@ -18,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Objects
 
             if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer >= 33)
             {
-                Ar.Position += 12;
+                Nonce = Ar.ReadBytes(12);
             }
         }
     }

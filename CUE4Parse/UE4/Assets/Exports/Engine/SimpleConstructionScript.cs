@@ -1,10 +1,9 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Component;
+using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Engine;
-
 
 public class USCS_Node : UObject
 {

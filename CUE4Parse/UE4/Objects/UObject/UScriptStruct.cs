@@ -17,7 +17,17 @@ public class UScriptStruct : UStruct
 
         if (Ar.Game < GAME_UE4_0)
         {
-            DeserializePropertiesTagged(Properties, Ar, false);
+            var structType = Class?.Super?.Name.Text ?? Class?.Name.Text;
+            var pushedStructType = !string.IsNullOrEmpty(structType);
+            if (pushedStructType) Ar.StructTypeStack.Push(structType!);
+            try
+            {
+                DeserializePropertiesTagged(Properties, Ar, false);
+            }
+            finally
+            {
+                if (pushedStructType) Ar.StructTypeStack.Pop();
+            }
         }
     }
 }

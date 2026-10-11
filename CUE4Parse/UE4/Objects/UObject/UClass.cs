@@ -15,7 +15,6 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [SkipObjectRegistration]
 public class UClass : UStruct
 {
-    
     /** Used to check if the class was cooked or not */
     public bool bCooked;
 
@@ -46,6 +45,13 @@ public class UClass : UStruct
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        if (Ar.Ver < EUnrealEngineObjectUE3Version.Release62)
+        {
+            Ar.Read<int>(); // classRecordSize
+        }
+
+        if (Ar.Game < GAME_UE4_0) return; // needs stuff
 
         if (Ar.Game == GAME_AWayOut) Ar.Position += 4;
 
