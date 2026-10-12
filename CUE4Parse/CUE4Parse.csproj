@@ -40,6 +40,8 @@
     <EmbeddedResource Include="Resources\ProSpiDecryptor.dll.gz" />
     <None Remove="Resources\ShaderHashedNames.json" />
     <EmbeddedResource Include="Resources\ShaderHashedNames.json" />
+    <None Remove="Resources\MogKeyPool.bin" />
+    <EmbeddedResource Include="Resources\MogKeyPool.bin" />
   </ItemGroup>
 
   <PropertyGroup>

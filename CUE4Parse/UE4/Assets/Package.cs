@@ -343,6 +343,9 @@ namespace CUE4Parse.UE4.Assets
         private ResolvedObject? ResolveImport(FPackageIndex importIndex)
         {
             var import = ImportMap[-importIndex.Index - 1];
+            if (Provider?.Versions.Game is GAME_MarchofGiants && import.OuterIndex is null or { IsNull: true })
+                return new ResolvedImportObject(import, this);
+
             var outerMostIndex = importIndex;
             FObjectImport outerMostImport;
             while (true)
@@ -352,7 +355,7 @@ namespace CUE4Parse.UE4.Assets
                     return new ResolvedImportObject(import, this);
 
                 outerMostImport = ImportMap[-outerMostIndex.Index - 1];
-                if (outerMostImport.OuterIndex.IsNull)
+                if (outerMostImport.OuterIndex is null or { IsNull: true })
                     break;
                 outerMostIndex = outerMostImport.OuterIndex;
             }
