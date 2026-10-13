@@ -1,8 +1,10 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Rig;
+﻿using CUE4Parse_Conversion.DNA;
+using CUE4Parse_Conversion.Formats.PoseAsset;
+using CUE4Parse.UE4.Assets.Exports.Rig;
 
 namespace CUE4Parse_Conversion.Exporters;
 
-public sealed class DnaExporter(UDNAAsset dna) : ExporterBase(dna)
+public sealed class DnaExporter(UDNAObject dna) : ExporterBase(dna)
 {
     protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
@@ -18,6 +20,21 @@ public sealed class DnaExporter(UDNAAsset dna) : ExporterBase(dna)
             suffix = $"/{Path.GetFileNameWithoutExtension(dna.DnaFileName)}";
         }
 
-        return [new ExportFile("dna", dna.DNAData?.Value ?? [], suffix)];
+        var results = new List<ExportFile>
+        {
+            new("dna", bytes, suffix)
+        };
+
+        if (!dna.TryConvert(out var convertedPoseAsset))
+            throw new Exception($"Failed to evaluate DNA pose for {ObjectName}");
+
+        ct.ThrowIfCancellationRequested();
+        var poseName = string.IsNullOrEmpty(dna.DnaFileName)
+            ? ObjectName
+            : Path.GetFileNameWithoutExtension(dna.DnaFileName);
+        var poseFile = new UEFormatPoseFormat().Build(poseName, ObjectPath, Session.Options, convertedPoseAsset);
+        results.Add(poseFile with { NameSuffix = suffix });
+
+        return results;
     }
 }

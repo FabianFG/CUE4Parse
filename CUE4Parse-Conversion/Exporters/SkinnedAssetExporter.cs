@@ -24,9 +24,13 @@ public sealed class SkinnedAssetExporter(USkinnedAsset originalMesh) : MeshExpor
         {
             foreach (var userData in dto.AssetUserData)
             {
-                if (userData.TryLoad<UDNAAsset>(out var dna))
+                if (userData.TryLoad<UDNAAsset>(out var dnaAsset))
                 {
-                    Session.Add(new DnaExporter(dna));
+                    Session.Add(new DnaExporter(dnaAsset));
+                }
+                else if (userData.TryLoad<UDNAAssetUserData>(out var dnaUserData) && dnaUserData.DNAAsset != null)
+                {
+                    Session.Add(new DnaExporter(dnaUserData.DNAAsset));
                 }
             }
         }
