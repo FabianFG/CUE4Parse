@@ -8,7 +8,7 @@ using CUE4Parse_Conversion.Dto;
 
 namespace CUE4Parse_Conversion.Materials;
 
-/// <summary>Resolves PBR values and textures from known aliases.</summary>
+/// <summary>Parses material inheritance and resolves PBR values from known parameter aliases.</summary>
 internal sealed partial class MaterialParameters
 {
     private static readonly string[] _baseColorTextures = [..CMaterialParams2.Diffuse[0], "Base", CMaterialParams2.FallbackDiffuse];
@@ -36,18 +36,122 @@ internal sealed partial class MaterialParameters
         .OrderBy(alias => alias.Layout)
         .Select(alias => (alias.Name, alias.Layout!.Value))];
 
-    private readonly CMaterialParams2[] _layers;
+    private readonly Lazy<CMaterialParams2> _local;
+    private readonly Lazy<MaterialParameters?> _parent;
+    private readonly Lazy<MaterialParameters[]> _inheritance;
+    private readonly Lazy<CMaterialParams2[]> _layers;
+    private readonly Lazy<CMaterialParams2> _combined;
+    private readonly Lazy<PbrMaterialDto> _pbr;
 
-    public MaterialParameters(UMaterialInterface material, EMaterialDepth depth)
+    public UMaterialInterface Source { get; }
+    public EMaterialDepth Depth { get; }
+    public MaterialParameters? Parent => Depth is EMaterialDepth.TopLayerOnly ? null : _parent.Value;
+    public PbrMaterialDto Pbr => _pbr.Value;
+    public CMaterialParams2 Parameters => _combined.Value;
+
+    public MaterialParameters(UMaterialInterface material, EMaterialDepth depth, Func<UMaterialInterface, EMaterialDepth, MaterialParameters> resolve)
     {
-        var local = ReadParameters(material, EMaterialDepth.TopLayerOnly);
-        if (depth is EMaterialDepth.TopLayerOnly)
+        Source = material;
+        Depth = depth;
+        _local = new Lazy<CMaterialParams2>(() => ReadParameters(material, material is UMaterialInstance ? EMaterialDepth.TopLayerOnly : depth));
+        _parent = new Lazy<MaterialParameters?>(() =>
         {
-            _layers = [local];
-            return;
+            if (material is not UMaterialInstance instance || instance.Parent?.TryLoad<UMaterialInterface>(out var parent) != true || parent == null)
+                return null;
+
+            return resolve(parent, depth);
+        });
+        _inheritance = new Lazy<MaterialParameters[]>(ReadInheritance);
+        _layers = new Lazy<CMaterialParams2[]>(() => depth is EMaterialDepth.TopLayerOnly
+            ? [_local.Value]
+            : [.. _inheritance.Value.Select(layer => layer._local.Value)]);
+        _combined = depth is EMaterialDepth.TopLayerOnly ? _local : new Lazy<CMaterialParams2>(CombineParameters);
+        _pbr = new Lazy<PbrMaterialDto>(() => PbrMaterialConverter.Convert(this));
+    }
+
+    private CMaterialParams2[] Layers => _layers.Value;
+
+    private MaterialParameters[] ReadInheritance()
+    {
+        var visited = new HashSet<MaterialParameters>();
+        var layers = new List<MaterialParameters>();
+        for (MaterialParameters? current = this; current != null; current = current._parent.Value)
+        {
+            if (!visited.Add(current))
+                throw new InvalidDataException($"Material inheritance contains a cycle at {current.Source.GetPathName()}.");
+
+            layers.Add(current);
         }
 
-        _layers = [local, ReadParameters(material, depth)];
+        return [.. layers];
+    }
+
+    private CMaterialParams2 CombineParameters()
+    {
+        var result = new CMaterialParams2();
+        foreach (var layer in _inheritance.Value.Reverse())
+        {
+            var local = layer._local.Value;
+            Copy(local, result);
+            if (layer.Source is not UMaterialInstance || layer.Source is UMaterialInstance { BasePropertyOverrides: not null })
+            {
+                result.BlendMode = local.BlendMode;
+                result.ShadingModel = local.ShadingModel;
+            }
+        }
+
+        return result;
+
+        static void Copy(CMaterialParams2 source, CMaterialParams2 target)
+        {
+            foreach (var (name, value) in source.Textures)
+                target.Textures[name] = value;
+            foreach (var (name, value) in source.Colors)
+                target.Colors[name] = value;
+            foreach (var (name, value) in source.Scalars)
+                target.Scalars[name] = value;
+            foreach (var (name, value) in source.Switches)
+                target.Switches[name] = value;
+            foreach (var (name, value) in source.Properties)
+                target.Properties[name] = value;
+        }
+    }
+
+    public (EBlendMode BlendMode, float Cutoff, bool TwoSided) GetSurface()
+    {
+        var blendMode = EBlendMode.BLEND_Opaque;
+        var cutoff = 0.333f;
+        var twoSided = false;
+
+        foreach (var layer in _inheritance.Value.Reverse())
+        {
+            if (layer.Source is UMaterial material)
+            {
+                blendMode = material.BlendMode;
+                cutoff = material.OpacityMaskClipValue;
+                twoSided = material.TwoSided;
+            }
+
+            if (layer.Source is not UMaterialInstance { BasePropertyOverrides: { } overrides })
+                continue;
+
+            if (overrides.bOverride_BlendMode)
+            {
+                blendMode = overrides.BlendMode;
+            }
+
+            if (overrides.bOverride_OpacityMaskClipValue)
+            {
+                cutoff = overrides.OpacityMaskClipValue;
+            }
+
+            if (overrides.bOverride_TwoSided)
+            {
+                twoSided = overrides.TwoSided;
+            }
+        }
+
+        return (blendMode, Clamp(cutoff), twoSided);
     }
 
     public UTexture2D? GetBaseColorTexture() => GetTexture(_baseColorTextures) ?? GetFallbackColorTexture();
@@ -86,7 +190,7 @@ internal sealed partial class MaterialParameters
 
     public (UTexture2D? Texture, EMaterialTextureLayout Layout) GetPackedTexture()
     {
-        foreach (var layer in _layers)
+        foreach (var layer in Layers)
         {
             foreach (var (name, layout) in _packedTextureNames)
             {
@@ -105,7 +209,7 @@ internal sealed partial class MaterialParameters
 
     private UTexture2D? GetTexture(string[] names, bool matchSuffix = false)
     {
-        foreach (var layer in _layers)
+        foreach (var layer in Layers)
         {
             if (FindTexture(layer, names) is { } texture)
                 return texture;
@@ -118,27 +222,39 @@ internal sealed partial class MaterialParameters
 
     private UTexture2D? GetFallbackColorTexture()
     {
-        foreach (var layer in _layers)
+        foreach (var layer in Layers)
         {
-            UTexture2D? fallback = null;
-            foreach (var texture in layer.GetTextures(layer.Textures.Keys).OfType<UTexture2D>())
+            foreach (var (name, reference) in layer.Textures)
             {
-                fallback ??= texture;
-                // References include engine defaults and linear shader data as well as color textures
-                // This should probably be done for 3D Viewer too, although it's far from perfect
-                if (texture.SRGB && !texture.IsNormalMap && !texture.GetPathName().StartsWith("/Engine/", StringComparison.OrdinalIgnoreCase))
+                if (reference.TryLoad<UTexture2D>(out var texture) && texture != null && IsBaseColorTexture(name, texture))
                     return texture;
             }
-            if (fallback != null)
-                return fallback;
         }
 
         return null;
     }
 
+    // Stolen from https://github.com/FModel/Snooper/blob/3ad5b935cd07cc4b0ba05f452a5b0f6bea0778b6/Snooper/Rendering/Cache/MaterialNode.cs#L316
+    private static bool IsBaseColorTexture(string parameterName, UTexture texture)
+    {
+        if (texture.CompressionSettings is not (TextureCompressionSettings.TC_Default or TextureCompressionSettings.TC_BC7 or TextureCompressionSettings.TC_LQ) ||
+            texture.LODGroup is TextureGroup.TEXTUREGROUP_WorldNormalMap or TextureGroup.TEXTUREGROUP_CharacterNormalMap or
+                TextureGroup.TEXTUREGROUP_WeaponNormalMap or TextureGroup.TEXTUREGROUP_VehicleNormalMap or
+                TextureGroup.TEXTUREGROUP_WorldSpecular or TextureGroup.TEXTUREGROUP_CharacterSpecular or
+                TextureGroup.TEXTUREGROUP_WeaponSpecular or TextureGroup.TEXTUREGROUP_VehicleSpecular or
+                TextureGroup.TEXTUREGROUP_UI or TextureGroup.TEXTUREGROUP_Lightmap or TextureGroup.TEXTUREGROUP_Shadowmap or
+                TextureGroup.TEXTUREGROUP_Skybox or TextureGroup.TEXTUREGROUP_ImpostorNormalDepth || OcclusionName().IsMatch(parameterName))
+            return false;
+
+        if (DiffuseName().IsMatch(parameterName))
+            return true;
+
+        return texture.SRGB && !EmissiveName().IsMatch(parameterName);
+    }
+
     private FLinearColor? GetColor(string[] names)
     {
-        foreach (var layer in _layers)
+        foreach (var layer in Layers)
         {
             if (layer.TryGetLinearColor(out var color, names))
                 return color;
@@ -149,7 +265,7 @@ internal sealed partial class MaterialParameters
 
     private float GetScalar(string[] names, float fallback)
     {
-        foreach (var layer in _layers)
+        foreach (var layer in Layers)
         {
             if (layer.TryGetScalar(out var value, names))
                 return Clamp(value);
@@ -242,7 +358,6 @@ internal sealed partial class MaterialParameters
         return false;
     }
 
-    // This needs to be tested on more games
     private static EMaterialTextureLayout? MatchPackedTextureLayout(string name)
     {
         var matches = PackedTextureName().Matches(name);
@@ -259,22 +374,19 @@ internal sealed partial class MaterialParameters
         return null;
     }
 
-    [GeneratedRegex(@"Ambient[ _]*Occlusion|Occlusion|Occl|Occ|Roughness|Rough|Metallic|Metal|Met|Specular|Spec", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(CMaterialParams2.RegexDiffuse, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex DiffuseName();
+
+    [GeneratedRegex(CMaterialParams2.RegexEmissive, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex EmissiveName();
+
+    [GeneratedRegex(CMaterialParams2.RegexOcclusion, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex OcclusionName();
+
+    [GeneratedRegex(CMaterialParams2.RegexChannelNames, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex ChannelNames();
 
-    [GeneratedRegex("""
-        (?: ^ | [^a-z0-9] ) (?: Tex(?:ture)? [ _]* )?
-        (?:
-            (?<ORM> O[ _/]*R[ _/]*ME? | AO?[ _/]*R[ _/]*M )
-          | (?<RMA> R[ _/]*M[ _/]*(?: AO? | O ) )
-          | (?<ROM> R[ _/]*(?: O | AO? )[ _/]*M )
-          | (?<RSM> R[ _/]*S[ _/]*M )
-          | (?<MRA> M[ _/]*R[ _/]*A[OES]? )
-          | (?<MRO> M[ _/]*R[ _/]*O(?: A | S | Dp )? )
-          | (?<SRM> S[ _/]*R[ _/]*M )
-        )
-        (?= $ | [^a-z0-9] | (?: Map | Tex(?:ture)? | VT )(?: $ | [^a-z0-9] ) )
-        """, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace)]
+    [GeneratedRegex(CMaterialParams2.RegexPackedTextureLayout, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace)]
     private static partial Regex PackedTextureName();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

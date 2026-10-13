@@ -56,7 +56,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
     private IMeshExportFormat GetMeshFormat(EMeshFormat format) => format switch
     {
         EMeshFormat.ActorX => new ActorXMeshFormat(),
-        EMeshFormat.Gltf2 => new GltfMeshFormat(Session.TextureCache),
+        EMeshFormat.Gltf2 => new GltfMeshFormat(Session),
         EMeshFormat.UEFormat => new UEFormatMeshFormat(),
         EMeshFormat.USD => new UsdMeshFormat(),
         _ => throw new NotSupportedException($"Mesh export does not support format {format}. Available formats: {string.Join(", ", Enum.GetNames<EMeshFormat>())}")

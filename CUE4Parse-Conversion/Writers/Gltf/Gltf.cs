@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Text.Json.Nodes;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse_Conversion.Textures;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Writers;
@@ -143,7 +142,7 @@ public class Gltf
     }
 
 
-    private static GltfMaterialExporter CreateMaterials(ExportOptions options) => new(options, new TextureExportCache(options.TexturePlatform));
+    private static GltfMaterialExporter CreateMaterials(ExportOptions options) => new(options, new ExportSession(options));
 
     private static void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLodDto<TVertex> lod, MeshExportRules rules, GltfMaterialExporter materials, List<(IPrimitiveBuilder Primitive, int Index)>?[]? vertexMap = null) where TVertex : struct, IMeshVertex
     {
@@ -240,10 +239,14 @@ public class Gltf
 
     public static VertexJoints4 PrepareVertexJoint(SkinnedMeshVertex vert)
     {
-        var bindings = new (int, float)[vert.Influences.Length];
+        var influences = vert.Influences;
+        if (influences is [{ Weight: 1 } influence])
+            return new VertexJoints4(influence.Bone);
+
+        var bindings = new (int, float)[influences.Length];
         for (var i = 0; i < bindings.Length; i++)
         {
-            bindings[i] = (vert.Influences[i].Bone, vert.Influences[i].Weight);
+            bindings[i] = (influences[i].Bone, influences[i].Weight);
         }
         return new VertexJoints4(bindings);
     }
@@ -257,9 +260,9 @@ public class Gltf
         return (jv1, jv2, jv3);
     }
 
-    private static (VERTEX, VERTEX, VERTEX) PrepareTris(IMeshVertex vert1, IMeshVertex vert2, IMeshVertex vert3)
+    private static (VERTEX, VERTEX, VERTEX) PrepareTris<TVertex>(TVertex vert1, TVertex vert2, TVertex vert3) where TVertex : struct, IMeshVertex
     {
-        var v1 = new VERTEX(SwapYZ(vert1.Position * UnitScale),SwapYZAndNormalize((FVector)vert1.Normal) , SwapYZAndNormalize((Vector4)vert1.Tangent));
+        var v1 = new VERTEX(SwapYZ(vert1.Position * UnitScale), SwapYZAndNormalize((FVector)vert1.Normal), SwapYZAndNormalize((Vector4)vert1.Tangent));
         var v2 = new VERTEX(SwapYZ(vert2.Position * UnitScale), SwapYZAndNormalize((FVector)vert2.Normal), SwapYZAndNormalize((Vector4)vert2.Tangent));
         var v3 = new VERTEX(SwapYZ(vert3.Position * UnitScale), SwapYZAndNormalize((FVector)vert3.Normal), SwapYZAndNormalize((Vector4)vert3.Tangent));
 

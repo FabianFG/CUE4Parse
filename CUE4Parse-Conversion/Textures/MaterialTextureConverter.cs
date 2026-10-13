@@ -7,66 +7,83 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.Textures;
 
-/// <summary>Decodes material textures and converts packed channels, normal orientation and opacity.</summary>
-public sealed class MaterialTextureConverter(ExportOptions options, TextureExportCache? textures = null)
+/// <summary>Converts material images into PNGs with PBR channels, opacity and normal orientation.</summary>
+internal static class MaterialTextureConverter
 {
-    public CTexture? GetTexture(UTexture texture, bool isNormalMap = false, UTexture? opacity = null, EMaterialTextureLayout layout = EMaterialTextureLayout.ORM)
+    public static unsafe byte[]? Encode(UTexture texture, ExportOptions options, bool invertNormalY = false,
+        UTexture? opacity = null, EMaterialTextureLayout layout = EMaterialTextureLayout.ORM,
+        string? sourcePath = null, string? opacityPath = null)
     {
-        var decoded = Decode(texture);
-        if (decoded == null)
+        using var bitmap = ReadTexture(texture, options.TexturePlatform, sourcePath);
+        if (bitmap == null)
             return null;
 
-        var invertNormalY = isNormalMap && options.MeshFormat is EMeshFormat.Gltf2;
-        if (!invertNormalY && opacity == null && layout is EMaterialTextureLayout.ORM)
-            return decoded;
+        using var mask = opacity != null ? ReadTexture(opacity, options.TexturePlatform, opacityPath) : null;
+        var convert = invertNormalY || mask != null || layout != EMaterialTextureLayout.ORM;
+        var width = Math.Max(bitmap.Width, mask?.Width ?? 0);
+        var height = Math.Max(bitmap.Height, mask?.Height ?? 0);
 
-        var mask = opacity != null ? Decode(opacity) : null;
-        // A tiny solid color base texture must not reduce a detailed eyelash/hair mask
-        var width = Math.Max(decoded.Width, mask?.Width ?? 0);
-        var height = Math.Max(decoded.Height, mask?.Height ?? 0);
-        var pixels = GetRgbaPixels(decoded, width, height);
-
-        NormalizePackedMask(pixels, layout);
-
-        if (invertNormalY)
+        using var prepared = convert && (bitmap.ColorType is not SKColorType.Rgba8888 || bitmap.Width != width || bitmap.Height != height) ? PrepareTexture(bitmap, width, height) : null;
+        using var pixels = (prepared ?? bitmap).PeekPixels();
+        if (convert)
         {
-            ConvertNormal(pixels);
-        }
-        else if (mask != null)
-        {
-            ApplyOpacity(pixels, width, height, mask);
-        }
-
-        return new CTexture(width, height, EPixelFormat.PF_R8G8B8A8, pixels);
-    }
-
-    private CTexture? Decode(UTexture texture) => textures != null ? textures.Decode(texture) : texture.Decode(options.TexturePlatform);
-
-    private static byte[] GetRgbaPixels(CTexture texture, int width, int height)
-    {
-        if (width == texture.Width && height == texture.Height)
-        {
-            if (texture.PixelFormat is EPixelFormat.PF_R8G8B8A8)
-                return (byte[]) texture.Data.Clone();
-
-            if (texture.PixelFormat is EPixelFormat.PF_B8G8R8A8 or EPixelFormat.PF_A8R8G8B8)
+            var rgba = new Span<byte>(pixels.GetPixels().ToPointer(), pixels.BytesSize);
+            NormalizePackedMask(rgba, layout);
+            if (invertNormalY)
             {
-                var pixels = (byte[]) texture.Data.Clone();
-                for (var i = 0; i < pixels.Length; i += 4)
-                {
-                    (pixels[i], pixels[i + 2]) = (pixels[i + 2], pixels[i]);
-                }
-
-                return pixels;
+                ConvertNormal(rgba);
+            }
+            else if (mask != null)
+            {
+                ApplyOpacity(rgba, width, height, mask);
             }
         }
 
-        using var bitmap = texture.ToSkBitmap();
-        using var rgba = bitmap.Resize(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul), SKFilterQuality.High);
-        return rgba.Bytes;
+        using var encoded = pixels.Encode(TextureEncoder.GetPngOptions(options.PngCompressionLevel));
+        return encoded.ToArray();
     }
 
-    private static void NormalizePackedMask(byte[] pixels, EMaterialTextureLayout layout)
+    private static SKBitmap? ReadTexture(UTexture texture, ETexturePlatform platform, string? path)
+    {
+        if (path != null)
+        {
+            using var codec = SKCodec.Create(path) ?? throw new InvalidDataException($"Could not read material texture {path}.");
+            var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+            return SKBitmap.Decode(codec, info) ?? throw new InvalidDataException($"Could not decode material texture {path}.");
+        }
+
+        var index = texture.GetFirstMipIndex();
+        var decoded = texture is UTexture2DArray array ? array.DecodeTextureArray(index, platform)?.FirstOrDefault() : texture.DecodeMip(index, platform);
+        return decoded?.ToSkBitmap();
+    }
+
+    private static unsafe SKBitmap PrepareTexture(SKBitmap bitmap, int width, int height)
+    {
+        var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
+        if (width != bitmap.Width || height != bitmap.Height)
+            return bitmap.Resize(info, SKFilterQuality.High);
+        if (bitmap.ColorType is not (SKColorType.Rgba8888 or SKColorType.Bgra8888))
+            return bitmap.Copy(SKColorType.Rgba8888);
+
+        // Skia's color conversion can discard RGB under zero alpha, which normals still need
+        var copy = new SKBitmap(info);
+        using var source = bitmap.PeekPixels();
+        using var target = copy.PeekPixels();
+        var original = source.GetPixelSpan();
+        var pixels = new Span<byte>(target.GetPixels().ToPointer(), target.BytesSize);
+        original.CopyTo(pixels);
+        if (bitmap.ColorType is SKColorType.Bgra8888)
+        {
+            for (var i = 0; i < pixels.Length; i += 4)
+            {
+                (pixels[i], pixels[i + 2]) = (pixels[i + 2], pixels[i]);
+            }
+        }
+
+        return copy;
+    }
+
+    private static void NormalizePackedMask(Span<byte> pixels, EMaterialTextureLayout layout)
     {
         if (layout is EMaterialTextureLayout.ORM)
             return;
@@ -90,17 +107,18 @@ public sealed class MaterialTextureConverter(ExportOptions options, TextureExpor
             {
                 occlusionValue = pixels[i + occlusion];
             }
+
             (pixels[i], pixels[i + 1], pixels[i + 2]) = (occlusionValue, roughnessValue, metallicValue);
         }
     }
 
     // Convert DirectX tangent space normals to the OpenGL convention
-    private static void ConvertNormal(byte[] pixels)
+    private static void ConvertNormal(Span<byte> pixels)
     {
         // Each uint holds one RGBA pixel: XOR flips green, OR makes alpha opaque
         var greenMask = new Vector<uint>(BitConverter.IsLittleEndian ? 0x0000FF00u : 0x00FF0000u);
         var alphaMask = new Vector<uint>(BitConverter.IsLittleEndian ? 0xFF000000u : 0x000000FFu);
-        var blocks = MemoryMarshal.Cast<byte, Vector<uint>>(pixels.AsSpan());
+        var blocks = MemoryMarshal.Cast<byte, Vector<uint>>(pixels);
         foreach (ref var block in blocks)
         {
             block = (block ^ greenMask) | alphaMask;
@@ -113,16 +131,18 @@ public sealed class MaterialTextureConverter(ExportOptions options, TextureExpor
         }
     }
 
-    // Combine the separate opacity mask with base color alpha
-    private static void ApplyOpacity(byte[] pixels, int width, int height, CTexture mask)
+    private static void ApplyOpacity(Span<byte> pixels, int width, int height, SKBitmap mask)
     {
-        var maskPixels = GetRgbaPixels(mask, mask.Width, mask.Height);
+        using var rgba = mask.ColorType is not SKColorType.Rgba8888 ? mask.Copy(SKColorType.Rgba8888) : null;
+        using var maskPixels = (rgba ?? mask).PeekPixels();
+        var values = maskPixels.GetPixelSpan();
         if (width == mask.Width && height == mask.Height)
         {
             for (var i = 0; i < pixels.Length; i += 4)
             {
-                pixels[i + 3] = maskPixels[i];
+                pixels[i + 3] = values[i];
             }
+
             return;
         }
 
@@ -132,8 +152,8 @@ public sealed class MaterialTextureConverter(ExportOptions options, TextureExpor
             var pixelRow = y * width;
             for (var x = 0; x < width; x++)
             {
-                var maskIndex = maskRow + x * mask.Width / width;
-                pixels[(pixelRow + x) * 4 + 3] = maskPixels[maskIndex * 4];
+                var maskIndex = (maskRow + x * mask.Width / width) * 4;
+                pixels[(pixelRow + x) * 4 + 3] = values[maskIndex];
             }
         }
     }

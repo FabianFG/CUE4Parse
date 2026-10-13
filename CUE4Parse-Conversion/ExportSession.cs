@@ -19,12 +19,21 @@ using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse_Conversion.Exporters;
 using CUE4Parse_Conversion.Exporters.Custom;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse_Conversion.Textures;
+using CUE4Parse_Conversion.Dto;
 
 namespace CUE4Parse_Conversion;
 
 public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationToken>? streamingLevelFilter = null) : INotifyPropertyChanged
 {
+    private ExportSessionCache? _cache;
+    public ExportSessionCache Cache => _cache ?? throw new InvalidOperationException("Session is not currently running.");
+
+    internal ExportSession(ExportOptions options) : this((Action<StreamingLevelFilterArgs, CancellationToken>?) null)
+    {
+        _options = options;
+        _cache = new ExportSessionCache();
+    }
+
     internal readonly Action<StreamingLevelFilterArgs, CancellationToken>? _streamingLevelFilter = streamingLevelFilter;
     internal readonly SemaphoreSlim _streamingLevelFilterLock = new(1, 1);
 
@@ -36,7 +45,10 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     private ExportOptions? _options;
     internal ExportOptions Options => _options ?? throw new InvalidOperationException("Session is not currently running.");
 
-    internal TextureExportCache? TextureCache { get; private set; }
+    public bool EmbedMaterials { get; private set; }
+
+    public PbrMaterialDto ResolveMaterial(UMaterialInterface material, EMaterialDepth? depth = null)
+        => Cache.ResolveMaterial(material, depth ?? Options.MaterialDepth);
 
     private int _totalQueued;
     public int TotalQueued => Volatile.Read(ref _totalQueued);
@@ -112,17 +124,17 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         if (Interlocked.Exchange(ref _running, 1) == 1)
             throw new InvalidOperationException("Session is already running.");
 
-        OnPropertyChanged(nameof(IsRunning));
-        _baseDirectory = new DirectoryInfo(baseDirectory);
-        _options = options;
-
-        // Only glTF embeds materials as of now
-        var embedMaterials = options.MeshFormat is EMeshFormat.Gltf2 && options.ExportMaterials;
-        if (embedMaterials) TextureCache = new TextureExportCache(options.TexturePlatform);
-
         var results = new ConcurrentQueue<ExportResult>();
         try
         {
+            OnPropertyChanged(nameof(IsRunning));
+            _baseDirectory = new DirectoryInfo(baseDirectory);
+            _options = options;
+            _cache = new ExportSessionCache();
+
+            // Only glTF embeds materials as of now.
+            EmbedMaterials = options.MeshFormat is EMeshFormat.Gltf2 && options.ExportMaterials;
+
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
             var current = new List<ExporterBase>();
             while (true)
@@ -132,8 +144,8 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
                 if (current.Count == 0)
                     break;
 
-                // Textures are processed first so we don't end up decoding the same texture multiple times when embedding materials
-                if (embedMaterials)
+                // Textures are processed first so embedded materials can reuse saved files
+                if (EmbedMaterials)
                 {
                     CollectDependencies(current, ct);
                     await Parallel.ForEachAsync(current.OfType<TextureExporter>(), parallelOptions, Process).ConfigureAwait(false);
@@ -148,13 +160,16 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             var stillQueued = TotalQueued;
             var count = results.Count;
 
-            Clear();
-            progress?.Report(new ExportProgress(count, count + stillQueued)); // this ensure the last progress reports the actual numbers
-
             _options = null;
             _baseDirectory = null;
-            TextureCache = null;
+            EmbedMaterials = false;
+            _cache?.Clear();
+            _cache = null;
             Interlocked.Exchange(ref _running, 0);
+
+            // Release session data before notifying callers, which may throw
+            Clear();
+            progress?.Report(new ExportProgress(count, count + stillQueued)); // this ensure the last progress reports the actual numbers
             OnPropertyChanged(nameof(IsRunning));
         }
 
@@ -163,6 +178,11 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         async ValueTask Process(ExporterBase exporter, CancellationToken token)
         {
             var result = await exporter.ExportAsync(token).ConfigureAwait(false);
+            if (EmbedMaterials && result.Success && exporter is TextureExporter texture)
+            {
+                texture.CacheTexturePath();
+            }
+
             results.Enqueue(result);
 
             var stillQueued = Interlocked.Decrement(ref _totalQueued);

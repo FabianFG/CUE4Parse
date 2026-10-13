@@ -6,20 +6,22 @@ using static CUE4Parse_Conversion.Materials.MaterialParameters;
 
 namespace CUE4Parse_Conversion.Materials;
 
-/// <summary>Converts Unreal material parameters into PBR properties and texture references.</summary>
-public sealed class PbrMaterialConverter(EMaterialDepth depth)
+/// <summary>Builds a PBR material description from parsed Unreal material parameters.</summary>
+internal static class PbrMaterialConverter
 {
-    public PbrMaterialDto Resolve(UMaterialInterface source)
+    public static PbrMaterialDto Convert(MaterialParameters parameters)
     {
-        var parameters = new MaterialParameters(source, depth);
-        var (blendMode, cutoff, twoSided) = ResolveSurface(source);
-        var baseColor = parameters.GetBaseColorTexture();
-        var normal = parameters.GetNormalTexture();
+        var (blendMode, cutoff, twoSided) = parameters.GetSurface();
         var (orm, ormLayout) = parameters.GetPackedTexture();
-        var occlusion = parameters.GetOcclusionTexture();
         var (emission, emissive) = ResolveEmissive(parameters);
 
-        return new PbrMaterialDto
+        Lazy<PbrMaterialDto?>? parent = null;
+        if (parameters.Depth is not EMaterialDepth.TopLayerOnly)
+        {
+            parent = new Lazy<PbrMaterialDto?>(() => parameters.Parent?.Pbr);
+        }
+
+        return new PbrMaterialDto(parameters.Depth, parent)
         {
             BaseColor = ResolveBaseColor(parameters, blendMode),
             Metallic = parameters.GetMetallic(orm != null),
@@ -28,13 +30,13 @@ public sealed class PbrMaterialConverter(EMaterialDepth depth)
             BlendMode = blendMode,
             AlphaCutoff = cutoff,
             DoubleSided = twoSided,
-            BaseColorTexture = baseColor,
-            NormalTexture = normal,
-            OcclusionTexture = occlusion,
+            BaseColorTexture = parameters.GetBaseColorTexture(),
+            NormalTexture = parameters.GetNormalTexture(),
+            OcclusionTexture = parameters.GetOcclusionTexture(),
             OrmTexture = orm,
             OrmTextureLayout = ormLayout,
             EmissiveTexture = emissive,
-            OpacityTexture = blendMode is EBlendMode.BLEND_Opaque ? null : ResolveOpacity(source)
+            OpacityTexture = blendMode is EBlendMode.BLEND_Opaque ? null : ResolveOpacity(parameters.Source)
         };
     }
 
@@ -78,57 +80,5 @@ public sealed class PbrMaterialConverter(EMaterialDepth depth)
         var parameters = new CMaterialParams();
         material.GetParams(parameters);
         return parameters.Opacity?.TryLoad<UTexture2D>(out var mask) == true ? mask : null;
-    }
-
-    private static (EBlendMode BlendMode, float Cutoff, bool TwoSided) ResolveSurface(UMaterialInterface material)
-    {
-        var blendMode = EBlendMode.BLEND_Opaque;
-        var cutoff = 0.333f;
-        var twoSided = false;
-        foreach (var current in GetInheritanceChain(material))
-        {
-            if (current is UMaterial parent)
-            {
-                blendMode = parent.BlendMode;
-                cutoff = parent.OpacityMaskClipValue;
-                twoSided = parent.TwoSided;
-            }
-
-            if (current is not UMaterialInstance { BasePropertyOverrides: { } overrides })
-                continue;
-
-            if (overrides.bOverride_BlendMode)
-            {
-                blendMode = overrides.BlendMode;
-            }
-
-            if (overrides.bOverride_OpacityMaskClipValue)
-            {
-                cutoff = overrides.OpacityMaskClipValue;
-            }
-
-            if (overrides.bOverride_TwoSided)
-            {
-                twoSided = overrides.TwoSided;
-            }
-        }
-
-        return (blendMode, Clamp(cutoff), twoSided);
-    }
-
-    private static Stack<UMaterialInterface> GetInheritanceChain(UMaterialInterface material)
-    {
-        var visited = new HashSet<UMaterialInterface>();
-        var chain = new Stack<UMaterialInterface>();
-        while (visited.Add(material))
-        {
-            chain.Push(material);
-            if (material is not UMaterialInstance instance || instance.Parent is not { } parentReference || !parentReference.TryLoad<UMaterialInterface>(out var parent))
-                break;
-
-            material = parent;
-        }
-
-        return chain;
     }
 }

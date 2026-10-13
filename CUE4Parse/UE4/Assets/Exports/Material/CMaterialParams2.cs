@@ -24,6 +24,24 @@ public class CMaterialParams2
     public const string RegexNormals = "^NO_|.*Norm.*|(?:_N|_NM|_NRM)$";
     public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_|MR|(?<!no)RM).*|(?:_S|_LP|_PAK)$";
     public const string RegexEmissive = ".*Emiss.*|(?:_E|_EM)$";
+    public const string RegexOcclusion = @"Occlu|(?:^|_)AO(?:_|\d*$)|(?-i:(?<![A-Z])AO(?![a-z]))";
+    public const string RegexChannelNames = @"Ambient[ _]*Occlusion|Occlusion|Occl|Occ|Roughness|Rough|Metallic|Metal|Met|Specular|Spec";
+
+    // Named groups identify channel layouts, use only with RegexOptions.IgnorePatternWhitespace
+    // It still needs to be tested on more games
+    public const string RegexPackedTextureLayout = """
+        (?: ^ | [^a-z0-9] ) (?: Tex(?:ture)? [ _]* )?
+        (?:
+            (?<ORM> O[ _/]*R[ _/]*ME? | AO?[ _/]*R[ _/]*M )
+          | (?<RMA> R[ _/]*M[ _/]*(?: AO? | O ) )
+          | (?<ROM> R[ _/]*(?: O | AO? )[ _/]*M )
+          | (?<RSM> R[ _/]*S[ _/]*M )
+          | (?<MRA> M[ _/]*R[ _/]*A[OES]? )
+          | (?<MRO> M[ _/]*R[ _/]*O(?: A | S | Dp )? )
+          | (?<SRM> S[ _/]*R[ _/]*M )
+        )
+        (?= $ | [^a-z0-9] | (?: Map | Tex(?:ture)? | VT )(?: $ | [^a-z0-9] ) )
+        """;
 
     public bool HasTopDiffuse => HasTopTexture(Diffuse[0]);
     public bool HasTopNormals => HasTopTexture(Normals[0]);

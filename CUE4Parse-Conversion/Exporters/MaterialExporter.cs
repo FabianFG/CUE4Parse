@@ -1,4 +1,4 @@
-﻿using CUE4Parse_Conversion.Formats.Materials;
+using CUE4Parse_Conversion.Formats.Materials;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
@@ -8,6 +8,8 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase(material)
 {
+    private CMaterialParams2? _parameters;
+    private ExportSessionCache? _parameterCache;
     internal override IEnumerable<UObject> GetDependencies(CancellationToken ct) => LoadTextures(ReadParameters(), ct);
 
     private static IEnumerable<UTexture> LoadTextures(CMaterialParams2 parameters, CancellationToken ct)
@@ -21,9 +23,13 @@ public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase
 
     private CMaterialParams2 ReadParameters()
     {
-        var parameters = new CMaterialParams2();
-        material.GetParams(parameters, Session.Options.MaterialDepth);
-        return parameters;
+        if (!ReferenceEquals(_parameterCache, Session.Cache))
+        {
+            _parameters = null;
+            _parameterCache = Session.Cache;
+        }
+
+        return _parameters ??= Session.Cache.ReadParameters(material, Session.Options.MaterialDepth);
     }
 
     protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
@@ -38,9 +44,12 @@ public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase
             files.Add(new UsdMaterialFormat().Build(ObjectName, parameters, SaveDirectory));
         }
 
-        foreach (var texture in LoadTextures(parameters, ct))
+        if (!Session.EmbedMaterials)
         {
-            Session.Add(texture);
+            foreach (var texture in LoadTextures(parameters, ct))
+            {
+                Session.Add(texture);
+            }
         }
 
         return files;

@@ -14,9 +14,10 @@ namespace CUE4Parse_Conversion.Textures;
 public static class TextureEncoder
 {
     public static byte[] Encode(this CTexture bitmap, ExportOptions options, out string ext)
-        => bitmap.Encode(options.TextureFormat, options.ExportHdrTexturesAsHdr, out ext, options.TextureQuality, options.PngCompressionLevel, options.TgaRleCompression);
-
+        => EncodeTexture(bitmap, options.TextureFormat, options.ExportHdrTexturesAsHdr, out ext, options.TextureQuality, options.PngCompressionLevel, options.TgaRleCompression);
     public static byte[] Encode(this CTexture bitmap, ETextureFormat format, bool saveHdrAsHdr, out string ext, int quality = 100, int pngCompressionLevel = 3, bool tgaRleCompression = true)
+        => EncodeTexture(bitmap, format, saveHdrAsHdr, out ext, quality, Math.Clamp(pngCompressionLevel, 0, 9), tgaRleCompression);
+    private static byte[] EncodeTexture(CTexture bitmap, ETextureFormat format, bool saveHdrAsHdr, out string ext, int quality, int pngCompressionLevel, bool tgaRleCompression)
     {
         if (saveHdrAsHdr && PixelFormatUtils.IsHDR(bitmap.PixelFormat))
         {
@@ -31,7 +32,7 @@ public static class TextureEncoder
                 ext = "png";
                 using var bmp = bitmap.ToSkBitmap();
                 using var pixels = bmp.PeekPixels();
-                using var data = pixels.Encode(new SKPngEncoderOptions(SKPngEncoderFilterFlags.AllFilters, Math.Clamp(pngCompressionLevel, 0, 9)));
+                using var data = pixels.Encode(GetPngOptions(pngCompressionLevel));
                 return data.ToArray();
             }
             case ETextureFormat.Jpeg:
@@ -54,6 +55,13 @@ public static class TextureEncoder
             default: throw new NotImplementedException("Unsupported texture format: " + format);
             //TODO: ETextureFormat.Dds
         }
+    }
+
+    // This way it makes it slightly faster and smaller for low compression levels
+    internal static SKPngEncoderOptions GetPngOptions(int compressionLevel)
+    {
+        var filters = compressionLevel <= 3 ? SKPngEncoderFilterFlags.Sub | SKPngEncoderFilterFlags.Up : SKPngEncoderFilterFlags.AllFilters;
+        return new SKPngEncoderOptions(filters, compressionLevel);
     }
 
     private static byte[] EncodeTga(CTexture bitmap, bool compress)

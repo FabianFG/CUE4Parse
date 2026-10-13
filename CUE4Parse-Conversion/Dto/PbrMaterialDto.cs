@@ -6,6 +6,17 @@ namespace CUE4Parse_Conversion.Dto;
 
 public sealed class PbrMaterialDto
 {
+    private readonly Lazy<PbrMaterialDto?>? _parent;
+
+    public EMaterialDepth Depth { get; }
+    public PbrMaterialDto? Parent => _parent?.Value;
+
+    internal PbrMaterialDto(EMaterialDepth depth, Lazy<PbrMaterialDto?>? parent)
+    {
+        Depth = depth;
+        _parent = parent;
+    }
+
     public Vector4 BaseColor { get; init; } = Vector4.One;
     public float Metallic { get; init; }
     public float Roughness { get; init; } = 1;
