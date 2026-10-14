@@ -68,6 +68,12 @@ public class FWwisePackagedFile : FStructFallback
             // i know it's ugly, but i don't see other solution without rewriting everything
             catch (RIFFSectionSizeException)
             {
+                if (PrefetchSize == 0)
+                {
+                    BulkData = null;
+                    Log.Warning("Failed to read Bulk data for {Name} from bulk data", name);
+                    return;
+                }
                 if (bulkData.TryCombineBulkData(Ar, out var combinedData, out var fullBulkData))
                 {
                     try
