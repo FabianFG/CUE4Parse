@@ -18,6 +18,7 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse_Conversion.Exporters;
 using CUE4Parse_Conversion.Exporters.Custom;
+using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion;
@@ -53,7 +54,6 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             UMaterialInterface material => Add(new MaterialExporter(material)),
             USkinnedAsset skinnedAsset => Add(new SkinnedAssetExporter(skinnedAsset)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
-            UHoudiniAsset houdiniAsset => Add(new HoudiniAssetExporter(houdiniAsset)),
             UHoudiniStaticMesh houdiniMesh => Add(new HoudiniStaticMeshExporter(houdiniMesh)),
             UIRMesh irMesh => Add(new IRMeshExporter(irMesh)),
             UGeometryCollection geometryCollection => Add(new GeometryCollectionExporter(geometryCollection)),
@@ -65,6 +65,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             ALandscapeProxy landscape => Add(new LandscapeMeshExporter(landscape)),
             ULandscapeComponent landscape => Add(new LandscapeMeshExporter2(landscape)),
             USplineMeshComponent spline => Add(new SplineMeshExporter(spline)),
+            _ when EmbeddedFilesDto.Supports(export) => Add(new EmbeddedFilesExporter(export)),
             _ => throw new NotSupportedException($"Could not create exporter for export of type '{export.GetType().Name}'.")
         };
     }

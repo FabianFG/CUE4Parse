@@ -2,6 +2,7 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
