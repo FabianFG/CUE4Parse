@@ -421,6 +421,8 @@ public class FScriptStruct
             // Cloudheim
             "NamedGuid" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
+            "FP32" when Ar.Game is GAME_MarchofGiants => type == ReadType.ZERO ? new FStructFallback() : new FStructFallback(Ar, structName, new FRawHeader([(0, 2)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
+
             "PackedNormal" when Ar.Game is GAME_TheDivisionResurgence => new FPackedNormal(Ar),
 
             "UWEWorldPopSpatialLayer" when Ar.Game is GAME_Subnautica2 => new FUWEWorldPopSpatialLayer(Ar),

@@ -5,17 +5,6 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Exporters.Custom;
 
-public sealed class HoudiniAssetExporter(UHoudiniAsset asset) : ExporterBase(asset)
-{
-    protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
-    {
-        if (asset.HdaBuffer.Length == 0)
-            throw new Exception("Houdini asset contains no data");
-
-        return [new ExportFile("hda", asset.HdaBuffer)];
-    }
-}
-
 public sealed class HoudiniStaticMeshExporter(UHoudiniStaticMesh mesh) : MeshExporter<UHoudiniStaticMesh>(mesh)
 {
     protected override IEnumerable<FPackageIndex?> MaterialReferences => mesh.Materials;

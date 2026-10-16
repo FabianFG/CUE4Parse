@@ -1,4 +1,5 @@
 using CUE4Parse.GameTypes.DeadIsland2.Assets.Objects;
+using CUE4Parse.GameTypes.DFHO.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -192,9 +193,10 @@ public class UStaticMesh : UObject
             RenderData = Ar.Game switch
             {
                 GAME_DeadIsland2 => new FDeadIsland2StaticMeshRenderData(Ar),
+                GAME_DeltaForce => new FDeltaForceStaticMeshRenderData(Ar),
                 GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
                 GAME_WeHappyFew => new GFPStaticMeshRenderData(Ar, true),
-                _ => RenderData = new FStaticMeshRenderData(Ar)
+                _ => new FStaticMeshRenderData(Ar)
             };
         }
 

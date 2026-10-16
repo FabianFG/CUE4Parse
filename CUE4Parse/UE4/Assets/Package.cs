@@ -61,8 +61,9 @@ namespace CUE4Parse.UE4.Assets
             Func<FByteBulkDataHeader?, FArchive?>? ubulk = null,
             Func<FByteBulkDataHeader?, FArchive?>? uptnl = null,
             IFileProvider? provider = null,
-            bool useLazySerialization = true)
-            : base(uasset.Name.SubstringBeforeLast('.'), provider)
+            bool useLazySerialization = true,
+            string? archiveName = null)
+            : base(uasset.Name.SubstringBeforeLast('.'), provider, archiveName)
         {
             // We clone the version container because it can be modified with package specific versions when reading the summary
             uasset.Versions = (VersionContainer) uasset.Versions.Clone();
@@ -342,6 +343,9 @@ namespace CUE4Parse.UE4.Assets
         private ResolvedObject? ResolveImport(FPackageIndex importIndex)
         {
             var import = ImportMap[-importIndex.Index - 1];
+            if (Provider?.Versions.Game is GAME_MarchofGiants && import.OuterIndex is null or { IsNull: true })
+                return new ResolvedImportObject(import, this);
+
             var outerMostIndex = importIndex;
             FObjectImport outerMostImport;
             while (true)
@@ -351,7 +355,7 @@ namespace CUE4Parse.UE4.Assets
                     return new ResolvedImportObject(import, this);
 
                 outerMostImport = ImportMap[-outerMostIndex.Index - 1];
-                if (outerMostImport.OuterIndex.IsNull)
+                if (outerMostImport.OuterIndex is null or { IsNull: true })
                     break;
                 outerMostIndex = outerMostImport.OuterIndex;
             }

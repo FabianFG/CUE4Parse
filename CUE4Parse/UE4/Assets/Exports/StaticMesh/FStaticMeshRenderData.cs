@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.GameTypes.DFHO.Assets.Objects;
 using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using Newtonsoft.Json;
 
@@ -110,30 +109,23 @@ public class FStaticMeshRenderData
 
             if (!stripped)
             {
-                if (Ar.Game is GAME_DeltaForce)
+                for (var i = 0; i < LODs.Length; i++)
                 {
-                    FDeltaForceStaticMeshRenderData.SkipDistanceFields(Ar, LODs.Length);
-                }
-                else
-                {
-                    for (var i = 0; i < LODs.Length; i++)
+                    var bValid = Ar.ReadBoolean();
+                    if (bValid)
                     {
-                        var bValid = Ar.ReadBoolean();
-                        if (bValid)
+                        if (Ar.Game is >= GAME_UE5_0 or GAME_TerminullBrigade or GAME_WutheringWaves)
                         {
-                            if (Ar.Game is >= GAME_UE5_0 or GAME_TerminullBrigade or GAME_WutheringWaves)
-                            {
-                                _ = new FDistanceFieldVolumeData5(Ar);
-                            }
-                            else
-                            {
-                                _ = new FDistanceFieldVolumeData(Ar);
-                            }
+                            _ = new FDistanceFieldVolumeData5(Ar);
                         }
-
-                        if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
-                            _ = Ar.ReadArray(() => new FDistanceFieldVolumeData5(Ar));
+                        else
+                        {
+                            _ = new FDistanceFieldVolumeData(Ar);
+                        }
                     }
+
+                    if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
+                        _ = Ar.ReadArray(() => new FDistanceFieldVolumeData5(Ar));
                 }
             }
         }
@@ -210,10 +202,6 @@ public class FStaticMeshRenderData
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 
-        if (Ar.Game is GAME_DeltaForce)
-        {
-            Bounds = FDeltaForceStaticMeshRenderData.DeserializeCustomData(Ar, LODs.Length);
-        }
         if (Ar.Game is GAME_DeadzoneRogue) Ar.Position += 4;
         if (Ar.Game is GAME_InfinityNikki or GAME_RogueCompany) Ar.Position += 8;
 

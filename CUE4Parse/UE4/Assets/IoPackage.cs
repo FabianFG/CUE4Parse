@@ -90,8 +90,9 @@ public sealed class IoPackage : AbstractUePackage
         Func<FByteBulkDataHeader?, FArchive?>? ubulk = null,
         Func<FByteBulkDataHeader?, FArchive?>? uptnl = null,
         IVfsFileProvider? provider = null,
-        IoOptionalSegment? optionalSegment = null)
-        : base(uasset.Name.SubstringBeforeLast('.'), provider)
+        IoOptionalSegment? optionalSegment = null,
+        string? archiveName = null)
+        : base(uasset.Name.SubstringBeforeLast('.'), provider, archiveName)
     {
         _globalData = provider?.GlobalData ?? throw new ParserException("Found IoStore Package but global data is missing, can't serialize");
 
@@ -529,6 +530,23 @@ public sealed class IoPackage : AbstractUePackage
     {
         if (index == null || index.IsNull)
             return null;
+
+        if (index.RealmIndex < 0)
+        {
+            if (index.IsExport)
+            {
+                var unified = index.Index - 1;
+                if (unified < ExportMapLength)
+                    return CreateResolvedExport(unified);
+            }
+            else if (index.IsImport && -index.Index - 1 < ImportMap.Length)
+            {
+                return ResolveObjectIndex(BaseRealm, ImportMap[-index.Index - 1]);
+            }
+
+            return null;
+        }
+
         var realm = RealmOf(index.RealmIndex);
         if (index.IsImport && -index.Index - 1 < realm.ImportMap.Length)
             return ResolveObjectIndex(realm, realm.ImportMap[-index.Index - 1]);

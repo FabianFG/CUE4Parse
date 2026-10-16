@@ -371,7 +371,14 @@ public class USpectatorPawnMovement : UFloatingPawnMovement;
 public class USphereComponent : UShapeComponent;
 public class USphereReflectionCaptureComponent : UReflectionCaptureComponent;
 public class USplineAudioComponent : UAudioComponent;
-public class USplineComponent : UPrimitiveComponent;
+public class USplineComponent : UPrimitiveComponent
+{
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        if (Ar.Game is GAME_StarWarsGalacticRacer) Ar.Position += 1;
+        base.Deserialize(Ar, validPos);
+    }
+}
 public class USplineNavModifierComponent : UNavModifierComponent;
 public class USpringArmComponent : USceneComponent;
 public class USpriteComponent : UBillboardComponent;

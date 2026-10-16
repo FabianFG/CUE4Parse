@@ -211,13 +211,14 @@ public partial class USkeletalMesh : USkinnedAsset
                         }
                         break;
                 }
+                if (Ar.Game is GAME_DeadzoneRogue2) Ar.Position += 4;
 
                 if (Ar.Game >= GAME_UE5_5 || Ar.Game is GAME_SilverPalace)
                 {
                     NaniteResources = new FNaniteResources(Ar);
                 }
 
-                if (Ar.Game == GAME_DeadzoneRogue) Ar.Position += 4;
+                if (Ar.Game is GAME_DeadzoneRogue) Ar.Position += 4;
 
                 if (useNewCookedFormat)
                 {
@@ -322,7 +323,7 @@ public partial class USkeletalMesh : USkinnedAsset
         if (Ar.Game == GAME_OutlastTrials) Ar.Position += 1;
         if (Ar.Game == GAME_WeHappyFew) Ar.Position += 20;
 
-        if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo"))
+        if (TryGetValue(out FStructFallback[] lodInfos, "LODInfo") || TryGetValue(out lodInfos, "SourceModels"))
         {
             for (var i = 0; i < LODModels?.Length; i++)
             {
