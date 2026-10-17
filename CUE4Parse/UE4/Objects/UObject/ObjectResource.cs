@@ -102,6 +102,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             Index = index;
             Owner = owner;
+            RealmIndex = -1;
         }
 
         public FPackageIndex()

@@ -11,9 +11,7 @@ public class FNiagaraVariableBase : IUStruct
     public FStructFallback TypeDef;
     protected FStructFallback? FallbackStruct;
 
-    public FNiagaraVariableBase(FAssetArchive Ar) : this(Ar, "NiagaraVariableBase") { }
-
-    public FNiagaraVariableBase(FAssetArchive Ar, string? structName)
+    public FNiagaraVariableBase(FAssetArchive Ar, string? structName = "NiagaraVariableBase")
     {
         if (FNiagaraCustomVersion.Get(Ar) < FNiagaraCustomVersion.Type.VariablesUseTypeDefRegistry)
         {

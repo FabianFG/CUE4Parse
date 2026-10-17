@@ -151,7 +151,7 @@ public class FText : IUStruct
                 ETextHistoryType.StringTableEntry => new FTextHistory.StringTableEntry(Ar),
                 ETextHistoryType.TextGenerator => new FTextHistory.TextGenerator(Ar),
                 (ETextHistoryType)22 when Ar.Game is GAME_Zeus => new FTextHistory.Base("", Ar.Read<ulong>().ToString(), ""),
-                _ => new FTextHistory.None(Ar)
+                _ => new FTextHistory.None(Ar, HistoryType)
             };
             if (Ar.Game is GAME_Splitgate2 or GAME_Empulse) Ar.Position += 4;
         }
@@ -185,8 +185,10 @@ public abstract class FTextHistory : IUStruct
         {
 
         }
-        public None(FAssetArchive Ar)
+        public None(FAssetArchive Ar, ETextHistoryType historyType = ETextHistoryType.None)
         {
+            if (historyType != ETextHistoryType.None)
+                Log.Debug("Unknown history type {0}", historyType);
             if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.CultureInvariantTextSerializationKeyStability)
             {
                 var bHasCultureInvariantString = Ar.ReadBoolean();
