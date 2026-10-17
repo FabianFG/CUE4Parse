@@ -297,6 +297,27 @@ public static class TextureDecoder
         DecodeBytes(bytes, sizeX, sizeY, sizeZ, formatInfo, texture.IsNormalMap, out data, out colorType);
     }
 
+    private delegate byte[] SliceDecoder(ReadOnlySpan<byte> slice, int sizeX, int sizeY);
+
+    /// <summary>
+    /// Decodes a block-compressed mip one slice at a time. A texture array's slices are stored back to back, each a whole
+    /// number of 4x4 blocks; the AssetRipper decoders read one 2D image, so each slice is decoded on its own and the
+    /// 4-byte-per-pixel results are concatenated in slice order (what <see cref="DecodeTextureArray(UTexture2DArray, FTexture2DMipMap?, ETexturePlatform)"/> splits).
+    /// </summary>
+    private static byte[] DecodeSlices(byte[] bytes, int sizeX, int sizeY, int sizeZ, int blockBytes, SliceDecoder decode)
+    {
+        if (sizeZ <= 1) return decode(bytes, sizeX, sizeY);
+        var sliceBytes = (sizeX + 3) / 4 * ((sizeY + 3) / 4) * blockBytes;
+        var pixelBytes = sizeX * sizeY * 4;
+        var output = new byte[pixelBytes * sizeZ];
+        for (var z = 0; z < sizeZ && (z + 1) * sliceBytes <= bytes.Length; z++)
+        {
+            var slice = decode(bytes.AsSpan(z * sliceBytes, sliceBytes), sizeX, sizeY);
+            Buffer.BlockCopy(slice, 0, output, z * pixelBytes, Math.Min(pixelBytes, slice.Length));
+        }
+        return output;
+    }
+
     private static void DecodeBytes(byte[] bytes, int sizeX, int sizeY, int sizeZ, FPixelFormatInfo formatInfo, bool isNormalMap, out byte[] data, out EPixelFormat colorType)
     {
         //default return the original data and Format
@@ -309,7 +330,7 @@ public static class TextureDecoder
             {
                 if (UseAssetRipperTextureDecoder)
                 {
-                    Bc1.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    data = DecodeSlices(bytes, sizeX, sizeY, sizeZ, 8, static (slice, x, y) => { Bc1.Decompress<ColorRGBA<byte>, byte>(slice, x, y, out var rgba); return rgba; });
                 }
                 else
                 {
@@ -322,7 +343,7 @@ public static class TextureDecoder
             {
                 if (UseAssetRipperTextureDecoder)
                 {
-                    Bc2.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    data = DecodeSlices(bytes, sizeX, sizeY, sizeZ, 16, static (slice, x, y) => { Bc2.Decompress<ColorRGBA<byte>, byte>(slice, x, y, out var rgba); return rgba; });
                 }
                 else
                 {
@@ -334,7 +355,7 @@ public static class TextureDecoder
             case EPixelFormat.PF_DXT5:
                 if (UseAssetRipperTextureDecoder)
                 {
-                    Bc3.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    data = DecodeSlices(bytes, sizeX, sizeY, sizeZ, 16, static (slice, x, y) => { Bc3.Decompress<ColorRGBA<byte>, byte>(slice, x, y, out var rgba); return rgba; });
                 }
                 else
                 {
@@ -379,7 +400,7 @@ public static class TextureDecoder
                 break;
             case EPixelFormat.PF_BC4:
                 if (UseAssetRipperTextureDecoder)
-                    Bc4.Decompress<ColorBGRA<byte>, byte>(bytes, sizeX, sizeY * sizeZ, out data);
+                    data = DecodeSlices(bytes, sizeX, sizeY, sizeZ, 8, static (slice, x, y) => { Bc4.Decompress<ColorBGRA<byte>, byte>(slice, x, y, out var bgra); return bgra; });
                 else
                     data = BCDecoder.BC4(bytes, sizeX, sizeY, sizeZ);
                 colorType = EPixelFormat.PF_B8G8R8A8;
@@ -387,7 +408,7 @@ public static class TextureDecoder
             case EPixelFormat.PF_BC5:
                 if (UseAssetRipperTextureDecoder)
                 {
-                    Bc5.Decompress<ColorBGRA<byte>, byte>(bytes, sizeX, sizeY * sizeZ, out data);
+                    data = DecodeSlices(bytes, sizeX, sizeY, sizeZ, 16, static (slice, x, y) => { Bc5.Decompress<ColorBGRA<byte>, byte>(slice, x, y, out var bgra); return bgra; });
                     for (var i = 0; i < sizeX * sizeY * sizeZ; i++)
                         data[i * 4] = BCDecoder.GetZNormal(data[i * 4 + 2], data[i * 4 + 1]);
                 }
@@ -400,19 +421,19 @@ public static class TextureDecoder
                 break;
             case EPixelFormat.PF_BC6H:
                 if (UseAssetRipperTextureDecoder)
-                    Bc6h.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, false, out data);
+                    data = DecodeSlices(bytes, sizeX, sizeY, sizeZ, 16, static (slice, x, y) => { Bc6h.Decompress<ColorRGBA<byte>, byte>(slice, x, y, false, out var rgba); return rgba; });
                 else
                     data = BCDecoder.BC6H(bytes, sizeX, sizeY, sizeZ);
                 colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
             case EPixelFormat.PF_BC6H_Signed:
-                Bc6h.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, true, out data);
+                data = DecodeSlices(bytes, sizeX, sizeY, sizeZ, 16, static (slice, x, y) => { Bc6h.Decompress<ColorRGBA<byte>, byte>(slice, x, y, true, out var rgba); return rgba; });
                 colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
             case EPixelFormat.PF_BC7:
                 if (UseAssetRipperTextureDecoder || !IsWindows)
                 {
-                    Bc7.Decompress<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, out data);
+                    data = DecodeSlices(bytes, sizeX, sizeY, sizeZ, 16, static (slice, x, y) => { Bc7.Decompress<ColorRGBA<byte>, byte>(slice, x, y, out var rgba); return rgba; });
                     colorType = EPixelFormat.PF_R8G8B8A8;
                 }
                 else
