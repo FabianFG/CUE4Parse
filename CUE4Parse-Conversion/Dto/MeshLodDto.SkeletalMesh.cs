@@ -95,42 +95,12 @@ public partial class MeshLodDto<TVertex>
             }
         }
 
-        var sectionCount = 0;
-        var indexCount = 0;
-        foreach (var section in lod.Sections)
+        var sections = new MeshSectionDto[lod.Sections.Length];
+        for (var i = 0; i < sections.Length; i++)
         {
-            if (section.bDisabled)
-                continue;
-
-            sectionCount++;
-            indexCount += section.NumTriangles * 3;
+            sections[i] = new MeshSectionDto(lod.Sections[i]);
         }
 
-        var indices = lod.Indices.Buffer;
-        var hasDisabledSections = sectionCount != lod.Sections.Length;
-        if (hasDisabledSections)
-            indices = new uint[indexCount];
-
-        var sections = new MeshSectionDto[sectionCount];
-        var sectionIndex = 0;
-        var firstIndex = 0;
-        foreach (var sourceSection in lod.Sections)
-        {
-            if (sourceSection.bDisabled)
-                continue;
-
-            var section = new MeshSectionDto(sourceSection);
-            if (hasDisabledSections)
-            {
-                var count = section.NumFaces * 3;
-                Array.Copy(lod.Indices.Buffer, section.FirstIndex, indices, firstIndex, count);
-                section.FirstIndex = firstIndex;
-                firstIndex += count;
-            }
-
-            sections[sectionIndex++] = section;
-        }
-
-        return new MeshLodDto<SkinnedMeshVertex>(owner, sourceLodIndex, indices, vertices, sections, extraUvs, vertexColors, screenSize);
+        return new MeshLodDto<SkinnedMeshVertex>(owner, sourceLodIndex, lod.Indices.Buffer, vertices, sections, extraUvs, vertexColors, screenSize);
     }
 }

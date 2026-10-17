@@ -26,11 +26,10 @@ public class Gltf
 
     internal Gltf(string name, MeshLodDto<MeshVertex> lod, ExportOptions options, GltfMaterialExporter? materials)
     {
-        var rules = new MeshExportRules(lod.Owner.Game, options.ExportMaterials);
         var sceneBuilder = new SceneBuilder();
         var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexEmpty>(name);
 
-        ExportMeshSections(meshBuilder, lod, rules, materials ?? CreateMaterials(options));
+        ExportMeshSections(meshBuilder, lod, options, materials ?? CreateMaterials(options));
         sceneBuilder.AddRigidMesh(meshBuilder, Matrix4x4.Identity);
 
         Model = sceneBuilder.ToGltf2();
@@ -44,7 +43,6 @@ public class Gltf
         if (lod.Owner is not SkeletalMeshDto mesh)
             throw new ArgumentException("LOD owner must be a SkeletalMeshDto for skeletal meshes.", nameof(lod));
 
-        var rules = new MeshExportRules(lod.Owner.Game, options.ExportMaterials);
         var sceneBuilder = new SceneBuilder();
         var armatureRoot = new NodeBuilder(string.IsNullOrEmpty(lod._suffix) ? $"{name}.ao" : $"{name}.ao{lod._suffix}");
         var armature = CreateGltfSkeleton(mesh.Bones, armatureRoot);
@@ -54,7 +52,7 @@ public class Gltf
         if (options.ExportMorphTargets && mesh.MorphTargets is { Length: > 0 })
             vertexMap = new List<(IPrimitiveBuilder Primitive, int Index)>?[lod.Vertices.Length];
 
-        ExportMeshSections(meshBuilder, lod, rules, materials ?? CreateMaterials(options), vertexMap);
+        ExportMeshSections(meshBuilder, lod, options, materials ?? CreateMaterials(options), vertexMap);
         sceneBuilder.AddSkinnedMesh(meshBuilder, Matrix4x4.Identity, armature);
 
         if (vertexMap != null && mesh.MorphTargets is { Length: > 0 } morphTargets)
@@ -144,7 +142,7 @@ public class Gltf
 
     private static GltfMaterialExporter CreateMaterials(ExportOptions options) => new(options, new ExportSession(options));
 
-    private static void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLodDto<TVertex> lod, MeshExportRules rules, GltfMaterialExporter materials, List<(IPrimitiveBuilder Primitive, int Index)>?[]? vertexMap = null) where TVertex : struct, IMeshVertex
+    private static void ExportMeshSections<TVertex>(IMeshBuilder<MaterialBuilder> builder, MeshLodDto<TVertex> lod, ExportOptions options, GltfMaterialExporter materials, List<(IPrimitiveBuilder Primitive, int Index)>?[]? vertexMap = null) where TVertex : struct, IMeshVertex
     {
         FColor[]? colors = null;
         if (lod.VertexColors is { Length: > 0 })
@@ -161,9 +159,6 @@ public class Gltf
         {
             var section = lod.Sections[i];
             var slot = lod.Owner.GetMaterial(section);
-
-            if (!rules.ShouldExportSection(slot))
-                continue;
 
             var mat = materials.Build(slot, $"MaterialSlot_{i}");
 
@@ -191,9 +186,9 @@ public class Gltf
                     uvList3[k + 1] = (Vector2)lod.ExtraUvs[k][idx2];
                 }
 
-                var c1 = new VertexColorXTextureX(uvList1, colors?[idx0], rules.PreserveVertexColorMasks);
-                var c2 = new VertexColorXTextureX(uvList2, colors?[idx1], rules.PreserveVertexColorMasks);
-                var c3 = new VertexColorXTextureX(uvList3, colors?[idx2], rules.PreserveVertexColorMasks);
+                var c1 = new VertexColorXTextureX(uvList1, colors?[idx0], options.ExportMaterials);
+                var c2 = new VertexColorXTextureX(uvList2, colors?[idx1], options.ExportMaterials);
+                var c3 = new VertexColorXTextureX(uvList3, colors?[idx2], options.ExportMaterials);
                 if (vertexMap != null)
                 {
                     c1.SourceIndex = idx0;
