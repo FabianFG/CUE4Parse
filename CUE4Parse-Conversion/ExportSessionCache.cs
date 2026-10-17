@@ -23,8 +23,9 @@ public sealed class ExportSessionCache
 
     private MaterialParameters GetMaterialParameters(UMaterialInterface material, EMaterialDepth depth)
     {
-        return ((Lazy<MaterialParameters>) _entries.GetOrAdd((GetAssetKey(material), depth), _ =>
-            new Lazy<MaterialParameters>(() => new MaterialParameters(material, depth, GetMaterialParameters)))).Value;
+        return ((Lazy<MaterialParameters>) _entries.GetOrAdd((GetAssetKey(material), depth), static (_, state) =>
+            new Lazy<MaterialParameters>(() => new MaterialParameters(state.Material, state.Depth, state.Cache.GetMaterialParameters)),
+            (Material: material, Depth: depth, Cache: this))).Value;
     }
 
     // Called only after the first mip's exported file has been written successfully
@@ -40,8 +41,5 @@ public sealed class ExportSessionCache
         return null;
     }
 
-    internal void Clear()
-    {
-        _entries.Clear();
-    }
+    internal void Clear() => _entries.Clear();
 }

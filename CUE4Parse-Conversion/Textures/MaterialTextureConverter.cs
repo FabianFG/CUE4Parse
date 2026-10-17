@@ -7,19 +7,29 @@ using SkiaSharp;
 
 namespace CUE4Parse_Conversion.Textures;
 
+internal enum EMaterialTextureAlpha
+{
+    Ignore,
+    Preserve
+}
+
+internal readonly record struct FMaterialTexture(UTexture Texture, bool InvertNormalY = false, UTexture? Opacity = null,
+    EMaterialTextureLayout Layout = EMaterialTextureLayout.ORM, EMaterialTextureAlpha Alpha = EMaterialTextureAlpha.Ignore)
+{
+    public bool NeedsConversion => InvertNormalY || Opacity != null || Layout is not EMaterialTextureLayout.ORM;
+}
+
 /// <summary>Converts material images into PNGs with PBR channels, opacity and normal orientation.</summary>
 internal static class MaterialTextureConverter
 {
-    public static unsafe byte[]? Encode(UTexture texture, ExportOptions options, bool invertNormalY = false,
-        UTexture? opacity = null, EMaterialTextureLayout layout = EMaterialTextureLayout.ORM,
-        string? sourcePath = null, string? opacityPath = null)
+    public static unsafe byte[]? Encode(FMaterialTexture source, ExportOptions options, string? sourcePath = null, string? opacityPath = null)
     {
-        using var bitmap = ReadTexture(texture, options.TexturePlatform, sourcePath);
+        using var bitmap = ReadTexture(source.Texture, options.TexturePlatform, sourcePath);
         if (bitmap == null)
             return null;
 
-        using var mask = opacity != null ? ReadTexture(opacity, options.TexturePlatform, opacityPath) : null;
-        var convert = invertNormalY || mask != null || layout != EMaterialTextureLayout.ORM;
+        using var mask = source.Opacity != null ? ReadTexture(source.Opacity, options.TexturePlatform, opacityPath) : null;
+        var convert = source.InvertNormalY || mask != null || source.Layout is not EMaterialTextureLayout.ORM;
         var width = Math.Max(bitmap.Width, mask?.Width ?? 0);
         var height = Math.Max(bitmap.Height, mask?.Height ?? 0);
 
@@ -28,14 +38,15 @@ internal static class MaterialTextureConverter
         if (convert)
         {
             var rgba = new Span<byte>(pixels.GetPixels().ToPointer(), pixels.BytesSize);
-            NormalizePackedMask(rgba, layout);
-            if (invertNormalY)
+            NormalizePackedMask(rgba, source.Layout);
+            switch (source)
             {
-                ConvertNormal(rgba);
-            }
-            else if (mask != null)
-            {
-                ApplyOpacity(rgba, width, height, mask);
+                case { InvertNormalY: true }:
+                    ConvertNormal(rgba);
+                    break;
+                case var _ when mask != null:
+                    ApplyOpacity(rgba, width, height, mask);
+                    break;
             }
         }
 
@@ -45,7 +56,7 @@ internal static class MaterialTextureConverter
 
     private static SKBitmap? ReadTexture(UTexture texture, ETexturePlatform platform, string? path)
     {
-        if (path != null)
+        if (path != null && File.Exists(path))
         {
             using var codec = SKCodec.Create(path) ?? throw new InvalidDataException($"Could not read material texture {path}.");
             var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);

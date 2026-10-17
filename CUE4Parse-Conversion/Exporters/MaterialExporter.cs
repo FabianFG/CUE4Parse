@@ -14,7 +14,7 @@ public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase
 
     private static IEnumerable<UTexture> LoadTextures(CMaterialParams2 parameters, CancellationToken ct)
     {
-        foreach (var ptr in parameters.Textures.Values)
+        foreach (var ptr in parameters.Textures.Values.Distinct())
         {
             ct.ThrowIfCancellationRequested();
             if (ptr.TryLoad<UTexture>(out var texture)) yield return texture;

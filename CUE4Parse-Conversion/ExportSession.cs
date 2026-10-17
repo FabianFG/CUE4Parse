@@ -20,7 +20,6 @@ using CUE4Parse_Conversion.Exporters;
 using CUE4Parse_Conversion.Exporters.Custom;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse_Conversion.Dto;
 
 namespace CUE4Parse_Conversion;
 
@@ -148,7 +147,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
                 // Textures are processed first so embedded materials can reuse saved files
                 if (EmbedMaterials)
                 {
-                    CollectDependencies(current, ct);
+                    CollectDependencies(current, parallelOptions);
                     await Parallel.ForEachAsync(current.OfType<TextureExporter>(), parallelOptions, Process).ConfigureAwait(false);
                     current.RemoveAll(exporter => exporter is TextureExporter);
                 }
@@ -196,24 +195,30 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     }
 
     // Appended materials can add textures, visit them before processing batch
-    private void CollectDependencies(List<ExporterBase> exporters, CancellationToken ct)
+    private void CollectDependencies(List<ExporterBase> exporters, ParallelOptions options)
     {
-        for (var i = 0; i < exporters.Count; i++)
+        var start = 0;
+        while (start < exporters.Count)
         {
-            var exporter = exporters[i];
-            try
+            var end = exporters.Count;
+            Parallel.For(start, end, options, i =>
             {
-                foreach (var dependency in exporter.GetDependencies(ct))
+                var exporter = exporters[i];
+                try
                 {
-                    Add(dependency);
+                    foreach (var dependency in exporter.GetDependencies(options.CancellationToken))
+                    {
+                        Add(dependency);
+                    }
                 }
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                exporter.Log.Warning(ex, "Could not collect export dependencies");
-            }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    exporter.Log.Warning(ex, "Could not collect export dependencies");
+                }
+            });
 
-            DrainQueue(exporters, ct);
+            start = end;
+            DrainQueue(exporters, options.CancellationToken);
         }
     }
 

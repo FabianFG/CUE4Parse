@@ -12,21 +12,23 @@ namespace CUE4Parse_Conversion.Formats.Materials;
 internal sealed class GltfMaterialFormat(ExportOptions options, ExportSession session)
 {
     // These images belong to the current mesh, not the session cache
-    private readonly Dictionary<(UTexture Texture, bool Normal, UTexture? Opacity, EMaterialTextureLayout Layout, bool PreserveAlpha), ImageBuilder?> _images = [];
+    private readonly Dictionary<FMaterialTexture, ImageBuilder?> _images = [];
 
     public void Apply(PbrMaterialDto source, MaterialBuilder material)
     {
         material.WithBaseColor(source.BaseColor).WithDoubleSide(source.DoubleSided);
         if (source.BlendMode is EBlendMode.BLEND_Masked)
         {
-            material.WithAlpha(AlphaMode.MASK, source.AlphaCutoff);
+            // This is just a guess to prevent making whole mesh invisible
+            var useMask = source.DoubleSided || source.OpacityTexture != null || source.BaseColor.W < 1;
+            material.WithAlpha(useMask ? AlphaMode.MASK : AlphaMode.OPAQUE, source.AlphaCutoff);
         }
         else if (source.BlendMode is EBlendMode.BLEND_Translucent or EBlendMode.BLEND_Additive or EBlendMode.BLEND_AlphaComposite)
         {
             material.WithAlpha(AlphaMode.BLEND);
         }
 
-        AttachTexture(material, KnownChannel.BaseColor, source.BaseColorTexture, source.OpacityTexture, preserveAlpha: source.BlendMode is not EBlendMode.BLEND_Opaque);
+        AttachTexture(material, KnownChannel.BaseColor, source.BaseColorTexture, source.OpacityTexture, alpha: material.AlphaMode is AlphaMode.OPAQUE ? EMaterialTextureAlpha.Ignore : EMaterialTextureAlpha.Preserve);
         AttachTexture(material, KnownChannel.Normal, source.NormalTexture);
 
         var orm = AttachTexture(material, KnownChannel.MetallicRoughness, source.OrmTexture, layout: source.OrmTextureLayout);
@@ -52,14 +54,14 @@ internal sealed class GltfMaterialFormat(ExportOptions options, ExportSession se
     }
 
     private ImageBuilder? AttachTexture(MaterialBuilder material, KnownChannel channel, UTexture? texture, UTexture? opacity = null,
-        EMaterialTextureLayout layout = EMaterialTextureLayout.ORM, bool preserveAlpha = false)
+        EMaterialTextureLayout layout = EMaterialTextureLayout.ORM, EMaterialTextureAlpha alpha = EMaterialTextureAlpha.Ignore)
     {
         if (texture == null)
             return null;
 
         try
         {
-            var image = GetTexture(texture, channel is KnownChannel.Normal, opacity, layout, preserveAlpha);
+            var image = GetTexture(new FMaterialTexture(texture, channel is KnownChannel.Normal, opacity, layout, alpha));
             if (image == null)
                 return null;
 
@@ -73,34 +75,26 @@ internal sealed class GltfMaterialFormat(ExportOptions options, ExportSession se
         }
     }
 
-    private ImageBuilder? GetTexture(UTexture texture, bool normal, UTexture? opacity, EMaterialTextureLayout layout, bool preserveAlpha)
+    private ImageBuilder? GetTexture(FMaterialTexture source)
     {
-        var key = (texture, normal, opacity, layout, preserveAlpha);
-        if (_images.TryGetValue(key, out var cached))
+        if (_images.TryGetValue(source, out var cached))
             return cached;
 
-        _images[key] = null; // Cache decode failures too
+        _images[source] = null; // Cache decode failures too
 
-        var convert = normal || opacity != null || layout is not EMaterialTextureLayout.ORM;
-        var path = GetReusableTexturePath(texture, allowJpeg: !convert && !preserveAlpha);
-        var opacityPath = opacity != null ? GetReusableTexturePath(opacity) : null;
+        var path = GetReusableTexturePath(source.Texture, allowJpeg: !source.NeedsConversion && source.Alpha is not EMaterialTextureAlpha.Preserve);
+        var opacityPath = source.Opacity != null ? GetReusableTexturePath(source.Opacity) : null;
 
-        byte[]? data;
-        if (path != null && !convert)
-        {
-            data = File.ReadAllBytes(path);
-        }
-        else
-        {
-            data = MaterialTextureConverter.Encode(texture, options, normal, opacity, layout, path, opacityPath);
-        }
+        var data = !source.NeedsConversion && path != null && File.Exists(path)
+            ? File.ReadAllBytes(path)
+            : MaterialTextureConverter.Encode(source, options, path, opacityPath);
 
         if (data == null)
             return null;
 
         ImageBuilder image = data;
-        image.Name = texture.Name;
-        _images[key] = image;
+        image.Name = source.Texture.Name;
+        _images[source] = image;
         return image;
     }
 

@@ -92,7 +92,7 @@ public class CMaterialParams2
     [
         [
             "Trunk_Normal", "T_Normal", "normal", "normalmap", "NRRO", "Base Normal", "BaseNormalMap", "Normal Map", "Base Normal Map",
-            "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "Normal Tex",
+            "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "NormalMap Texture", "Normal Tex",
             "Normal A Map", "Normals Top", "Normals Side", "Fallback Normal", "Base_N", "BaseNormal_Tex", "BaseNormal_NonVT",
             "Base_Normal", "BaseNormal", "Normal Base", "NormalVT", "TextureNormal", "Tex_BakedNormal", "TexNor", "Normal VT",
             "BakedNormalMap", "3 - Baked Normal", "Base Texture Normal", "Normal Base Map", "Tex_NM","TexA_NM", "Normal_Tex",
@@ -116,7 +116,7 @@ public class CMaterialParams2
     [
         [
             "Trunk_Specular", "PackedTexture",
-            "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side",
+            "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side", "AORoughnessMetallic",
             "MG", "ORM", "MRAE", "MRAS", "MRAO", "MRA", "MRAO_Map", "MRA A", "MRS", "LP", "LP_1", "Base_LP", "Base_R*", "MRO_Tex",
             "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "MRO Map", "MROA Map", "MRO",
             "Base_ORM", "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map", "AO",
