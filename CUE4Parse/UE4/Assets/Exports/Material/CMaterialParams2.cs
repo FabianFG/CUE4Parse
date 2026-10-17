@@ -25,7 +25,7 @@ public class CMaterialParams2
     public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_|MR|(?<!no)RM).*|(?:_S|_LP|_PAK)$";
     public const string RegexEmissive = ".*Emiss.*|(?:_E|_EM)$";
     public const string RegexOcclusion = @"Occlu|(?:^|_)AO(?:_|\d*$)|(?-i:(?<![A-Z])AO(?![a-z]))";
-    public const string RegexChannelNames = @"Ambient[ _]*Occlusion|Occlusion|Occl|Occ|Roughness|Rough|Metallic|Metal|Met|Specular|Spec";
+    public const string RegexChannelNames = @"Ambient[ _]*Occlusion|Occlusion|Occl|Occ|Roughness|Rough|Metallic|Metal|Met|Specular|Spec|Height";
 
     // Named groups identify channel layouts, use only with RegexOptions.IgnorePatternWhitespace
     // It still needs to be tested on more games
@@ -39,6 +39,7 @@ public class CMaterialParams2
           | (?<MRA> M[ _/]*R[ _/]*A[OES]? )
           | (?<MRO> M[ _/]*R[ _/]*O(?: A | S | Dp )? )
           | (?<SRM> S[ _/]*R[ _/]*M )
+          | (?<HRM> H[ _/]*R[ _/]*M )
         )
         (?= $ | [^a-z0-9] | (?: Map | Tex(?:ture)? | VT )(?: $ | [^a-z0-9] ) )
         """;

@@ -49,5 +49,7 @@ public enum EMaterialTextureLayout
     /// <summary>Metallic (R), Roughness (G), Occlusion (B).</summary>
     MRO,
     /// <summary>Specular (R), Roughness (G), Metallic (B); Occlusion is stored separately.</summary>
-    SRM
+    SRM,
+    /// <summary>Height (R), Roughness (G), Metallic (B); Occlusion is stored separately.</summary>
+    HRM
 }

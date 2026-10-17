@@ -105,7 +105,7 @@ internal static class MaterialTextureConverter
             EMaterialTextureLayout.ROM => (1, 0, 2),
             EMaterialTextureLayout.RSM => (-1, 0, 2),
             EMaterialTextureLayout.MRA or EMaterialTextureLayout.MRO => (2, 1, 0),
-            EMaterialTextureLayout.SRM => (-1, 1, 2),
+            EMaterialTextureLayout.SRM or EMaterialTextureLayout.HRM => (-1, 1, 2),
             _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null)
         };
 

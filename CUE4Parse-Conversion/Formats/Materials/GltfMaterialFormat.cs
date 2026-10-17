@@ -36,7 +36,7 @@ internal sealed class GltfMaterialFormat(ExportOptions options, ExportSession se
         {
             AttachTexture(material, KnownChannel.Occlusion, source.OcclusionTexture);
         }
-        else if (orm != null && source.OrmTextureLayout is not (EMaterialTextureLayout.RSM or EMaterialTextureLayout.SRM))
+        else if (orm != null && source.OrmTextureLayout is not (EMaterialTextureLayout.RSM or EMaterialTextureLayout.SRM or EMaterialTextureLayout.HRM))
         {
             material.WithChannelImage(KnownChannel.Occlusion, orm);
         }
