@@ -62,6 +62,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             UAnimationAsset animation => Add(new AnimationExporter(animation)),
             UDNAAsset dna => Add(new DnaExporter(dna)),
             UWorld world => Add(new WorldExporter(world)),
+            UBlueprintGeneratedClass blueprint => Add(new BlueprintExporter(blueprint)),
             ALandscapeProxy landscape => Add(new LandscapeMeshExporter(landscape)),
             ULandscapeComponent landscape => Add(new LandscapeMeshExporter2(landscape)),
             USplineMeshComponent spline => Add(new SplineMeshExporter(spline)),
