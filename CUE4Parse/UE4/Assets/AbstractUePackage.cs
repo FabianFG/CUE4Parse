@@ -14,8 +14,8 @@ namespace CUE4Parse.UE4.Assets;
 [JsonConverter(typeof(PackageConverter))]
 public abstract class AbstractUePackage : UObject, IPackage
 {
-
     public IFileProvider? Provider { get; }
+    public string? ArchiveName { get; }
     public TypeMappings? Mappings => Provider?.MappingsForGame;
 
     public abstract FPackageFileSummary Summary { get; }
@@ -35,10 +35,11 @@ public abstract class AbstractUePackage : UObject, IPackage
         }
     }
 
-    protected AbstractUePackage(string name, IFileProvider? provider)
+    protected AbstractUePackage(string name, IFileProvider? provider, string? archiveName = null)
     {
         Name = name;
         Provider = provider;
+        ArchiveName = archiveName;
         Flags |= EObjectFlags.RF_WasLoaded;
     }
 
@@ -109,7 +110,15 @@ public abstract class AbstractUePackage : UObject, IPackage
             {
                 throw new ParserException($"Could not read {obj.ExportType} named {obj.Name} correctly", e);
             }
-            Log.Error(e, "Could not read {0} named {1} correctly", obj.ExportType, obj.Name);
+
+            if (e is ParserException)
+            {
+                Log.Error(e, "Could not read {0} named {1} correctly", obj.ExportType, obj.Name);
+            }
+            else
+            {
+                Log.Error(e, "Could not read {0} named {1} correctly ({2})", obj.ExportType, obj.Name, Ar.Name);
+            }
         }
     }
 

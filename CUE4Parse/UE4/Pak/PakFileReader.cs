@@ -8,6 +8,7 @@ using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.LordOfMysteries.UE4.Lua;
+using CUE4Parse.GameTypes.NetEase.RacingMaster.Lua;
 using CUE4Parse.GameTypes.Netmarble.NiNoKuni.UE4.Encryption;
 using CUE4Parse.GameTypes.NFS.Mobile.Lua;
 using CUE4Parse.GameTypes.NTE.Encryption;
@@ -222,6 +223,7 @@ public partial class PakFileReader : AbstractAesVfsReader
         (GAME_NeedForSpeedMobile, "lua") => NFSLua.RestoreLuaBytecode(entry.Path, data),
         (GAME_ValorantSource, "lua") => ValorantSourceLua.DecryptLuaBytecode(entry.Name, data),
         (GAME_LordOfMysteries, "luac") => LoMLua.DecryptLuaJITBytecode(entry.Path, data),
+        (GAME_RacingMaster, "lua") => RacingMasterLua.DecryptLuaBytecode(entry.Path, data),
 
         (GAME_NevernessToEverness, "ini") => NevernessToEvernessIniEncryption.DecryptIni(data, data.Length),
         (GAME_GameForPeace, "ini") => DecryptGameForPeaceIni(data),

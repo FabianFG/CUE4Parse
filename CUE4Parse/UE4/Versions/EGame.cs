@@ -188,10 +188,12 @@ public enum EGame : uint
     GAME_UE5_0 = GameUtils.GameUe5Base + (0 << 16),
         GAME_MeetYourMaker = GAME_UE5_0 + 1,
         GAME_BlackMythWukong = GAME_UE5_0 + 2,
-        // Added here, so it doesn't break existing configurations.
+        GAME_UE5_EA_Legacy = GAME_UE5_0 + 3,
+        GAME_TheMatrixAwakens = GAME_UE5_EA_Legacy + 1,
         // The commit https://github.com/EpicGames/UnrealEngine/commit/cf116088ae6b65c1701eee99288e43c7310d6bb1#diff-6178e9d97c98e321fc3f53770109ea7f6a8ea7a86cac542717a81922f2f93613R723
-        // changed the IoStore and its packages format which breaks backward compatibility with 5.0.0-16433597+++UE5+Release-5.0-EarlyAccess
-        GAME_UE5_EA = GAME_UE5_0 + 3,
+        // changed the IoStore and its packages format which breaks backward compatibility with 5.0.0-16433597+++UE5+Release-5.0-EarlyAccess.
+        // Use GAME_UE5_EA_Legacy for that version and below.
+        GAME_UE5_EA = GAME_UE5_EA_Legacy + 2,
     GAME_UE5_1 = GameUtils.GameUe5Base + (1 << 16),
         GAME_3on3FreeStyleRebound = GAME_UE5_1 + 1,
         GAME_Placeholder = GAME_UE5_1 + 2,
@@ -264,7 +266,7 @@ public enum EGame : uint
         GAME_Solasta2 = GAME_UE5_6 + 3,
         GAME_NevernessToEverness = GAME_UE5_6 + 4,
         GAME_DeadByDaylight_Old = GAME_UE5_6 + 5,
-        GAME_Placeholder9 = GAME_UE5_6 + 6,
+        GAME_DeadzoneRogue2 = GAME_UE5_6 + 6,
         GAME_Subnautica2 = GAME_UE5_6 + 7,
         GAME_LEGOBatmanLegacyoftheDarkKnight = GAME_UE5_6 + 8,
         GAME_Fatekeeper = GAME_UE5_6 + 9,
@@ -284,6 +286,8 @@ public enum EGame : uint
         GAME_DeadByDaylight = GAME_UE5_7 + 7,
         GAME_Bringer = GAME_UE5_7 + 8,
         GAME_ArcRaiders = GAME_UE5_7 + 9,
+        GAME_MarchofGiants = GAME_UE5_7 + 10,
+        GAME_StarWarsGalacticRacer = GAME_UE5_7 + 11,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
         GAME_ConanExilesEnhanced = GAME_UE5_8 + 1,
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
@@ -319,8 +323,9 @@ public static class GameUtils
         {
             return game switch
             {
-                    GAME_UE5_EA => new FPackageFileVersion(522, 1002),
-                < GAME_UE5_1 => new FPackageFileVersion(522, 1004),
+                // Early Access never had EUnrealEngineObjectUE5Version
+                    GAME_UE5_EA_Legacy or GAME_UE5_EA or GAME_TheMatrixAwakens => new FPackageFileVersion(522, 0),
+                < GAME_UE5_1 => new FPackageFileVersion(522, 1004), // Some early ++UE5+Release-5.0 builds had 1002.
                 < GAME_UE5_2 => new FPackageFileVersion(522, 1008),
                     GAME_TheFirstDescendant => new FPackageFileVersion(522, 1002),
                 < GAME_UE5_4 => new FPackageFileVersion(522, 1009),

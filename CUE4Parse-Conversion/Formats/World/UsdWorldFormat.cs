@@ -11,7 +11,7 @@ public class UsdWorldFormat : IWorldExportFormat
 {
     public string DisplayName => "USD World (.usda)";
 
-    public ExportFile Build(WorldDto dto, WorldAssetPaths paths)
+    public ExportFile Build(SceneDto dto, WorldAssetPaths paths)
     {
         var worldPrim = UsdPrim.Def("Scope", dto.Name);
         foreach (var actor in dto.Actors)

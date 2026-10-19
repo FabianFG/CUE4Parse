@@ -64,7 +64,7 @@ public abstract class ExporterBase : IExporter
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default);
 
-    public async Task<ExportResult> ExportAsync(CancellationToken ct = default)
+    public virtual async Task<ExportResult> ExportAsync(CancellationToken ct = default)
     {
         try
         {
@@ -85,7 +85,7 @@ public abstract class ExporterBase : IExporter
         }
     }
 
-    private async Task<string> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
+    protected async Task<string> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
     {
         var (fileName, path) = ResolveOutputPath(file); // fileName may not be the real file name, it's just for logging
         Log.ForContext("FilePath", path).Information("Writing {FileName} ({ReadableFileSize:l})", fileName, file.Data.Length.GetReadableSize());

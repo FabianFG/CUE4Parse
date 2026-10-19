@@ -43,6 +43,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
         public FName RetargetSource;
         public FTransform[]? RetargetSourceAssetReferencePose;
         public EAnimInterpolationType Interpolation;
+        public bool bEnableRootMotion { get; private set; } = false;
+        public ERootMotionRootLock RootMotionRootLock { get; private set; } = ERootMotionRootLock.RefPose;
+        public bool bForceRootLock { get; private set; } = false;
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -58,6 +61,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             RetargetSource = GetOrDefault<FName>(nameof(RetargetSource));
             RetargetSourceAssetReferencePose = GetOrDefault<FTransform[]>(nameof(RetargetSourceAssetReferencePose));
             Interpolation = GetOrDefault<EAnimInterpolationType>(nameof(Interpolation));
+            bEnableRootMotion = GetOrDefault(nameof(bEnableRootMotion), bEnableRootMotion);
+            RootMotionRootLock = GetOrDefault(nameof(RootMotionRootLock), RootMotionRootLock);
+            bForceRootLock = GetOrDefault(nameof(bForceRootLock), bForceRootLock);
 
             if (BoneCompressionSettings == null && Ar.Game == GAME_RogueCompany)
             {
@@ -255,7 +261,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
             var nameIndex = Ar.Read<int>(); //ACL thing - KeyEncodingFormat FName
             Ar.Position -= 4;
-            if (nameIndex >= 0 && nameIndex < Ar.Owner?.NameMap.Length)
+            if (nameIndex >= 0 && nameIndex < Ar.NameMap?.Length)
             {
                 var format = Ar.ReadFName();
                 if ("AKF_" + format.Text != compressedData.KeyEncodingFormat.ToString() && !format.Text.StartsWith("ACL")) Ar.Position -= 8;

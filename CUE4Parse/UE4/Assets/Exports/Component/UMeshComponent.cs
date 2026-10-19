@@ -7,6 +7,11 @@ public class UMeshComponent : UPrimitiveComponent
 {
     public FPackageIndex?[] OverrideMaterials = [];
 
+    public UMeshComponent()
+    {
+        CastShadow = true;
+    }
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);

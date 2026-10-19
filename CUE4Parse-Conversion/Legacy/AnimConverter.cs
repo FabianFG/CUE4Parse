@@ -308,7 +308,7 @@ namespace CUE4Parse_Conversion.Animations
                 var refPose = (FCompactPose)referencePoses[refPoseType switch
                 {
                     EAdditiveBasePoseType.ABPT_AnimScaled => frameIndex % maxRefPosFrame,
-                    _ => refFrameIndex
+                    _ => 0 // LoadAsPoses(seq, skel, refFrame) and LoadRestAsPoses return a single pose
                 }].Clone();
 
                 switch (animSeq.OriginalSequence.AdditiveAnimType)
