@@ -204,30 +204,32 @@ public readonly struct FSoftObjectPath : ILoadableObject, IUStruct
             return true;
         }
 
-        var current = asset;
+        export = null;
+        if (asset.Owner is not { } package) return false;
 
-        var parts = SubPathString.Split('.');
-        foreach (var part in parts)
+        var current = package.ResolvePackageIndex(new FPackageIndex(package, package.GetExportIndex(asset.Name) + 1));
+        foreach (var part in SubPathString.Split('.'))
         {
-            if (current.Owner == null)
+            if (current is null) return false;
+
+            ResolvedObject? child = null;
+            for (var i = 0; i < package.ExportMapLength && child is null; i++)
             {
-                export = null;
-                return false;
+                if (package.ResolvePackageIndex(new FPackageIndex(package, i + 1)) is { } candidate &&
+                    candidate.Name.Text == part && current.Equals(candidate.Outer))
+                    child = candidate;
             }
 
-            var foundExport = current.Owner.GetExportOrNull(part);
-            if (foundExport == null)
+            if (child is null)
             {
                 Log.Warning("SoftObjectPath: Could not find subobject '{ObjectName}' in path '{SubPath}' for asset '{AssetPath}'", part, SubPathString, AssetPathName.Text);
-                export = null;
                 return false;
             }
 
-            current = foundExport;
+            current = child;
         }
 
-        export = current;
-        return true;
+        return current?.TryLoad(out export) == true;
     }
 
     public override string ToString() => string.IsNullOrEmpty(SubPathString)
