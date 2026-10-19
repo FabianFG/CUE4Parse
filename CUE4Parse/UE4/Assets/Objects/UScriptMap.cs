@@ -13,6 +13,8 @@ namespace CUE4Parse.UE4.Assets.Objects;
 public class UScriptMap
 {
     public Dictionary<FPropertyTagType, FPropertyTagType?> Properties;
+    // The keys a map saved against its defaults removes from them
+    public List<FPropertyTagType?> KeysToRemove = [];
 
     public UScriptMap() => Properties = [];
 
@@ -56,7 +58,7 @@ public class UScriptMap
             var numKeysToRemove = Ar.Read<int>();
             for (var i = 0; i < numKeysToRemove; i++)
             {
-                FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP);
+                KeysToRemove.Add(FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP));
             }
         }
 
