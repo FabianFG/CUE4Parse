@@ -58,9 +58,11 @@ public class ActorDto : ObjectDto
 
         if (RootComponent is { } roota && Location is { } loc)
         {
-            roota.Transform.Translation = loc;
-            if (Rotation is { } rot) roota.Transform.Rotation = rot.Quaternion();
-            if (Scale is { } scale) roota.Transform.Scale3D = scale;
+            var transform = roota.Transform;
+            transform.Translation = loc;
+            if (Rotation is { } rot) transform.Rotation = rot.Quaternion();
+            if (Scale is { } scale) transform.Scale3D = scale;
+            roota.Transform = transform;
         }
 
         // TODO: TextureData
