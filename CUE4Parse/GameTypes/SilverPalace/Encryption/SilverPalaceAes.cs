@@ -1,7 +1,12 @@
 using System.Buffers.Binary;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Blake3;
+using CUE4Parse.Encryption.Aes;
+using CUE4Parse.UE4.IO;
+using CUE4Parse.UE4.Pak;
+using CUE4Parse.UE4.Pak.Objects;
 using CUE4Parse.UE4.VirtualFileSystem;
 using CUE4Parse.Utils;
 
@@ -21,6 +26,11 @@ public static class SilverPalaceAes
         0x43, 0x1E, 0xA5, 0xF0
     ];
 
+    private const int PakInfoSize = 221;
+    private const int PakInfoMagicOffset = 17;
+
+    private static readonly ConditionalWeakTable<IAesVfsReader, StrongBox<bool>> _isLegacyCache = new();
+
     // Used starting from CBT2
     public static byte[] SilverPalaceDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
@@ -32,6 +42,9 @@ public static class SilverPalaceAes
             throw new NullReferenceException("reader.AesKey");
 
         var key = reader.AesKey;
+        if (!IsLegacy(reader))
+            return bytes.Decrypt(beginOffset, count, key);
+
         var pakName = Path.GetFileNameWithoutExtension(reader.Name).ToLower();
 
         var pakKey = (stackalloc byte[KeySize]);
@@ -45,6 +58,43 @@ public static class SilverPalaceAes
         var data = bytes.AsSpan(beginOffset, count).ToArray();
         DecryptCustomAes(data, pakKey);
         return data;
+    }
+
+    private static bool IsLegacy(IAesVfsReader reader)
+        => _isLegacyCache.GetValue(reader, static r => new StrongBox<bool>(DetectLegacy(r))).Value;
+
+    private static bool DetectLegacy(IAesVfsReader reader)
+    {
+        switch (reader)
+        {
+            case PakFileReader pak:
+                return pak.Info.Magic == FPakInfo.PAK_FILE_MAGIC_SilverPalace;
+            case IoStoreReader:
+            {
+                var pakPath = Path.ChangeExtension(reader.Path, ".pak");
+                try
+                {
+                    using var stream = File.OpenRead(pakPath);
+                    if (stream.Length < PakInfoSize)
+                        return false;
+
+                    var footer = (stackalloc byte[PakInfoSize]);
+                    stream.Seek(-PakInfoSize, SeekOrigin.End);
+                    stream.ReadExactly(footer);
+                    return BinaryPrimitives.ReadUInt32LittleEndian(footer[PakInfoMagicOffset..]) == FPakInfo.PAK_FILE_MAGIC_SilverPalace;
+                }
+                catch (IOException)
+                {
+                    return false;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return false;
+                }
+            }
+            default:
+                return false;
+        }
     }
 
     private static void DecryptCustomAes(Span<byte> data, Span<byte> key)
