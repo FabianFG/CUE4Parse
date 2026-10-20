@@ -379,13 +379,16 @@ public partial class FPakInfo
                 Ar.Game == GAME_DreamStar && Magic == PAK_FILE_MAGIC_DreamStar ||
                 Ar.Game == GAME_AssaultFireFuture && Magic == PAK_FILE_MAGIC_AssaultFireFuture ||
                 Ar.Game == GAME_KartRiderDrift && Magic == PAK_FILE_MAGIC_KartRiderDrift ||
-                Ar.Game == GAME_SilverPalace && Magic == PAK_FILE_MAGIC_SilverPalace)
+                Ar.Game == GAME_SilverPalace && Magic == PAK_FILE_MAGIC_SilverPalace ||
+                HasArcheAgeChroniclesPakMagic(Ar, Magic))
                 goto afterMagic;
             // Stop immediately when magic is wrong
             return;
         }
 
         afterMagic:
+        if (HasArcheAgeChroniclesPakMagic(Ar, Magic))
+            ReadArcheAgeChroniclesPakTrailerExtension(Ar);
         Version = hottaVersion >= 2 ? (EPakFileVersion) (Ar.Read<int>() ^ 2) : Ar.Read<EPakFileVersion>();
         if (Ar.Game == GAME_LordOfMysteries && ((uint) Version & 0x80000000) != 0)
         {
@@ -491,7 +494,7 @@ public partial class FPakInfo
         {
             var maxNumCompressionMethods = offsetToTry switch
             {
-                OffsetsToTry.Size8a => 5,
+                OffsetsToTry.Size8a or ArcheAgeChroniclesFooterOffset => 5,
                 OffsetsToTry.Size10 => 5,
                 OffsetsToTry.SizeHotta => 5,
                 OffsetsToTry.SizeDbD => 5,
@@ -635,6 +638,7 @@ public partial class FPakInfo
                 GAME_ArenaBreakoutMobile => (long) OffsetsToTry.SizeArenaBreakoutMobile,
                 GAME_ValorantSource => (long) OffsetsToTry.SizeValorantSource,
                 GAME_GangstarMirageCity => (long) OffsetsToTry.SizeGangstar,
+                GAME_ArcheAgeChronicles => Math.Min(length, (long) ArcheAgeChroniclesFooterOffset),
                 _ => Math.Min(length, (long) OffsetsToTry.SizeMax),
             };
 
@@ -675,6 +679,7 @@ public partial class FPakInfo
                 GAME_ValorantSource => [OffsetsToTry.SizeValorantSource],
                 GAME_Overhit => [OffsetsToTry.SizeOverhit],
                 GAME_GangstarMirageCity => [OffsetsToTry.SizeGangstar],
+                GAME_ArcheAgeChronicles => GetArcheAgeChroniclesOffsetsToTry(),
                 GAME_RocoKingdomWorld => [OffsetsToTry.SizeRocoKingdomWorld, OffsetsToTry.Size8a],
                 _ => _offsetsToTry
             };
@@ -716,6 +721,7 @@ public partial class FPakInfo
                     GAME_Back4Blood when info.Magic == PAK_FILE_MAGIC_Back4Blood => true,
                     GAME_SilverPalace when info.Magic == PAK_FILE_MAGIC_SilverPalace => true,
                     GAME_ValorantSource when info.Magic == PAK_FILE_MAGIC_ValorantSource => true,
+                    GAME_ArcheAgeChronicles when IsSupportedArcheAgeChroniclesPakMagic(info.Magic) => true,
                     _ => info.Magic == PAK_FILE_MAGIC
                 };
 

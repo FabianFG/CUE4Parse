@@ -34,7 +34,7 @@ public enum EIoContainerFlags : byte
     OnDemand	= (1 << 4),
 }
 
-public class FIoStoreTocHeader
+public partial class FIoStoreTocHeader
 {
     public const int SIZE = 144;
     public static byte[] TOC_MAGIC = {0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D, 0x2D, 0x3D, 0x3D, 0x2D}; // -==--==--==--==-
@@ -70,11 +70,14 @@ public class FIoStoreTocHeader
     public FIoStoreTocHeader(FArchive Ar)
     {
         TocMagic = Ar.ReadBytes(16);
-        if (!TOC_MAGIC.SequenceEqual(TocMagic))
+        var isX5Toc = HasArcheAgeChroniclesTocMagic(Ar, TocMagic);
+        if (!TOC_MAGIC.SequenceEqual(TocMagic) && !isX5Toc)
             throw new ParserException(Ar, "Invalid utoc magic");
         Version = Ar.Read<EIoStoreTocVersion>();
         _reserved0 = Ar.Read<byte>();
         _reserved1 = Ar.Read<ushort>();
+        if (isX5Toc)
+            ReadArcheAgeChroniclesTocHeaderExtension(Ar);
         TocHeaderSize = Ar.Read<uint>();
         TocEntryCount = Ar.Read<uint>();
         TocCompressedBlockEntryCount = Ar.Read<uint>();
