@@ -453,6 +453,9 @@ public class FScriptStruct
                 or "TCPresentationCueNamedParam_Texture" or "TCPresentationCueNamedParam_Vector2D" or "TCPresentationCueNamedParam_Material"
                 or "TCPresentationCueNamedParam_StaticMesh" when Ar.Game is GAME_GearsofWarEDay => new FTCNamedParam(Ar, structName),
 
+            // Eclipse The Awakening
+            "XDataTableRowValue" => new FXDataTableRowValue(Ar),
+
             _ => Ar.Game switch
             {
                 GAME_TitanQuest2 => TQ2Structs.ParseTQ2Struct(Ar, structName, struc, type),
