@@ -1,14 +1,14 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 
-namespace CUE4Parse.UE4.Assets.Exports.Groom;
+namespace CUE4Parse.UE4.Assets.Exports.HairStrands;
 
 public class FHairStrandsRootData(FAssetArchive Ar)
 {
     public uint RootCount = Ar.Read<uint>();
     public uint[] VertexToCurveIndexBuffer = Ar.ReadArray<uint>();
     public FVector4[] RootPositionBuffer = Ar.ReadArray<FVector4>();
-    public FVector4_16[] RootNormalBuffer = Ar.ReadArray(() => new FVector4_16(Ar));
+    public FVector4_16[] RootNormalBuffer = Ar.ReadArray<FVector4_16>();
     public FMeshProjectionLOD_UE4[] MeshProjectionLODs = Ar.ReadArray(() => new FMeshProjectionLOD_UE4(Ar));
 }
 

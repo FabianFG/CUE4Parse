@@ -1,9 +1,9 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 
-namespace CUE4Parse.UE4.Assets.Exports.Groom;
+namespace CUE4Parse.UE4.Assets.Exports.HairStrands;
 
-public class FHairStrandsRootBulkData(FAssetArchive Ar)
+public class FHairStrandsRootBulkData_Old(FAssetArchive Ar)
 {
     public uint RootCount = Ar.Read<uint>();
     public uint PointCount = Ar.Read<uint>();

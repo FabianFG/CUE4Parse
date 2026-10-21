@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
 using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
+using CUE4Parse.UE4.Assets.Exports.HairStrands;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Sound;
@@ -3531,6 +3532,30 @@ public class AkPropValueConverter : JsonConverter<AkUnionValue>
     }
 
     public override AkUnionValue ReadJson(JsonReader reader, Type objectType, AkUnionValue existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FGroomDataflowSettingsConverter : JsonConverter<FGroomDataflowSettings>
+{
+    public override void WriteJson(JsonWriter writer, FGroomDataflowSettings value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        foreach (var property in value.Properties)
+        {
+            writer.WritePropertyName(property.ArrayIndex > 0 ? $"{property.Name.Text}[{property.ArrayIndex}]" : property.Name.Text);
+            serializer.Serialize(writer, property.Tag);
+        }
+
+        writer.WritePropertyName(nameof(value.RestCollection));
+        serializer.Serialize(writer, value.RestCollection);
+
+        writer.WriteEndObject();
+    }
+
+    public override FGroomDataflowSettings ReadJson(JsonReader reader, Type objectType, FGroomDataflowSettings existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }
