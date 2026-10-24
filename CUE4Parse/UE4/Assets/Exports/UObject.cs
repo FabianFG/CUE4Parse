@@ -374,6 +374,7 @@ public class UObject : AbstractPropertyHolder
             throw new ParserException(Ar, "Missing prop mappings for type " + type);
         }
 
+        var filterEditorOnly = Ar.IsFilterEditorOnly;
         using var it = new FIterator(header);
         do
         {
@@ -381,7 +382,7 @@ public class UObject : AbstractPropertyHolder
             // The value has content and needs to be serialized normally
             if (isNonZero)
             {
-                if (propMappings.TryGetValue(val, out var propertyInfo))
+                if (propMappings.TryGetValue(val, filterEditorOnly, out var propertyInfo))
                 {
                     var tag = new FPropertyTag(Ar, propertyInfo, ReadType.NORMAL);
                     if (tag.Tag != null)
@@ -399,7 +400,7 @@ public class UObject : AbstractPropertyHolder
             // The value is serialized as zero meaning we don't have to read any bytes here
             else
             {
-                if (propMappings.TryGetValue(val, out var propertyInfo))
+                if (propMappings.TryGetValue(val, filterEditorOnly, out var propertyInfo))
                 {
                     properties.Add(new FPropertyTag(Ar, propertyInfo, ReadType.ZERO));
                 }
@@ -458,10 +459,11 @@ public class UObject : AbstractPropertyHolder
             readtype = ReadType.RAW;
         }
 
-        var indices = header.BuildIndices(propMappings);
+        var filterEditorOnly = Ar.IsFilterEditorOnly;
+        var indices = header.BuildIndices(propMappings, filterEditorOnly);
         foreach (var index in indices)
         {
-            if (propMappings.TryGetValue(index, out var propertyInfo))
+            if (propMappings.TryGetValue(index, filterEditorOnly, out var propertyInfo))
             {
                 if (propertyInfo.MappingType.Type is "StructProperty" && readtype is ReadType.RAW && header.Flags.HasFlag(ERawHeaderFlags.RawPropertiesExceptStructs))
                 {

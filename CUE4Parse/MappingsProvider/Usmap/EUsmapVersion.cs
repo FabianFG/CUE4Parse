@@ -20,6 +20,10 @@ public enum EUsmapVersion : byte
     /* Adds support for engine versioning information */
     EngineVersioning,
 
+    /* Property Flags, PackageOwnerName, Usmap Metadata, Class/Struct flags, extends ArrayDim to ushort/uint16
+     and PropertyCount to int (actual count is int24 and 1 byte flag for Class/Struct flag) */
+    ExtendedMetadata,
+
     LatestPlusOne,
     Latest = LatestPlusOne - 1
 }
