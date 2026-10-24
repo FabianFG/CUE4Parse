@@ -4,45 +4,46 @@ using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
-namespace CUE4Parse.UE4.Objects.PhysicsEngine
+namespace CUE4Parse.UE4.Objects.PhysicsEngine;
+
+public class UBodySetup : Assets.Exports.UObject
 {
-    public class UBodySetup : Assets.Exports.UObject
+    public FKAggregateGeom? AggGeom { get; private set; }
+    public FBodyInstance? DefaultInstance { get; private set; } // DefaultInstance.SetObjectType(ECC_PhysicsBody);
+    public FGuid BodySetupGuid { get; private set; }
+    public FFormatContainer? CookedFormatData { get; private set; }
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
     {
-        public FKAggregateGeom? AggGeom;
-        public FGuid BodySetupGuid;
-        public FFormatContainer? CookedFormatData;
+        base.Deserialize(Ar, validPos);
 
-        public override void Deserialize(FAssetArchive Ar, long validPos)
+        AggGeom = GetOrDefault<FKAggregateGeom>(nameof(AggGeom));
+        DefaultInstance = GetOrDefault(nameof(DefaultInstance), DefaultInstance);
+
+        BodySetupGuid = Ar.Read<FGuid>();
+
+        var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_BODY_SETUP && Ar.ReadBoolean();
+        if (!bCooked) return;
+        if (Ar.Game is GAME_Aion2 && GetOrDefault<bool>("bNeverNeedsCookedCollisionData")) return;
+        if (Ar.Game is GAME_Highguard) return;
+        if (Ar.Ver >= EUnrealEngineObjectUE4Version.STORE_HASCOOKEDDATA_FOR_BODYSETUP)
         {
-            base.Deserialize(Ar, validPos);
-
-            AggGeom = GetOrDefault<FKAggregateGeom>(nameof(AggGeom));
-
-            BodySetupGuid = Ar.Read<FGuid>();
-
-            var bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.ADD_COOKED_TO_BODY_SETUP && Ar.ReadBoolean();
-            if (!bCooked) return;
-            if (Ar.Game is GAME_Aion2 && GetOrDefault<bool>("bNeverNeedsCookedCollisionData")) return;
-            if (Ar.Game is GAME_Highguard) return;
-            if (Ar.Ver >= EUnrealEngineObjectUE4Version.STORE_HASCOOKEDDATA_FOR_BODYSETUP)
-            {
-                _ = Ar.ReadBoolean(); // bTemp
-            }
-
-            CookedFormatData = new FFormatContainer(Ar);
-            if (Ar.Game == GAME_DreamStar) Ar.Position += 4;
+            _ = Ar.ReadBoolean(); // bTemp
         }
 
-        protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
-        {
-            base.WriteJson(writer, serializer);
+        CookedFormatData = new FFormatContainer(Ar);
+        if (Ar.Game == GAME_DreamStar) Ar.Position += 4;
+    }
 
-            writer.WritePropertyName("BodySetupGuid");
-            writer.WriteValue(BodySetupGuid.ToString());
+    protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
+    {
+        base.WriteJson(writer, serializer);
 
-            if (CookedFormatData?.Formats.Count <= 0) return;
-            writer.WritePropertyName("CookedFormatData");
-            serializer.Serialize(writer, CookedFormatData);
-        }
+        writer.WritePropertyName("BodySetupGuid");
+        writer.WriteValue(BodySetupGuid.ToString());
+
+        if (CookedFormatData?.Formats.Count <= 0) return;
+        writer.WritePropertyName("CookedFormatData");
+        serializer.Serialize(writer, CookedFormatData);
     }
 }
