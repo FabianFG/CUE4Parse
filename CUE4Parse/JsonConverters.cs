@@ -1224,7 +1224,7 @@ public class FPackedRGBA16NConverter : JsonConverter<FPackedRGBA16N>
         writer.WriteValue(value.Z);
 
         writer.WritePropertyName("W");
-        writer.WriteValue(value.X);
+        writer.WriteValue(value.W);
 
         writer.WriteEndObject();
     }

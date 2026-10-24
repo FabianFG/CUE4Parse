@@ -36,6 +36,18 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         }
     }
 
+    public class FMaterialExpressionVectorParameter(FAssetArchive Ar) : IUStruct
+    {
+        public FName ParameterName { get; private set; } = Ar.ReadFName();
+        public FLinearColor DefaultValue { get; private set; } = Ar.Read<FLinearColor>();
+    }
+
+    public class FMaterialUniformExpressionTextureParameter(FAssetArchive Ar) : IUStruct
+    {
+        public FName ParameterName { get; private set; } = Ar.ReadFName();
+        public FPackageIndex? Texture { get; private set; } = new FPackageIndex(Ar);
+    }
+
     public class UMaterialExpressionScalarParameter : UMaterialExpressionParameter
     {
         public float DefaultValue { get; private set; }
@@ -50,6 +62,12 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             SliderMin = GetOrDefault<float>(nameof(SliderMin));
             SliderMax = GetOrDefault<float>(nameof(SliderMax));
         }
+    }
+
+    public class FMaterialExpressionScalarParameter(FAssetArchive Ar) : IUStruct
+    {
+        public FName ParameterName { get; private set; } = Ar.ReadFName();
+        public int DefaultValue { get; private set; } = Ar.Read<int>();
     }
 
     public class UMaterialExpressionStaticBoolParameter : UMaterialExpressionParameter

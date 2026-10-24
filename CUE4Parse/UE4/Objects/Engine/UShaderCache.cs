@@ -83,6 +83,8 @@ namespace CUE4Parse.UE4.Objects.Engine
             {
                 Platform = Ar.Read<EShaderPlatform>();
 
+                if (Ar.Game == GAME_BioshockInfinite) Ar.Position += 4;
+
                 if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_AUTO_SHADER_VERSIONING)
                 {
                     ShaderTypeMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
@@ -190,6 +192,9 @@ namespace CUE4Parse.UE4.Objects.Engine
         public int NumMaterialShaderMaps;
         public FShaderCacheShaderMap[] ShaderMaps;
 
+        public int NumShaders;
+        public FShaderCacheShader[] Shaders;
+
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
             base.Deserialize(Ar, validPos);
@@ -205,6 +210,12 @@ namespace CUE4Parse.UE4.Objects.Engine
 
                 ShaderTypeMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
                 VertexFactoryMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
+            }
+
+            if (Ar.Game == GAME_BorderlandsSequel)
+            {
+                ShaderCache = new FShaderCache { Shaders = [] }; // alot of changes so just ignore
+                return;
             }
 
             ShaderCache = new FShaderCache(Ar);
@@ -235,6 +246,18 @@ namespace CUE4Parse.UE4.Objects.Engine
 
                 ShaderMaps[i] = shaderMap;
             }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.GLOBAL_SHADER_FILE)
+            {
+                NumShaders = Ar.Read<int>();
+                Shaders = new FShaderCacheShader[NumShaders];
+
+                for (int i = 0; i < NumShaders; i++)
+                {
+                    Shaders[i] = new FShaderCacheShader { ShaderType = Ar.ReadFName(), ShaderId = Ar.Read<FGuid>() };
+                    Ar.ReadFName(); // ShaderType again
+                }
+            }
         }
 
         protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -261,6 +284,25 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             writer.WritePropertyName(nameof(ShaderMaps));
             serializer.Serialize(writer, ShaderMaps);
+
+            if (Shaders?.Length > 0)
+            {
+                writer.WritePropertyName(nameof(Shaders));
+                writer.WriteStartArray();
+
+                foreach (var shader in Shaders)
+                {
+                    writer.WriteStartObject();
+
+                    writer.WritePropertyName(nameof(FShaderCacheShader.ShaderType));
+                    serializer.Serialize(writer, shader.ShaderType);
+
+                    writer.WritePropertyName(nameof(FShaderCacheShader.ShaderId));
+                    serializer.Serialize(writer, shader.ShaderId);
+
+                    writer.WriteEndObject();
+                }
+            }
         }
     }
 }
