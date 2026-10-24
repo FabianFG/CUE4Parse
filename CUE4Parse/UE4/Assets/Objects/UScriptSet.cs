@@ -11,6 +11,8 @@ namespace CUE4Parse.UE4.Assets.Objects;
 public class UScriptSet
 {
     public readonly List<FPropertyTagType> Properties;
+    // The elements a set saved against its defaults removes from them
+    public List<FPropertyTagType?> ElementsToRemove = [];
 
     public UScriptSet() => Properties = [];
 
@@ -62,7 +64,7 @@ public class UScriptSet
             var numElementsToRemove = Ar.Read<int>();
             for (var i = 0; i < numElementsToRemove; i++)
             {
-                FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY);
+                ElementsToRemove.Add(FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY));
             }
         }
         if (Ar.Game is GAME_AshesOfCreation && Ar is FAoCDBCReader) Ar.Position += 4;
