@@ -171,7 +171,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         var fullPath = Path.Combine(BaseDirectory.FullName, savePath) + nameSuffix + '.' + ext.ToLower();
         var dir = Path.GetDirectoryName(fullPath) ?? throw new InvalidOperationException($"Cannot determine directory for path: {fullPath}");
         Directory.CreateDirectory(dir);
-        return fullPath.Replace('/', '\\');
+        return fullPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
