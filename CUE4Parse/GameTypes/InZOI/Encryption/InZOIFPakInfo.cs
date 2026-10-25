@@ -15,7 +15,7 @@ public partial class FPakInfo
         int* lastInt = (int*) (buffer + maxOffset - 4);
         if (*lastInt == 0) return;
 
-        var path = Path.Combine(Path.GetDirectoryName(Ar.Name), "public_key.pem");
+        var path = Path.Combine(Path.GetDirectoryName(Ar.Name) ?? string.Empty, "public_key.pem");
         if (!File.Exists(path))
             throw new ParserException("Can't decrypt pak files as public_key.pem not found");
         AsymmetricKeyParameter publicKey = ReadPublicKeyFromPem(path);

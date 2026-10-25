@@ -113,11 +113,11 @@ namespace CUE4Parse.UE4.Versions
         private void InitMapStructTypes()
         {
             MapStructTypes.Clear();
-            MapStructTypes["BindingIdToReferences"] = new KeyValuePair<string, string>("Guid", null);
+            MapStructTypes["BindingIdToReferences"] = new KeyValuePair<string, string>("Guid", string.Empty);
             MapStructTypes["UserParameterRedirects"] = new KeyValuePair<string, string>("NiagaraVariable", "NiagaraVariable");
-            MapStructTypes["Tracks"] = new KeyValuePair<string, string>("MovieSceneTrackIdentifier", null);
-            MapStructTypes["SubSequences"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
-            MapStructTypes["Hierarchy"] = new KeyValuePair<string, string>("MovieSceneSequenceID", null);
+            MapStructTypes["Tracks"] = new KeyValuePair<string, string>("MovieSceneTrackIdentifier", string.Empty);
+            MapStructTypes["SubSequences"] = new KeyValuePair<string, string>("MovieSceneSequenceID", string.Empty);
+            MapStructTypes["Hierarchy"] = new KeyValuePair<string, string>("MovieSceneSequenceID", string.Empty);
             MapStructTypes["TrackSignatureToTrackIdentifier"] = Game < GAME_UE4_19
                 ? new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifiers")
                 : new KeyValuePair<string, string>("Guid", "MovieSceneTrackIdentifier");

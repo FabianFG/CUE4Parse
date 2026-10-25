@@ -79,7 +79,7 @@ public class GbxDefPtrPropertyConverter : JsonConverter<GbxDefPtrProperty>
 
 public class FGameDataHandleProperty : FProperty
 {
-    public ulong Flags;
+    public new ulong Flags;
 
     public override void Deserialize(FAssetArchive Ar)
     {

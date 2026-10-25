@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
@@ -75,7 +76,7 @@ public class UDataTable : UObject
 
 public static class UDataTableUtility
 {
-    public static bool TryGetDataTableRow(this UDataTable dataTable, string rowKey, StringComparison comparisonType, out FStructFallback rowValue)
+    public static bool TryGetDataTableRow(this UDataTable dataTable, string rowKey, StringComparison comparisonType, [MaybeNullWhen(false)] out FStructFallback rowValue)
     {
         foreach (var kvp in dataTable.RowMap)
         {
@@ -85,7 +86,7 @@ public static class UDataTableUtility
             return true;
         }
 
-        rowValue = default;
+        rowValue = null;
         return false;
     }
 }

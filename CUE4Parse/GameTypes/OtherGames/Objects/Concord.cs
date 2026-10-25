@@ -10,7 +10,7 @@ namespace CUE4Parse.GameTypes.OtherGames.Objects;
 
 public class UPMTimelineEvent : UObject
 {
-    public FStructFallback Properties;
+    public new FStructFallback Properties;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {

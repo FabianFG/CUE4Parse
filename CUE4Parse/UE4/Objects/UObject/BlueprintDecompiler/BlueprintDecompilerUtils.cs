@@ -989,12 +989,12 @@ public static class BlueprintDecompilerUtils
                         }
 
                         var valueTypeData = propertyTag.TagData?.ValueTypeData;
-                        var valueProperty = new FPropertyTag(new FName(valueTypeData?.Type), mapValue, valueTypeData);
+                        var valueProperty = new FPropertyTag(new FName(valueTypeData?.Type ?? "None"), mapValue, valueTypeData);
 
                         if (!GetPropertyTagVariable(valueProperty, out valueType, out var valueValue))
                         {
                             Log.Warning("Unable to get MapValue for UScriptMap of type: {type}",
-                                mapValue.GetType().Name);
+                                mapValue?.GetType().Name ?? "null");
                         }
 
                         keyValueList.Add($"{{ {keyValue}, {valueValue} }}");
@@ -1536,7 +1536,7 @@ public static class BlueprintDecompilerUtils
             }
             case EX_SetArray setArray:
             {
-                var variable = GetLineExpression(setArray.AssigningProperty); // todo: ArrayInnerProp
+                var variable = GetLineExpression(setArray.AssigningProperty!); // todo: ArrayInnerProp
 
                 var values = new List<string>(setArray.Elements.Length);
                 foreach (var element in setArray.Elements)

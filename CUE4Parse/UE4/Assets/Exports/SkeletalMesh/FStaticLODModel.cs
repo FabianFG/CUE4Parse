@@ -682,6 +682,7 @@ public class FStaticLODModel
                 0 => 47,
                 1 => 35,
                 256 => 58,
+                _ => throw new ParserException(Ar, "Unknown availability info type")
             };
             if (HasClothData() || Ar.Peek<int>() == 0)
             {

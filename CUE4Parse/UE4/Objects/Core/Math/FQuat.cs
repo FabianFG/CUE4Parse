@@ -235,7 +235,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public float Size => Sqrt(SizeSquared);
 
-        public float SizeSquared => X * X + Y * Y + Z * Z + W * W;
+        public readonly float SizeSquared => X * X + Y * Y + Z * Z + W * W;
 
         public FVector RotateVector(FVector v)
         {

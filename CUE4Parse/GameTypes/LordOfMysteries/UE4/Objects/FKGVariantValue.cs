@@ -14,7 +14,8 @@ public class FKGVariantValue : FStructFallback
         var varianttype = Ar.Read<int>();
         var name = Ar.ReadFName();
         var strukt = new FPackageIndex(Ar);
-        var some = strukt.TryLoad<UStruct>(out var struc);
+        if (!strukt.TryLoad<UStruct>(out var struc) || struc is null)
+            return;
 
         var type = struc.Name;
         Struct? propMappings = null;

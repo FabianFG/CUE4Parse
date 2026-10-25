@@ -65,7 +65,9 @@ public class UInstancedSkinnedMeshComponent : USkinnedMeshComponent
 
     public readonly struct FBoneAttachmentBinding
     {
+#pragma warning disable CS0169
         private readonly uint Bits;
+#pragma warning restore CS0169
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -89,5 +91,7 @@ public struct FSkinnedMeshInstanceData_Deprecated
 {
     public FMatrix Transform;
     public uint AnimationIndex;
+#pragma warning disable CS0169
     private InlineArray3<uint> _padding;
+#pragma warning restore CS0169
 }

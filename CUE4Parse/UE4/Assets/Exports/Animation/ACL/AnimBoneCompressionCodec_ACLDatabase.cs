@@ -27,7 +27,7 @@ public class FACLDatabaseCompressedAnimData : FACLCompressedAnimData
         }*/
     }
 
-    public void Bind(byte[] bulkData)
+    public new void Bind(byte[] bulkData)
     {
         //var compressedClipData = new CompressedTracks(bulkData);
         throw new NotImplementedException();

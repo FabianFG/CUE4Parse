@@ -397,10 +397,11 @@ namespace CUE4Parse.UE4.Assets
             }
 
             string? outer = null;
-            if (outerMostIndex != import.OuterIndex && import.OuterIndex.IsImport)
+            var importOuterIndex = import.OuterIndex;
+            if (outerMostIndex != importOuterIndex && importOuterIndex is { IsImport: true })
             {
-                var outerImport = ImportMap[-import.OuterIndex.Index - 1];
-                outer = ResolveImport(import.OuterIndex)?.GetPathName();
+                var outerImport = ImportMap[-importOuterIndex.Index - 1];
+                outer = ResolveImport(importOuterIndex)?.GetPathName();
                 if (outer == null)
                 {
 #if DEBUG
@@ -483,7 +484,7 @@ namespace CUE4Parse.UE4.Assets
                 Lazy = new(() =>
                 {
                     Fire(LoadPhase.Serialize);
-                    return _object;
+                    return _object!;
                 });
                 package.ExportsLazy[index] = Lazy;
             }
@@ -496,30 +497,31 @@ namespace CUE4Parse.UE4.Assets
                 }
 
                 _dependencies = new();
+                var preloadDependencies = _package.PreloadDependencies ?? [];
                 var runningIndex = _export.FirstExportDependency;
                 if (runningIndex >= 0)
                 {
                     for (var index = _export.SerializationBeforeSerializationDependencies; index > 0; index--)
                     {
-                        var dep = _package.PreloadDependencies[runningIndex++];
+                        var dep = preloadDependencies[runningIndex++];
                         // don't request IO for this export until these are serialized
                         _dependencies.Add(new(LoadPhase.Serialize, LoadPhase.Serialize, ResolveLoader(dep)));
                     }
                     for (var index = _export.CreateBeforeSerializationDependencies; index > 0; index--)
                     {
-                        var dep = _package.PreloadDependencies[runningIndex++];
+                        var dep = preloadDependencies[runningIndex++];
                         // don't request IO for this export until these are done
                         _dependencies.Add(new(LoadPhase.Serialize, LoadPhase.Create, ResolveLoader(dep)));
                     }
                     for (var index = _export.SerializationBeforeCreateDependencies; index > 0; index--)
                     {
-                        var dep = _package.PreloadDependencies[runningIndex++];
+                        var dep = preloadDependencies[runningIndex++];
                         // can't create this export until these things are serialized
                         _dependencies.Add(new(LoadPhase.Create, LoadPhase.Serialize, ResolveLoader(dep)));
                     }
                     for (var index = _export.CreateBeforeCreateDependencies; index > 0; index--)
                     {
-                        var dep = _package.PreloadDependencies[runningIndex++];
+                        var dep = preloadDependencies[runningIndex++];
                         // can't create this export until these things are created
                         _dependencies.Add(new(LoadPhase.Create, LoadPhase.Create, ResolveLoader(dep)));
                     }
@@ -531,9 +533,9 @@ namespace CUE4Parse.UE4.Assets
                 }
             }
 
-            private ExportLoader? ResolveLoader(FPackageIndex index)
+            private ExportLoader? ResolveLoader(FPackageIndex? index)
             {
-                if (index.IsExport)
+                if (index is { IsExport: true })
                 {
                     return _package._exportLoaders[index.Index - 1];
                 }

@@ -242,7 +242,7 @@ public class FPropertyTag
         Tag = tag;
     }
 
-    public FPropertyTag(FName propertyType, FPropertyTagType tag, FPropertyTagData? tagData = null)
+    public FPropertyTag(FName propertyType, FPropertyTagType? tag, FPropertyTagData? tagData = null)
     {
         PropertyType = propertyType;
         Tag = tag;

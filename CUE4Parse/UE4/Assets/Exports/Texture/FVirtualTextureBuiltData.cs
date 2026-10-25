@@ -60,7 +60,7 @@ public readonly struct FVirtualTextureTileOffsetData : IUStruct
             return ~0u;
         }
 
-        uint baseAddress = Addresses[blockIndex];
+        uint baseAddress = Addresses![blockIndex];
         uint localOffset = inAddress - baseAddress;
         return baseOffset + localOffset;
     }
@@ -229,7 +229,7 @@ public class FVirtualTextureBuiltData
                 }
             }
         }
-        else if (BaseOffsetPerMip != null && BaseOffsetPerMip.Length > vLevel && TileOffsetData.Length > vLevel)
+        else if (BaseOffsetPerMip != null && BaseOffsetPerMip.Length > vLevel && TileOffsetData != null && TileOffsetData.Length > vLevel)
         {
             // If the tile offset is ~0u there is no data present so we return ~0u to indicate that.
             chunkIndex = GetChunkIndex(vLevel);
@@ -261,7 +261,7 @@ public class FVirtualTextureBuiltData
             tileOffsetData = new FVirtualTextureTileOffsetData(blockWidthInTiles, blockHeightInTiles, Math.Max(maxAddress - TileIndexPerMip[level], 1));
         }
         else
-            tileOffsetData = TileOffsetData[level];
+            tileOffsetData = TileOffsetData![level];
         return tileOffsetData;
     }
 }

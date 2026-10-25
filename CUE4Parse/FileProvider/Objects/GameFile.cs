@@ -37,7 +37,7 @@ public abstract class GameFile
     private string? _nameWithoutExtension;
     private string? _extension;
 
-    protected GameFile() { }
+    protected GameFile() { Path = string.Empty; }
     protected GameFile(string path, long size)
     {
         Path = path;

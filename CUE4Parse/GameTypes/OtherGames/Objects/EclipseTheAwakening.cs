@@ -55,7 +55,7 @@ public class FXDataTableRowValue : FStructFallback
             EXDataTableRowValueType.Name => new NameProperty(Ar, ReadType.NORMAL),
             EXDataTableRowValueType.Float => new FloatProperty(Ar, ReadType.NORMAL),
             EXDataTableRowValueType.Asset => new SoftObjectProperty(Ar, ReadType.NORMAL),
-            EXDataTableRowValueType.Array => new ArrayProperty(new (Ar.ReadArray(() => ReadXDataValue(Ar)).ToList(), "", null)),
+            EXDataTableRowValueType.Array => new ArrayProperty(new (Ar.ReadArray(() => ReadXDataValue(Ar)!).ToList(), "", null)),
             _ => null
         };
         return tag;

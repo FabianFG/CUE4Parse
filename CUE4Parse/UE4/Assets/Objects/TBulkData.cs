@@ -140,7 +140,7 @@ public abstract class TBulkData<T> where T: struct
 
         if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload))
         {
-            if (_savedAr.Game < GAME_UE4_0) position = Header.OffsetInFile;
+            if (archive.Game < GAME_UE4_0) position = Header.OffsetInFile;
         }
         else if (archive.Game is GAME_DeltaForce && FDeltaForceBulkData.IsUHD(Header))
         {
@@ -196,7 +196,8 @@ public abstract class TBulkData<T> where T: struct
                 return false; // This is some very stupid stuff. You need to get the outermost export, get its ObjectName, and then load that .upk
             }
 
-            if (!_savedAr.Owner.Provider.TextureCachePaths.TryGetValue(_savedTfc, out var tfcPath))
+            var provider = archive.Owner?.Provider;
+            if (provider == null || !provider.TextureCachePaths.TryGetValue(_savedTfc, out var tfcPath))
             {
 #if DEBUG
                 Log.Debug("Failed {TFC} is missing, Can't find payload (Payload In Separate File) (flags={BulkDataFlags}, pos={HeaderOffsetInFile}, size={HeaderSizeOnDisk}))", _savedTfc, BulkDataFlags, Header.OffsetInFile, Header.SizeOnDisk);
@@ -209,7 +210,7 @@ public abstract class TBulkData<T> where T: struct
             using var fs = File.OpenRead(tfcPath);
             fs.Seek(Header.OffsetInFile, SeekOrigin.Begin);
             fs.ReadExactly(bytes);
-            archive = new FAssetArchive(new FByteArchive("TFC Payload", bytes, _savedAr.Versions), _savedAr.Owner);
+            archive = new FAssetArchive(new FByteArchive("TFC Payload", bytes, archive.Versions), archive.Owner);
             position = 0;
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))

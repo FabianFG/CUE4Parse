@@ -27,7 +27,7 @@ public class FMemoryMappedImageArchive(FArchive Ar) : FMemoryImageArchive(Ar)
         foreach (var prop in structProperties)
         {
             var tag = prop.Name.Text.EndsWith("_Array") ? new FF7ArrayProperty(this, prop.UnderlyingType) : ReadPropertyTagType(prop.UnderlyingType);
-            properties.Add(tag);
+            properties.Add(tag!);
         }
 
         return new FF7StructProperty(properties, structProperties);

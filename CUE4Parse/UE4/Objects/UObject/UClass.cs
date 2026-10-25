@@ -293,13 +293,13 @@ public class UClass : UStruct
             functionStringBuilder.AppendLine(functionExpression);
             functionStringBuilder.OpenBlock();
 
-            if (function?.ScriptBytecode == null || function?.ScriptBytecode.Length == 0)
+            if (function.ScriptBytecode is not { Length: > 0 })
             {
                 functionStringBuilder.AppendLine("// No Script Bytecode");
                 stringBuilder.CloseBlock("};");
                 return stringBuilder.ToString();
             }
-            var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function?.Name, out var jumpList) ? jumpList : [];
+            var jumpCodeOffsets = jumpCodeOffsetsMap.TryGetValue(function.Name, out var jumpList) ? jumpList : [];
             for (int i = 0; i < function.ScriptBytecode.Length; i++)
             {
                 var kismetExpression = function.ScriptBytecode[i];

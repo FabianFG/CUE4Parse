@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Buffers;
+using System.Diagnostics;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
@@ -92,8 +93,26 @@ namespace CUE4Parse.UE4.Readers
             var difference = offset - currentPos;
             // We only support forward seeking.
             Trace.Assert(difference >= 0);
-            // Seek by serializing data, albeit with NULL destination so it's just decompressing data.
-            ReadExactly(null, 0, (int) difference);
+            // Seek by serializing data into a scratch buffer so it's just decompressing data.
+            if (difference == 0)
+                return Position;
+
+            var remaining = (int) difference;
+            var buffer = ArrayPool<byte>.Shared.Rent(Math.Min(remaining, LOADING_COMPRESSION_CHUNK_SIZE));
+            try
+            {
+                while (remaining > 0)
+                {
+                    var bytesToRead = Math.Min(remaining, buffer.Length);
+                    ReadExactly(buffer, 0, bytesToRead);
+                    remaining -= bytesToRead;
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+
             return Position;
         }
 

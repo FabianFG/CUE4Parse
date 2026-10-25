@@ -31,7 +31,7 @@ public struct FInstancedStructContainer : IUStruct
                     Ar.Position = savedPos + size;
                 }
 
-                Structs[index] = strukt;
+                Structs[index] = strukt!;
             }
             else
             {

@@ -377,7 +377,7 @@ public class ULevelSaveRecord : UObject
             foreach (var kvp in TemplateRecords)
             {
                 if (kvp.Value is null) continue;
-                ActorData.Add(kvp.Value.ReadActorData(Owner, SaveVersion));
+                ActorData.Add(kvp.Value.ReadActorData(Owner!, SaveVersion));
             }
 
         }

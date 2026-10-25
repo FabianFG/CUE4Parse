@@ -246,7 +246,7 @@ public class UMaterial : UMaterialInterface
 
         foreach (var expression in Expressions)
         {
-            if (!expression.TryLoad(out UMaterialExpression materialExpression))
+            if (!expression.TryLoad(out var expressionExport) || expressionExport is not UMaterialExpression materialExpression)
                 continue;
 
             switch (materialExpression)

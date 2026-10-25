@@ -137,7 +137,7 @@ public class UBinaryAsset : UObject
             var properties = new List<FPropertyTagType>(length);
             for (int i = 0; i < length; i++)
             {
-                properties.Add(ReadOctopathPropertyTagType(Ar));
+                properties.Add(ReadOctopathPropertyTagType(Ar)!);
             }
 
             return new UScriptArray(properties, "");

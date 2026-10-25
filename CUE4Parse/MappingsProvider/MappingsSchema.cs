@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -34,7 +35,7 @@ public class Struct
         Properties = properties;
     }
 
-    public bool TryGetValue(int i, out PropertyInfo info)
+    public bool TryGetValue(int i, [MaybeNullWhen(false)] out PropertyInfo info)
     {
         if (!Properties.TryGetValue(i, out info))
         {

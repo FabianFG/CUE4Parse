@@ -178,7 +178,7 @@ public class UMaterialInterface : UUnrealMaterial
             else
             {
                 var ShaderMaps = new FByteBulkData(Ar);
-                using var ShaderMapsAr = new FByteArchive("ShaderMaps", ShaderMaps.Data, Ar.Versions);
+                using var ShaderMapsAr = new FByteArchive("ShaderMaps", ShaderMaps.Data!, Ar.Versions);
                 resourceAr = new FMaterialResourceProxyReader(ShaderMapsAr);
             }
 

@@ -3,6 +3,7 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Sound;
 using CUE4Parse.UE4.Assets.Exports.Sound.Node;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.Utils;
 
@@ -97,12 +98,15 @@ public static class SoundDecoder
         var offset = 0;
         audioFormat = "WEM";
 
-        var input = new byte[media.DataChunks.Where(x => !x.IsPrefetch).Sum(x => x.Data.Data?.Length ?? 0)];
-        foreach (var dataChunk in media.DataChunks)
+        var chunks = media.DataChunks
+            .Where(x => !x.IsPrefetch)
+            .Select(x => x.Data.Data ?? throw new ParserException($"Missing Wwise data chunk for {media.Name}"))
+            .ToArray();
+        var input = new byte[chunks.Sum(x => x.Length)];
+        foreach (var chunkData in chunks)
         {
-            if (dataChunk.IsPrefetch || dataChunk.Data.Data is null) continue;
-            Buffer.BlockCopy(dataChunk.Data.Data, 0, input, offset, dataChunk.Data.Data.Length);
-            offset += dataChunk.Data.Data.Length;
+            Buffer.BlockCopy(chunkData, 0, input, offset, chunkData.Length);
+            offset += chunkData.Length;
         }
 
         data = Decompress(shouldDecompress, ref audioFormat, input);

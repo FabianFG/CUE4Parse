@@ -365,7 +365,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
             if (bUseBulkDataForLoad)
             {
                 var bulkData = new FByteBulkData(Ar);
-                using var bulkAr = new FByteArchive("AnimSequenceBulkData", bulkData.Data, Ar.Versions);
+                using var bulkAr = new FByteArchive("AnimSequenceBulkData", bulkData.Data!, Ar.Versions);
                 serializedByteStream = bulkAr.ReadBytes(numBytes);
             }
             else

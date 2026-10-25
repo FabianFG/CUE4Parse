@@ -807,7 +807,7 @@ namespace CUE4Parse.UE4.Readers
             var bytes = ReadBytes(int.Min(size, (int) (Length - Position)));
             Position = savePos;
             var f = new FileInfo(Path.GetTempPath() + $"cue4parse_temp/{Name}_s{savePos}_size_{bytes.Length}.bin");
-            f.Directory.Create();
+            f.Directory?.Create();
 
             using var fs = f.OpenWrite();
             fs.Write(bytes, 0, bytes.Length);

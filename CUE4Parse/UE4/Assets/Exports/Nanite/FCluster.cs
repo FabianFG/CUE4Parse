@@ -737,7 +737,8 @@ public class FCluster
             if (isParentRef)
             {
                 parentGPUPageIndex = resources.PageDependencies[pageStreamingState.DependenciesStart + (parentPageIndex - 1)];
-                srcCluster = resources.GetPage(parentGPUPageIndex).Clusters[srcLocalClusterIndex];
+                var parentPage = resources.GetPage(parentGPUPageIndex) ?? throw new ParserException(Ar, $"Failed to load Nanite page {parentGPUPageIndex}");
+                srcCluster = parentPage.Clusters[srcLocalClusterIndex];
                 realSrcVertexIndex = srcCodedVertexIndex;
             }
             else

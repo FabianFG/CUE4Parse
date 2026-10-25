@@ -93,9 +93,9 @@ public abstract class FPropertyTagType
                 var (path, substring) = index == -1 ? (str, "") : (str[..index], str[(index+1)..]);
                 return new FSoftObjectPath(path, substring, assetObjectProp.Owner);
             case FloatProperty when type == typeof(double):
-                return (double)(float)GenericValue;
+                return (double)(float)GenericValue!;
             case DoubleProperty when type == typeof(double):
-                return (float)(double)GenericValue;
+                return (float)(double)GenericValue!;
             default:
                 Log.Warning("Incorrect type conversion from {0} to {1}", this, type);
                 return null;
@@ -149,7 +149,7 @@ public abstract class FPropertyTagType
 
     public abstract override string ToString();
 
-    internal static FPropertyTagType? ReadPropertyTagType(FAssetArchive Ar, string propertyType, FPropertyTagData? tagData, ReadType type, int size = 0)
+    internal static FPropertyTagType? ReadPropertyTagType(FAssetArchive Ar, string? propertyType, FPropertyTagData? tagData, ReadType type, int size = 0)
     {
         var tagType = propertyType switch
         {

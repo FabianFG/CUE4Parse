@@ -130,7 +130,7 @@ public class FF7ArrayProperty : FPropertyTagType<FPropertyTagType[]>
             FF7propertyType.Int16Property => 2,
             _ => 4,
         };
-        Value = Ar.ReadArray(() => Ar.ReadPropertyTagType(underlyingType), align);
+        Value = Ar.ReadArray(() => Ar.ReadPropertyTagType(underlyingType), align)!;
     }
 }
 
