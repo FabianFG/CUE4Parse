@@ -5,7 +5,7 @@ namespace CUE4Parse_Conversion.Dto;
 
 public abstract class LightObjectDto(string name) : IDisposable
 {
-    public readonly string Name = name;
+    public string Name { get; protected init; } = name;
 
     protected LightObjectDto(UObject owner, string? name = null) : this(name ?? owner.Name)
     {

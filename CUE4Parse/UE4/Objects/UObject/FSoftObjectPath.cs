@@ -159,26 +159,34 @@ public readonly struct FSoftObjectPath : ILoadableObject, IUStruct
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public async Task<T?> TryLoadAsync<T>(IFileProvider provider) where T : UExport => await TryLoadAsync(provider) as T;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UExport Load(IFileProvider provider) => provider.LoadPackageObject(AssetPathName.Text);
+    public UExport Load(IFileProvider provider)
+    {
+        if (string.IsNullOrEmpty(SubPathString)) return provider.LoadPackageObject(AssetPathName.Text);
+
+        var (packagePath, assetName) = SplitAssetPath();
+        return TryResolveSubObject(provider.LoadPackage(packagePath), assetName, out var export)
+            ? export
+            : throw new ParserException($"Could not find subobject '{SubPathString}' for asset '{AssetPathName.Text}'");
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryLoad(IFileProvider provider, [MaybeNullWhen(false)] out UExport export)
     {
-        if (!provider.TryLoadPackageObject(AssetPathName.Text, out var asset))
-        {
-            export = null;
-            return false;
-        }
+        export = null;
+        if (string.IsNullOrEmpty(SubPathString)) return provider.TryLoadPackageObject(AssetPathName.Text, out export);
 
-        return TryResolveSubObject(asset, out export);
+        var (packagePath, assetName) = SplitAssetPath();
+        return provider.TryLoadPackage(packagePath, out var package) && TryResolveSubObject(package, assetName, out export);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public async Task<UExport?> LoadAsync(IFileProvider provider)
     {
-        var asset = await provider.LoadPackageObjectAsync(AssetPathName.Text);
-        return TryResolveSubObject(asset, out var export) ? export : null;
+        if (string.IsNullOrEmpty(SubPathString)) return await provider.LoadPackageObjectAsync(AssetPathName.Text);
+
+        var (packagePath, assetName) = SplitAssetPath();
+        var package = await provider.LoadPackageAsync(packagePath);
+        return TryResolveSubObject(package, assetName, out var export) ? export : null;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -186,8 +194,7 @@ public readonly struct FSoftObjectPath : ILoadableObject, IUStruct
     {
         try
         {
-            var asset = await provider.LoadPackageObjectAsync(AssetPathName.Text);
-            return TryResolveSubObject(asset, out var export) ? export : null;
+            return await LoadAsync(provider);
         }
         catch
         {
@@ -196,38 +203,26 @@ public readonly struct FSoftObjectPath : ILoadableObject, IUStruct
     }
     #endregion
 
-    private bool TryResolveSubObject(UExport asset, [MaybeNullWhen(false)] out UExport export)
+    private (string PackagePath, string AssetName) SplitAssetPath()
     {
-        if (string.IsNullOrEmpty(SubPathString))
+        var path = AssetPathName.Text;
+        var dot = path.LastIndexOf('.');
+        return dot < 0 ? (path, path.SubstringAfterLast('/')) : (path[..dot], path[(dot + 1)..]);
+    }
+
+    private bool TryResolveSubObject(IPackage package, string assetName, [MaybeNullWhen(false)] out UExport export)
+    {
+        var name = SubPathString[(SubPathString.LastIndexOf('.') + 1)..];
+        var path = $"{assetName}:{SubPathString}";
+        for (var i = 0; i < package.ExportMapLength; i++)
         {
-            export = asset;
-            return true;
+            if (package.ResolvePackageIndex(new FPackageIndex(package, i + 1)) is { } candidate && candidate.Name.Text == name && candidate.GetPathName(false) == path)
+                return candidate.TryLoad(out export);
         }
 
-        var current = asset;
-
-        var parts = SubPathString.Split('.');
-        foreach (var part in parts)
-        {
-            if (current.Owner == null)
-            {
-                export = null;
-                return false;
-            }
-
-            var foundExport = current.Owner.GetExportOrNull(part);
-            if (foundExport == null)
-            {
-                Log.Warning("SoftObjectPath: Could not find subobject '{ObjectName}' in path '{SubPath}' for asset '{AssetPath}'", part, SubPathString, AssetPathName.Text);
-                export = null;
-                return false;
-            }
-
-            current = foundExport;
-        }
-
-        export = current;
-        return true;
+        Log.Warning("SoftObjectPath: Could not find subobject '{SubPath}' for asset '{AssetPath}'", SubPathString, AssetPathName.Text);
+        export = null;
+        return false;
     }
 
     public override string ToString() => string.IsNullOrEmpty(SubPathString)
