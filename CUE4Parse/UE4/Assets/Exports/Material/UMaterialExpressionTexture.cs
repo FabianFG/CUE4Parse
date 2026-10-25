@@ -51,7 +51,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
     public class UMaterialExpressionTextureBase : UMaterialExpression
     {
-        public UTexture? Texture { get; private set; }
+        public FPackageIndex? Texture { get; private set; }
         public EMaterialSamplerType SamplerType { get; private set; }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -59,8 +59,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
             base.Deserialize(Ar, validPos);
 
             SamplerType = GetOrDefault<EMaterialSamplerType>(nameof(SamplerType));
-            if (TryGetValue(out FPackageIndex objectPtr, "Texture") && objectPtr.TryLoad(out UTexture texture))
-                Texture = texture;
+            Texture = GetOrDefault<FPackageIndex?>(nameof(Texture));
         }
     }
 

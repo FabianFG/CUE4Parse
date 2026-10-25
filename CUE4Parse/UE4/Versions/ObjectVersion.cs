@@ -942,6 +942,7 @@ public enum EUnrealEngineObjectUE3Version
     Release58 = 58,
     Release61 = 61,
     Release62 = 62,
+    LazyArraySkipCountChangedToSkipOffset = 62, // todo
     Release64 = 64,
     Release69 = 69,
     DeprecatedHeritageTable = 68,

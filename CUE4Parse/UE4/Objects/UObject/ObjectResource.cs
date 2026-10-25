@@ -22,7 +22,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// array index will be (-FPackageIndex - 1)
     /// </summary>
     [JsonConverter(typeof(FPackageIndexConverter))]
-    public class FPackageIndex : IEquatable<FPackageIndex>
+    public class FPackageIndex : ILoadableObject, IEquatable<FPackageIndex>
     {
         /// <summary>
         /// Values greater than zero indicate that this is an index into the ExportMap.  The
@@ -35,22 +35,35 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public readonly IPackage? Owner;
 
+        /// <summary>
+        /// Ordinal of the save realm this index was read from, base realm first. Both maps are local to
+        /// the realm an export was serialized from (Unreal resolves them against the realm's own
+        /// <c>HeaderData-&gt;ExportsView</c> / <c>HeaderData-&gt;ImportMap</c>), so the same raw value can
+        /// point at a different object depending on which realm it came from.
+        /// </summary>
+        internal readonly int RealmIndex;
+
         private WeakReference<ResolvedObject?>? _resolvedObject;
-        public ResolvedObject? ResolvedObject {
-            get {
+        public ResolvedObject? ResolvedObject
+        {
+            get
+            {
                 var resolvedObject = _resolvedObject != null && _resolvedObject.TryGetTarget(out var target) ? target : null;
                 if (resolvedObject == null)
                 {
                     if (Owner == null) return null;
                     resolvedObject = Owner.ResolvePackageIndex(this);
-                    _resolvedObject = new(resolvedObject);
+                    _resolvedObject = new WeakReference<ResolvedObject?>(resolvedObject);
                 }
+
                 return resolvedObject;
             }
         }
 
-        public ResolvedObject? ResolvedObjectNoCache {
-            get {
+        public ResolvedObject? ResolvedObjectNoCache
+        {
+            get
+            {
                 if (Owner == null) return null;
                 var resolvedObject = _resolvedObject != null && _resolvedObject.TryGetTarget(out var target) ? target : null;
                 if (resolvedObject != null) return resolvedObject;
@@ -61,20 +74,20 @@ namespace CUE4Parse.UE4.Objects.UObject
         public bool IsNull => Index == 0;
         public bool IsExport => Index > 0;
         public bool IsImport => Index < 0;
-
-        private string? _name;
-        public string Name => _name ??= ResolvedObject?.Name.Text ?? "None";
+        public string Name => field ??= ResolvedObject?.Name.Text ?? "None";
 
         public FPackageIndex(FAssetArchive Ar, int index)
         {
             Index = index;
             Owner = Ar.Owner;
+            RealmIndex = Ar.RealmIndex;
         }
 
         public FPackageIndex(FAssetArchive Ar)
         {
             Index = Ar.Read<int>();
             Owner = Ar.Owner;
+            RealmIndex = Ar.RealmIndex;
         }
 
         public FPackageIndex(FKismetArchive Ar)
@@ -82,12 +95,14 @@ namespace CUE4Parse.UE4.Objects.UObject
             Index = Ar.Read<int>();
             Owner = Ar.Owner;
             Ar.Index += 4;
+            RealmIndex = Ar.RealmIndex;
         }
 
         public FPackageIndex(IPackage owner, int index)
         {
             Index = index;
             Owner = owner;
+            RealmIndex = -1;
         }
 
         public FPackageIndex()
@@ -103,7 +118,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         protected internal void WriteJson(JsonWriter writer, JsonSerializer serializer)
         {
-            if (TryLoad<UProperty>(out var property))
+            if (this.TryLoad<UProperty>(out var property))
             {
                 serializer.Serialize(writer, property);
             }
@@ -115,27 +130,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         #region Loading Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T? Load<T>() where T : UExport => Owner?.FindObject(this)?.Value as T;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryLoad<T>([MaybeNullWhen(false)] out T export) where T : UExport
-        {
-            if (!TryLoad(out var genericExport) || genericExport is not T cast)
-            {
-                export = default;
-                return false;
-            }
-
-            export = cast;
-            return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> LoadAsync<T>() where T : UExport =>
-            await LoadAsync() as T ?? throw new ParserException($"Loaded {ToString()} but it was of wrong type");
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T?> TryLoadAsync<T>() where T : UExport => await TryLoadAsync() as T;
+        public Type? GetObjectType() => ResolvedObject?.GetObjectType();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UExport? Load() => ResolvedObject?.Load();
@@ -155,33 +150,29 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             if (ResolvedObject != null)
                 return await ResolvedObject.LoadAsync();
-            throw new ParserException($"{ToString()} could not be loaded");
+            return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<UExport?> TryLoadAsync()
         {
             if (ResolvedObject != null)
-            {
-                var loadedObj = await ResolvedObject.TryLoadAsync();
-                if (loadedObj != null)
-                    return loadedObj;
-            }
-
+                return await ResolvedObject.TryLoadAsync();
             return null;
         }
         #endregion
 
+        public override bool Equals(object? obj) => Equals(obj as FPackageIndex);
         public bool Equals(FPackageIndex? other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Index == other.Index && Owner != null && Owner.Equals(other.Owner);
+            return Index == other.Index && RealmIndex == other.RealmIndex && Owner != null && Owner.Equals(other.Owner);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Index, Owner);
+            return HashCode.Combine(Index, Owner, RealmIndex);
         }
     }
 
@@ -192,7 +183,7 @@ namespace CUE4Parse.UE4.Objects.UObject
     /// contained within the same package)
     /// </summary>
     [JsonConverter(typeof(FObjectResourceConverter))]
-    public abstract class FObjectResource : IObject
+    public abstract class FObjectResource
     {
         public FName ObjectName;
         public FPackageIndex? OuterIndex;
@@ -245,14 +236,30 @@ namespace CUE4Parse.UE4.Objects.UObject
             ObjectName = Ar.ReadFName();
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedArcheType && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_ARCHETYPE_INDEX_FROM_LINKER_TABLES)
             {
-                new FPackageIndex(Ar); // Archetype
+                _ = new FPackageIndex(Ar); // Archetype
             }
-            ObjectFlags = Ar.Read<uint>();
+
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag && Ar.Game < GAME_UE4_0)
+            {
+                Ar.Position += sizeof(ulong); // ulong - ObjectFlagsLegacy
+            }
+            else
+            {
+                ObjectFlags = Ar.Read<uint>();
+            }
 
             if (Ar.Ver < EUnrealEngineObjectUE4Version.e64BIT_EXPORTMAP_SERIALSIZES)
             {
                 SerialSize = Ar.Read<int>();
-                SerialOffset = Ar.Read<int>();
+
+                if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22)
+                {
+                    SerialOffset = Ar.Read<long>();
+                }
+                else if (SerialSize > 0 || Ar.Ver >= EUnrealEngineObjectUE3Version.MOVED_EXPORTIMPORTMAPS_ADDED_TOTALHEADERSIZE)
+                {
+                    SerialOffset = Ar.Read<int>();
+                }
             }
             else
             {
@@ -267,11 +274,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 NotForServer = Ar.ReadBoolean();
             }
 
-            PackageGuid = Ar.Ver < EUnrealEngineObjectUE5Version.REMOVE_OBJECT_EXPORT_PACKAGE_GUID ? Ar.Read<FGuid>() : default;
-            IsInheritedInstance = Ar.Ver >= EUnrealEngineObjectUE5Version.TRACK_OBJECT_EXPORT_IS_INHERITED && Ar.ReadBoolean();
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentMapToExports && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_MAP)
             {
-                Ar.ReadMap(() => Ar.ReadFName(), () => new FPackageIndex(Ar)); // LegacyComponentMap
+                Ar.ReadMap(Ar.ReadFName, () => new FPackageIndex(Ar)); // LegacyComponentMap
             }
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.FOBJECTEXPORT_EXPORTFLAGS && Ar.Game < GAME_UE4_0)
@@ -285,6 +290,9 @@ namespace CUE4Parse.UE4.Objects.UObject
                 {
                     Ar.ReadArray<int>(); // NetObjectCount
                 }
+
+                PackageGuid = Ar.Ver < EUnrealEngineObjectUE5Version.REMOVE_OBJECT_EXPORT_PACKAGE_GUID ? Ar.Read<FGuid>() : default;
+                IsInheritedInstance = Ar.Ver >= EUnrealEngineObjectUE5Version.TRACK_OBJECT_EXPORT_IS_INHERITED && Ar.ReadBoolean();
 
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedPackageFlags)
                 {

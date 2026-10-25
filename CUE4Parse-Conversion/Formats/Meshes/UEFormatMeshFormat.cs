@@ -1,5 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers.UEFormat;

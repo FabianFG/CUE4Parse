@@ -160,4 +160,9 @@ public enum EAkPluginId : uint
     TencentGMESource                     = 0x23291212,
     TencentGMEReceiveSource              = 0x232B1212,
     TencentGMESessionFX                  = 0x232D1212,
+
+    // Valve
+    SteamAudioSpatializer                = 0x767313B3,
+    SteamAudioMixReturn                  = 0x767413B3,
+    SteamAudioReverb                     = 0x767513B3,
 }

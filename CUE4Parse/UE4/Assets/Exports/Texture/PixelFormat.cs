@@ -39,7 +39,7 @@ public static class PixelFormatUtils
         { EPixelFormat.PF_G16R16F,            new(EPixelFormat.PF_G16R16F,            "G16R16F",                1,          1,          1,          4,            2,                true) },
         { EPixelFormat.PF_G16R16F_FILTER,     new(EPixelFormat.PF_G16R16F_FILTER,     "G16R16F_FILTER",         1,          1,          1,          4,            2,                true) },
         { EPixelFormat.PF_G32R32F,            new(EPixelFormat.PF_G32R32F,            "G32R32F",                1,          1,          1,          8,            2,                true) },
-        { EPixelFormat.PF_A2B10G10R10,        new(EPixelFormat.PF_A2B10G10R10,        "A2B10G10R10",            1,          1,          1,          4,            4,                false) },
+        { EPixelFormat.PF_A2B10G10R10,        new(EPixelFormat.PF_A2B10G10R10,        "A2B10G10R10",            1,          1,          1,          4,            4,                true) },
         { EPixelFormat.PF_A16B16G16R16,       new(EPixelFormat.PF_A16B16G16R16,       "A16B16G16R16",           1,          1,          1,          8,            4,                true) },
         { EPixelFormat.PF_D24,                new(EPixelFormat.PF_D24,                "D24",                    1,          1,          1,          4,            1,                false) },
         { EPixelFormat.PF_R16F,               new(EPixelFormat.PF_R16F,               "PF_R16F",                1,          1,          1,          2,            1,                true) },

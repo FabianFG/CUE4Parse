@@ -5,11 +5,17 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 
 [JsonConverter(typeof(FManagedArrayCollectionConverter))]
-public class FManagedArrayCollection
+public class FManagedArrayCollection : IUStruct
 {
     public int Version;
     public Dictionary<FName, FGroupInfo> GroupInfo;
     public Dictionary<FKeyType, FValueType> Map;
+
+    public FManagedArrayCollection()
+    {
+        GroupInfo = [];
+        Map = [];
+    }
 
     public FManagedArrayCollection(FChaosArchive Ar)
     {

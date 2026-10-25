@@ -164,7 +164,7 @@ public class FGbxParam : IUStruct
             EGbxType.Asset => new FSoftObjectPath(Ar),
             EGbxType.GbxDef => new FGbxDefPtr(Ar),
             EGbxType.WeightedAttributeInit => new FStructFallback(Ar, "GbxWeightedAttributeInit"), // only 1 entry
-            // EGbxType.FactAddress
+            EGbxType.FactAddress => new FSName(Ar),
             // EGbxType.DialogEnumValue
             EGbxType.AttributeEvaluator => new FStructFallback(Ar, "GbxAttributeEvaluator"),
             EGbxType.GameplayTag => new FGameplayTag(Ar),

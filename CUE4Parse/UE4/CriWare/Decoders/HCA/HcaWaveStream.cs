@@ -1,6 +1,6 @@
 using NAudio.Wave;
 
-namespace CUE4Parse.UE4.CriWare.Decoders.HCA;
+namespace CUE4Parse.UE4.Criware.Decoders.HCA;
 
 public class HcaWaveStream : WaveStream
 {

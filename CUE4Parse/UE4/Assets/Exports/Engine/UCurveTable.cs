@@ -9,9 +9,32 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
 {
     public class UCurveTable : UObject
     {
-        
-        public Dictionary<FName, FStructFallback> RowMap { get; private set; } // FStructFallback is FRealCurve aka FSimpleCurve if CurveTableMode is SimpleCurves else FRichCurve
-        public ECurveTableMode CurveTableMode { get; private set; }
+        private Dictionary<FName, FStructFallback> _rowMap = [];
+        private ECurveTableMode _curveTableMode;
+
+        // FStructFallback is FRealCurve aka FSimpleCurve if CurveTableMode is SimpleCurves else FRichCurve
+        public Dictionary<FName, FStructFallback> RowMap
+        {
+            get
+            {
+                EnsureRowMap();
+                return _rowMap;
+            }
+        }
+
+        public ECurveTableMode CurveTableMode
+        {
+            get
+            {
+                EnsureRowMap();
+                return _curveTableMode;
+            }
+            protected set => _curveTableMode = value;
+        }
+
+        protected Dictionary<FName, FStructFallback> RowMapStorage => _rowMap;
+
+        protected virtual void EnsureRowMap() { }
 
         public override void Deserialize(FAssetArchive Ar, long validPos)
         {
@@ -24,7 +47,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
                 CurveTableMode = numRows > 0 ? ECurveTableMode.RichCurves : ECurveTableMode.Empty;
             else
                 CurveTableMode = Ar.Read<ECurveTableMode>();
-            RowMap = new Dictionary<FName, FStructFallback>(numRows);
+            _rowMap = new Dictionary<FName, FStructFallback>(numRows);
             for (var i = 0; i < numRows; i++)
             {
                 var rowName = Ar.ReadFName();
@@ -34,7 +57,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
                     ECurveTableMode.RichCurves => "RichCurve",
                     _ => ""
                 };
-                RowMap[rowName] = new FStructFallback(Ar, rowStruct);
+                _rowMap[rowName] = new FStructFallback(Ar, rowStruct);
             }
         }
 
@@ -51,24 +74,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
 
         public FRealCurve? FindCurve(FName rowName, bool bWarnIfNotFound = true)
         {
-            if (rowName.IsNone)
-            {
-                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
-                return null;
-            }
-
-            if (!RowMap.TryGetValue(rowName, out var foundCurve))
-            {
-                if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
-                return null;
-            }
-
-            return CurveTableMode switch
-            {
-                ECurveTableMode.SimpleCurves => new FSimpleCurve(foundCurve),
-                ECurveTableMode.RichCurves => new FRichCurve(foundCurve),
-                _ => null
-            };
+            TryFindCurve(rowName, out var curve, bWarnIfNotFound);
+            return curve;
         }
 
         public bool TryFindCurve(FName rowName, out FRealCurve outCurve, bool bWarnIfNotFound = true)
@@ -76,29 +83,29 @@ namespace CUE4Parse.UE4.Assets.Exports.Engine
             if (rowName.IsNone)
             {
                 if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : NAME_None is invalid row name for CurveTable '{0}'.", GetPathName());
-                outCurve = null;
+                outCurve = null!;
                 return false;
             }
 
             if (!RowMap.TryGetValue(rowName, out var foundCurve))
             {
                 if (bWarnIfNotFound) Log.Warning("UCurveTable::FindCurve : Row '{0}' not found in CurveTable '{1}'.", rowName.ToString(), GetPathName());
-                outCurve = null;
+                outCurve = null!;
                 return false;
             }
 
-            switch (CurveTableMode)
-            {
-                case ECurveTableMode.SimpleCurves:
-                    outCurve = new FSimpleCurve(foundCurve);
-                    return true;
-                case ECurveTableMode.RichCurves:
-                    outCurve = new FRichCurve(foundCurve);
-                    return true;
-            }
+            outCurve = ResolveCurve(rowName, foundCurve)!;
+            return outCurve is not null;
+        }
 
-            outCurve = null;
-            return false;
+        protected virtual FRealCurve? ResolveCurve(FName rowName, FStructFallback rowData)
+        {
+            return CurveTableMode switch
+            {
+                ECurveTableMode.SimpleCurves => new FSimpleCurve(rowData),
+                ECurveTableMode.RichCurves => new FRichCurve(rowData),
+                _ => null
+            };
         }
     }
 }

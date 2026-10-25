@@ -5,6 +5,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -122,6 +123,7 @@ public class FStaticMeshRenderData
                             _ = new FDistanceFieldVolumeData(Ar);
                         }
                     }
+
                     if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
                         _ = Ar.ReadArray(() => new FDistanceFieldVolumeData5(Ar));
                 }
@@ -145,25 +147,41 @@ public class FStaticMeshRenderData
         }
 
         Bounds = new FBoxSphereBounds(Ar);
-
-        if (Ar.Game == GAME_RocoKingdomWorld)
+        switch (Ar.Game)
         {
-            foreach (var lod in LODs)
+            case GAME_GangstarMirageCity:
             {
-                if (lod.PositionVertexBuffer != null && lod.PositionVertexBuffer.Stride != 8) continue;
-                if (lod.PositionVertexBuffer?.Verts == null) continue;
-
-                var verts = lod.PositionVertexBuffer.Verts;
-                for (var i = 0; i < verts.Length; i++)
+                foreach (var lod in LODs)
                 {
-                    verts[i] =  verts[i] * Bounds.BoxExtent + Bounds.Origin;
+                    if (lod.PositionVertexBuffer is FGangstarPositionVertexBuffer positions)
+                    {
+                        positions.Decode(Bounds);
+                    }
                 }
+                break;
+            }
+            case GAME_RocoKingdomWorld:
+            {
+                foreach (var lod in LODs)
+                {
+                    if (lod.PositionVertexBuffer != null && lod.PositionVertexBuffer.Stride != 8)
+                        continue;
+                    if (lod.PositionVertexBuffer?.Verts == null)
+                        continue;
+
+                    var verts = lod.PositionVertexBuffer.Verts;
+                    for (var i = 0; i < verts.Length; i++)
+                    {
+                        verts[i] = verts[i] * Bounds.BoxExtent + Bounds.Origin;
+                    }
+                }
+                break;
             }
         }
 
         if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
         {
-            if (Ar.Game is >= GAME_UE5_6 or GAME_GrayZoneWarfare or GAME_HighOnLife2 or GAME_Gothic1Remake)
+            if (Ar.Game is >= GAME_UE5_6 or GAME_GrayZoneWarfare or GAME_HighOnLife2 or GAME_Gothic1Remake or GAME_TheBloodofDawnwalker)
             {
                 var bRenderDataFlags = Ar.Read<byte>();
                 bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;
@@ -184,13 +202,14 @@ public class FStaticMeshRenderData
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 
-        if (Ar.Game is GAME_DeltaForce or GAME_DeadzoneRogue) Ar.Position += 4;
-        if (Ar.Game is GAME_InfinityNikki) Ar.Position += 8;
+        if (Ar.Game is GAME_DeadzoneRogue) Ar.Position += 4;
+        if (Ar.Game is GAME_InfinityNikki or GAME_RogueCompany) Ar.Position += 8;
 
         var screenSizeLength = Ar.Game switch
         {
             GAME_FragPunk or GAME_RocoKingdomWorld => 16,
             GAME_Stalker2 => 14,
+            GAME_TheBloodofDawnwalker => 2,
             >= GAME_UE4_9 => MAX_STATIC_LODS_UE4,
             _ => 4
         };
@@ -206,8 +225,12 @@ public class FStaticMeshRenderData
                 ScreenSize[i] = Ar.Read<float>();
             }
 
-            if (Ar.Game == GAME_HogwartsLegacy) Ar.Position += 8;
-            if (Ar.Game is GAME_VisionsofMana or GAME_ValorantSource) Ar.Position += 4;
+            Ar.Position += Ar.Game switch
+            {
+                GAME_HogwartsLegacy => 8,
+                GAME_VisionsofMana or GAME_ValorantSource => 4,
+                _ => 0
+            };
         }
 
         if (Ar.Game == GAME_Borderlands3)

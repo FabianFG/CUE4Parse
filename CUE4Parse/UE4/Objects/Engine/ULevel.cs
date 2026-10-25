@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.BuildData;
+using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -106,11 +107,12 @@ public readonly struct FPrecomputedVolumeDistanceField : IUStruct
     }
 }
 
-public class ULevel : Assets.Exports.UObject
+public class ULevel : Assets.Exports.UObject, IAssetUserData
 {
     public FPackageIndex WorldSettings;
     public FPackageIndex WorldDataLayers;
     public FSoftObjectPath WorldPartitionRuntimeCell;
+    public FPackageIndex[]? AssetUserData { get; private set; }
 
     public FPackageIndex?[] Actors;
     public FURL URL;
@@ -128,6 +130,7 @@ public class ULevel : Assets.Exports.UObject
         WorldSettings = GetOrDefault(nameof(WorldSettings), new FPackageIndex());
         WorldDataLayers = GetOrDefault(nameof(WorldDataLayers), new FPackageIndex());
         WorldPartitionRuntimeCell = GetOrDefault<FSoftObjectPath>(nameof(WorldPartitionRuntimeCell));
+        AssetUserData = GetOrDefault<FPackageIndex[]?>(nameof(AssetUserData));
 
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 16;
         if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) || Ar.Position >= validPos) return;

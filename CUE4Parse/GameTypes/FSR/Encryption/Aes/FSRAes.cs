@@ -1,6 +1,4 @@
 using System.Runtime.Intrinsics;
-using CUE4Parse.UE4.VirtualFileSystem;
-using static System.Runtime.Intrinsics.X86.Aes;
 using static System.Runtime.Intrinsics.Vector128;
 
 namespace CUE4Parse.GameTypes.FSR.Encryption.Aes;
@@ -11,7 +9,7 @@ namespace CUE4Parse.GameTypes.FSR.Encryption.Aes;
 public static class FreeStyleReboundAes
 {
     // 0x6D89D6DB4A5CC951E446BE95AAB054108057B22DF936A8E2F27F9FC00D16A103
-    private static readonly Vector128<byte>[] RoundKeys =
+    public static readonly Vector128<byte>[] RoundKeys =
     [
         Create(0xB0, 0x97, 0x9A, 0xC8, 0x52, 0x0B, 0x51, 0x95, 0x52, 0x54, 0x8F, 0x2D, 0x2C, 0x03, 0xE5, 0xED),
         Create(0xC4, 0x43, 0x7E, 0x4E, 0xE5, 0xE1, 0x58, 0x96, 0x46, 0xA9, 0x02, 0xD7, 0xF0, 0xA4, 0x09, 0xDC),
@@ -27,38 +25,4 @@ public static class FreeStyleReboundAes
         Create(0xC3, 0x4B, 0x61, 0xA1, 0xE2, 0xAD, 0xA2, 0x68, 0x44, 0x76, 0x96, 0x76, 0xBB, 0x31, 0x7E, 0x4D),
         Create(0x6D, 0x89, 0xD6, 0xDB, 0x4A, 0x5C, 0xC9, 0x51, 0xE4, 0x46, 0xBE, 0x95, 0xAA, 0xB0, 0x54, 0x10)
     ];
-
-    private static void DecryptWithRoundKeys(byte[] input, int index, Vector128<byte>[] roundkeys)
-    {
-        var state = Create(input, index);
-        var rounds = roundkeys.Length - 1;
-        state = Xor(state, roundkeys[0]);
-        for (var i = 1; i < rounds; i++)
-        {
-            state = Decrypt(state, roundkeys[i]);
-        }
-
-        state = DecryptLast(state, roundkeys[rounds]);
-        state.CopyTo(input, index);
-    }
-
-    public static byte[] FSRDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
-    {
-        if (bytes.Length < beginOffset + count)
-            throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");
-        if (count % 16 != 0)
-            throw new ArgumentException("count must be a multiple of 16");
-        if (reader.AesKey == null)
-            throw new NullReferenceException("reader.AesKey");
-
-        var output = new byte[count];
-        Array.Copy(bytes, beginOffset, output, 0, count);
-
-        for (var i = 0; i < count / 16; i++)
-        {
-            DecryptWithRoundKeys(output, i * 16, RoundKeys);
-        }
-
-        return output;
-    }
 }

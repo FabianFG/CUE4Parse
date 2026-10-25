@@ -1,11 +1,14 @@
 using System.Diagnostics;
+using CUE4Parse.Compression;
 using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.ACE7.Encryption;
+using CUE4Parse.GameTypes.RL.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.IO.Objects;
+using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -16,7 +19,6 @@ namespace CUE4Parse.UE4.Assets
     [SkipObjectRegistration]
     public sealed class Package : AbstractUePackage
     {
-        
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
         public override int ImportMapLength => ImportMap.Length;
@@ -59,8 +61,9 @@ namespace CUE4Parse.UE4.Assets
             Func<FByteBulkDataHeader?, FArchive?>? ubulk = null,
             Func<FByteBulkDataHeader?, FArchive?>? uptnl = null,
             IFileProvider? provider = null,
-            bool useLazySerialization = true)
-            : base(uasset.Name.SubstringBeforeLast('.'), provider)
+            bool useLazySerialization = true,
+            string? archiveName = null)
+            : base(uasset.Name.SubstringBeforeLast('.'), provider, archiveName)
         {
             // We clone the version container because it can be modified with package specific versions when reading the summary
             uasset.Versions = (VersionContainer) uasset.Versions.Clone();
@@ -83,8 +86,11 @@ namespace CUE4Parse.UE4.Assets
                 uassetAr = new FAssetArchive(new FArchiveBigEndian(uasset), this);
             }
             uassetAr.Position -= 4;
-            
+
             Summary = new FPackageFileSummary(uassetAr);
+
+            // Decompresses CompressedChunks and Decrypts Rocket league encrypted files
+            DecryptAndDecompress(uassetAr, Summary);
 
             uassetAr.SeekAbsolute(Summary.NameOffset, SeekOrigin.Begin);
             NameMap = new FNameEntrySerialized[Summary.NameCount];
@@ -232,6 +238,84 @@ namespace CUE4Parse.UE4.Assets
             IsFullyLoaded = true;
         }
 
+        private static void DecryptAndDecompress(FAssetArchive uassetAr, FPackageFileSummary Summary)
+        {
+            if (uassetAr.Game == GAME_RocketLeague)
+            {
+                var checkSumDataSize = uassetAr.Read<int>();
+                var compressedChunkInfoOffset = uassetAr.Read<int>();
+                var lastBlockSize = uassetAr.Read<int>();
+
+                if (Summary.CompressionFlags != ECompressionFlags.COMPRESS_None)
+                {
+                    var headerEnd = uassetAr.Position;
+                    var checkSumDataOffset = (int) (Summary.TotalHeaderSize - headerEnd - checkSumDataSize);
+
+                    uassetAr.Position = 0;
+                    var before = uassetAr.ReadBytes(Summary.NameOffset);
+
+                    var encryptedSize = (int) (Summary.TotalHeaderSize - lastBlockSize - headerEnd);
+                    if (uassetAr.Game == GAME_RocketLeague && (int)uassetAr.LicenseeVer >= 33) encryptedSize -= encryptedSize % 16;
+                    var encryptedData = uassetAr.ReadBytes(encryptedSize);
+
+                    RocketLeagueAes.Decrypt(encryptedData, checkSumDataOffset, lastBlockSize, true, out var decryptedData);
+
+                    var after = uassetAr.ReadBytes((int) (uassetAr.Length - uassetAr.Position));
+
+                    var fullBuffer = new byte[before.Length + decryptedData.Length + after.Length];
+                    Buffer.BlockCopy(before, 0, fullBuffer, 0, before.Length);
+                    Buffer.BlockCopy(decryptedData, 0, fullBuffer, before.Length, decryptedData.Length);
+                    Buffer.BlockCopy(after, 0, fullBuffer, before.Length + decryptedData.Length, after.Length);
+
+                    uassetAr.SetBaseArchive(new FByteArchive("Rocket League - Decrypted Package", fullBuffer, uassetAr.Versions));
+                    uassetAr.SeekAbsolute(Summary.NameOffset + compressedChunkInfoOffset, SeekOrigin.Begin);
+
+                    Summary.CompressedChunks = uassetAr.ReadArray(() => new FCompressedChunk(uassetAr));
+                }
+            }
+
+            if (Summary.CompressionFlags.HasFlag(ECompressionFlags.COMPRESS_GZIP) || Summary.CompressionFlags.HasFlag(ECompressionFlags.COMPRESS_ZLIB))
+            {
+                long totalSize = uassetAr.Length;
+                foreach (var chunk in Summary.CompressedChunks)
+                    totalSize = Math.Max(totalSize, chunk.UncompressedOffset + chunk.UncompressedSize);
+
+                var buffer = new byte[totalSize];
+                uassetAr.Position = 0;
+                uassetAr.Read(buffer, 0, (int) uassetAr.Length);
+
+                foreach (var chunk in Summary.CompressedChunks)
+                {
+                    uassetAr.Position = chunk.CompressedOffset;
+                    var decompressedData = new byte[chunk.UncompressedSize];
+
+                    uassetAr.SerializeCompressedNew(decompressedData, chunk.UncompressedSize,
+                        Summary.CompressionFlags.HasFlag(ECompressionFlags.COMPRESS_ZLIB)
+                            ? CompressionMethod.Zlib.ToString()
+                            : CompressionMethod.LZO.ToString(),
+                        ECompressionFlags.COMPRESS_None, false, out _);
+
+                    Array.Copy(decompressedData, 0, buffer, chunk.UncompressedOffset, decompressedData.Length);
+                }
+
+                uassetAr.SetBaseArchive(new FByteArchive("Decompressed Package", buffer, uassetAr.Versions));
+            }
+
+            if (uassetAr.Game < GAME_UE4_0 && Summary.CompressionFlags.HasFlag(ECompressionFlags.COMPRESS_Custom)) throw new NotSupportedException("Custom Decompression not supported");
+        }
+
+        public static byte[] GetDecryptedData(FArchive uasset)
+        {
+            uasset.Versions = (VersionContainer) uasset.Versions.Clone();
+            var uassetAr = new FAssetArchive(uasset, null);
+            var Summary = new FPackageFileSummary(uassetAr);
+
+            DecryptAndDecompress(uassetAr, Summary);
+
+            uassetAr.Position = 0;
+            return uassetAr.ReadBytes((int) uassetAr.Length);
+        }
+
         public override int GetExportIndex(string name, StringComparison comparisonType = StringComparison.Ordinal)
         {
             for (var i = 0; i < ExportMap.Length; i++)
@@ -259,6 +343,9 @@ namespace CUE4Parse.UE4.Assets
         private ResolvedObject? ResolveImport(FPackageIndex importIndex)
         {
             var import = ImportMap[-importIndex.Index - 1];
+            if (Provider?.Versions.Game is GAME_MarchofGiants && import.OuterIndex is null or { IsNull: true })
+                return new ResolvedImportObject(import, this);
+
             var outerMostIndex = importIndex;
             FObjectImport outerMostImport;
             while (true)
@@ -268,14 +355,15 @@ namespace CUE4Parse.UE4.Assets
                     return new ResolvedImportObject(import, this);
 
                 outerMostImport = ImportMap[-outerMostIndex.Index - 1];
-                if (outerMostImport.OuterIndex.IsNull)
+                if (outerMostImport.OuterIndex is null or { IsNull: true })
                     break;
                 outerMostIndex = outerMostImport.OuterIndex;
             }
 
             outerMostImport = ImportMap[-outerMostIndex.Index - 1];
             // We don't support loading script packages, so just return a fallback
-            if (outerMostImport.ObjectName.Text.StartsWith("/Script/"))
+            var outerMostObjectName = outerMostImport.ObjectName.Text;
+            if (outerMostObjectName.StartsWith("/Script/", StringComparison.Ordinal))
             {
                 return new ResolvedImportObject(import, this);
             }
@@ -283,25 +371,22 @@ namespace CUE4Parse.UE4.Assets
             if (Provider == null)
                 return null;
             Package? importPackage = null;
-            if (Provider.TryLoadPackage(outerMostImport.ObjectName.Text, out var package))
+            if (Provider.TryLoadPackage(outerMostObjectName, out var package) || Provider.TryLoadPackage(outerMostImport.ClassPackage.Text, out package))
             {
                 if (package is IoPackage ioPackage)
                 {
-                    for (int i = 0; i < ioPackage.ExportMap.Length; i++)
+                    // GetExportIndex also covers the exports of a merged optional segment
+                    var exportIndex = ioPackage.GetExportIndex(import.ObjectName.Text);
+                    if (exportIndex != -1)
                     {
-                        FExportMapEntry export = ioPackage.ExportMap[i];
-                        if (ioPackage.CreateFNameFromMappedName(export.ObjectName).Text == import.ObjectName.Text)
-                        {
-                            return ioPackage.ResolvePackageIndex(new FPackageIndex(ioPackage, i + 1));
-                        }
+                        return ioPackage.ResolvePackageIndex(new FPackageIndex(ioPackage, exportIndex + 1));
                     }
 #if DEBUG
                     Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, ioPackage.GetFullName());
 #endif
                     return new ResolvedImportObject(import, this);
                 }
-                else
-                    importPackage = package as Package;
+                importPackage = package as Package;
             }
             if (importPackage == null)
             {

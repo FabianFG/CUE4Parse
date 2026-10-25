@@ -7,7 +7,7 @@ namespace CUE4Parse_Conversion.Formats.Materials;
 /// <summary>
 /// TODO: support layers (st, st1, st2, etc)
 /// </summary>
-public sealed class UsdMaterialFormat : IMaterialExportFormat
+public sealed class UsdMaterialFormat(bool useDiffuseColor = true) : IMaterialExportFormat
 {
     public string DisplayName => "USD Material (.usda)";
 
@@ -23,7 +23,7 @@ public sealed class UsdMaterialFormat : IMaterialExportFormat
         shader.Add(UsdAttribute.Uniform("int", "inputs:useSpecularWorkflow", UsdValue.Int(0)));
 
         var hasDiffuseTexture = TryResolveTexture(parameters, [..CMaterialParams2.Diffuse[0], CMaterialParams2.FallbackDiffuse], packageDirectory, out var diffusePath);
-        var hasDiffuseTint = parameters.TryGetLinearColor(out var diffuseColor, CMaterialParams2.DiffuseColors[0]);
+        var hasDiffuseTint = parameters.TryGetLinearColor(out var diffuseColor, CMaterialParams2.DiffuseColors[0]) && useDiffuseColor;
 
         if (hasDiffuseTexture)
         {
