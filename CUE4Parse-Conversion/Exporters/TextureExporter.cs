@@ -7,12 +7,17 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
 {
     private string? _texturePath;
 
-    internal void CacheTexturePath()
+    public override async Task<ExportResult> ExportAsync(CancellationToken ct = default)
     {
-        if (_texturePath != null)
+        var result = await base.ExportAsync(ct).ConfigureAwait(false);
+
+        // Embedded materials reuse the saved file
+        if (result.Success && Session.EmbedMaterials && _texturePath != null)
         {
             Session.Cache.CacheTexturePath(texture, _texturePath);
         }
+
+        return result;
     }
 
     protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)

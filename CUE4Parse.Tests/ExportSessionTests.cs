@@ -87,6 +87,7 @@ public class ExportSessionTests
         Assert.True(session.Remove(objectPath));
         Assert.Equal(0, session.TotalQueued);
         await AssertEventually(() => !exporter.IsAlive, "A removed exporter remained strongly referenced.");
+        GC.KeepAlive(session);
     }
 
     [Fact]
@@ -125,6 +126,113 @@ public class ExportSessionTests
         session.Add(new TestExporter("Second"));
         var second = Assert.Single(await session.RunAsync(directory.Path, new ExportOptions(), ct: Ct));
         Assert.Equal(("First.First", "Second.Second"), (first.ObjectPath, second.ObjectPath));
+    }
+
+    [Fact]
+    public async Task Clear_LeavesARunningSessionAlone()
+    {
+        using var gate = new ManualResetEventSlim();
+        using var started = new ManualResetEventSlim();
+        var session = new ExportSession { MaxDegreeOfParallelism = 1 };
+        session.Add(new TestExporter("Blocked", gate: gate, started: started));
+        session.Add(new TestExporter("Next"));
+        using var directory = new TempDirectory();
+        var run = Task.Run(() => session.RunAsync(directory.Path, new ExportOptions(), ct: Ct), Ct);
+        try
+        {
+            Assert.True(await Task.Run(() => started.Wait(TimeSpan.FromSeconds(10)), Ct));
+            Assert.False(session.Clear());
+        }
+        finally
+        {
+            gate.Set();
+        }
+
+        var results = await run.WaitAsync(TimeSpan.FromSeconds(10), Ct);
+        Assert.Equal(2, results.Count);
+        Assert.Equal(0, session.TotalQueued);
+    }
+
+    [Fact]
+    public async Task RunAsync_ReportsProgressInOrder()
+    {
+        const int count = 64;
+        var session = new ExportSession { MaxDegreeOfParallelism = 8 };
+        for (var i = 0; i < count; i++)
+            session.Add(new TestExporter($"Item{i}"));
+        var reports = new List<ExportProgress>();
+        using var directory = new TempDirectory();
+
+        await session.RunAsync(directory.Path, new ExportOptions(), new InlineProgress(value =>
+        {
+            lock (reports) reports.Add(value);
+        }), Ct);
+
+        Assert.Equal([.. Enumerable.Range(1, count), count], reports.Select(report => report.Completed));
+        Assert.All(reports, report => Assert.Equal(count, report.Total));
+    }
+
+    // glTF embeds materials, so textures, including the ones that are only held weakly, go before everything else
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public async Task RunAsync_ExportsQueuedTexturesFirstWhenEmbeddingMaterials(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization,
+            compression: FixtureCompression.Uncompressed);
+        string? cachedPath = null;
+        var session = new ExportSession { MaxDegreeOfParallelism = 1 };
+        session.Add(new TestExporter("Mesh", enqueue: current =>
+            cachedPath = current.Cache.GetTexturePath(LoadExport<UTexture2D>(provider, TexturePath, "T_BGRA8"))));
+        var texture = QueueTexture(session, provider);
+        await AssertEventually(() => !texture.IsAlive, "The queued texture remained strongly referenced.");
+        using var directory = new TempDirectory();
+
+        var results = await session.RunAsync(directory.Path, new ExportOptions(meshFormat: EMeshFormat.Gltf2), ct: Ct);
+
+        Assert.All(results, result => Assert.True(result.Success, result.Error?.ToString()));
+        Assert.NotNull(cachedPath);
+    }
+
+    // Components and other subobjects would reload their whole package, so they stay alive like before
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public async Task Add_KeepsSubobjectsAlive(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization,
+            compression: FixtureCompression.Uncompressed);
+        var session = new ExportSession();
+        var landscape = QueueLandscape(session, provider);
+
+        for (var i = 0; i < 3; i++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            await Task.Delay(25, Ct);
+        }
+
+        Assert.True(landscape.IsAlive);
+        Assert.True(session.Clear());
+    }
+
+    private const string TexturePath = "CUE4ParseFixtures/Content/Fixtures/Textures/T_BGRA8.uasset";
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference QueueTexture(ExportSession session, CUE4Parse.FileProvider.DefaultFileProvider provider)
+    {
+        var texture = LoadExport<UTexture2D>(provider, TexturePath, "T_BGRA8");
+        session.Add(texture);
+        return new WeakReference(texture);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference QueueLandscape(ExportSession session, CUE4Parse.FileProvider.DefaultFileProvider provider)
+    {
+        var landscape = LoadPackageExports(provider, "CUE4ParseFixtures/Content/Fixtures/Maps/Landscape.umap")
+            .OfType<CUE4Parse.UE4.Assets.Exports.Actor.ALandscapeProxy>().First();
+        session.Add(landscape);
+        return new WeakReference(landscape);
     }
 
     private static async Task<IReadOnlyList<ExportResult>> Run(ExportSession session)

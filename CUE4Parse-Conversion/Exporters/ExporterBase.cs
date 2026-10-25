@@ -45,7 +45,7 @@ public abstract class ExporterBase : IExporter
         ObjectPath = PackagePath + '.' + ObjectName;
         ClassName = className;
 
-        Log = Serilog.Log.ForContext(GetType())
+        Log = CUE4ParseLog.Log.ForContext(GetType())
             .ForContext(nameof(ObjectPath), ObjectPath)
             .ForContext(nameof(ClassName), ClassName)
             .ForContext("ExporterV2", true);
@@ -64,6 +64,7 @@ public abstract class ExporterBase : IExporter
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default);
 
+    internal virtual bool HasDependencies => false;
     internal virtual IEnumerable<UObject> GetDependencies(CancellationToken ct) => [];
 
     public virtual async Task<ExportResult> ExportAsync(CancellationToken ct = default)

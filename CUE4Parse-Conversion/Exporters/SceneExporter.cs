@@ -1,4 +1,5 @@
 ﻿using CUE4Parse_Conversion.Dto;
+using CUE4Parse_Conversion.Exporters.Custom;
 using CUE4Parse_Conversion.Formats.World;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.GameTypes.Nascar.Assets.Exports;
@@ -93,7 +94,8 @@ public abstract class SceneExporter(UObject export) : ExporterBase(export)
                     {
                         irmesh.SetMaterials(irmComp.OverrideMaterials);
                         paths.Assets[meshComp.MeshPtr] = Resolve(irmesh, Extension);
-                        Session.Add(irmesh);
+                        // The override materials only exist on this object, so it must not be reloaded
+                        Session.Add(new IRMeshExporter(irmesh));
                     }
                     else if (paths.Assets.TryAdd(meshComp.MeshPtr, "") && meshComp.MeshPtr.Load<UObject>() is { } mesh)
                     {
