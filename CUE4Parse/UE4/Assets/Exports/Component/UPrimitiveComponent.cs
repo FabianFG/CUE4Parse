@@ -9,6 +9,7 @@ public class UPrimitiveComponent : USceneComponent
     public bool CastShadow { get; protected set; }
     public bool bCastDynamicShadow { get; protected set; } = true;
     public bool bCastStaticShadow { get; private set; } = true;
+    public bool bRenderInMainPass { get; protected set; } = true;
     public FBodyInstance? BodyInstance { get; protected set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
@@ -18,6 +19,7 @@ public class UPrimitiveComponent : USceneComponent
         CastShadow = GetOrDefault(nameof(CastShadow), CastShadow);
         bCastDynamicShadow = GetOrDefault(nameof(bCastDynamicShadow), bCastDynamicShadow);
         bCastStaticShadow = GetOrDefault(nameof(bCastStaticShadow), bCastStaticShadow);
+        bRenderInMainPass = GetOrDefault(nameof(bRenderInMainPass), bRenderInMainPass);
         BodyInstance = GetOrDefault(nameof(BodyInstance), BodyInstance);
 
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 16;

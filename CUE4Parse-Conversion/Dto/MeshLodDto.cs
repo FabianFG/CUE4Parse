@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion.Dto;
 
@@ -23,21 +24,29 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
 
     private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColorDto[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false, bool isNanite = false)
     {
-        if (owner.Materials.Length > 0)
+        var rules = new MeshExportRules(owner.Game, owner.Materials);
+        var visibleSections = new List<MeshSectionDto>(sections.Length);
+        foreach (var section in sections)
         {
-            for (var i = 0; i < sections.Length; i++)
+            var materialSection = section;
+            if (owner.Materials.Length > 0)
             {
                 // unfortunately we can't trust these indices
-                var materialIndex = Math.Clamp(sections[i].MaterialIndex, 0, owner.Materials.Length - 1);
-                sections[i] = new MeshSectionDto(materialIndex, sections[i]);
+                var materialIndex = Math.Clamp(section.MaterialIndex, 0, owner.Materials.Length - 1);
+                materialSection = new MeshSectionDto(materialIndex, section);
             }
+
+            if (!rules.ShouldExportSection(materialSection))
+                continue;
+
+            visibleSections.Add(materialSection);
         }
 
         Owner = owner;
         SourceLodIndex = sourceLodIndex;
         Indices = indices;
         Vertices = vertices;
-        Sections = sections;
+        Sections = [.. visibleSections];
         ExtraUvs = extraUvs;
         VertexColors = vertexColors;
         ScreenSize = screenSize;

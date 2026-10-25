@@ -184,7 +184,7 @@ public class UsdWorldFormat : IWorldExportFormat
 
     private UsdPrim BuildPointInstancer(InstancedStaticMeshComponentDto ism, WorldAssetPaths paths)
     {
-        var instancer = UsdPrim.Def("PointInstancer", "Instances");
+        var instancer = UsdPrim.Def("PointInstancer", ism.Name);
         var prototypes = UsdPrim.Def("Scope", "Prototypes");
 
         // Build the prototype prim

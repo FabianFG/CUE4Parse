@@ -1,11 +1,14 @@
 using CUE4Parse.UE4.Assets.Exports.Houdini;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Formats.Meshes;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Exporters.Custom;
 
 public sealed class HoudiniStaticMeshExporter(UHoudiniStaticMesh mesh) : MeshExporter<UHoudiniStaticMesh>(mesh)
 {
+    protected override IEnumerable<FPackageIndex?> MaterialReferences => mesh.Materials;
+
     protected override IReadOnlyList<ExportFile> BuildFiles(UHoudiniStaticMesh original, IMeshExportFormat format)
     {
         using var dto = new StaticMeshDto(original);

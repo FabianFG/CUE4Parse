@@ -20,10 +20,29 @@ public class CMaterialParams2
     public const string FallbackSpecularMasks = "PM_SpecularMasks";
     public const string FallbackEmissive = "PM_Emissive";
 
-    public const string RegexDiffuse = ".*(?:Diff|_Tex|_?Albedo|_?Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM|_DS|_DA)$";
+    public const string RegexDiffuse = ".*(?:Diff|_?Albedo|_?Base_?Colou?r).*|(?:^|[_ ])Colou?r(?:[_ ]|$)|(?:_Tex|_D|_DIF|_DM|_C|_CM|_DS|_DA)$";
     public const string RegexNormals = "^NO_|.*Norm.*|(?:_N|_NM|_NRM)$";
     public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_|MR|(?<!no)RM).*|(?:_S|_LP|_PAK)$";
     public const string RegexEmissive = ".*Emiss.*|(?:_E|_EM)$";
+    public const string RegexOcclusion = @"Occlu|(?:^|_)AO(?:_|\d*$)|(?-i:(?<![A-Z])AO(?![a-z]))";
+    public const string RegexChannelNames = @"Ambient[ _]*Occlusion|Occlusion|Occl|Occ|Roughness|Rough|Metallic|Metal|Met|Specular|Spec|Height";
+
+    // Named groups identify channel layouts, use only with RegexOptions.IgnorePatternWhitespace
+    // It still needs to be tested on more games
+    public const string RegexPackedTextureLayout = """
+        (?: ^ | [^a-z0-9] ) (?: Tex(?:ture)? [ _]* )?
+        (?:
+            (?<ORM> O[ _/]*R[ _/]*ME? | AO?[ _/]*R[ _/]*M )
+          | (?<RMA> R[ _/]*M[ _/]*(?: AO? | O ) )
+          | (?<ROM> R[ _/]*(?: O | AO? )[ _/]*M )
+          | (?<RSM> R[ _/]*S[ _/]*M )
+          | (?<MRA> M[ _/]*R[ _/]*A[OES]? )
+          | (?<MRO> M[ _/]*R[ _/]*O(?: A | S | Dp )? )
+          | (?<SRM> S[ _/]*R[ _/]*M )
+          | (?<HRM> H[ _/]*R[ _/]*M )
+        )
+        (?= $ | [^a-z0-9] | (?: Map | Tex(?:ture)? | VT )(?: $ | [^a-z0-9] ) )
+        """;
 
     public bool HasTopDiffuse => HasTopTexture(Diffuse[0]);
     public bool HasTopNormals => HasTopTexture(Normals[0]);
@@ -44,7 +63,7 @@ public class CMaterialParams2
     public static readonly string[][] Diffuse =
     [
         [
-            "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse", "Base Colour", "CLRM", "Diffuse_Map", "Base Color", "Base_Tex", "BaseTex", "ColorTexture",
+            "Main_BaseColor", "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse", "Base Colour", "CLRM", "Diffuse_Map", "Base Color", "Base_Tex", "BaseTex", "ColorTexture",
             "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Base Color Map", "DesatTexture",
             "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "BaseColor_Tex", "UDR",
             "DiffuseLayer1", "1 - Albedo", "albedo", "Albedo", "Aldebo", "ALB", "TextureAlbedo", "AlbedoTex", "Color_Texture", "color", "Base_D", "Tex_BaseColor",
@@ -73,8 +92,8 @@ public class CMaterialParams2
     public static readonly string[][] Normals =
     [
         [
-            "Trunk_Normal", "T_Normal", "normal", "normalmap", "NRRO", "Base Normal", "BaseNormalMap", "Normal Map", "Base Normal Map",
-            "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "Normal Tex",
+            "Main_Normal", "Trunk_Normal", "T_Normal", "normal", "normalmap", "NRRO", "Base Normal", "BaseNormalMap", "Normal Map", "Base Normal Map",
+            "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "NormalMap Texture", "Normal Tex",
             "Normal A Map", "Normals Top", "Normals Side", "Fallback Normal", "Base_N", "BaseNormal_Tex", "BaseNormal_NonVT",
             "Base_Normal", "BaseNormal", "Normal Base", "NormalVT", "TextureNormal", "Tex_BakedNormal", "TexNor", "Normal VT",
             "BakedNormalMap", "3 - Baked Normal", "Base Texture Normal", "Normal Base Map", "Tex_NM","TexA_NM", "Normal_Tex",
@@ -97,8 +116,8 @@ public class CMaterialParams2
     public static readonly string[][] SpecularMasks =
     [
         [
-            "Trunk_Specular", "PackedTexture",
-            "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side",
+            "Main_ORM", "Trunk_Specular", "PackedTexture",
+            "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side", "AORoughnessMetallic",
             "MG", "ORM", "MRAE", "MRAS", "MRAO", "MRA", "MRAO_Map", "MRA A", "MRS", "LP", "LP_1", "Base_LP", "Base_R*", "MRO_Tex",
             "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "MRO Map", "MROA Map", "MRO",
             "Base_ORM", "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map", "AO",
@@ -123,7 +142,7 @@ public class CMaterialParams2
     public static readonly string[][] Emissive =
     [
         [
-            "Emissive", "EmissiveTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
+            "Emissive", "EmissiveTexture", "EmmisiveColorTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
             "EmmisiveColor_A", "TextureEmissive", "TexEm", "Main_T_Emissive", "VT Emissive"
         ],
         ["L1_Emissive", "EmmisiveColor_B"],
@@ -327,15 +346,15 @@ public class CMaterialParams2
     public bool VerifyTexture(string name, ILoadableObject texture, bool appendToDictionary = true, EMaterialSamplerType samplerType = EMaterialSamplerType.SAMPLERTYPE_Color)
     {
         var fallback = "";
-        if (Regex.IsMatch(name, RegexDiffuse, RegexOptions.IgnoreCase))
-            fallback = FallbackDiffuse;
-        else if (samplerType == EMaterialSamplerType.SAMPLERTYPE_Normal ||
-                 Regex.IsMatch(name, RegexNormals, RegexOptions.IgnoreCase))
+        if (samplerType is EMaterialSamplerType.SAMPLERTYPE_Normal or EMaterialSamplerType.SAMPLERTYPE_VirtualNormal ||
+            Regex.IsMatch(name, RegexNormals, RegexOptions.IgnoreCase))
             fallback = FallbackNormals;
         else if (Regex.IsMatch(name, RegexSpecularMasks, RegexOptions.IgnoreCase))
             fallback = FallbackSpecularMasks;
         else if (Regex.IsMatch(name, RegexEmissive, RegexOptions.IgnoreCase))
             fallback = FallbackEmissive;
+        else if (Regex.IsMatch(name, RegexDiffuse, RegexOptions.IgnoreCase))
+            fallback = FallbackDiffuse;
 
         var ret = !string.IsNullOrEmpty(fallback);
         if (ret) Textures[fallback] = texture;
