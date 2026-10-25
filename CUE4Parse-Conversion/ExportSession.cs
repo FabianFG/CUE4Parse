@@ -11,14 +11,16 @@ using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Assets.Exports.Houdini;
 using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.Paper2D;
 using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Exporters;
 using CUE4Parse_Conversion.Exporters.Custom;
-using CUE4Parse_Conversion.Dto;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion;
@@ -63,6 +65,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             UDNAAsset dna => Add(new DnaExporter(dna)),
             UWorld world => Add(new WorldExporter(world)),
             UBlueprintGeneratedClass blueprint => Add(new BlueprintExporter(blueprint)),
+            UPaperTileMap map when map.Game is EGame.GAME_DeadByDaylight => Add(new DeadByDaylightMapExporter(map)),
             ALandscapeProxy landscape => Add(new LandscapeMeshExporter(landscape)),
             ULandscapeComponent landscape => Add(new LandscapeMeshExporter2(landscape)),
             USplineMeshComponent spline => Add(new SplineMeshExporter(spline)),
