@@ -9,8 +9,8 @@ public sealed class FUsmapReader : FArchive
 {
     private readonly FArchive Ar;
     public readonly EUsmapVersion Version;
-    private EPropertyFlags[] _flagLut = [];
-    private string[] _nameLut;
+    private readonly EPropertyFlags[] _flagLut = [];
+    private readonly string[] _nameLut;
 
     public FUsmapReader(FArchive ar, EUsmapVersion version) : base(ar.Versions)
     {
@@ -28,6 +28,15 @@ public sealed class FUsmapReader : FArchive
         {
             _flagLut = Ar.ReadArray<EPropertyFlags>();
         }
+    }
+
+    // Clones share the tables that were already read instead of reading them again at the current position
+    private FUsmapReader(FArchive ar, EUsmapVersion version, string[] nameLut, EPropertyFlags[] flagLut) : base(ar.Versions)
+    {
+        Ar = ar;
+        Version = version;
+        _nameLut = nameLut;
+        _flagLut = flagLut;
     }
 
     private const int InvalidNameIndex = -1;
@@ -72,11 +81,20 @@ public sealed class FUsmapReader : FArchive
 
     public override string Name => Ar.Name;
 
-    public override object Clone()
-    {
-        var clone = new FUsmapReader((FArchive) Ar.Clone(), Version);
-        clone._nameLut = _nameLut;
-        clone._flagLut = _flagLut;
-        return clone;
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override T Read<T>() => Ar.Read<T>();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override byte[] ReadBytes(int length) => Ar.ReadBytes(length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override unsafe void Serialize(byte* ptr, int length) => Ar.Serialize(ptr, length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override T[] ReadArray<T>(int length) => Ar.ReadArray<T>(length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override void ReadArray<T>(T[] array) => Ar.ReadArray(array);
+
+    public override object Clone() => new FUsmapReader((FArchive) Ar.Clone(), Version, _nameLut, _flagLut);
 }

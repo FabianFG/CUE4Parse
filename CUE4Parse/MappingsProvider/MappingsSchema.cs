@@ -120,7 +120,7 @@ public class Struct
 
 public class SerializedStruct : Struct
 {
-    public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
+    public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, CountSlots(struc))
     {
         Super = new Lazy<Struct?>(() =>
         {
@@ -144,17 +144,20 @@ public class SerializedStruct : Struct
 
             return null;
         });
+        // Every element of a fixed-size array takes its own schema slot, like in usmap files
         Properties = new Dictionary<int, PropertyInfo>();
-        for (var i = 0; i < struc.ChildProperties.Length; i++)
+        var slot = 0;
+        foreach (var field in struc.ChildProperties)
         {
-            var prop = (FProperty) struc.ChildProperties[i];
-            var propInfo = new PropertyInfo(Math.Min(i, prop.ArrayDim - 1), prop.Name.Text, new PropertyType(prop), prop.ArrayDim, prop.PropertyFlags);
+            var prop = (FProperty) field;
             for (var j = 0; j < prop.ArrayDim; j++)
             {
-                Properties[i + j] = propInfo;
+                Properties[slot++] = new PropertyInfo(j, prop.Name.Text, new PropertyType(prop), prop.ArrayDim, prop.PropertyFlags);
             }
         }
     }
+
+    private static int CountSlots(UStruct struc) => struc.ChildProperties.Sum(field => ((FProperty) field).ArrayDim);
 }
 
 public class PropertyInfo(int index, string name, PropertyType mappingType, int? arraySize = null, EPropertyFlags propertyFlags = EPropertyFlags.None) : ICloneable
