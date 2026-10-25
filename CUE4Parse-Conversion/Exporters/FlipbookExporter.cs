@@ -9,10 +9,10 @@ public sealed class FlipbookExporter(UPaperFlipbook flipbook) : ExporterBase(fli
     {
         Log.Debug("Decoding flipbook for platform {Platform} as {Format}", Session.Options.TexturePlatform, Session.Options.TextureFormat);
 
-        var decoded = flipbook.Decode(Session.Options.TexturePlatform)
+        var decoded = flipbook.Decode(Session.Options.TexturePlatform, cancellationToken: ct)
             ?? throw new Exception("Failed to decode flipbook");
 
-        var data = decoded.Encode(Session.Options, out var ext);
+        var data = decoded.Encode(Session.Options, out var ext, ct);
         return [new ExportFile(ext, data)];
     }
 }

@@ -18,5 +18,5 @@ public class CFlipbook(IReadOnlyList<CFlipbookFrame> frames, float framesPerSeco
     public int Height { get; } = frames.Where(f => f.Texture != null).Select(f => f.Offset.Y + f.Texture!.Height).DefaultIfEmpty(0).Max();
 
     public int TotalFrames => Frames.Sum(f => f.FrameRun);
-    public float Duration => TotalFrames / FramesPerSecond;
+    public float Duration => FramesPerSecond != 0 ? TotalFrames / FramesPerSecond : 0;
 }

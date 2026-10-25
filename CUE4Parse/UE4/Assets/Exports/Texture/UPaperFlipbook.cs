@@ -19,5 +19,5 @@ public class UPaperFlipbook : UObject
     }
 
     public int GetNumFrames() => KeyFrames.Sum(kf => kf.FrameRun);
-    public float GetTotalDuration() => GetNumFrames() / FramesPerSecond;
+    public float GetTotalDuration() => FramesPerSecond != 0 ? GetNumFrames() / FramesPerSecond : 0;
 }
