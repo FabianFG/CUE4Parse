@@ -65,7 +65,9 @@ public class URigHierarchy : UObject
 
         if (Ar.Game == GAME_Aion2) bAllocateStoragePerElement = false;
 
-        if (elementCount > 1) bAllocateStoragePerElement = ProbeInterleavedElements(archiveForElements) ?? bAllocateStoragePerElement;
+        // Without a serialized or supplied version, the layout is guessed from the engine version, so check the data
+        if (elementCount > 1 && Ar.CustomVer(FControlRigObjectVersion.GUID) < 0)
+            bAllocateStoragePerElement = ProbeInterleavedElements(archiveForElements) ?? bAllocateStoragePerElement;
 
         Elements = new FRigBaseElement[elementCount];
         for (var elementIndex = 0; elementIndex < elementCount; elementIndex++)
