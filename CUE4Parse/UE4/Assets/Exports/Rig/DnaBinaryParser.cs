@@ -6,7 +6,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Rig;
 public sealed class DnaBinaryDocument
 {
     public DNAVersion Version;
-    public DNAVersion? LayerVersion;
     public Dictionary<string, IRawBase> Layers = new();
     public long ByteLength;
 }
@@ -35,7 +34,6 @@ public static class DnaBinaryParser
 
         var version = new DNAVersion(endianAr);
         Dictionary<string, IRawBase> layers;
-        DNAVersion? layerVersion = null;
 
         if (version.FileVersion < FileVersion.v23)
         {
@@ -55,31 +53,10 @@ public static class DnaBinaryParser
             foreach (var entry in indexTable.Entries)
                 dnaEnd = Math.Max(dnaEnd, startPos + entry.Offset + entry.Size);
 
-            // Older dual-block payloads (behavior DNA + geometry/layer DNA).
-            if (version.FileVersion < FileVersion.v26 && endianAr.Position + 3 <= endianAr.Length)
-            {
-                var peekPos = endianAr.Position;
-                var next = endianAr.ReadBytes(3);
-                endianAr.Position = peekPos;
-                if (next.SequenceEqual(Signature))
-                {
-                    var layerStart = endianAr.Position;
-                    endianAr.ReadBytes(3);
-                    layerVersion = new DNAVersion(endianAr);
-                    var layersIndexTable = new IndexTable(endianAr);
-                    ReadLayers(endianAr, layerVersion.FileVersion, layersIndexTable, layerStart, out var extra, validateSizes);
-                    foreach (var kv in extra)
-                        layers[kv.Key] = kv.Value;
-                    foreach (var entry in layersIndexTable.Entries)
-                        dnaEnd = Math.Max(dnaEnd, layerStart + entry.Offset + entry.Size);
-                }
-            }
-
             endianAr.Position = dnaEnd;
             return new DnaBinaryDocument
             {
                 Version = version,
-                LayerVersion = layerVersion,
                 Layers = layers,
                 ByteLength = dnaEnd - startPos
             };
@@ -88,7 +65,6 @@ public static class DnaBinaryParser
         return new DnaBinaryDocument
         {
             Version = version,
-            LayerVersion = layerVersion,
             Layers = layers,
             ByteLength = endianAr.Position - startPos
         };

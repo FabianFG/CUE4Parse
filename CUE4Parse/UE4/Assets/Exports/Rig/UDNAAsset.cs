@@ -48,21 +48,57 @@ public abstract class UDNAObject : UObject, IDnaAsset
         DNAData = new Lazy<byte[]>(() => dnaBytes);
     }
 
-    protected static void ParseDnaStream(FAssetArchive Ar, long limitPos, UDNAObject dest, bool parseTrailingSnapshot)
+    private static (DnaBinaryDocument Doc, byte[] Bytes) ReadDnaStream(FAssetArchive Ar)
     {
         var dnaStart = Ar.Position;
-        var endianAr = new FArchiveBigEndian(Ar);
-        var doc = DnaBinaryParser.Parse(endianAr, dnaStart);
+        var doc = DnaBinaryParser.Parse(new FArchiveBigEndian(Ar), dnaStart);
         var dnaBytes = Ar.ReadBytesAt(dnaStart, (int) doc.ByteLength);
-        dest.ApplyDocument(doc, dnaBytes);
         Ar.Position = dnaStart + doc.ByteLength;
+        return (doc, dnaBytes);
+    }
+
+    protected void ParseDnaStream(FAssetArchive Ar, long limitPos, bool parseTrailingSnapshot)
+    {
+        var (doc, dnaBytes) = ReadDnaStream(Ar);
+        ApplyDocument(doc, dnaBytes);
 
         if (parseTrailingSnapshot && Ar.Position < limitPos)
         {
-            var remaining = (int) (limitPos - Ar.Position);
-            var snapshotBytes = Ar.ReadBytes(remaining);
-            dest.Snapshot = RigLogicSnapshot.Read(snapshotBytes, requireFullConsume: false);
+            var snapshotBytes = Ar.ReadBytes((int) (limitPos - Ar.Position));
+            try
+            {
+                Snapshot = RigLogicSnapshot.Read(snapshotBytes, requireFullConsume: false);
+            }
+            catch (Exception e)
+            {
+                // The DNA itself is still usable without the cooked RigLogic state
+                Log.Warning(e, "Failed to read the RigLogic snapshot of {0}", Name);
+            }
         }
+    }
+
+    /// <summary>
+    /// Before custom versions were added, the asset stored its behavior and its geometry as two DNA files. UE keeps the
+    /// behavior layers of the first one and the geometry of the second, which cooked assets only have as an empty placeholder.
+    /// </summary>
+    protected void ParseLegacyDnaStreams(FAssetArchive Ar, long limitPos)
+    {
+        var (behavior, dnaBytes) = ReadDnaStream(Ar);
+        if (Ar.Position < limitPos && DnaBinaryParser.LooksLikeDna(Ar))
+        {
+            try
+            {
+                var (geometry, _) = ReadDnaStream(Ar);
+                if (DnaAssetQueries.TryGet(geometry.Layers, "geom", out RawGeometry geom))
+                    behavior.Layers["geom"] = geom;
+            }
+            catch (Exception e)
+            {
+                Log.Warning(e, "Failed to read the geometry DNA of {0}", Name);
+            }
+        }
+
+        ApplyDocument(behavior, dnaBytes);
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -92,22 +128,20 @@ public class UDNAAsset : UDNAObject
 
         if (customVer == FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
         {
-            ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
-            if (Ar.Position < validPos && DnaBinaryParser.LooksLikeDna(Ar))
-                ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
+            ParseLegacyDnaStreams(Ar, validPos);
             return;
         }
 
-        ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
+        ParseDnaStream(Ar, validPos, parseTrailingSnapshot: false);
     }
 }
 
 public class UDNA : UDNAObject
 {
-    public FDNAConfig DNAConfig;
+    public FDNAConfig? DNAConfig;
     public bool bKeepDNAAfterInitialization;
     public bool bUseOptimizedCooking = true;
-    public FRigLogicConfiguration RigLogicConfiguration;
+    public FRigLogicConfiguration? RigLogicConfiguration;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -128,9 +162,7 @@ public class UDNA : UDNAObject
 
         if (customVer == FDNAAssetCustomVersion.Type.BeforeCustomVersionWasAdded)
         {
-            ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
-            if (Ar.Position < validPos && DnaBinaryParser.LooksLikeDna(Ar))
-                ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: false);
+            ParseLegacyDnaStreams(Ar, validPos);
             return;
         }
 
@@ -142,11 +174,11 @@ public class UDNA : UDNAObject
         {
             if (!Ar.ReadBoolean())
                 return;
-            ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: true);
+            ParseDnaStream(Ar, validPos, parseTrailingSnapshot: true);
             return;
         }
 
-        ParseDnaStream(Ar, validPos, this, parseTrailingSnapshot: Ar.Position < validPos && !DnaBinaryParser.LooksLikeDna(Ar));
+        ParseDnaStream(Ar, validPos, parseTrailingSnapshot: false);
     }
 }
 

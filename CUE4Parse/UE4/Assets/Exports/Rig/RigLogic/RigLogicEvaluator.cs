@@ -231,6 +231,21 @@ public static class RigLogicEvaluator
                 cx * sy * cz + sx * cy * sz,
                 cx * cy * sz + sx * sy * cz,
                 cx * cy * cz - sx * sy * sz),
+            ERotationSequence.YZX => (
+                sx * cy * cz - cx * sy * sz,
+                cx * sy * cz - sx * cy * sz,
+                cx * cy * sz + sx * sy * cz,
+                cx * cy * cz + sx * sy * sz),
+            ERotationSequence.ZXY => (
+                sx * cy * cz + cx * sy * sz,
+                cx * sy * cz - sx * cy * sz,
+                cx * cy * sz - sx * sy * cz,
+                cx * cy * cz + sx * sy * sz),
+            ERotationSequence.ZYX => (
+                sx * cy * cz + cx * sy * sz,
+                cx * sy * cz - sx * cy * sz,
+                cx * cy * sz + sx * sy * cz,
+                cx * cy * cz - sx * sy * sz),
             _ => (
                 sx * cy * cz - cx * sy * sz,
                 cx * sy * cz + sx * cy * sz,

@@ -25,8 +25,12 @@ public sealed class DnaExporter(UDNAObject dna) : ExporterBase(dna)
             new("dna", bytes, suffix)
         };
 
+        // The pose is extra, a DNA whose behavior can't be evaluated is still worth exporting
         if (!dna.TryConvert(out var convertedPoseAsset))
-            throw new Exception($"Failed to evaluate DNA pose for {ObjectName}");
+        {
+            Log.Warning("Failed to evaluate the DNA pose of {ObjectName}, exporting the DNA only", ObjectName);
+            return results;
+        }
 
         ct.ThrowIfCancellationRequested();
         var poseName = string.IsNullOrEmpty(dna.DnaFileName)

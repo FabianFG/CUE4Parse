@@ -31,6 +31,8 @@ public class FDNAAssetCustomVersion
         return Ar.Game switch
         {
             < GAME_UE4_26 => (Type) (-1),
+            // RigLogic only added custom versions in 5.8
+            < GAME_UE5_8 => Type.BeforeCustomVersionWasAdded,
             _ => Type.LatestVersion
         };
     }

@@ -73,25 +73,26 @@ public class FCoordinateSystem : IUStruct
 [StructFallback]
 public class FDNAConfig : IUStruct
 {
+    // Same defaults as UE, unversioned packages leave out the values that match them
     public int Layers = (int) EDNADataLayer.All;
-    public FPerPlatformInt MaxLODPerPlatform;
-    public FPerPlatformInt MinLODPerPlatform;
+    public FPerPlatformInt MaxLODPerPlatform = new();
+    public FPerPlatformInt MinLODPerPlatform = new() { Default = -1 };
     public byte[] ExactLODs = [];
     public ECoordinateSystemTransformPolicy CoordinateSystemTransformPolicy = ECoordinateSystemTransformPolicy.Preserve;
-    public FCoordinateSystem CoordinateSystem = new();
-    public FRotationSign RotationSign = new();
+    public FCoordinateSystem CoordinateSystem = new() { XAxis = EDirection.Left, YAxis = EDirection.Front, ZAxis = EDirection.Up };
+    public FRotationSign RotationSign = new() { XAxis = ERotationDirection.Negative, YAxis = ERotationDirection.Negative, ZAxis = ERotationDirection.Positive };
     public ERotationSequence RotationSequence = ERotationSequence.XYZ;
     public EFaceWindingOrder FaceWindingOrder = EFaceWindingOrder.CW;
 
     public FDNAConfig(FStructFallback fallback)
     {
         Layers = fallback.GetOrDefault(nameof(Layers), (int) EDNADataLayer.All);
-        MaxLODPerPlatform = fallback.GetOrDefault<FPerPlatformInt>(nameof(MaxLODPerPlatform));
-        MinLODPerPlatform = fallback.GetOrDefault<FPerPlatformInt>(nameof(MinLODPerPlatform));
+        MaxLODPerPlatform = fallback.GetOrDefault(nameof(MaxLODPerPlatform), MaxLODPerPlatform);
+        MinLODPerPlatform = fallback.GetOrDefault(nameof(MinLODPerPlatform), MinLODPerPlatform);
         ExactLODs = fallback.GetOrDefault<byte[]>(nameof(ExactLODs), []);
         CoordinateSystemTransformPolicy = fallback.GetOrDefault(nameof(CoordinateSystemTransformPolicy), ECoordinateSystemTransformPolicy.Preserve);
-        CoordinateSystem = fallback.GetOrDefault(nameof(CoordinateSystem), new FCoordinateSystem());
-        RotationSign = fallback.GetOrDefault(nameof(RotationSign), new FRotationSign());
+        CoordinateSystem = fallback.GetOrDefault(nameof(CoordinateSystem), CoordinateSystem);
+        RotationSign = fallback.GetOrDefault(nameof(RotationSign), RotationSign);
         RotationSequence = fallback.GetOrDefault(nameof(RotationSequence), ERotationSequence.XYZ);
         FaceWindingOrder = fallback.GetOrDefault(nameof(FaceWindingOrder), EFaceWindingOrder.CW);
     }
