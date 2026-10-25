@@ -50,18 +50,9 @@ public class UStaticMeshComponent : UMeshComponent
     {
         if (StaticMesh != null)
             return StaticMesh;
-        var mesh = new FPackageIndex();
-        var current = this;
-        while (true)
-        {
-            if (current is null) break;
-            mesh = current.GetOrDefault("StaticMesh", new FPackageIndex());
-            if (!mesh.IsNull || current.Template == null)
-                break;
-            current = current.Template.Load<UStaticMeshComponent>();
-        }
-        StaticMesh = mesh;
-        return mesh;
+
+        TryGetValue(out FPackageIndex mesh, nameof(StaticMesh));
+        return StaticMesh = mesh ?? new FPackageIndex();
     }
 
     private WeakReference<UStaticMesh> StaticMeshRef;

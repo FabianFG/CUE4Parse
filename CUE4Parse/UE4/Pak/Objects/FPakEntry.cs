@@ -247,6 +247,13 @@ public class FPakEntry : VfsEntry
 
         // This should clear out any excess CompressionBlocks that may be valid in the user's passed in entry.
         var compressionBlocksCount = (bitfield >> 6) & 0xffff;
+        if (reader.Ar.Game == GAME_RocoKingdomWorld)
+        {
+            var strategyIndex = compressionBlocksCount >> 10;
+            compressionBlocksCount &= 0x3FF;
+            CustomData = (int)strategyIndex;
+        }
+
         CompressionBlocks = compressionBlocksCount > 0 ? new FPakCompressedBlock[compressionBlocksCount] : [];
         CompressionBlockSize = compressionBlocksCount switch
         {
@@ -263,8 +270,7 @@ public class FPakEntry : VfsEntry
 
         StructSize += reader.Ar.Game switch
         {
-            GAME_TorchlightInfinite or GAME_EtheriaRestart => 1,
-            GAME_BlackMythWukong => 1,
+            GAME_TorchlightInfinite or GAME_EtheriaRestart or GAME_BlackMythWukong or GAME_ArcheAgeWar => 1,
             GAME_InfinityNikki => 20,
             GAME_VisionsofMana => -3,
             _ => 0

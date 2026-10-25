@@ -1,7 +1,7 @@
 using CUE4Parse.GameTypes.FantasyLifeTheGirlWhoStealsTime.Encryption;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.UE4.CriWare;
+namespace CUE4Parse.UE4.Criware;
 
 // AWB encryption is not part of standard CRIWARE, which only provides audio samples encryption
 // This handles games that implement their own custom AWB encryption

@@ -111,7 +111,7 @@ public static class ToaaAes
         PUTU32(output[12..], internalData[0]);
     }
 
-    public static byte[] ToaaDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] ToaaDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

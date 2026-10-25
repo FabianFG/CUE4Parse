@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.IO.Objects;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
@@ -12,12 +13,28 @@ namespace CUE4Parse.UE4.Assets.Readers
 {
     public class FAssetArchive : FArchive
     {
-        
         private readonly Dictionary<PayloadType, Func<FByteBulkDataHeader?, FAssetArchive?>> _payloads;
         private FArchive _baseArchive;
 
         public readonly IPackage? Owner;
         public int AbsoluteOffset;
+
+        // Bulk data map of the save realm this archive was created from. Only set for optional segments
+        internal FBulkDataMapEntry[]? BulkDataMap;
+
+        // Name map of the save realm this archive was created from. Only set for optional segments
+        internal FNameEntrySerialized[]? RealmNameMap;
+
+        // Ordinal of the save realm this archive was created from, base realm first. Raw package indices
+        // carried by an export are local to the realm it was serialized from, so resolving them needs
+        // this to pick the realm's own import and export tables.
+        internal int RealmIndex;
+
+        // The name map FNames carried by this archive must be resolved against. Unreal Engine resolves
+        // them against the header the export was serialized from and always as package-local names
+        // (see <c>FLinkerLoad::operator&lt;&lt;(FName&amp;)</c> using <c>HeaderData-&gt;NameMap</c>),
+        // which is the optional segment's own map for its exports rather than the base package's.
+        public FNameEntrySerialized[]? NameMap => RealmNameMap ?? Owner?.NameMap;
 
         public bool HasUnversionedProperties => Owner?.HasFlags(EPackageFlags.PKG_UnversionedProperties) ?? false;
         public bool IsFilterEditorOnly => Owner?.HasFlags(EPackageFlags.PKG_FilterEditorOnly) ?? false;
@@ -36,6 +53,18 @@ namespace CUE4Parse.UE4.Assets.Readers
             _baseArchive = newArchive;
         }
 
+        /// <summary>
+        /// Carries the save realm context over to an archive that wraps this one. Archives created
+        /// while deserializing an export (Chaos, FastGeo, ...) serialize bytes of the realm their
+        /// parent archive was created from, so they must resolve names and bulk data the same way.
+        /// </summary>
+        internal void CopyRealmContextFrom(FAssetArchive other)
+        {
+            RealmNameMap = other.RealmNameMap;
+            BulkDataMap = other.BulkDataMap;
+            RealmIndex = other.RealmIndex;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override FName ReadFName()
         {
@@ -46,12 +75,13 @@ namespace CUE4Parse.UE4.Assets.Readers
                 extraIndex = Read<int>();
             }
 #if !NO_FNAME_VALIDATION
-            if (nameIndex < 0 || nameIndex >= Owner!.NameMap.Length)
+            var nameMap = NameMap!;
+            if (nameIndex < 0 || nameIndex >= nameMap.Length)
             {
-                throw new ParserException(this, $"FName could not be read, requested index {nameIndex}, name map size {Owner!.NameMap.Length}");
+                throw new ParserException(this, $"FName could not be read, requested index {nameIndex}, name map size {nameMap.Length}");
             }
 #endif
-            return new FName(Owner.NameMap[nameIndex], nameIndex, extraIndex);
+            return new FName(NameMap![nameIndex], nameIndex, extraIndex);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,7 +96,7 @@ namespace CUE4Parse.UE4.Assets.Readers
             var nameIndex = Read<int>();
             var index = Read<int>();
             Position = savedPos;
-            return nameIndex >= 0 && nameIndex < Owner!.NameMap.Length && index >= 0 && index < 256;
+            return nameIndex >= 0 && nameIndex < NameMap!.Length && index is >= 0 and < 256;
         }
 
         // TODO not really optimal, there should be TryReadObject functions etc
@@ -209,6 +239,6 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         // For performance reasons we carry over the payloads dict to the cloned instance
         // Shouldn't be a big deal since we add the payloads during package initialization phase, not during object serialization
-        public override object Clone() => new FAssetArchive((FArchive) _baseArchive.Clone(), Owner, AbsoluteOffset, _payloads);
+        public override object Clone() => new FAssetArchive((FArchive) _baseArchive.Clone(), Owner, AbsoluteOffset, _payloads) { BulkDataMap = BulkDataMap, RealmNameMap = RealmNameMap, RealmIndex = RealmIndex };
     }
 }

@@ -14,6 +14,7 @@ public sealed class FFastGeoArchive : FAssetArchive
         Assets = assets;
         baseAr = Ar;
         Position = Ar.Position;
+        CopyRealmContextFrom(Ar);
     }
 
     public FPackageIndex ReadFPackageIndex()

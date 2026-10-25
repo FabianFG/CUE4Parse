@@ -1,4 +1,5 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
+using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -13,10 +14,10 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 [JsonConverter(typeof(FStaticMeshLODResourcesConverter))]
 public class FStaticMeshLODResources
 {
-    public FStaticMeshSection[] Sections { get; }
+    public FStaticMeshSection[] Sections { get; protected set; } = [];
     public FBoxSphereBounds? SourceMeshBounds;
     public FCardRepresentationData? CardRepresentationData { get; set; }
-    public float MaxDeviation { get; }
+    public float MaxDeviation { get; protected set; }
     public int NumVertices { get; set; }
     public FPositionVertexBuffer? PositionVertexBuffer { get; set; }
     public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
@@ -40,6 +41,7 @@ public class FStaticMeshLODResources
         CDSF_StripIndexBuffers = 128 | 64 | 32
     }
 
+    protected FStaticMeshLODResources() { }
     public FStaticMeshLODResources(FArchive Ar)
     {
         var stripDataFlags = new FStripDataFlags(Ar);
@@ -155,17 +157,17 @@ public class FStaticMeshLODResources
                     Ar.Position += 2 * 4; // AdjacencyIndexBuffer
                 }
 
-                Ar.Position += Ar.Game switch
+                var rawDataHeaderSize = Ar.Game >= GAME_UE5_6 ? 6 * 4 : 0; // RawDataHeader = 6x uint32
+                Ar.Position += rawDataHeaderSize + Ar.Game switch
                 {
-                    GAME_TheFinals => 12 + 6 * 4,
-                    >= GAME_UE5_6 => 6 * 4, // RawDataHeader = 6x uint32
-                    GAME_ArenaBreakoutMobile => 44,
+                    GAME_TheFinals or GAME_ArcRaiders => 12,
+                    GAME_ArenaBreakoutMobile or GAME_GangstarMirageCity => 44,
                     GAME_NeedForSpeedMobile => 32,
                     GAME_SuicideSquad => 29,
                     GAME_ArenaBreakoutInfinite => 16,
-                    GAME_ArcRaiders => 12,
                     GAME_StarWarsJediSurvivor or GAME_DeltaForce => 4, // bDropNormals
                     GAME_FateTrigger => 5,
+                    GAME_Splitgate2 or GAME_Empulse => 1,
                     _ => 0
                 };
             }
@@ -313,7 +315,7 @@ public class FStaticMeshLODResources
     {
         var stripDataFlags = new FStripDataFlags(Ar);
 
-        PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+        PositionVertexBuffer = Ar.Game is GAME_GangstarMirageCity ? new FGangstarPositionVertexBuffer(Ar) : new FPositionVertexBuffer(Ar);
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);
         ColorVertexBuffer = new FColorVertexBuffer(Ar);
 

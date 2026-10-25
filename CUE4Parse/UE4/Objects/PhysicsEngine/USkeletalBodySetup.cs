@@ -8,8 +8,7 @@ public class USkeletalBodySetup : UBodySetup
     public FName BoneName;
     public EPhysicsType PhysicsType;
     public ECollisionTraceFlag CollisionTraceFlag;
-    // TODO public FBodyInstance DefaultInstance;
-    
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);

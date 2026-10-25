@@ -37,12 +37,15 @@ public readonly struct FByteBulkDataHeader
     {
         CookedIndex = FBulkDataCookedIndex.Default;
 
-        if (Ar.Owner is IoPackage { BulkDataMap.Length: > 0 } iopkg)
+        // The bulk data map of the realm the export belongs to wins over the owner package's one.
+        // An optional segment has its own map, so using the package's would resolve wrong entries.
+        var bulkDataMap = Ar.BulkDataMap ?? (Ar.Owner as IoPackage)?.BulkDataMap;
+        if (bulkDataMap is { Length: > 0 })
         {
             var dataIndex = Ar.Read<int>();
-            if (dataIndex >= 0 && dataIndex < iopkg.BulkDataMap.Length)
+            if (dataIndex >= 0 && dataIndex < bulkDataMap.Length)
             {
-                var metaData = iopkg.BulkDataMap[dataIndex];
+                var metaData = bulkDataMap[dataIndex];
                 BulkDataFlags = (EBulkDataFlags) metaData.Flags;
                 ElementCount = (int) metaData.SerialSize;
                 SizeOnDisk = (uint) metaData.SerialSize; // ??
@@ -93,7 +96,7 @@ public readonly struct FByteBulkDataHeader
         {
             OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
         }
-        if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp)) // UE4.26 flag
+        if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp) && Ar.Owner is not null) // UE4.26 flag
         {
             OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;
         }

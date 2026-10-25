@@ -1,15 +1,15 @@
-﻿
+﻿using System.Numerics.Tensors;
+
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
-public abstract class FRawIndexBuffer
+public class FRawIndexBuffer
 {
     public uint[]? Buffer { get; private set; }
 
-    internal void SetIndices(ushort[] indices)
+    internal void SetIndices(ReadOnlySpan<ushort> indices)
     {
         Buffer = new uint[indices.Length];
-        for (var i = 0; i < indices.Length; i++)
-            Buffer[i] = indices[i];
+        TensorPrimitives.ConvertTruncating(indices, Buffer);
     }
 
     internal void SetIndices(uint[] indices)

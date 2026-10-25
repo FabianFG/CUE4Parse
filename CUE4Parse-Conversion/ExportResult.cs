@@ -1,5 +1,3 @@
-﻿using System;
-
 namespace CUE4Parse_Conversion;
 
 public readonly record struct ExportFile(string Extension, byte[] Data, string? NameSuffix = null);

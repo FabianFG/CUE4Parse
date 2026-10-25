@@ -6,7 +6,7 @@ namespace CUE4Parse.GameTypes.INikki.Encryption.Aes;
 
 public static class InfinityNikkiAes
 {
-    public static byte[] InfinityNikkiDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] InfinityNikkiDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

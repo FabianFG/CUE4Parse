@@ -1,3 +1,5 @@
+using CUE4Parse.GameTypes.DeadIsland2.Assets.Objects;
+using CUE4Parse.GameTypes.DFHO.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -31,10 +33,10 @@ public class UStaticMesh : UObject
         bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR && Ar.ReadBoolean();
         HasTangents = Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE;
 
-        var Bounds = new FBoxSphereBounds();
+        var bounds = new FBoxSphereBounds();
         if (!stripDataFlags.IsEditorDataStripped() && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
         {
-            Bounds = new FBoxSphereBounds(Ar);
+            bounds = new FBoxSphereBounds(Ar);
         }
 
         if (Ar.Game == GAME_WutheringWaves && GetOrDefault<bool>("bUseStandaloneBodySetup"))
@@ -106,8 +108,10 @@ public class UStaticMesh : UObject
                 Ar.Position += sizeof(int); // bool - bIsMeshProxy
             }
 
-            RenderData = new FStaticMeshRenderData(Ar);
-            RenderData.Bounds = Bounds;
+            RenderData = new FStaticMeshRenderData(Ar)
+            {
+                Bounds = bounds
+            };
 
             Materials = new FPackageIndex[RenderData.LODs[0].Sections.Length];
             for (var i = 0; i < RenderData.LODs[0].Sections.Length; i++)
@@ -188,9 +192,11 @@ public class UStaticMesh : UObject
         {
             RenderData = Ar.Game switch
             {
+                GAME_DeadIsland2 => new FDeadIsland2StaticMeshRenderData(Ar),
+                GAME_DeltaForce => new FDeltaForceStaticMeshRenderData(Ar),
                 GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
                 GAME_WeHappyFew => new GFPStaticMeshRenderData(Ar, true),
-                _ => RenderData = new FStaticMeshRenderData(Ar)
+                _ => new FStaticMeshRenderData(Ar)
             };
         }
 
@@ -210,6 +216,7 @@ public class UStaticMesh : UObject
                 {
                     case GAME_CrystalOfAtlan:
                     case GAME_FragPunk:
+                    case GAME_GangstarMirageCity:
                     case GAME_RocoKingdomWorld:
                         if (Ar.Game is GAME_FragPunk && !Ar.ReadBoolean()) break;
                         Ar.SkipMultipleBulkArrayData(3);
@@ -303,11 +310,18 @@ public class UStaticMesh : UObject
             Materials[i] = StaticMaterials[i].MaterialInterface;
         }
 
+        if (Ar.Game is GAME_GangstarMirageCity)
+        {
+            var idk = Ar.Read<int>();
+            Ar.SkipMultipleFixedArrays([4, 28, 4, 4, 2]);
+        }
+
         Ar.Position += Ar.Game switch
         {
             GAME_OutlastTrials => 1,
             GAME_Farlight84 or GAME_DuneAwakening => 4,
             GAME_DaysGone => Ar.Read<int>() * 4 + 4,
+            GAME_GangstarMirageCity => 20,
             _ => 0
         };
     }

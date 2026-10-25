@@ -9,9 +9,9 @@ namespace CUE4Parse.UE4.Objects.Meshes;
 [JsonConverter(typeof(FPositionVertexBufferConverter))]
 public class FPositionVertexBuffer
 {
-    [JsonIgnore] public readonly FVector[] Verts;
-    public readonly int Stride;
-    public readonly int NumVertices;
+    [JsonIgnore] public FVector[] Verts { get; protected set; }
+    public int Stride { get; protected set; }
+    public int NumVertices { get; protected set; }
 
     public FPositionVertexBuffer()
     {
@@ -129,12 +129,18 @@ public class FPositionVertexBuffer
                 return;
             }
         }
-        if (Ar.Game is GAME_Gothic1Remake && Stride == 8)
+        if (Ar.Game is GAME_Gothic1Remake or GAME_DestroyAllHumans2Reprobed && Stride == 8)
         {
             var vertsHalf = Ar.ReadBulkArray<FHalfVector4>();
             Verts = new FVector[vertsHalf.Length];
             for (int i = 0; i < vertsHalf.Length; i++)
                 Verts[i] = vertsHalf[i];
+            return;
+        }
+        if (Ar.Game is GAME_Splitgate2 or GAME_Empulse)
+        {
+            Ar.Position += 1;
+            Verts = Stride == 8 ? Ar.ReadBulkArray<FVector>(() => Ar.Read<FHalfVector4>()) : Ar.ReadBulkArray<FVector>();
             return;
         }
         if (Ar.Game is GAME_DaysGone)

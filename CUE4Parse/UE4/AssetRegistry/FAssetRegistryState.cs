@@ -50,9 +50,6 @@ public class FAssetRegistryState
     {
         PreallocatedAssetDataBuffers = Ar.ReadArray(() => new FAssetData(Ar));
 
-        if (Ar.Header.Version < FAssetRegistryVersionType.RemovedMD5Hash)
-            return; // Just ignore the rest of this for now.
-
         if (Ar.Header.Version < FAssetRegistryVersionType.AddedDependencyFlags)
         {
             var localNumDependsNodes = Ar.Read<int>();

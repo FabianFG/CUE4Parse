@@ -209,12 +209,7 @@ public class FSkelMeshSection
 
             if (FOverlappingVerticesCustomVersion.Get(Ar) >= FOverlappingVerticesCustomVersion.Type.DetectOVerlappingVertices)
             {
-                var size = Ar.Read<int>();
-                OverlappingVertices = new Dictionary<int, int[]>(size);
-                for (var i = 0; i < size; i++)
-                {
-                    OverlappingVertices[Ar.Read<int>()] = Ar.ReadArray<int>();
-                }
+                OverlappingVertices = Ar.ReadMap(Ar.Read<int>, Ar.ReadArray<int>);
             }
 
             if (FReleaseObjectVersion.Get(Ar) >= FReleaseObjectVersion.Type.AddSkeletalMeshSectionDisable)
@@ -241,6 +236,8 @@ public class FSkelMeshSection
                 OriginalDataSectionIndex = -1;
                 ChunkedParentSectionIndex = -1;
             }
+
+            if (Ar.Game is GAME_NewGundamBreaker) Ar.Position += 4;
         }
     }
 
@@ -255,7 +252,7 @@ public class FSkelMeshSection
         if (Ar.Game == GAME_Paragon) Ar.Position += 1; // bool
         bRecomputeTangent = Ar.ReadBoolean();
         RecomputeTangentsVertexMaskChannel = FRecomputeTangentCustomVersion.Get(Ar) >= FRecomputeTangentCustomVersion.Type.RecomputeTangentVertexColorMask ? Ar.Read<ESkinVertexColorChannel>() : ESkinVertexColorChannel.None;
-        if (Ar.Game == GAME_WutheringWaves && Ar.Owner?.NameMap.Any(n => n.Name == "KuroRuntimeLODBias_PackedData2") == true)
+        if (Ar.Game == GAME_WutheringWaves && Ar.NameMap?.Any(n => n.Name == "KuroRuntimeLODBias_PackedData2") == true)
         {
             Ar.Position += 4; // WuWa 3.6+: extra int32 field after RecomputeTangentsVertexMaskChannel
         }
@@ -300,6 +297,11 @@ public class FSkelMeshSection
         }
 
         if (Ar.Game is GAME_InfinityNikki) CustomData = Ar.Read<int>();
+        if (Ar.Game is GAME_DeadIsland2)
+        {
+            Ar.SkipFixedArray(18);
+            Ar.Position += 2;
+        }
 
         Ar.Position += Ar.Game switch
         {
@@ -307,10 +309,10 @@ public class FSkelMeshSection
             GAME_RogueCompany or GAME_BladeAndSoul or GAME_SYNCED or
                 GAME_StarWarsHunters or GAME_NeedForSpeedMobile or GAME_ValorantSource => 4,
             GAME_FragPunk or GAME_InfinityNikki => 8,
-            GAME_MortalKombat1 => 12,
-            GAME_FateTrigger => 19,
-            GAME_Strinova => 18,
             GAME_SuicideSquad => 11,
+            GAME_MortalKombat1 => 12,
+            GAME_Strinova => 18,
+            GAME_FateTrigger => 19,
             GAME_LordOfMysteries => 32,
             _ => 0,
         };

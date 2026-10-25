@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 
@@ -13,7 +13,7 @@ public readonly struct FWwiseLanguageCookedData
 
     public FWwiseLanguageCookedData(FStructFallback fallback)
     {
-        LanguageId = fallback.GetOrDefault<int>(nameof(LanguageId));
+        LanguageId = fallback.GetOrDefault<int>(nameof(LanguageId), comparisonType: StringComparison.OrdinalIgnoreCase);
         LanguageName = fallback.GetOrDefault<FName>(nameof(LanguageName));
         LanguageRequirement = fallback.GetOrDefault<EWwiseLanguageRequirement>(nameof(LanguageRequirement));
     }
