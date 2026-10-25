@@ -27,6 +27,7 @@ using CUE4Parse.GameTypes.TSW.Objects;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 using CUE4Parse.UE4.Assets.Exports.ChaosClothAsset;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
+using CUE4Parse.UE4.Assets.Exports.HairStrands;
 using CUE4Parse.UE4.Assets.Exports.Harmonix;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
@@ -218,6 +219,7 @@ public class FScriptStruct
             "ControlRigOverrideContainer" => type == ReadType.ZERO ? new FControlRigOverrideContainer() : new FControlRigOverrideContainer(Ar),
             "ChaosClothSimulationLodModel" => type == ReadType.ZERO ? new FStructFallback() : new FChaosClothSimulationLodModel(Ar),
             "ManagedArrayCollection" when FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.AddManagedArrayCollectionPropertySerialization=> type == ReadType.ZERO ? new FManagedArrayCollection() : new FManagedArrayCollection(new(Ar)),
+            "GroomDataflowSettings" => new FGroomDataflowSettings(Ar),
 
             // Custom struct types for simple structs in tagged TMap
             "UInt32Property" => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),
@@ -421,6 +423,8 @@ public class FScriptStruct
             // Cloudheim
             "NamedGuid" => new FStructFallback(Ar, structName, FRawHeader.FullRead, ReadType.RAW),
 
+            "FP32" when Ar.Game is GAME_MarchofGiants => type == ReadType.ZERO ? new FStructFallback() : new FStructFallback(Ar, structName, new FRawHeader([(0, 2)], ERawHeaderFlags.Reverse | ERawHeaderFlags.RawProperties), ReadType.RAW),
+
             "PackedNormal" when Ar.Game is GAME_TheDivisionResurgence => new FPackedNormal(Ar),
 
             "UWEWorldPopSpatialLayer" when Ar.Game is GAME_Subnautica2 => new FUWEWorldPopSpatialLayer(Ar),
@@ -450,6 +454,9 @@ public class FScriptStruct
                 or "TCGameplayBlackboardNamedParam_Float" or "TCGameplayBlackboardNamedParam_Vector" or "TCPresentationCueNamedParam_Bool"
                 or "TCPresentationCueNamedParam_Texture" or "TCPresentationCueNamedParam_Vector2D" or "TCPresentationCueNamedParam_Material"
                 or "TCPresentationCueNamedParam_StaticMesh" when Ar.Game is GAME_GearsofWarEDay => new FTCNamedParam(Ar, structName),
+
+            // Eclipse The Awakening
+            "XDataTableRowValue" => new FXDataTableRowValue(Ar),
 
             _ => Ar.Game switch
             {

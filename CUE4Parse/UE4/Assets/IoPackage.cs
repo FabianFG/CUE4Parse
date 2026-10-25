@@ -530,6 +530,23 @@ public sealed class IoPackage : AbstractUePackage
     {
         if (index == null || index.IsNull)
             return null;
+
+        if (index.RealmIndex < 0)
+        {
+            if (index.IsExport)
+            {
+                var unified = index.Index - 1;
+                if (unified < ExportMapLength)
+                    return CreateResolvedExport(unified);
+            }
+            else if (index.IsImport && -index.Index - 1 < ImportMap.Length)
+            {
+                return ResolveObjectIndex(BaseRealm, ImportMap[-index.Index - 1]);
+            }
+
+            return null;
+        }
+
         var realm = RealmOf(index.RealmIndex);
         if (index.IsImport && -index.Index - 1 < realm.ImportMap.Length)
             return ResolveObjectIndex(realm, realm.ImportMap[-index.Index - 1]);

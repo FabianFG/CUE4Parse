@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Channels;
 using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
@@ -12,19 +11,31 @@ using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 using CUE4Parse.UE4.Assets.Exports.Houdini;
 using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Assets.Exports.Paper2D;
 using CUE4Parse.UE4.Assets.Exports.Rig;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
+using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Exporters;
 using CUE4Parse_Conversion.Exporters.Custom;
+using CUE4Parse.UE4.Versions;
 using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion;
 
 public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationToken>? streamingLevelFilter = null) : INotifyPropertyChanged
 {
+    private ExportSessionCache? _cache;
+    public ExportSessionCache Cache => _cache ?? throw new InvalidOperationException("Session is not currently running.");
+
+    internal ExportSession(ExportOptions options) : this((Action<StreamingLevelFilterArgs, CancellationToken>?) null)
+    {
+        _options = options;
+        _cache = new ExportSessionCache();
+    }
+
     internal readonly Action<StreamingLevelFilterArgs, CancellationToken>? _streamingLevelFilter = streamingLevelFilter;
     internal readonly SemaphoreSlim _streamingLevelFilterLock = new(1, 1);
 
@@ -36,6 +47,11 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     private ExportOptions? _options;
     internal ExportOptions Options => _options ?? throw new InvalidOperationException("Session is not currently running.");
 
+    public bool EmbedMaterials { get; private set; }
+
+    public PbrMaterialDto ResolveMaterial(UMaterialInterface material, EMaterialDepth? depth = null)
+        => Cache.ResolveMaterial(material, depth ?? Options.MaterialDepth);
+
     private int _totalQueued;
     public int TotalQueued => Volatile.Read(ref _totalQueued);
     public bool HasQueuedItems => TotalQueued > 0;
@@ -43,68 +59,43 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     private int _running;
     public bool IsRunning => Volatile.Read(ref _running) == 1;
 
-    private readonly Channel<QueueEntry> _queue = Channel.CreateUnbounded<QueueEntry>(new UnboundedChannelOptions
-    {
-        SingleReader = false,
-        SingleWriter = false,
-        AllowSynchronousContinuations = false
-    });
-    private readonly ConcurrentDictionary<string, QueueEntry> _entries = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentQueue<ExporterBase> _roots = new();
+    private readonly ConcurrentDictionary<string, byte> _paths = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>
-    /// Queues a built-in exporter for an Unreal object. Provider-backed package exports are held weakly and
-    /// reloaded if necessary, allowing their package data to be collected while the session is waiting to run.
-    /// Use <see cref="Add(ExporterBase)"/> when the exact in-memory object must remain alive.
-    /// </summary>
     public ExportSession Add(UObject export)
-    {
-        var exporter = CreateExporter(export);
-        return Add(DeferredObjectExporter.TryCreate(export) ?? exporter);
-    }
-
-    internal static ExporterBase CreateExporter(UObject export)
     {
         return export switch
         {
-            UTexture texture => new TextureExporter(texture),
-            UMaterialInterface material => new MaterialExporter(material),
-            USkinnedAsset skinnedAsset => new SkinnedAssetExporter(skinnedAsset),
-            UStaticMesh staticMesh => new StaticMeshExporter(staticMesh),
-            UHoudiniAsset houdiniAsset => new HoudiniAssetExporter(houdiniAsset),
-            UHoudiniStaticMesh houdiniMesh => new HoudiniStaticMeshExporter(houdiniMesh),
-            UIRMesh irMesh => new IRMeshExporter(irMesh),
-            UGeometryCollection geometryCollection => new GeometryCollectionExporter(geometryCollection),
-            USkeleton skeleton => new SkeletonExporter(skeleton),
-            UPoseAsset poseAsset => new PoseAssetExporter(poseAsset),
-            UAnimationAsset animation => new AnimationExporter(animation),
-            UDNAAsset dna => new DnaExporter(dna),
-            UWorld world => new WorldExporter(world),
-            ALandscapeProxy landscape => new LandscapeMeshExporter(landscape),
-            ULandscapeComponent landscape => new LandscapeMeshExporter2(landscape),
-            USplineMeshComponent spline => new SplineMeshExporter(spline),
+            UTexture texture => Add(new TextureExporter(texture)),
+            UMaterialInterface material => Add(new MaterialExporter(material)),
+            USkinnedAsset skinnedAsset => Add(new SkinnedAssetExporter(skinnedAsset)),
+            UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
+            UHoudiniStaticMesh houdiniMesh => Add(new HoudiniStaticMeshExporter(houdiniMesh)),
+            UIRMesh irMesh => Add(new IRMeshExporter(irMesh)),
+            UGeometryCollection geometryCollection => Add(new GeometryCollectionExporter(geometryCollection)),
+            USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
+            UPoseAsset poseAsset => Add(new PoseAssetExporter(poseAsset)),
+            UAnimationAsset animation => Add(new AnimationExporter(animation)),
+            UDNAAsset dna => Add(new DnaExporter(dna)),
+            UWorld world => Add(new WorldExporter(world)),
+            UBlueprintGeneratedClass blueprint => Add(new BlueprintExporter(blueprint)),
+            UPaperTileMap map when map.Game is EGame.GAME_DeadByDaylight => Add(new DeadByDaylightMapExporter(map)),
+            ALandscapeProxy landscape => Add(new LandscapeMeshExporter(landscape)),
+            ULandscapeComponent landscape => Add(new LandscapeMeshExporter2(landscape)),
+            USplineMeshComponent spline => Add(new SplineMeshExporter(spline)),
+            _ when EmbeddedFilesDto.Supports(export) => Add(new EmbeddedFilesExporter(export)),
             _ => throw new NotSupportedException($"Could not create exporter for export of type '{export.GetType().Name}'.")
         };
     }
 
-    /// <summary>
-    /// Queues a preconfigured exporter. The exporter is strongly referenced until it is processed, removed,
-    /// or the session is cleared.
-    /// </summary>
     public ExportSession Add(ExporterBase exporter)
     {
         // TODO: this prevents 2 exporters messing with the same file from being enqueued in the same run (e.g. MeshExporter / RawDataExporter)
-        var entry = new QueueEntry(exporter);
-        if (!_entries.TryAdd(exporter.ObjectPath, entry)) return this;
+        if (!_paths.TryAdd(exporter.ObjectPath, 0)) return this;
 
         exporter._session = this;
         Interlocked.Increment(ref _totalQueued);
-        if (!_queue.Writer.TryWrite(entry))
-        {
-            _entries.TryRemove(exporter.ObjectPath, out _);
-            Interlocked.Decrement(ref _totalQueued);
-            throw new InvalidOperationException("The export queue is not accepting new items.");
-        }
-
+        _roots.Enqueue(exporter);
         OnPropertyChanged(nameof(TotalQueued));
         OnPropertyChanged(nameof(HasQueuedItems));
         exporter.Log.Debug("Queued for export");
@@ -113,10 +104,10 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
     public bool Remove(string objectPath)
     {
-        if (IsRunning || !_entries.TryRemove(objectPath, out var entry))
+        // the exporter stays in _roots but we won't process it, it's fine because nothing actually relies on _roots.Count
+        if (IsRunning || !_paths.TryRemove(objectPath, out _))
             return false;
 
-        entry.Take();
         Interlocked.Decrement(ref _totalQueued);
         OnPropertyChanged(nameof(TotalQueued));
         OnPropertyChanged(nameof(HasQueuedItems));
@@ -125,8 +116,8 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
     public void Clear()
     {
-        while (_queue.Reader.TryRead(out _)) { }
-        _entries.Clear();
+        _roots.Clear();
+        _paths.Clear();
         Interlocked.Exchange(ref _totalQueued, 0);
         OnPropertyChanged(nameof(TotalQueued));
         OnPropertyChanged(nameof(HasQueuedItems));
@@ -137,57 +128,35 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         if (Interlocked.Exchange(ref _running, 1) == 1)
             throw new InvalidOperationException("Session is already running.");
 
-        OnPropertyChanged(nameof(IsRunning));
-        _baseDirectory = new DirectoryInfo(baseDirectory);
-        _options = options;
-
         var results = new ConcurrentQueue<ExportResult>();
         try
         {
-            var parallelOptions = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = MaxDegreeOfParallelism,
-                CancellationToken = ct
-            };
-            var drained = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            if (TotalQueued == 0) drained.TrySetResult();
+            OnPropertyChanged(nameof(IsRunning));
+            _baseDirectory = new DirectoryInfo(baseDirectory);
+            _options = options;
+            _cache = new ExportSessionCache();
 
-            await Parallel.ForEachAsync(ReadAll(), parallelOptions, Process).ConfigureAwait(false);
+            // Only glTF embeds materials as of now.
+            EmbedMaterials = options.MeshFormat is EMeshFormat.Gltf2 && options.ExportMaterials;
 
-            async IAsyncEnumerable<ExporterBase> ReadAll([EnumeratorCancellation] CancellationToken token = default)
+            var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
+            var current = new List<ExporterBase>();
+            while (true)
             {
-                while (true)
+                current.Clear();
+                DrainQueue(current, ct);
+                if (current.Count == 0)
+                    break;
+
+                // Textures are processed first so embedded materials can reuse saved files
+                if (EmbedMaterials)
                 {
-                    token.ThrowIfCancellationRequested();
-                    if (_queue.Reader.TryRead(out var entry))
-                    {
-                        if (entry.Take() is { } exporter)
-                            yield return exporter;
-                        continue;
-                    }
-
-                    if (TotalQueued == 0) yield break;
-
-                    var workAvailable = _queue.Reader.WaitToReadAsync(token).AsTask();
-                    if (await Task.WhenAny(workAvailable, drained.Task).ConfigureAwait(false) == drained.Task)
-                        yield break;
-
-                    if (!await workAvailable.ConfigureAwait(false)) yield break;
+                    CollectDependencies(current, parallelOptions);
+                    await Parallel.ForEachAsync(current.OfType<TextureExporter>(), parallelOptions, Process).ConfigureAwait(false);
+                    current.RemoveAll(exporter => exporter is TextureExporter);
                 }
-            }
 
-            async ValueTask Process(ExporterBase exporter, CancellationToken token)
-            {
-                var result = await exporter.ExportAsync(token).ConfigureAwait(false);
-                results.Enqueue(result);
-
-                var stillQueued = Interlocked.Decrement(ref _totalQueued);
-                var count = results.Count;
-                OnPropertyChanged(nameof(TotalQueued));
-                OnPropertyChanged(nameof(HasQueuedItems));
-
-                progress?.Report(new ExportProgress(count, count + stillQueued, result));
-                if (stillQueued == 0) drained.TrySetResult();
+                await Parallel.ForEachAsync(current, parallelOptions, Process).ConfigureAwait(false);
             }
         }
         finally // just in case cancellation is requested, we still need to clear things up
@@ -195,16 +164,76 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             var stillQueued = TotalQueued;
             var count = results.Count;
 
-            Clear();
-            progress?.Report(new ExportProgress(count, count + stillQueued)); // this ensure the last progress reports the actual numbers
-
             _options = null;
             _baseDirectory = null;
+            EmbedMaterials = false;
+            _cache?.Clear();
+            _cache = null;
             Interlocked.Exchange(ref _running, 0);
+
+            // Release session data before notifying callers, which may throw
+            Clear();
+            progress?.Report(new ExportProgress(count, count + stillQueued)); // this ensure the last progress reports the actual numbers
             OnPropertyChanged(nameof(IsRunning));
         }
 
         return [.. results];
+
+        async ValueTask Process(ExporterBase exporter, CancellationToken token)
+        {
+            var result = await exporter.ExportAsync(token).ConfigureAwait(false);
+            if (EmbedMaterials && result.Success && exporter is TextureExporter texture)
+            {
+                texture.CacheTexturePath();
+            }
+
+            results.Enqueue(result);
+
+            var stillQueued = Interlocked.Decrement(ref _totalQueued);
+            var count = results.Count;
+            OnPropertyChanged(nameof(TotalQueued));
+            OnPropertyChanged(nameof(HasQueuedItems));
+
+            progress?.Report(new ExportProgress(count, count + stillQueued, result));
+        }
+    }
+
+    // Appended materials can add textures, visit them before processing batch
+    private void CollectDependencies(List<ExporterBase> exporters, ParallelOptions options)
+    {
+        var start = 0;
+        while (start < exporters.Count)
+        {
+            var end = exporters.Count;
+            Parallel.For(start, end, options, i =>
+            {
+                var exporter = exporters[i];
+                try
+                {
+                    foreach (var dependency in exporter.GetDependencies(options.CancellationToken))
+                    {
+                        Add(dependency);
+                    }
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    exporter.Log.Warning(ex, "Could not collect export dependencies");
+                }
+            });
+
+            start = end;
+            DrainQueue(exporters, options.CancellationToken);
+        }
+    }
+
+    private void DrainQueue(List<ExporterBase> exporters, CancellationToken ct)
+    {
+        while (_roots.TryDequeue(out var exporter))
+        {
+            ct.ThrowIfCancellationRequested();
+            if (_paths.ContainsKey(exporter.ObjectPath)) // false = exporter was added but then manually removed
+                exporters.Add(exporter);
+        }
     }
 
     internal string ResolveOutputPath(string savePath, string ext, string? nameSuffix = null)
@@ -217,10 +246,4 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
     public event PropertyChangedEventHandler? PropertyChanged;
     private void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-    private sealed class QueueEntry(ExporterBase exporter)
-    {
-        private ExporterBase? _exporter = exporter;
-        public ExporterBase? Take() => Interlocked.Exchange(ref _exporter, null);
-    }
 }
