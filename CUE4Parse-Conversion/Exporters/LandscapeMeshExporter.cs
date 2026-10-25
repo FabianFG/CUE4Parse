@@ -8,6 +8,7 @@ using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
+using CUE4Parse.UE4.Objects.UObject;
 using SixLabors.ImageSharp.Formats.Png;
 using SkiaSharp;
 
@@ -15,6 +16,9 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter<ALandscapeProxy>(actor)
 {
+    protected override IEnumerable<FPackageIndex?> MaterialReferences
+        => actor.LandscapeComponents.Select(reference => reference.Load<ULandscapeComponent>()?.OverrideMaterial ?? actor.LandscapeMaterial);
+
     protected override IReadOnlyList<ExportFile> BuildFiles(ALandscapeProxy actor, IMeshExportFormat format)
     {
         const ELandscapeFlags flags = ELandscapeFlags.All; // TODO: options
@@ -51,6 +55,8 @@ public sealed class LandscapeMeshExporter(ALandscapeProxy actor) : MeshExporter<
 
 public sealed class LandscapeMeshExporter2(ULandscapeComponent component) : MeshExporter<ULandscapeComponent>(component)
 {
+    protected override IEnumerable<FPackageIndex?> MaterialReferences => [component.OverrideMaterial];
+
     protected override IReadOnlyList<ExportFile> BuildFiles(ULandscapeComponent component, IMeshExportFormat format)
     {
         var dto = new LandscapeMeshDto(component);

@@ -45,6 +45,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
     public enum EIoContainerHeaderVersion // : uint
     {
+        EarlyAccess = -2, // UE5 Early Access Zen container header
         BeforeVersionWasAdded = -1, // Custom constant to indicate pre-UE5 data
         Initial = 0,
         LocalizedPackages = 1,
@@ -76,7 +77,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
         public FIoContainerHeader(FArchive Ar)
         {
-            Version = Ar.Game >= GAME_UE5_0 ? EIoContainerHeaderVersion.Initial : EIoContainerHeaderVersion.BeforeVersionWasAdded;
+            Version = Ar.Game >= GAME_UE5_0 ? Ar.Game is GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens ? EIoContainerHeaderVersion.EarlyAccess : EIoContainerHeaderVersion.Initial : EIoContainerHeaderVersion.BeforeVersionWasAdded;
             if (Version == EIoContainerHeaderVersion.Initial)
             {
                 var signature = Ar.Read<uint>();

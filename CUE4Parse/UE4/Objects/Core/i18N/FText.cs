@@ -6,10 +6,12 @@ using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Objects.Core.i18N;
 
 [Flags]
+[JsonConverter(typeof(StringEnumConverter))]
 public enum ETextFlag : uint
 {
     Transient = (1 << 0),
@@ -19,6 +21,7 @@ public enum ETextFlag : uint
     InitializedFromString = (1 << 4),  // this ftext was initialized using FromString
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum ETextHistoryType : sbyte
 {
     None = -1,
@@ -39,6 +42,7 @@ public enum ETextHistoryType : sbyte
     // Add new enum types at the end only! They are serialized by index.
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EFormatArgumentType : sbyte
 {
     Int,
@@ -51,6 +55,15 @@ public enum EFormatArgumentType : sbyte
     // Add new enum types at the end only! They are serialized by index.
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
+public enum ETextGender : byte
+{
+    Male,
+    Female,
+    Neuter,
+}
+
+[JsonConverter(typeof(StringEnumConverter))]
 public enum ERoundingMode : sbyte
 {
     /** Rounds to the nearest place, equidistant ties go to the value which is closest to an even value: 1.5 becomes 2, 0.5 becomes 0 */
@@ -78,6 +91,7 @@ public enum ERoundingMode : sbyte
     // Add new enum types at the end only! They are serialized by index.
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EDateTimeStyle : sbyte
 {
     Default,
@@ -85,10 +99,12 @@ public enum EDateTimeStyle : sbyte
     Medium,
     Long,
 
-    Full
+    Full,
+    Custom
     // Add new enum types at the end only! They are serialized by index.
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum ETransformType : byte
 {
     ToLower = 0,
@@ -151,7 +167,7 @@ public class FText : IUStruct
                 ETextHistoryType.StringTableEntry => new FTextHistory.StringTableEntry(Ar),
                 ETextHistoryType.TextGenerator => new FTextHistory.TextGenerator(Ar),
                 (ETextHistoryType)22 when Ar.Game is GAME_Zeus => new FTextHistory.Base("", Ar.Read<ulong>().ToString(), ""),
-                _ => new FTextHistory.None(Ar)
+                _ => new FTextHistory.None(Ar, HistoryType)
             };
             if (Ar.Game is GAME_Splitgate2 or GAME_Empulse) Ar.Position += 4;
         }
@@ -181,12 +197,12 @@ public abstract class FTextHistory : IUStruct
         public readonly string? CultureInvariantString;
         public override string Text => CultureInvariantString ?? string.Empty;
 
-        public None()
-        {
+        public None() { }
 
-        }
-        public None(FAssetArchive Ar)
+        public None(FAssetArchive Ar, ETextHistoryType historyType = ETextHistoryType.None)
         {
+            if (historyType != ETextHistoryType.None)
+                Log.Debug("Unknown history type {0}", historyType);
             if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.CultureInvariantTextSerializationKeyStability)
             {
                 var bHasCultureInvariantString = Ar.ReadBoolean();
@@ -467,6 +483,7 @@ public class FFormatArgumentValue : IUStruct
             EFormatArgumentType.UInt => Ar.Read<ulong>(),
             EFormatArgumentType.Double => Ar.Read<double>(),
             EFormatArgumentType.Float => Ar.Read<float>(),
+            EFormatArgumentType.Gender => (ETextGender) Ar.Read<ulong>(),
             _ => throw new ParserException(Ar, $"{Type} argument not supported yet"),
         };
     }

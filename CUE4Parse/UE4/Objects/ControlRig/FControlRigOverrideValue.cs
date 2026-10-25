@@ -9,7 +9,6 @@ namespace CUE4Parse.UE4.Objects.ControlRig;
 
 public class FControlRigOverrideValue
 {
-    
     public FName SubjectKey; // TOptional
     public FPropertyInfo[] Properties;
     public long OffsetForData;
@@ -22,7 +21,24 @@ public class FControlRigOverrideValue
         bool bStoresOnlyPathAndLeafProperty = FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.OverridesStorePathAndLeafPropertyOnly;
         if (bStoresOnlyPathAndLeafProperty)
         {
-            OwnerStructPath = new FSoftObjectPath(Ar);
+            var bOwnerStructIsTransient = false;
+            if (FControlRigObjectVersion.Get(Ar) >= FControlRigObjectVersion.Type.OverridesStoreTransientOwnerStructByName)
+            {
+                bOwnerStructIsTransient = Ar.ReadBoolean();
+            }
+
+            if (bOwnerStructIsTransient)
+            {
+                var ownerStructPathString = Ar.ReadFString();
+                var separator = ownerStructPathString.LastIndexOf(':');
+                OwnerStructPath = separator == -1
+                    ? new(ownerStructPathString, "", Ar.Owner)
+                    : new(ownerStructPathString[..separator], ownerStructPathString[(separator + 1)..], Ar.Owner);
+            }
+            else
+            {
+                OwnerStructPath = new FSoftObjectPath(Ar);
+            }
             TempPath = Ar.ReadBoolean() ? Ar.ReadFString() : null;
         }
         else

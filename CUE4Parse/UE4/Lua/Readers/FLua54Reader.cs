@@ -1,3 +1,4 @@
+using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 
 namespace CUE4Parse.UE4.Lua.Readers;
@@ -98,7 +99,8 @@ public static class FLua54Reader
                 break;
             case 4:  // Short String
             case 20: // Long String
-                constant.StrData = Ar.ReadLuaString();
+                constant.Data = Ar.ReadLuaStringBytes();
+                constant.StrData = Encoding.UTF8.GetString(constant.Data);
                 break;
         }
 

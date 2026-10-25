@@ -14,23 +14,23 @@ public abstract class GameFile
     public static readonly string[] LegacyUePackageExtensions = ["upk", "xxx", "XXX", "udk", "u", "mbamap", "sword", "rbd", "aa3", "ut3", "ut2", "utx", "unr", "umx", "uax", "usx", "ukx", "map", "lm", "s8m", "ccpk", "mo"];
     public static readonly string[] UePackageExtensions = ["uasset", "umap", ..LegacyUePackageExtensions];
     public static readonly string[] UePackagePayloadExtensions = ["uexp", "ubulk", "uptnl", "tfc"];
+    public static readonly string[] CustomUePackagePayloadExtensions = ["uhd"]; // GAME_DeltaForce
     public static readonly string[] UeKnownExtensions =
     [
-        ..UePackageExtensions, ..UePackagePayloadExtensions,
+        ..UePackageExtensions, ..UePackagePayloadExtensions, ..CustomUePackagePayloadExtensions,
         "bin", "ini", "uplugin", "upluginmanifest", "locres", "locmeta",
         "wem", "ewem", "bnk", "pck", "bank", "awb", "acb"
     ];
 
     // Immutable lookup tables optimized once during startup.
     public static readonly FrozenSet<string> UePackageExtensionsSet = UePackageExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
-    public static readonly FrozenSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+    public static readonly FrozenSet<string> UePackagePayloadExtensionsSet = UePackagePayloadExtensions.Concat(CustomUePackagePayloadExtensions).ToFrozenSet(StringComparer.OrdinalIgnoreCase);
     public static readonly FrozenSet<string> UeKnownExtensionsSet = UeKnownExtensions.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     // Avoid retaining duplicate extension and directory strings for every file.
     private static readonly ConcurrentDictionary<string, string> _internedExtensions = new(StringComparer.OrdinalIgnoreCase);
     private static readonly ConcurrentDictionary<string, string> _internedDirectories = new(StringComparer.Ordinal);
 
-    private string _path;
     private string? _directory;
     private string? _pathWithoutExtension;
     private string? _name;
@@ -49,10 +49,10 @@ public abstract class GameFile
 
     public string Path
     {
-        get => _path;
+        get;
         protected internal set
         {
-            _path = value;
+            field = value;
 
             _directory = null;
             _pathWithoutExtension = null;
@@ -61,6 +61,7 @@ public abstract class GameFile
             _extension = null;
         }
     }
+
     public long Size { get; protected init; }
 
     public string Directory => _directory ??= Intern(_internedDirectories, Path.SubstringBeforeLast('/'));
@@ -83,6 +84,12 @@ public abstract class GameFile
 
     public bool IsUePackage => UePackageExtensionsSet.Contains(Extension);
     public bool IsUePackagePayload => UePackagePayloadExtensionsSet.Contains(Extension);
+
+    /// <summary>
+    /// Whether this file is cooked as part of another file rather than being a package of its own,
+    /// and must therefore not be listed on its own.
+    /// </summary>
+    public virtual bool IsHidden => false;
 
     public abstract byte[] Read(FByteBulkDataHeader? header = null);
     public abstract FArchive CreateReader(FByteBulkDataHeader? header = null);

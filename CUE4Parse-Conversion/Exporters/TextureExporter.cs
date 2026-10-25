@@ -5,11 +5,28 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
 {
+    private string? _texturePath;
+
+    internal void CacheTexturePath()
+    {
+        if (_texturePath != null)
+        {
+            Session.Cache.CacheTexturePath(texture, _texturePath);
+        }
+    }
+
     protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
         Log.Debug("Decoding texture for platform {Platform} as {Format}", Session.Options.TexturePlatform, Session.Options.TextureFormat);
 
         var files = new List<ExportFile>();
+        _texturePath = null;
+        var firstMip = texture.GetFirstMipIndex();
+        if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } firstVt } && firstVt.IsInitialized())
+        {
+            firstMip = Math.Max(firstMip, TextureDecoder.GetMinLevel(firstVt));
+        }
+
         var all = Session.Options.ExportAllTextureMips;
         if (all)
         {
@@ -34,7 +51,7 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
         }
         else
         {
-            AddMip(texture.GetFirstMipIndex());
+            AddMip(firstMip);
         }
 
         return files;
@@ -66,10 +83,17 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
             var layered = texture is UTexture2DArray;
             for (var i = 0; i < decoded.Length; i++)
             {
-                if (decoded[i] is not { } slice) continue;
+                if (decoded[i] is not { } slice)
+                    continue;
 
-                var data = slice.Encode(Session.Options, out var ext);
-                files.Add(new ExportFile(ext, data, layered ? $"{mipSuffix}_LAYER{i}" : mipSuffix));
+                var data = slice.Encode(Session.Options, out var extension);
+                var file = new ExportFile(extension, data, layered ? $"{mipSuffix}_LAYER{i}" : mipSuffix);
+                files.Add(file);
+
+                if (Session.EmbedMaterials && index == firstMip && i == 0 && texture is not UTextureCube)
+                {
+                    (_, _texturePath) = ResolveOutputPath(file);
+                }
             }
         }
     }

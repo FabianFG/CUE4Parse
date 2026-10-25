@@ -20,10 +20,29 @@ public class CMaterialParams2
     public const string FallbackSpecularMasks = "PM_SpecularMasks";
     public const string FallbackEmissive = "PM_Emissive";
 
-    public const string RegexDiffuse = ".*(?:Diff|_Tex|_?Albedo|_?Base_?Color).*|(?:_D|_DIF|_DM|_C|_CM|_DS|_DA)$";
+    public const string RegexDiffuse = ".*(?:Diff|_?Albedo|_?Base_?Colou?r).*|(?:^|[_ ])Colou?r(?:[_ ]|$)|(?:_Tex|_D|_DIF|_DM|_C|_CM|_DS|_DA)$";
     public const string RegexNormals = "^NO_|.*Norm.*|(?:_N|_NM|_NRM)$";
     public const string RegexSpecularMasks = "^SP_|.*(?:Specu|_S_|MR|(?<!no)RM).*|(?:_S|_LP|_PAK)$";
     public const string RegexEmissive = ".*Emiss.*|(?:_E|_EM)$";
+    public const string RegexOcclusion = @"Occlu|(?:^|_)AO(?:_|\d*$)|(?-i:(?<![A-Z])AO(?![a-z]))";
+    public const string RegexChannelNames = @"Ambient[ _]*Occlusion|Occlusion|Occl|Occ|Roughness|Rough|Metallic|Metal|Met|Specular|Spec|Height";
+
+    // Named groups identify channel layouts, use only with RegexOptions.IgnorePatternWhitespace
+    // It still needs to be tested on more games
+    public const string RegexPackedTextureLayout = """
+        (?: ^ | [^a-z0-9] ) (?: Tex(?:ture)? [ _]* )?
+        (?:
+            (?<ORM> O[ _/]*R[ _/]*ME? | AO?[ _/]*R[ _/]*M )
+          | (?<RMA> R[ _/]*M[ _/]*(?: AO? | O ) )
+          | (?<ROM> R[ _/]*(?: O | AO? )[ _/]*M )
+          | (?<RSM> R[ _/]*S[ _/]*M )
+          | (?<MRA> M[ _/]*R[ _/]*A[OES]? )
+          | (?<MRO> M[ _/]*R[ _/]*O(?: A | S | Dp )? )
+          | (?<SRM> S[ _/]*R[ _/]*M )
+          | (?<HRM> H[ _/]*R[ _/]*M )
+        )
+        (?= $ | [^a-z0-9] | (?: Map | Tex(?:ture)? | VT )(?: $ | [^a-z0-9] ) )
+        """;
 
     public bool HasTopDiffuse => HasTopTexture(Diffuse[0]);
     public bool HasTopNormals => HasTopTexture(Normals[0]);
@@ -44,11 +63,11 @@ public class CMaterialParams2
     public static readonly string[][] Diffuse =
     [
         [
-            "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse", "Base Colour", "CLRM", "Diffuse_Map", "Base Color", "Base_Tex", "BaseTex", "ColorTexture",
+            "Main_BaseColor", "Trunk_BaseColor", "ShadedDiffuse", "LitDiffuse", "Base Colour", "CLRM", "Diffuse_Map", "Base Color", "Base_Tex", "BaseTex", "ColorTexture",
             "Background Diffuse", "BG Diffuse Texture", "Diffuse", "Diffuse_1", "DiffuseTexture", "DiffuseMap", "Diffuse A", "Base Color Map", "DesatTexture",
             "Diffuse A Map", "Diffuse Top", "Diffuse Side", "Base Diffuse", "Diffuse Base", "Diffuse Base Map", "Diffuse Color Map", "BaseColor_Tex", "UDR",
             "DiffuseLayer1", "1 - Albedo", "albedo", "Albedo", "Aldebo", "ALB", "TextureAlbedo", "AlbedoTex", "Color_Texture", "color", "Base_D", "Tex_BaseColor",
-            "AlbedoColour", "BCR", "Base Texture", "BaseColour", "Color Map", "Base Color - Texture",
+            "AlbedoColour", "BCR", "Base Texture", "BaseColour", "Color Map", "Base Color - Texture", "BaseColor Map", "VT_Tex_SkinBase_BC",
             "Base Color Texture", "BaseColorTexture", "BaseColor_Texture", "Base_Color", "BaseColor", "Basecolor", "Tex_BC", "TexA_BC", "BaseDiffuse",
             "Base Texture Color", "BaseColorA", "BC", "BCA", "BC_Map", "Base Map", "BCE", "Color", "CO", "CO_", "CO_1", "Base_CO", "Base Color + Linework", "Bc",
             "BaseColorVT", "Tex_Color", "Color Tex", "TexColor", "AlbedMap", "Tex_Colormap", "ColorMap", "Main_T_BaseColor", "BaseColour", "Base_Texture",
@@ -59,7 +78,7 @@ public class CMaterialParams2
             "Basecolor_VT", "BaseColor_Map", "BaceColor_Map", "ColorAo", "RGBMask", "Color & Alpha", "BaseColor - Texture", "Clothing Diffuse",
             "Base Color [Standard]", "Base Color VT", "BaseColorRoughness", "BaseColorAlpha", "Color Map (Packed)", "D(ID)", "BC Texture (BC/BCO)",
             "BCM BaseColor|Metallic Map", "Color_Main", "Texture_BC", "Virtual Texture Base Color", "DF", "L01.BaseColor", "BCM", "WGAD_Map", "OSGB",
-            "Decal Base Color & Alpha",
+            "Decal Base Color & Alpha", "Tex_Core_Layer_AO",
         ],
         ["Background Diffuse 2", "Diffuse_Texture_2", "DiffuseLayer2", "Diffuse B", "Diffuse B Map", "BaseColorB", "CO_2", "M2_T_BC"],
         ["Background Diffuse 3", "Diffuse_Texture_3", "DiffuseLayer3", "Diffuse C", "Diffuse C Map", "BaseColorC", "CO_3", "M3_T_BC"],
@@ -73,17 +92,17 @@ public class CMaterialParams2
     public static readonly string[][] Normals =
     [
         [
-            "Trunk_Normal", "T_Normal", "normal", "normalmap", "NRRO", "Base Normal", "BaseNormalMap", "Normal Map", "Base Normal Map",
-            "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "Normal Tex",
+            "Main_Normal", "Trunk_Normal", "T_Normal", "normal", "normalmap", "NRRO", "Base Normal", "BaseNormalMap", "Normal Map", "Base Normal Map",
+            "Normals", "Normal", "NormalA", "NormalTexture", "Normal Texture", "Normal_Texture", "NormalMap", "NormalMap Texture", "Normal Tex",
             "Normal A Map", "Normals Top", "Normals Side", "Fallback Normal", "Base_N", "BaseNormal_Tex", "BaseNormal_NonVT",
             "Base_Normal", "BaseNormal", "Normal Base", "NormalVT", "TextureNormal", "Tex_BakedNormal", "TexNor", "Normal VT",
             "BakedNormalMap", "3 - Baked Normal", "Base Texture Normal", "Normal Base Map", "Tex_NM","TexA_NM", "Normal_Tex",
-            "N", "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base", "NRH", "MW_TextureNormal",
+            "N", "NM", "NM_1", "Base_NM", "NRM", "T_NRM", "M1_T_NRM", "Base NRM", "NRM Base", "NRH", "MW_TextureNormal", "VT_Tex_SkinBase_N",
             "Texture A Normal", "CliffNormal", "Skin Normal", "Normal_MAIN","Main_T_Normal(B：SSSMask)", "PBREmissiveTex",
             "Primary Normal Map", "ORN" /*ABI*/, "NRO_Base_Normal", "Layer00_Normal_Tex", "Tex_SkinBase_N", "Tex_Core_Layer_Normal",
             "Simple_Normal_Texture", "BaseNormal Texture", "NOH", "N/O/H", "NMH", "NWO" /*Finals*/, "Normal_VT", "NRM_Map",
             "Normal - Texture", "Clothing Normal", "Normal [Standard]", "NCD_Mask", "Normal Map (Packed)", "N2R(M)", "Normal Texture (N)",
-            "Normal(HrNM)_Texture", "VT Normal", "L01.Normal.Metallic.Roughness", "NRA"
+            "Normal(HrNM)_Texture", "VT Normal", "L01.Normal.Metallic.Roughness", "NRA", "Tex_Core_Layer_Normal",
         ],
         ["Normals_Texture_2", "Texture B Normal", "NormalB", "Normal B Map", "NM_2", "M2_T_NRM"],
         ["Normals_Texture_3", "Texture C Normal", "NormalC", "Normal C Map", "NM_3", "M3_T_NRM"],
@@ -97,14 +116,15 @@ public class CMaterialParams2
     public static readonly string[][] SpecularMasks =
     [
         [
-            "Trunk_Specular", "PackedTexture",
-            "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side",
+            "Main_ORM", "Trunk_Specular", "PackedTexture",
+            "SpecularMasks", "Specular", "SpecMap", "T_Specular", "Specular Top", "Specular Side", "AORoughnessMetallic",
             "MG", "ORM", "MRAE", "MRAS", "MRAO", "MRA", "MRAO_Map", "MRA A", "MRS", "LP", "LP_1", "Base_LP", "Base_R*", "MRO_Tex",
             "TextureRMA", "Tex_MultiMask", "Tex_Multi", "TexMRC", "TexMRA", "TexRCN", "MultiMaskMap", "MRO Map", "MROA Map", "MRO",
-            "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map", "AO",
+            "Base_ORM", "Base_SRO", "Base Texture RMAO", "Skin SRXO", "SRXO_Mask", "SRXO", "SROA", "SR", "SRO Map", "SRM", "SC_Map", "AO",
             "Pack", "PAK", "T_PAK", "M1_T_PAK", "2 - Packed mask (MRAO)", "RoughnessMaterial_Mask", "Packed Tex", "Packed Texture",
+            "VT_Tex_SkinBase_ORM",
             "Cliff Spec Texture", "PhysicalMap", "KizokMap", "Roughness_MAIN", "Main_T_MGA", "Tex_CH", "TexA_CH", "ARMMap", "REM",
-            "Primary ARME", "CombineTex(HRA)", "ORN", "TPA_SpecColorTex", "Tex_RME", "CompVT", "MetalRoughOcc_Tex",
+            "Primary ARME", "CombineTex(HRA)", "ORN", "TPA_SpecColorTex", "Tex_RME", "CompVT", "MetalRoughOcc_Tex", "HRM\\ORM Map",
             "Layer00_MetalRoughOccDp_Tex", "Tex_SkinBase_ORM", "Tex_Core_Layer_AO", "RGB[AO/R/Metallic]_Texture", "MRO - Texture",
             "Simple_OcclRoughMet_Texture", "P (NoneVT)", "Pack Tex1", "CASR", "Roughness_VT", "OcclusionRoughnessMetallicTexture",
             "Clothing ORM", "ORC [Standard]", "ORME_Tex", "Roughness VT", "RMAO VT", "Mix(AO,Rough,Mask,Metal)", "Texture_S",
@@ -122,7 +142,7 @@ public class CMaterialParams2
     public static readonly string[][] Emissive =
     [
         [
-            "Emissive", "EmissiveTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
+            "Emissive", "EmissiveTexture", "EmmisiveColorTexture", "EmissiveColorTexture", "EmissiveColor", "EmissiveMask",
             "EmmisiveColor_A", "TextureEmissive", "TexEm", "Main_T_Emissive", "VT Emissive"
         ],
         ["L1_Emissive", "EmmisiveColor_B"],
@@ -326,15 +346,15 @@ public class CMaterialParams2
     public bool VerifyTexture(string name, ILoadableObject texture, bool appendToDictionary = true, EMaterialSamplerType samplerType = EMaterialSamplerType.SAMPLERTYPE_Color)
     {
         var fallback = "";
-        if (Regex.IsMatch(name, RegexDiffuse, RegexOptions.IgnoreCase))
-            fallback = FallbackDiffuse;
-        else if (samplerType == EMaterialSamplerType.SAMPLERTYPE_Normal ||
-                 Regex.IsMatch(name, RegexNormals, RegexOptions.IgnoreCase))
+        if (samplerType is EMaterialSamplerType.SAMPLERTYPE_Normal or EMaterialSamplerType.SAMPLERTYPE_VirtualNormal ||
+            Regex.IsMatch(name, RegexNormals, RegexOptions.IgnoreCase))
             fallback = FallbackNormals;
         else if (Regex.IsMatch(name, RegexSpecularMasks, RegexOptions.IgnoreCase))
             fallback = FallbackSpecularMasks;
         else if (Regex.IsMatch(name, RegexEmissive, RegexOptions.IgnoreCase))
             fallback = FallbackEmissive;
+        else if (Regex.IsMatch(name, RegexDiffuse, RegexOptions.IgnoreCase))
+            fallback = FallbackDiffuse;
 
         var ret = !string.IsNullOrEmpty(fallback);
         if (ret) Textures[fallback] = texture;

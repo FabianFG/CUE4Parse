@@ -2,6 +2,7 @@ using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Wwise.Enums;
 using CUE4Parse.UE4.Wwise.Objects.HIRC;
 using CUE4Parse.UE4.Wwise.Objects.HIRC.Containers;
@@ -24,6 +25,7 @@ public partial class WwiseProvider
     private readonly AbstractVfsFileProvider _provider;
     private readonly string _gameDirectory;
     private string _baseWwiseAudioPath;
+    private string? _defaultAssetLibraryGroup;
 
     private static readonly HashSet<string> _validWwiseExtensions = new(StringComparer.OrdinalIgnoreCase) { "bnk", "pck", "wem" };
     private readonly Dictionary<uint, Hierarchy> _wwiseHierarchyTables = [];
@@ -513,8 +515,11 @@ public partial class WwiseProvider
         }
         values.Clear();
         engineConfig.EvaluatePropertyValues("/Script/WwisePackaging.WwisePackagingSettings", "AssetLibraries", values);
+        var libraryGroup = new List<string>();
+        engineConfig.EvaluatePropertyValues("/Script/WwisePackaging.WwisePackagingSettings", "DefaultAssetLibraryGroup", libraryGroup);
+        _defaultAssetLibraryGroup = libraryGroup.FirstOrDefault();
 
-        return [.. values.Select(x => _provider.FixPath(x.TrimStart('/').SubstringBeforeLast('.') + ".uasset"))];
+        return values;
     }
 
     private void LoadMultiReferenceLibrary()
@@ -524,15 +529,53 @@ public partial class WwiseProvider
 
         _loadedMultiRefLibrary = true;
 
-        var configFiles = LoadWwisePackagingSettings();
+        var configFiles = LoadWwisePackagingSettings(); // FSoftObjectPath
+        var libraryFiles = configFiles.Select(x => _provider.FixPath(x.TrimStart('/').SubstringBeforeLast('.') + ".uasset")).ToArray();
 
         var assetFiles = _provider.Files.Values.Where(f =>
-            f.Path.EndsWith("ReferenceAssetLibrary.uasset", StringComparison.OrdinalIgnoreCase) || configFiles.Contains(f.Path, _provider.PathComparer));
+            f.Path.EndsWith("ReferenceAssetLibrary.uasset", StringComparison.OrdinalIgnoreCase) || libraryFiles.Contains(f.Path, _provider.PathComparer));
 
         foreach (var assetFile in assetFiles)
         {
             TryLoadMultiReferenceAsset(assetFile);
         }
+
+        if (string.IsNullOrEmpty(_defaultAssetLibraryGroup) ||
+            !_provider.TryLoadPackageObject<UWwiseAssetLibraryGroup>(_defaultAssetLibraryGroup, out var libraryGroup) ||
+            libraryGroup.Libraries is not { Length: > 0 } libraries) return;
+
+        foreach (var library in libraries.Where(x => x is not null && !configFiles.Contains(x.ToString()!)))
+        {
+            if (library is not null && library.TryLoad<UWwiseAssetLibrary>(out var assetLibrary) && assetLibrary.CookedData is not null)
+            {
+                LoadWwiseAssetLibrary(assetLibrary, out int filesCount,  out long loadedSize, out long totalSize);
+                Log.Information("Loaded {Name} and cached {Count} packaged files, loaded size {LoadedSize}/{TotalSize}", assetLibrary.Name, filesCount, loadedSize.GetReadableSize(), totalSize.GetReadableSize());
+            }
+        }
+    }
+
+    private void LoadWwiseAssetLibrary(UWwiseAssetLibrary assetLibrary, out int filesCount,  out long loadedSize, out long totalSize)
+    {
+        filesCount = 0;
+        loadedSize = 0L;
+        totalSize = 0L;
+
+        if (assetLibrary.CookedData?.PackagedFiles != null)
+        {
+            foreach (var pf in assetLibrary.CookedData.PackagedFiles)
+            {
+                if (pf.BulkData != null && !_multiReferenceLibraryCache.ContainsKey(pf.Hash))
+                {
+                    CacheWwiseFile(pf.BulkData);
+                    _multiReferenceLibraryCache[pf.Hash] = pf.BulkData;
+                    filesCount++;
+                    loadedSize += pf.BulkData.LoadedSize;
+                    totalSize += pf.BulkData.TotalSize;
+                }
+            }
+        }
+        _totalLoadedWwiseSize += loadedSize;
+        _totalWwiseBanksSize += totalSize;
     }
 
     private void TryLoadMultiReferenceAsset(GameFile? assetFile)
@@ -548,31 +591,13 @@ public partial class WwiseProvider
                 .OfType<UWwiseAssetLibrary>()
                 .FirstOrDefault();
 
-            var filesCount = 0;
-            var loadedSize = 0L;
-            var totalSize = 0L;
             if (wwiseAssetLib == null)
             {
                 Log.Warning("No UWwiseAssetLibrary found in the package {0}", assetFile.Path);
                 return;
             }
 
-            if (wwiseAssetLib.CookedData?.PackagedFiles != null)
-            {
-                foreach (var pf in wwiseAssetLib.CookedData.PackagedFiles)
-                {
-                    if (pf.BulkData != null && !_multiReferenceLibraryCache.ContainsKey(pf.Hash))
-                    {
-                        CacheWwiseFile(pf.BulkData);
-                        _multiReferenceLibraryCache[pf.Hash] = pf.BulkData;
-                        filesCount++;
-                        loadedSize += pf.BulkData.LoadedSize;
-                        totalSize += pf.BulkData.TotalSize;
-                    }
-                }
-            }
-            _totalLoadedWwiseSize += loadedSize;
-            _totalWwiseBanksSize += totalSize;
+            LoadWwiseAssetLibrary(wwiseAssetLib, out int filesCount,  out long loadedSize, out long totalSize);
             Log.Information("Loaded {Name} and cached {Count} packaged files, loaded size {LoadedSize}/{TotalSize}", assetFile.Name, filesCount, loadedSize.GetReadableSize(), totalSize.GetReadableSize());
         }
         catch (Exception e)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
@@ -158,7 +158,17 @@ public sealed class UEModel : UEFormatExport
             });
         });
 
-        attrs.AddAttribute("INDICES", attr => attr.WriteArray(lod.Indices, (writer, index) => writer.Write(index)));
+        attrs.AddAttribute("INDICES", attr =>
+        {
+            attr.Write(lod.Sections.Sum(section => section.NumFaces) * 3);
+            foreach (var section in lod.Sections)
+            {
+                foreach (var index in lod.Indices.AsSpan(section.FirstIndex, section.NumFaces * 3))
+                {
+                    attr.Write(index);
+                }
+            }
+        });
 
         if (lod.VertexColors is { Length: > 0 })
         {
@@ -169,13 +179,15 @@ public sealed class UEModel : UEFormatExport
             }));
         }
 
+        var faceOffset = 0;
         attrs.AddAttribute("MATERIALS", attr => attr.WriteArray(lod.Sections, (writer, section, i) =>
         {
             var material = lod.Owner.GetMaterial(section);
             writer.WriteFString(material?.SlotName ?? $"MaterialSlot_{i}");
             writer.WriteFString(material?.Material?.ResolvedObject?.GetPathName() ?? string.Empty);
-            writer.Write(section.FirstIndex);
+            writer.Write(faceOffset);
             writer.Write(section.NumFaces);
+            faceOffset += section.NumFaces * 3;
         }));
     }
 

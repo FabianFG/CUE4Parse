@@ -1,4 +1,4 @@
-﻿using CUE4Parse.GameTypes.Nascar.Assets.Exports;
+using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component;
@@ -28,6 +28,59 @@ public class ComponentDto : LightObjectDto
         Owner = owner;
     }
 
+    internal static ComponentDto? Create(FPackageIndex ptr, ActorDto owner)
+    {
+        try
+        {
+            return ptr.Load() switch
+            {
+                USceneComponent scene => scene switch
+                {
+                    UStaticMeshComponent sm when sm.GetStaticMesh() is { IsNull: false } mesh => sm switch
+                    {
+                        UInstancedStaticMeshComponent ism => new InstancedStaticMeshComponentDto(mesh, ism, owner),
+                        USplineMeshComponent spline => new SplineMeshComponentDto(mesh, spline, owner),
+                        _ => new StaticMeshComponentDto(mesh, sm, owner)
+                    },
+                    USkeletalMeshComponent sk when sk.GetSkeletalMesh() is { IsNull: false } mesh => new SkeletalMeshComponentDto(mesh, sk, owner),
+                    UGeometryCollectionComponent { RestCollection: not null } gc => new GeometryCollectionComponentDto(gc.RestCollection, gc, owner),
+                    ULandscapeComponent landscape => new LandscapeMeshComponentDto(landscape, owner),
+                    ULandscapeSplinesComponent splines => new LandscapeSplinesComponentDto(splines, owner),
+                    // UBillboardComponent billboard => new BillboardComponent(billboard),
+                    // UArrowComponent arrow => new ArrowComponent(arrow),
+                    // UBrushComponent brush => new BrushComponentDto(brush, owner),
+                    // UShapeComponent shape when shape.Outer?.Object?.Value is not ALevelBounds => shape switch
+                    // {
+                    //     UBoxComponent box => new BoxComponentDto(box, owner),
+                    //     USphereComponent sphere => new SphereComponentDto(sphere, owner),
+                    //     UCapsuleComponent capsule => new CapsuleComponentDto(capsule, owner),
+                    //     _ => new SceneComponentDto(shape, owner)
+                    // },
+                    ULightComponentBase light => light switch
+                    {
+                        USpotLightComponent spotLight => new SpotLightComponentDto(spotLight, owner),
+                        UPointLightComponent pointLight => new PointLightComponentDto(pointLight, owner),
+                        URectLightComponent rectLight => new RectLightComponentDto(rectLight, owner),
+                        UDirectionalLightComponent directionalLight => new DirectionalLightComponentDto(directionalLight, owner),
+                        _ => new SceneComponentDto(light, owner)
+                    },
+                    UIRMeshComponent irmc => new IRMeshCComponentDto(irmc, owner),
+                    // UAudioComponent audio => new AudioComponent(audio),
+                    // UTextRenderComponent text => new TextRenderComponent(text),
+                    // UCameraComponent camera => new CameraComponent(camera),
+                    _ => new SceneComponentDto(scene, owner),
+                },
+                { } data => new ComponentDto(data, owner),
+                null => null,
+            };
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Failed to create ComponentDto for pointer {Ptr}", ptr);
+            return null;
+        }
+    }
+
     public override void Dispose()
     {
 
@@ -41,7 +94,7 @@ public class SceneComponentDto : ComponentDto
     public readonly List<SceneComponentDto> Children = []; // same actor components only
     public readonly List<ActorDto> AttachedActors = []; // actors whose root is attached here
 
-    public readonly FTransform Transform;
+    public FTransform Transform { get; internal set; }
     public readonly string? AttachSocketName; // TODO: use it
 
     internal void AddChildComponent(SceneComponentDto child)
@@ -109,14 +162,9 @@ public abstract class PrimitiveComponentDto : SceneComponentDto
 
     protected PrimitiveComponentDto(UPrimitiveComponent component, ActorDto owner) : base(component, owner)
     {
-        if (component.TryGetValue(out bool visible, "bVisible"))
-        {
-            IsVisible = visible;
-        }
-        else if (component.TryGetValue(out bool hidden, "bHiddenInGame"))
-        {
-            IsVisible = !hidden;
-        }
+        var visible = !component.TryGetValue(out bool isVisible, "bVisible") || isVisible;
+        var hidden = component.TryGetValue(out bool isHidden, "bHiddenInGame", "bIsHidden") && isHidden;
+        IsVisible = visible && !hidden && component.bRenderInMainPass;
 
         if (component.TryGetValue(out bool castShadow, "CastShadow", "bCastStaticShadow", "bCastDynamicShadow"))
         {
