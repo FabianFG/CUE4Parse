@@ -2,14 +2,15 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
-using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace CUE4Parse.UE4.Objects.PCG;
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EPCGMetadataTypes : byte
 {
     Float = 0,
@@ -42,6 +43,7 @@ public enum EPCGMetadataTypes : byte
     Unknown = 255,
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum EPCGMetadataAttributeContainerTypes
 {
     None,
@@ -76,97 +78,86 @@ public class FPCGMetadataAttributeDesc
         KeyTypeObject = fallback.GetOrDefault<FPackageIndex?>(nameof(KeyTypeObject));
     }
 
-    internal FPropertyTagType ReadValue(FAssetArchive Ar)
-    {
-        var (propertyType, tagData) = CreatePropertyTagData();
-        return FPropertyTagType.ReadPropertyTagType(Ar, propertyType, tagData, ReadType.RAW)
-               ?? throw new ParserException(Ar, $"Unable to read PCG metadata value of type {ValueType}");
-    }
+    // UE treats an attribute as a single value when its outer container is None
+    internal bool IsSingleValue => ContainerTypes.Length == 0 || ContainerTypes[0] == EPCGMetadataAttributeContainerTypes.None;
 
-    private (string Type, FPropertyTagData Data) CreatePropertyTagData()
+    // Describes the property UE builds for this descriptor, or null when it can't build one and serializes no values
+    internal FPropertyTagData? CreatePropertyTagData()
     {
         var value = CreateScalarPropertyTagData(ValueType, ValueTypeObject);
-        for (var i = ContainerTypes.Length - 1; i >= 0; i--)
+        for (var i = ContainerTypes.Length - 1; i >= 0 && value != null; i--)
         {
             value = ContainerTypes[i] switch
             {
-                EPCGMetadataAttributeContainerTypes.None => value,
-                EPCGMetadataAttributeContainerTypes.Array => ("ArrayProperty", new FPropertyTagData
+                EPCGMetadataAttributeContainerTypes.Array => new FPropertyTagData
                 {
-                    Type = "ArrayProperty", InnerType = value.Type, InnerTypeData = value.Data
-                }),
-                EPCGMetadataAttributeContainerTypes.Set => ("SetProperty", new FPropertyTagData
+                    Type = "ArrayProperty", InnerType = value.Type, InnerTypeData = value
+                },
+                EPCGMetadataAttributeContainerTypes.Set => new FPropertyTagData
                 {
-                    Type = "SetProperty", InnerType = value.Type, InnerTypeData = value.Data
-                }),
-                EPCGMetadataAttributeContainerTypes.Map => CreateMapPropertyTagData(value),
-                _ => throw new ParserException($"Unknown PCG metadata container type {ContainerTypes[i]}")
+                    Type = "SetProperty", InnerType = value.Type, InnerTypeData = value
+                },
+                EPCGMetadataAttributeContainerTypes.Map => CreateScalarPropertyTagData(KeyType, KeyTypeObject) is { } key
+                    ? new FPropertyTagData
+                    {
+                        Type = "MapProperty", InnerType = key.Type, InnerTypeData = key, ValueType = value.Type, ValueTypeData = value
+                    }
+                    : null,
+                // None and unknown containers add no layer, like in UE
+                _ => value
             };
         }
 
         return value;
     }
 
-    private (string Type, FPropertyTagData Data) CreateMapPropertyTagData((string Type, FPropertyTagData Data) value)
+    private static FPropertyTagData? CreateScalarPropertyTagData(EPCGMetadataTypes valueType, FPackageIndex? typeObject)
     {
-        var key = CreateScalarPropertyTagData(KeyType, KeyTypeObject);
-        return ("MapProperty", new FPropertyTagData
+        if (valueType is EPCGMetadataTypes.Enum or EPCGMetadataTypes.Struct)
         {
-            Type = "MapProperty",
-            InnerType = key.Type,
-            InnerTypeData = key.Data,
-            ValueType = value.Type,
-            ValueTypeData = value.Data
-        });
-    }
+            if (typeObject is not { IsNull: false })
+                return null;
+            if (valueType == EPCGMetadataTypes.Enum)
+                return new FPropertyTagData { Type = "EnumProperty", EnumName = typeObject.Name };
 
-    private static (string Type, FPropertyTagData Data) CreateScalarPropertyTagData(
-        EPCGMetadataTypes valueType, FPackageIndex? typeObject)
-    {
+            // Keep the loaded struct, user-defined structs aren't part of the mappings. UE still wrote the values when
+            // the struct can't be loaded here, so unversioned packages fail on them instead of skipping them.
+            typeObject.TryLoad<UStruct>(out var struc);
+            return new FPropertyTagData { Type = "StructProperty", StructType = typeObject.Name, Struct = struc };
+        }
+
+        if (valueType is EPCGMetadataTypes.Object or EPCGMetadataTypes.SoftObject or EPCGMetadataTypes.Class or EPCGMetadataTypes.SoftClass)
+            throw new ParserException($"UE can't load PCG metadata attributes of type {valueType}");
+
+        var structType = valueType switch
+        {
+            EPCGMetadataTypes.Vector2 => "Vector2D",
+            EPCGMetadataTypes.Vector => "Vector",
+            EPCGMetadataTypes.Vector4 => "Vector4",
+            EPCGMetadataTypes.Quaternion => "Quat",
+            EPCGMetadataTypes.Transform => "Transform",
+            EPCGMetadataTypes.Rotator => "Rotator",
+            EPCGMetadataTypes.SoftObjectPath => "SoftObjectPath",
+            EPCGMetadataTypes.SoftClassPath => "SoftClassPath",
+            _ => null
+        };
+        if (structType != null)
+            return new FPropertyTagData { Type = "StructProperty", StructType = structType };
+
         var propertyType = valueType switch
         {
             EPCGMetadataTypes.Float => "FloatProperty",
             EPCGMetadataTypes.Double => "DoubleProperty",
             EPCGMetadataTypes.Integer32 => "IntProperty",
             EPCGMetadataTypes.Integer64 => "Int64Property",
-            EPCGMetadataTypes.Vector2 or EPCGMetadataTypes.Vector or EPCGMetadataTypes.Vector4 or
-                EPCGMetadataTypes.Quaternion or EPCGMetadataTypes.Transform or EPCGMetadataTypes.Rotator or
-                EPCGMetadataTypes.SoftObjectPath or EPCGMetadataTypes.SoftClassPath or EPCGMetadataTypes.Struct => "StructProperty",
             EPCGMetadataTypes.String => "StrProperty",
             EPCGMetadataTypes.Boolean => "BoolProperty",
             EPCGMetadataTypes.Name => "NameProperty",
             EPCGMetadataTypes.Byte => "ByteProperty",
             EPCGMetadataTypes.Text => "TextProperty",
-            EPCGMetadataTypes.Enum => "EnumProperty",
-            EPCGMetadataTypes.Object or EPCGMetadataTypes.Class => "ObjectProperty",
-            EPCGMetadataTypes.SoftObject or EPCGMetadataTypes.SoftClass => "SoftObjectProperty",
-            _ => throw new ParserException($"Unsupported PCG metadata value type {valueType}")
+            _ => null
         };
-
-        var data = new FPropertyTagData { Type = propertyType };
-        if (propertyType == "StructProperty")
-        {
-            data.StructType = valueType switch
-            {
-                EPCGMetadataTypes.Vector2 => "Vector2D",
-                EPCGMetadataTypes.Vector => "Vector",
-                EPCGMetadataTypes.Vector4 => "Vector4",
-                EPCGMetadataTypes.Quaternion => "Quat",
-                EPCGMetadataTypes.Transform => "Transform",
-                EPCGMetadataTypes.Rotator => "Rotator",
-                EPCGMetadataTypes.SoftObjectPath => "SoftObjectPath",
-                EPCGMetadataTypes.SoftClassPath => "SoftClassPath",
-                _ => typeObject?.Name
-            };
-        }
-        else if (propertyType == "EnumProperty")
-        {
-            data.EnumName = typeObject?.Name;
-            data.InnerType = "ByteProperty";
-            data.InnerTypeData = new FPropertyTagData { Type = "ByteProperty" };
-        }
-
-        return (propertyType, data);
+        return propertyType != null ? new FPropertyTagData { Type = propertyType } : null;
     }
 }
 
@@ -232,16 +223,16 @@ public abstract class FPCGMetadataAttributeBase
             : new FPCGMetadataAttributeDesc((EPCGMetadataTypes) Ar.Read<int>(), attributeName);
         var header = new FPCGMetadataAttributeHeader(Ar, descriptor, usesGenericValueLayout);
 
-        FPCGMetadataAttributeBase attribute = header.Descriptor.ContainerTypes.Length == 0
-            ? ReadScalarAttribute(Ar, header, usesGenericValueLayout)
-            : new FPCGMetadataGenericAttribute(Ar, header);
-
-        if (!usesGenericValueLayout && descriptor.ValueType == EPCGMetadataTypes.Boolean)
-            Ar.Position += 3;
-        return attribute;
+        // Like UE, single values of the legacy types keep their typed attribute, everything else is generic
+        var desc = header.Descriptor;
+        if (desc.IsSingleValue && desc.ValueType < EPCGMetadataTypes.EndLegacyTypes)
+            return ReadTypedAttribute(Ar, header, usesGenericValueLayout);
+        if (usesGenericValueLayout)
+            return new FPCGMetadataGenericAttribute(Ar, header);
+        throw new ParserException(Ar, $"Unknown EPCGMetadataTypes value {desc.ValueType}");
     }
 
-    private static FPCGMetadataAttributeBase ReadScalarAttribute(
+    private static FPCGMetadataAttributeBase ReadTypedAttribute(
         FAssetArchive Ar, FPCGMetadataAttributeHeader header, bool usesGenericLayout)
     {
         return header.Descriptor.ValueType switch
@@ -254,17 +245,18 @@ public abstract class FPCGMetadataAttributeBase
             EPCGMetadataTypes.Vector => new FPCGMetadataAttribute<FVector>(Ar, header, () => new FVector(Ar), usesGenericLayout),
             EPCGMetadataTypes.Vector4 => new FPCGMetadataAttribute<FVector4>(Ar, header, () => new FVector4(Ar), usesGenericLayout),
             EPCGMetadataTypes.Quaternion => new FPCGMetadataAttribute<FQuat>(Ar, header, () => new FQuat(Ar), usesGenericLayout),
-            EPCGMetadataTypes.Transform => new FPCGMetadataAttribute<FTransform>(Ar, header, () => new FTransform(Ar), usesGenericLayout),
+            // FTransform has no native serializer, so the generic layout stores it as properties
+            EPCGMetadataTypes.Transform => new FPCGMetadataAttribute<FTransform>(Ar, header, usesGenericLayout
+                ? () => new FTransform(new FStructFallback(Ar, "Transform"))
+                : () => new FTransform(Ar), usesGenericLayout),
             EPCGMetadataTypes.String => new FPCGMetadataAttribute<string>(Ar, header, Ar.ReadFString, usesGenericLayout),
-            EPCGMetadataTypes.Boolean => new FPCGMetadataAttribute<bool>(Ar, header, Ar.ReadFlag, usesGenericLayout),
+            // The legacy layout writes the bool values as bytes but the default value as a 32-bit bool
+            EPCGMetadataTypes.Boolean => new FPCGMetadataAttribute<bool>(Ar, header, Ar.ReadFlag, usesGenericLayout,
+                usesGenericLayout ? Ar.ReadFlag : Ar.ReadBoolean),
             EPCGMetadataTypes.Rotator => new FPCGMetadataAttribute<FRotator>(Ar, header, () => new FRotator(Ar), usesGenericLayout),
             EPCGMetadataTypes.Name => new FPCGMetadataAttribute<FName>(Ar, header, Ar.ReadFName, usesGenericLayout),
             EPCGMetadataTypes.SoftObjectPath or EPCGMetadataTypes.SoftClassPath =>
                 new FPCGMetadataAttribute<FSoftObjectPath>(Ar, header, () => new FSoftObjectPath(Ar), usesGenericLayout),
-            EPCGMetadataTypes.Byte or EPCGMetadataTypes.Enum =>
-                new FPCGMetadataAttribute<byte>(Ar, header, Ar.Read<byte>, usesGenericLayout),
-            EPCGMetadataTypes.Text => new FPCGMetadataAttribute<FText>(Ar, header, () => new FText(Ar), usesGenericLayout),
-            _ when usesGenericLayout => new FPCGMetadataGenericAttribute(Ar, header),
             _ => throw new ParserException(Ar, $"Unknown EPCGMetadataTypes value {header.Descriptor.ValueType}")
         };
     }
@@ -283,30 +275,85 @@ public class FPCGMetadataAttribute<T> : FPCGMetadataAttributeBase
     }
 
     internal FPCGMetadataAttribute(FAssetArchive Ar, FPCGMetadataAttributeHeader header, Func<T> getter,
-        bool usesGenericLayout) : base(header)
+        bool usesGenericLayout, Func<T>? defaultGetter = null) : base(header)
     {
+        defaultGetter ??= getter;
         if (usesGenericLayout)
         {
-            DefaultValue = getter();
+            DefaultValue = defaultGetter();
             Values = Ar.ReadArray(getter);
         }
         else
         {
             Values = Ar.ReadArray(getter);
-            DefaultValue = getter();
+            DefaultValue = defaultGetter();
         }
     }
 }
 
 public class FPCGMetadataGenericAttribute : FPCGMetadataAttributeBase
 {
-    public FPropertyTagType DefaultValue;
+    public FPropertyTagType? DefaultValue;
     [JsonIgnore]
-    public FPropertyTagType[] Values;
+    public FPropertyTagType[] Values = [];
 
     internal FPCGMetadataGenericAttribute(FAssetArchive Ar, FPCGMetadataAttributeHeader header) : base(header)
     {
-        DefaultValue = Descriptor.ReadValue(Ar);
-        Values = Ar.ReadArray(() => Descriptor.ReadValue(Ar));
+        if (Descriptor.CreatePropertyTagData() is not { } property)
+            return;
+
+        DefaultValue = ReadValue(Ar, property);
+        Values = [.. ReadValues(Ar, property)];
+    }
+
+    // Same layout as FProperty::SerializeItem, which UE uses for the default value and every element of the values
+    private static FPropertyTagType ReadValue(FAssetArchive Ar, FPropertyTagData property)
+    {
+        switch (property.Type)
+        {
+            case "ArrayProperty":
+                return new ArrayProperty(new UScriptArray(ReadValues(Ar, property.InnerTypeData!), property.InnerType!, property.InnerTypeData));
+            case "SetProperty":
+                SkipRemovedValues(Ar, property.InnerTypeData!);
+                return new SetProperty(new UScriptSet(ReadValues(Ar, property.InnerTypeData!)));
+            case "MapProperty":
+                SkipRemovedValues(Ar, property.InnerTypeData!);
+                var count = ReadCount(Ar);
+                var entries = new Dictionary<FPropertyTagType, FPropertyTagType?>(count);
+                for (var i = 0; i < count; i++)
+                {
+                    var key = ReadValue(Ar, property.InnerTypeData!);
+                    entries[key] = ReadValue(Ar, property.ValueTypeData!);
+                }
+                return new MapProperty(new UScriptMap(entries));
+            default:
+                return FPropertyTagType.ReadPropertyTagType(Ar, property.Type, property, ReadType.ARRAY)
+                       ?? throw new ParserException(Ar, $"Unable to read PCG metadata value of type {property.Type}");
+        }
+    }
+
+    private static List<FPropertyTagType> ReadValues(FAssetArchive Ar, FPropertyTagData element)
+    {
+        var count = ReadCount(Ar);
+        var values = new List<FPropertyTagType>(count);
+        for (var i = 0; i < count; i++)
+            values.Add(ReadValue(Ar, element));
+        return values;
+    }
+
+    // Sets and maps start with the elements to remove from their defaults, PCG saves them without defaults
+    private static void SkipRemovedValues(FAssetArchive Ar, FPropertyTagData element)
+    {
+        var count = Ar.Read<int>();
+        for (var i = 0; i < count; i++)
+            ReadValue(Ar, element);
+    }
+
+    private static int ReadCount(FAssetArchive Ar)
+    {
+        var count = Ar.Read<int>();
+        if (count < 0 || count > Ar.Length - Ar.Position)
+            throw new ParserException(Ar, $"Invalid PCG metadata element count {count}");
+        return count;
     }
 }
