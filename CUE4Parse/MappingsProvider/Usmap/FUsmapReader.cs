@@ -88,6 +88,9 @@ public sealed class FUsmapReader : FArchive
     public override byte[] ReadBytes(int length) => Ar.ReadBytes(length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override ReadOnlySpan<byte> ReadSpan(int length) => Ar.ReadSpan(length);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override unsafe void Serialize(byte* ptr, int length) => Ar.Serialize(ptr, length);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
