@@ -16,6 +16,11 @@ public class UModelComponent : UPrimitiveComponent
     /** The nodes which this component renders. */
     public ushort[] Nodes;
 
+    public UModelComponent()
+    {
+        CastShadow = true;
+    }
+
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
@@ -45,17 +50,28 @@ public class FModelElement
         if (FRenderingObjectVersion.Get(Ar) < FRenderingObjectVersion.Type.MapBuildDataSeparatePackage)
         {
             LegacyMapBuildData = new FMeshMapBuildData();
-            LegacyMapBuildData.LightMap = Ar.Read<ELightMapType>() switch
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.LIGHTMAP_NON_UOBJECT)
             {
-                ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
-                ELightMapType.LMT_2D => new FLightMap2D(Ar),
-                _ => null
-            };
-            LegacyMapBuildData.ShadowMap = Ar.Read<EShadowMapType>() switch
+                Ar.Position += sizeof(int); // FPackageIndex - LightMap
+            }
+            else
             {
-                EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
-                _ => null
-            };
+                LegacyMapBuildData.LightMap = Ar.Read<ELightMapType>() switch
+                {
+                    ELightMapType.LMT_1D => new FLegacyLightMap1D(Ar),
+                    ELightMapType.LMT_2D => new FLightMap2D(Ar),
+                    _ => null
+                };
+            }
+
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.PRECOMPUTED_SHADOW_MAPS_BSP)
+            {
+                LegacyMapBuildData.ShadowMap = Ar.Read<EShadowMapType>() switch
+                {
+                    EShadowMapType.SMT_2D => new FShadowMap2D(Ar),
+                    _ => null
+                };
+            }
         }
 
         if (FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.FixedBSPLightmaps)
@@ -67,7 +83,7 @@ public class FModelElement
         Material = new FPackageIndex(Ar);
         Nodes = Ar.ReadArray<ushort>();
 
-        if (Ar.Game < EGame.GAME_UE4_0)
+        if (Ar.Game < GAME_UE4_0)
         {
             Ar.ReadArray(() => new FPackageIndex(Ar)); // ShadowMaps
         }

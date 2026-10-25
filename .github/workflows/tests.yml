@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests-linux:
-    name: tests-linux
+  tests-with-ue58-fixtures-linux:
+    name: tests-with-ue58-fixtures-linux
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -27,5 +27,26 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Run Release tests
+      - name: Run all tests with UE5.8 fixtures
         run: dotnet test CUE4Parse.Tests/CUE4Parse.Tests.csproj --configuration Release --logger "console;verbosity=normal"
+
+  fixtures-ue6-linux:
+    name: fixtures-ue6-linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CUE4PARSE_FIXTURE_ENGINE: UE6_0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Run UE6 fixture tests
+        run: dotnet test CUE4Parse.Tests/CUE4Parse.Tests.csproj --configuration Release --filter "FullyQualifiedName~CUE4Parse.Tests.Fixtures" --logger "console;verbosity=normal"

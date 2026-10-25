@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.GeometryCollection;
 
@@ -15,7 +16,8 @@ public class FGeometryCollectionRenderData
     public FGeometryCollectionMeshDescription? MeshDescription;
     public FNaniteResources? NaniteResources;
     public FBoxSphereBounds? PreSkinnedBounds;
-    public object? CustomData;
+    [JsonIgnore] public object? CustomData;
+
     public FGeometryCollectionRenderData(FAssetArchive Ar, bool bStripRenderDataOnCook, bool nanite = false)
     {
         if (Ar.Game < GAME_UE5_3)
@@ -37,6 +39,7 @@ public class FGeometryCollectionRenderData
                 if (nanite)
                 {
                     NaniteResources = new FNaniteResources(Ar);
+                    bHasNaniteData = true;
                     return;
                 }
                 var size = Ar.Read<int>(); // bulksize -96
@@ -62,7 +65,7 @@ public class FGeometryCollectionRenderData
             }
 
             CustomData = customData;
-
+            bHasMeshData = true;
             return;
         }
 
@@ -79,5 +82,10 @@ public class FGeometryCollectionRenderData
 
         if (bHasNaniteData) NaniteResources = new FNaniteResources(Ar);
         if (Ar.Game >= GAME_UE5_7) PreSkinnedBounds = new FBoxSphereBounds(Ar);
+
+        if (Ar.Game == GAME_GearsofWarEDay && MeshResources?.StaticMeshVertexBuffer.Strides == -1)
+        {
+            bHasMeshData = false;
+        }
     }
 }

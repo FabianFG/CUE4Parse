@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using CUE4Parse.UE4.Assets.Objects;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise.Objects;

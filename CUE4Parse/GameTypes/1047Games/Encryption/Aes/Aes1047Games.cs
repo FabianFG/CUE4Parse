@@ -1,5 +1,4 @@
 using System.Runtime.Intrinsics;
-using CUE4Parse.UE4.VirtualFileSystem;
 using static System.Runtime.Intrinsics.Vector128;
 using static System.Runtime.Intrinsics.X86.Aes;
 using static System.Runtime.Intrinsics.X86.Sse2;
@@ -13,43 +12,7 @@ namespace CUE4Parse.GameTypes.Splitgate2.Encryption.Aes;
 /// Used by Splitgate 2 and Empulse games
 public static class Aes1047Games
 {
-    private static void DecryptWithRoundKeys(byte[] input, int index, Vector128<byte>[] roundKeys)
-    {
-        var state = Create(input, index);
-        var rounds = roundKeys.Length - 1;
-        state = Xor(state, roundKeys[0]);
-        for (var i = 1; i < rounds; i++)
-        {
-            state = Decrypt(state, roundKeys[i]);
-        }
-
-        state = DecryptLast(state, roundKeys[rounds]);
-        state.CopyTo(input, index);
-    }
-
-    public static byte[] Decrypt1047Games(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
-    {
-        if (bytes.Length < beginOffset + count)
-            throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");
-        if (count % 16 != 0)
-            throw new ArgumentException("count must be a multiple of 16");
-        if (reader.AesKey == null)
-            throw new NullReferenceException("reader.AesKey");
-
-        var output = new byte[count];
-        Array.Copy(bytes, beginOffset, output, 0, count);
-
-        var roundKeys = KeyExpansion(reader.AesKey.Key);
-
-        for (var i = 0; i < count / 16; i++)
-        {
-            DecryptWithRoundKeys(output, i * 16, roundKeys);
-        }
-
-        return output;
-    }
-
-    private static Vector128<byte>[] KeyExpansion(byte[] key)
+    public static Vector128<byte>[] KeyExpansion(byte[] key)
     {
         Vector128<byte>[] roundKeys = new Vector128<byte>[14];
 

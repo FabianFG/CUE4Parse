@@ -1,9 +1,8 @@
 using CUE4Parse.FileProvider.Objects;
-using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.IO.Objects;
 
-namespace CUE4Parse.UE4.Wwise;
+namespace CUE4Parse.UE4.Assets.Objects;
 
 public abstract class FDeferredByteData
 {
@@ -23,6 +22,27 @@ public sealed class FArrayDeferredByteData(byte[] data) : FDeferredByteData
     public override byte[] GetData() => _data;
 
     public override long LoadedSize => _data.Length;
+}
+
+public sealed class FRangeDeferredByteData(FDeferredByteData source, int offset, int size) : FDeferredByteData
+{
+    public override bool IsValid => source.IsValid && size > 0;
+    public override byte[] GetData()
+    {
+        var data = source.GetData();
+        return offset == 0 && data.Length == size ? data : data.AsSpan(offset, size).ToArray();
+    }
+}
+
+public sealed class FCombinedBulkDeferredByteData(FByteBulkData first, FByteBulkData second) : FDeferredByteData
+{
+    public override bool IsValid => first.GetDataSize() + second.GetDataSize() > 0;
+    public override byte[] GetData()
+    {
+        var firstData = first.ReadDataOnce() ?? [];
+        var secondData = second.ReadDataOnce() ?? [];
+        return [.. firstData, .. secondData];
+    }
 }
 
 public sealed class FGameFileDeferredByteData : FDeferredByteData

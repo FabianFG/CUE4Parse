@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.Animation.ACL;
 using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.Engine.Font;
+using CUE4Parse.UE4.Assets.Exports.HairStrands;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.Sound;
@@ -17,7 +18,7 @@ using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Exports.Wwise;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
-using CUE4Parse.UE4.CriWare.Readers;
+using CUE4Parse.UE4.Criware.Readers;
 using CUE4Parse.UE4.FMod;
 using CUE4Parse.UE4.FMod.Objects;
 using CUE4Parse.UE4.Kismet;
@@ -362,7 +363,23 @@ public class AssetObjectPropertyConverter : JsonConverter<AssetObjectProperty>
 {
     public override void WriteJson(JsonWriter writer, AssetObjectProperty value, JsonSerializer serializer)
     {
-        writer.WriteValue(value.Value);
+        if (value.Value is null)
+            writer.WriteNull();
+        else
+        {
+            var str = value.Value;
+            var index = str.LastIndexOf('.');
+            var (path, substring) = index == -1 ? (str, "") : (str[..index], str[(index+1)..]);
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("AssetPathName");
+            writer.WriteValue(path);
+
+            writer.WritePropertyName("SubPathString");
+            writer.WriteValue(substring);
+
+            writer.WriteEndObject();
+        }
     }
 
     public override AssetObjectProperty ReadJson(JsonReader reader, Type objectType, AssetObjectProperty existingValue, bool hasExistingValue,
@@ -829,8 +846,17 @@ public class FPackageFileSummaryConverter : JsonConverter<FPackageFileSummary>
         writer.WritePropertyName(nameof(value.FileVersionLicenseeUE));
         writer.WriteValue(value.FileVersionLicenseeUE.ToStringBitfield());
 
-        writer.WritePropertyName("CustomVersions");
-        serializer.Serialize(writer, value.CustomVersionContainer?.Versions);
+        if (value.CustomVersionContainer is not null)
+        {
+            writer.WritePropertyName("CustomVersions");
+            serializer.Serialize(writer, value.CustomVersionContainer?.Versions);
+        }
+
+        if (value.TextureAllocations is not null)
+        {
+            writer.WritePropertyName("TextureAllocations");
+            serializer.Serialize(writer, value.TextureAllocations);
+        }
 
         writer.WritePropertyName(nameof(value.bUnversioned));
         writer.WriteValue(value.bUnversioned);
@@ -1732,7 +1758,7 @@ public class FSkeletalMaterialConverter : JsonConverter<FSkeletalMaterial>
         serializer.Serialize(writer, value.MaterialSlotName);
 
         writer.WritePropertyName("Material");
-        serializer.Serialize(writer, value.Material);
+        serializer.Serialize(writer, value.MaterialInterface);
 
         writer.WritePropertyName("ImportedMaterialSlotName");
         serializer.Serialize(writer, value.ImportedMaterialSlotName);
@@ -2607,6 +2633,12 @@ public class FAssetPackageDataConverter : JsonConverter<FAssetPackageData>
             serializer.Serialize(writer, value.CookedHash);
         }
 
+        if (value.SourceFileMD5 != null)
+        {
+            writer.WritePropertyName("SourceFileMD5");
+            serializer.Serialize(writer, value.SourceFileMD5);
+        }
+
         if (value.FileVersionUE.FileVersionUE4 != 0 || value.FileVersionUE.FileVersionUE5 != 0)
         {
             writer.WritePropertyName("FileVersionUE");
@@ -2780,14 +2812,12 @@ public class FSoftObjectPathConverter : JsonConverter<FSoftObjectPath>
 {
     public override void WriteJson(JsonWriter writer, FSoftObjectPath value, JsonSerializer serializer)
     {
-        /*var path = value.ToString();
-        writer.WriteValue(path.Length > 0 ? path : "None");*/
         writer.WriteStartObject();
 
-        writer.WritePropertyName("AssetPathName");
+        writer.WritePropertyName(nameof(value.AssetPathName));
         serializer.Serialize(writer, value.AssetPathName);
 
-        writer.WritePropertyName("SubPathString");
+        writer.WritePropertyName(nameof(value.SubPathString));
         writer.WriteValue(value.SubPathString);
 
         writer.WriteEndObject();
@@ -3502,6 +3532,30 @@ public class AkPropValueConverter : JsonConverter<AkUnionValue>
     }
 
     public override AkUnionValue ReadJson(JsonReader reader, Type objectType, AkUnionValue existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class FGroomDataflowSettingsConverter : JsonConverter<FGroomDataflowSettings>
+{
+    public override void WriteJson(JsonWriter writer, FGroomDataflowSettings value, JsonSerializer serializer)
+    {
+        writer.WriteStartObject();
+
+        foreach (var property in value.Properties)
+        {
+            writer.WritePropertyName(property.ArrayIndex > 0 ? $"{property.Name.Text}[{property.ArrayIndex}]" : property.Name.Text);
+            serializer.Serialize(writer, property.Tag);
+        }
+
+        writer.WritePropertyName(nameof(value.RestCollection));
+        serializer.Serialize(writer, value.RestCollection);
+
+        writer.WriteEndObject();
+    }
+
+    public override FGroomDataflowSettings ReadJson(JsonReader reader, Type objectType, FGroomDataflowSettings existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
         throw new NotImplementedException();
     }

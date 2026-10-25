@@ -21,7 +21,6 @@ namespace CUE4Parse.UE4.IO;
 
 public partial class IoStoreReader : AbstractAesVfsReader
 {
-
     private readonly record struct DirectoryTraversal(uint Directory, int ParentPathLength);
 
     public readonly IReadOnlyList<FArchive> ContainerStreams;
@@ -32,6 +31,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
     private int _packageDataChunkCount = -1;
     public FIoContainerHeader? ContainerHeader => _containerHeader.Value;
     public Dictionary<FPackageId, GameFile> PackageIdIndex { get; private set; } = [];
+    public Dictionary<FPackageId, GameFile> OptionalSegmentPackageIdIndex { get; private set; } = [];
 
     internal int GetPackageDataChunkCount()
     {
@@ -96,7 +96,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         {
             containerStreams = new List<FArchive>((int) TocResource.Header.PartitionCount);
             var environmentPath = tocStream.Name.SubstringBeforeLast('.');
-            for (int i = 0; i < TocResource.Header.PartitionCount; i++)
+            for (var i = 0; i < TocResource.Header.PartitionCount; i++)
             {
                 try
                 {
@@ -114,7 +114,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         ContainerStreams = containerStreams;
         if (TocResource.ChunkPerfectHashSeeds != null)
         {
-            TocImperfectHashMapFallback = new();
+            TocImperfectHashMapFallback = new Dictionary<FIoChunkId, FIoOffsetAndLength>();
             if (TocResource.ChunkIndicesWithoutPerfectHash != null)
             {
                 foreach (var chunkIndexWithoutPerfectHash in TocResource.ChunkIndicesWithoutPerfectHash)
@@ -294,7 +294,8 @@ public partial class IoStoreReader : AbstractAesVfsReader
             reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
             // FragPunk decided to encrypt the global utoc too.
             // For Lord of Mysteries utoc files are "synthetic", without dir index, so we can't test the key.
-            compressedBuffer = DecryptIfEncrypted(compressedBuffer, 0, (int) rawSize, IsEncrypted, Game == GAME_LordOfMysteries || Game == GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
+            compressedBuffer = DecryptCompressionBlock(compressedBuffer, (int) rawSize, blockIndex,
+                Game == GAME_LordOfMysteries || Game == GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
 
             byte[] src;
             if (compressionBlock.CompressionMethodIndex == 0)
@@ -311,6 +312,12 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 }
 
                 var compressionMethod = TocResource.CompressionMethods[compressionBlock.CompressionMethodIndex];
+                if (Game is GAME_SleeplessWilds && compressionMethod is Compression.CompressionMethod.Oodle &&
+                    compressedBuffer.Length > 1 && compressedBuffer[0] == 0x8C && compressedBuffer[1] == 0x14)
+                {
+                    compressedBuffer[1] = 0x0C;
+                }
+
                 Compression.Compression.Decompress(compressedBuffer, 0, (int)compressionBlock.CompressedSize, uncompressedBuffer, 0,
                     (int) uncompressedSize, compressionMethod, reader);
                 src = uncompressedBuffer;
@@ -501,6 +508,29 @@ public partial class IoStoreReader : AbstractAesVfsReader
         }
     }
 
+    protected override byte[] DecryptBytes(byte[] bytes, int beginOffset, int count, FAesKey key, bool isIndex)
+    {
+        if (TocResource.EncryptionMethod != EIoEncryptionMethod.AES_CTR)
+            return base.DecryptBytes(bytes, beginOffset, count, key, isIndex);
+        if (!isIndex)
+            throw new InvalidOperationException("AES-CTR IoStore data requires a compression-block IV.");
+
+        var directoryIndexIv = TocResource.EncryptionIVs[^1];
+        return bytes.CryptCtr(beginOffset, count, key, directoryIndexIv.Bytes);
+    }
+
+    private byte[] DecryptCompressionBlock(byte[] bytes, int count, int blockIndex, bool bypassMountPointCheck)
+    {
+        if (!IsEncrypted || TocResource.EncryptionMethod != EIoEncryptionMethod.AES_CTR)
+            return DecryptIfEncrypted(bytes, 0, count, IsEncrypted, bypassMountPointCheck);
+        if (CustomEncryption is not null)
+            return CustomEncryption(bytes, 0, count, false, this);
+
+        EnsureValidAesKey(AesKey, bypassMountPointCheck);
+        bytes.AsSpan(0, count).CryptCtrInPlace(AesKey!, TocResource.EncryptionIVs[blockIndex].Bytes);
+        return bytes;
+    }
+
     private void ReadIndex(char[] pathBuffer, int mountPointLength,
         FIoDirectoryIndexEntry[] directoryEntries, FIoFileIndexEntry[] fileEntries,
         FStringMemory[] stringTable, Dictionary<string, GameFile> files)
@@ -510,6 +540,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
             ? (byte) EIoChunkType5.ExportBundleData
             : (byte) EIoChunkType.ExportBundleData;
         PackageIdIndex = new Dictionary<FPackageId, GameFile>(GetPackageDataChunkCount());
+        OptionalSegmentPackageIdIndex = [];
         var pendingDirectories = new Stack<DirectoryTraversal>(64);
         pendingDirectories.Push(new DirectoryTraversal(0U, mountPointLength));
 
@@ -536,18 +567,28 @@ public partial class IoStoreReader : AbstractAesVfsReader
                 var name = stringTable[fileEntry.Name];
                 var fullPathLength = Write(pathBuffer, directoryLength, name, true);
                 var fullPathSpan = pathBuffer.AsSpan(..fullPathLength);
-                if (Game == GAME_NeedForSpeedMobile) fullPathSpan = fullPathSpan.SubstringAfter("../../../");
+                if (Game is GAME_NeedForSpeedMobile or >= GAME_UE6_0) fullPathSpan = fullPathSpan.SubstringAfter("../../../");
                 var path = new string(fullPathSpan);
 
                 var entry = new FIoStoreEntry(this, path, fileEntry.UserData);
                 ref readonly var chunkId = ref TocResource.ChunkIds[fileEntry.UserData];
-                // Normal package data uses chunk index zero. Some optional segments use a non-zero index,
-                // while older containers identify them only through the ".o" package-path modifier.
-                if (chunkId.ChunkType == packageDataChunkType &&
-                    chunkId._chunkIndex == 0 && !FIoStoreEntry.IsOptionalPackagePath(path))
+                var isPackageDataChunk = chunkId.ChunkType == packageDataChunkType;
+                if (isPackageDataChunk)
                 {
-                    PackageIdIndex[chunkId.AsPackageId()] = entry;
+                    // The multi output index is what UE uses to tell the save realms apart: a base realm
+                    // chunk always has index 0 while a non-zero index is the optional segment UE loads
+                    // on top of the package.
+                    if (chunkId._chunkIndex != 0)
+                    {
+                        OptionalSegmentPackageIdIndex[chunkId.AsPackageId()] = entry;
+                    }
+                    else if (!entry.IsOptionalPackage)
+                    {
+                        // an optional segment cooked with index 0 replaces the package, it must not shadow it
+                        PackageIdIndex[chunkId.AsPackageId()] = entry;
+                    }
                 }
+
                 files[path] = entry;
 
                 file = fileEntry.NextFileEntry;
@@ -569,8 +610,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         {
             if (Game >= GAME_UE5_0)
                 throw;
-            else
-                return null!;
+            return null!;
         }
     }
 

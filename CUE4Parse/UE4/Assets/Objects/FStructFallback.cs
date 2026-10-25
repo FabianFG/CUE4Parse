@@ -11,7 +11,6 @@ namespace CUE4Parse.UE4.Assets.Objects;
 [SkipObjectRegistration]
 public class FStructFallback : AbstractPropertyHolder, IUStruct
 {
-
     public FStructFallback() => Properties = [];
 
     public FStructFallback(List<FPropertyTag> properties) => Properties = properties;
@@ -33,7 +32,7 @@ public class FStructFallback : AbstractPropertyHolder, IUStruct
 
     public FStructFallback(FAssetArchive Ar, string? structType, FRawHeader rawHeader, ReadType type = ReadType.NORMAL)
     {
-        ArgumentException.ThrowIfNullOrEmpty(structType, nameof(structType));
+        ArgumentException.ThrowIfNullOrEmpty(structType);
         UObject.DeserializeRawProperties(Properties = [], Ar, new UScriptClass(structType), rawHeader, type);
     }
 

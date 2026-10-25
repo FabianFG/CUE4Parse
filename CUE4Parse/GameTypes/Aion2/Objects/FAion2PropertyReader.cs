@@ -8,7 +8,7 @@ namespace CUE4Parse.GameTypes.Aion2.Objects;
 
 public static class FAion2PropertyReader
 {
-    public static FPropertyTagType? ReadPropertyTagType(FAion2DatFileArchive Ar, TypeMappings mappings, string? propertyType, FPropertyTagData? tagData, bool readtag = true,  ReadType type = ReadType.NORMAL)
+    public static FPropertyTagType? ReadPropertyTagType(FAion2DatFileArchive Ar, TypeMappings mappings, string? propertyType, FPropertyTagData? tagData, bool readtag = true, ReadType type = ReadType.NORMAL)
     {
         return propertyType switch
         {
@@ -29,6 +29,7 @@ public static class FAion2PropertyReader
             "MapProperty" => new MapProperty(ReadMap(Ar, mappings, tagData)),
             "StrProperty" => new StrProperty(Ar.ReadUnencryptedFString()),
             "StructProperty" => new StructProperty(ReadStruct(Ar, mappings, tagData?.StructType)),
+            "TextProperty" => new TextProperty(new FAion2AssetArchive(Ar), type),
             "UInt16Property" => new UInt16Property(Ar.Read<ushort>()),
             "UInt32Property" => new UInt32Property(Ar.Read<uint>()),
             "UInt64Property" => new UInt64Property(Ar.Read<ulong>()),
@@ -102,6 +103,7 @@ public static class FAion2PropertyReader
 
             var propCount = propMappings.CountProperties(true);
             var properties = new List<FPropertyTag>(propCount);
+            var previousProperty = "none";
 
             foreach (var index in Enumerable.Range(0, propCount))
             {
@@ -126,13 +128,18 @@ public static class FAion2PropertyReader
                 }
                 catch (ParserException e)
                 {
-                    throw new ParserException($"Failed to read FPropertyTagType {tag.TagData?.ToString() ?? tag.PropertyType.Text} {tag.Name.Text}", e);
+                    throw new ParserException(
+                        $"Failed to read FPropertyTagType {tag.TagData?.ToString() ?? tag.PropertyType.Text} " +
+                        $"{tag.Name.Text} at {pos}; previous {previousProperty}", e);
                 }
 
                 tag.Size = (int) (Ar.Position - pos);
 
                 if (tag.Tag != null)
+                {
                     properties.Add(tag);
+                    previousProperty = $"{tag.Name.Text}@{pos}+{tag.Size}";
+                }
                 else
                     throw new ParserException(Ar, $"Failed to serialize property {info.MappingType.Type} {info.Name}. Can't proceed with serialization (Serialized {properties.Count} properties until now)");
 

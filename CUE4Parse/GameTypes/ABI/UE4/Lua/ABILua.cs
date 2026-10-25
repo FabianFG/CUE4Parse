@@ -71,19 +71,12 @@ public static class ABILuaReader
         30, 31, 32, 33, 16, 6, 11, 66, 2, 10, 73, 19, 70, 4, 77, 72,
         71, 78, 82
     ];
-    private static readonly Dictionary<byte, byte> _opcodeMapping =
-        _opcodeTable.Select((mapped, opcode) => (opcode, mapped)).ToDictionary(x => (byte) x.opcode, x => x.mapped);
+    private static readonly Dictionary<byte, byte> _opcodeMapping = _opcodeTable.ToOpcodeMapping();
 
     public static byte[] DecryptLuaBytecode(byte[] bytes, bool isMobile)
     {
-        var Ar = new FABILua54Archive("ABILua", bytes, isMobile);
-
-        using var msOut = new MemoryStream();
-        using var writer = new FLua54ArchiveWriter(msOut);
-        FLuaWriter54.Write(writer, ReadLuaBytecode(Ar));
-
-        writer.Flush();
-        return msOut.ToArray();
+        using var Ar = new FABILua54Archive("ABILua", bytes, isMobile);
+        return new FLuaWriter54(ReadLuaBytecode(Ar)).GetBuffer();
     }
 
     private static LuaBytecode ReadLuaBytecode(FABILua54Archive Ar) => new()

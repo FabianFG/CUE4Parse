@@ -34,7 +34,10 @@ public class FTexture2DMipMap
 
     public FTexture2DMipMap(FAssetArchive Ar, bool bSerializeMipData = true)
     {
-        var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < GAME_UE5_0 ? Ar.ReadBoolean() : Ar.IsFilterEditorOnly;
+        var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < GAME_UE5_0 ||
+                     Ar.Game is GAME_UE5_EA_Legacy or GAME_UE5_EA or GAME_TheMatrixAwakens
+            ? Ar.ReadBoolean()
+            : Ar.IsFilterEditorOnly;
 
         if (bSerializeMipData) BulkData = new FByteBulkData(Ar);
 
@@ -63,6 +66,15 @@ public class FTexture2DMipMap
             var derivedDataKey = Ar.Game < GAME_UE5_0 ? Ar.ReadFString() : "";
             var bPagedToDerivedData = Ar.Game >= GAME_UE5_0 ? Ar.ReadBoolean() : false;
         }
+    }
+
+    public FTexture2DMipMap(FAssetArchive Ar, string tfc)
+    {
+        BulkData = new FByteBulkData(Ar, tfc);
+
+        SizeX = Ar.Read<int>();
+        SizeY = Ar.Read<int>();
+        SizeZ = 1;
     }
 
     public bool EnsureValidBulkData(UTextureAllMipDataProviderFactory? provider, int mipLevel)
@@ -103,5 +115,24 @@ public class FTexture2DMipMap
         }
 
         return false;
+    }
+
+    public class FLegacyMipMap
+    {
+        public FByteBulkData BulkData;
+        public int USize;
+        public int VSize;
+        public byte UBits;
+        public byte VBits;
+
+        public FLegacyMipMap(FAssetArchive Ar)
+        {
+            BulkData = new FByteBulkData(Ar);
+
+            USize = Ar.Read<int>();
+            VSize = Ar.Read<int>();
+            UBits = Ar.Read<byte>();
+            VBits = Ar.Read<byte>();
+        }
     }
 }

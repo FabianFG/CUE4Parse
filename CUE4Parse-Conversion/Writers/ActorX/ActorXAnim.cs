@@ -24,13 +24,17 @@ public sealed class ActorXAnim()
         var mainHdr = new VChunkHeader { TypeFlag = Constants.PSA_VERSION };
         _archive.SerializeChunkHeader(mainHdr, "ANIMHEAD");
 
+        var sequence = anim.Sequences[seqIdx];
+        var refSkeleton = anim.Skeleton.ReferenceSkeleton;
         var numBones = anim.Skeleton.BoneCount;
+        var parentScales = refSkeleton.GetParentScales(sequence); // PSA has no bone scale, see BoneScaleExtensions
+
         var boneHdr = new VChunkHeader { DataCount = numBones, DataSize = Constants.FNamedBoneBinary_SIZE };
         _archive.SerializeChunkHeader(boneHdr, "BONENAMES");
         for (var boneIndex = 0; boneIndex < numBones; boneIndex++)
         {
-            var boneInfo = anim.Skeleton.ReferenceSkeleton.FinalRefBoneInfo[boneIndex];
-            var boneTransform = anim.Skeleton.ReferenceSkeleton.FinalRefBonePose[boneIndex];
+            var boneInfo = refSkeleton.FinalRefBoneInfo[boneIndex];
+            var boneTransform = refSkeleton.FinalRefBonePose[boneIndex];
             var bone = new FNamedBoneBinary
             {
                 Name = boneInfo.Name.Text,
@@ -40,7 +44,7 @@ public sealed class ActorXAnim()
                 BonePos =
                 {
                     Orientation = boneTransform.Rotation,
-                    Position = boneTransform.Translation,
+                    Position = boneTransform.Translation * parentScales[boneIndex],
                     Size = boneTransform.Scale3D,
                     Length = 1.0f
                 }
@@ -48,7 +52,6 @@ public sealed class ActorXAnim()
             bone.Serialize(_archive);
         }
 
-        var sequence = anim.Sequences[seqIdx];
         var animHdr = new VChunkHeader { DataCount = 1, DataSize = Constants.ANIM_INFO_SIZE };
         _archive.SerializeChunkHeader(animHdr, "ANIMINFO");
         var animInfo = new AnimInfoBinary
@@ -74,7 +77,7 @@ public sealed class ActorXAnim()
         {
             for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
             {
-                var boneTransform = anim.Skeleton.ReferenceSkeleton.FinalRefBonePose[boneIndex];
+                var boneTransform = refSkeleton.FinalRefBonePose[boneIndex];
                 var position = boneTransform.Translation;
                 var orientation = boneTransform.Rotation;
                 var scale = boneTransform.Scale3D;
@@ -83,6 +86,7 @@ public sealed class ActorXAnim()
                 {
                     sequence.Tracks[boneIndex].GetBoneTransform(frame, sequence.NumFrames, ref orientation, ref position, ref scale);
                 }
+                position.Scale(parentScales[boneIndex]);
 
                 // MIRROR_MESH
                 orientation.Y *= -1;
@@ -107,7 +111,8 @@ public sealed class ActorXAnim()
             {
                 for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
                 {
-                    FVector boneScale = anim.Skeleton.ReferenceSkeleton.FinalRefBonePose[boneIndex].Scale3D;
+                    var restScale = refSkeleton.FinalRefBonePose[boneIndex].Scale3D;
+                    var boneScale = restScale;
                     if (sequence.OriginalSequence.FindTrackForBoneIndex(boneIndex) >= 0)
                     {
                         var bonePosition = FVector.ZeroVector;
@@ -115,7 +120,7 @@ public sealed class ActorXAnim()
                         sequence.Tracks[boneIndex].GetBoneTransform(frame, sequence.NumFrames, ref boneOrientation, ref bonePosition, ref boneScale);
                     }
 
-                    var key = new VScaleAnimKey(boneScale, 1);
+                    var key = new VScaleAnimKey(boneScale.RelativeTo(restScale), 1);
                     key.Serialize(_archive);
                 }
             }

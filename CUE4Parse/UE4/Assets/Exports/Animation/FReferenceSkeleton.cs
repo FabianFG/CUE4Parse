@@ -40,42 +40,10 @@ public class FReferenceSkeleton
             }
         }
 
-        AdjustBoneScales(FinalRefBonePose);
-
         if (Ar.Game == GAME_WutheringWaves)
         {
             Ar.SkipFixedArray(12);
             Ar.Position += 4;
         }
-    }
-
-    public void AdjustBoneScales(FTransform[] transforms)
-    {
-        if (FinalRefBoneInfo.Length != transforms.Length)
-            return;
-
-        for (var boneIndex = 0; boneIndex < transforms.Length; boneIndex++)
-        {
-            var scale = GetBoneScale(transforms, boneIndex);
-            transforms[boneIndex].Translation.Scale(scale);
-        }
-    }
-
-    public FVector GetBoneScale(FTransform[] transforms, int boneIndex)
-    {
-        var scale = new FVector(1);
-
-        // Get the parent bone, ignore scale of the current one
-        boneIndex = FinalRefBoneInfo[boneIndex].ParentIndex;
-        while (boneIndex >= 0)
-        {
-            var boneScale = transforms[boneIndex].Scale3D;
-            // Accumulate the scale
-            scale.Scale(boneScale);
-            // Get the bone's parent
-            boneIndex = FinalRefBoneInfo[boneIndex].ParentIndex;
-        }
-
-        return scale;
     }
 }

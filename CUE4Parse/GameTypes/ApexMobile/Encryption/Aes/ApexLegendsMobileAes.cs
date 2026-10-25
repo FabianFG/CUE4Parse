@@ -5,7 +5,7 @@ namespace CUE4Parse.GameTypes.ApexMobile.Encryption.Aes;
 
 public static class ApexLegendsMobileAes
 {
-    public static byte[] DecryptApexMobile(this byte[] encrypted, int beginOffset, int count, bool isIndex, IAesVfsReader reader )
+    public static byte[] DecryptApexMobile(this byte[] encrypted, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (encrypted.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

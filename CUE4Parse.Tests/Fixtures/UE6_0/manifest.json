@@ -1,0 +1,2049 @@
+{
+  "schemaVersion": 8,
+  "engine": {
+    "major": 6,
+    "minor": 0,
+    "patch": 0,
+    "gitSha": "4268b7097cf76b6deb5046d6af48d9958c85c8f8"
+  },
+  "target": {
+    "platform": "Win64",
+    "configuration": "Shipping",
+    "mergedModules": true,
+    "layout": "launcher + Common DLL + Engine DLL",
+    "launcher": "CUE4ParseFixtures-Win64-Shipping.exe",
+    "commonDll": "CUE4ParseFixtures-Common-Win64-Shipping.dll",
+    "engineDll": "CUE4ParseFixtures-Engine-Win64-Shipping.dll",
+    "modulesMetadata": "CUE4ParseFixtures-Win64-Shipping.modules",
+    "versionMetadata": "CUE4ParseFixtures-Win64-Shipping.version"
+  },
+  "binaries": [
+    {
+      "name": "CUE4ParseFixtures-Common-Win64-Shipping.dll",
+      "size": 140288,
+      "sha256": "01fb0b777e7f96cdf882f1bab8f71b5e20215aace3c8fe92a2e280bcddcb5c57"
+    },
+    {
+      "name": "CUE4ParseFixtures-Engine-Win64-Shipping.dll",
+      "size": 149020672,
+      "sha256": "c24df7bfd7b18bab94f4d36c29200d11a8a2266bc29404aefdb72fad0573d2a4"
+    },
+    {
+      "name": "CUE4ParseFixtures-Win64-Shipping.exe",
+      "size": 197120,
+      "sha256": "3ece24c70cfcfcb563ab90e1dca5ef704ebbe0f3fc1b2a0bf98ecc45d269ed61"
+    },
+    {
+      "name": "CUE4ParseFixtures-Win64-Shipping.modules",
+      "size": 16240,
+      "sha256": "e85f915e1562a22b4d53653b74822696f3ece3e8fc23dd9d04fee5cc2f39c65c"
+    },
+    {
+      "name": "CUE4ParseFixtures-Win64-Shipping.version",
+      "size": 247,
+      "sha256": "45b282fbb48a97391b397d28abdb42e99dedf8d13b307f238adb4d8188bed3d4"
+    },
+    {
+      "name": "D3D12/x64/D3D12Core.dll",
+      "size": 5027640,
+      "sha256": "eddf4cff4eda8162624b88694ad2adf4b09bc5aee6339191f39adf8ae48b41e7"
+    },
+    {
+      "name": "D3D12/x64/d3d12SDKLayers.dll",
+      "size": 4965688,
+      "sha256": "a78bca22ebe6c8ccdd6efff630d798b27447f8922bb889de2f50e0dd1ab10f85"
+    },
+    {
+      "name": "DML/x64/DirectML.dll",
+      "size": 18527776,
+      "sha256": "9c9e6d822561c6c41b90e6994b3e8857cf1d66dbfb1e0c4c799c7c89b4e92da1"
+    },
+    {
+      "name": "tbb12.dll",
+      "size": 331776,
+      "sha256": "e6856cefe45a067aaa5fdf033e6fe9704dafe8cf96e648c02230cf0cef0e745f"
+    },
+    {
+      "name": "tbbmalloc.dll",
+      "size": 106496,
+      "sha256": "af20d7ca563e542432b856f6628d9481247197d1853bd4057caaf6c449749d42"
+    }
+  ],
+  "variants": {
+    "Tagged": {
+      "propertySerialization": "Tagged",
+      "propertyFixtureLoaded": true,
+      "unversionedProperties": false,
+      "ioStoreCompressionModes": [
+        "Oodle",
+        "Zlib",
+        "Uncompressed",
+        "OodlePartitioned",
+        "OodleEncrypted"
+      ],
+      "containers": [
+        {
+          "name": "global.ucas",
+          "size": 2466784,
+          "sha256": "97930da72de87a08a560b7965fe45a96764b09de3ad02ac049f06d3c1a70c01f"
+        },
+        {
+          "name": "global.utoc",
+          "size": 650,
+          "sha256": "ad36e6816b83ec33749d0164decb00c690be5e27d6e82a7c9b5aa7297af4f97c"
+        },
+        {
+          "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.ucas",
+          "size": 987968,
+          "sha256": "bf1aab6dc46a167b82ab41a899c35e4b92388b8dffcedb259b3b9d33335898a7"
+        },
+        {
+          "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.utoc",
+          "size": 11989,
+          "sha256": "96c1d92e8bad5f7eb7f8dd70f65f39f27b25c1e08231f20a195bb28704bad02d"
+        },
+        {
+          "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.ucas",
+          "size": 987968,
+          "sha256": "86e4cb793fa7e31432ad41eaa8fbed9828fc08263eef541434bddc19a596ea8a"
+        },
+        {
+          "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.utoc",
+          "size": 13604,
+          "sha256": "2121915aa45019056b7f28fd621111810916e75bda34457213d5f39114e3faa1"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s1.ucas",
+          "size": 98112,
+          "sha256": "7b813d4a0beb78fc5d8c9b90a55e7eb5b91553185635a0c8184f2da5cfb99666"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s2.ucas",
+          "size": 258848,
+          "sha256": "0e450678b5628bf20176172b684a8eb159411612a8c0f54d80ee7d1116ba5342"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s3.ucas",
+          "size": 184944,
+          "sha256": "1eca3c8c7ece1ff17e10708125bfbea76b4faa0896b41af295a21f474c739b92"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s4.ucas",
+          "size": 181056,
+          "sha256": "e0c1314d6bd7a76974504f11b4d88d530cbc15f7a7abcf579474b8018f3d9953"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows.ucas",
+          "size": 261872,
+          "sha256": "f7b5d0cff658ef2bfa1290bfd4b002bb67c47f9d87827822bc41bbb1bb88fc62"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows.utoc",
+          "size": 11989,
+          "sha256": "4eed2303d18f65df8f04251899e714cd82ca3c84181771e3efbef2c4653923ce"
+        },
+        {
+          "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.ucas",
+          "size": 2376512,
+          "sha256": "bad57db18b26bbcafec3f6cc37d7d25d441252acd2ef2935b376bff55d474207"
+        },
+        {
+          "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.utoc",
+          "size": 11957,
+          "sha256": "9d63d9c54f89324bc0cea5bb4c0cf46e678b49616d41e021cbd5daf16d87e500"
+        },
+        {
+          "name": "Zlib/CUE4ParseFixtures-Minimal-Zlib-Windows.ucas",
+          "size": 1123136,
+          "sha256": "daf58b409e294bfe6d663ca7bf08903569f6c0c05fd59347fbcd90f8861c3ad6"
+        },
+        {
+          "name": "Zlib/CUE4ParseFixtures-Minimal-Zlib-Windows.utoc",
+          "size": 12005,
+          "sha256": "0664fe56e00689eb61f119dfda7e06497de3cb403e004e9229a6502d50272c1d"
+        }
+      ],
+      "assets": [
+        {
+          "asset": "/Game/Fixtures/DataTables/DT_AllProperties.DT_AllProperties",
+          "loaded": true,
+          "class": "DataTable"
+        },
+        {
+          "asset": "/Game/Fixtures/DataTables/DT_Overrides.DT_Overrides",
+          "loaded": true,
+          "class": "DataTable"
+        },
+        {
+          "asset": "/Game/Fixtures/DataTables/DT_Composite.DT_Composite",
+          "loaded": true,
+          "class": "CompositeDataTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/CT_Simple.CT_Simple",
+          "loaded": true,
+          "class": "CurveTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/CT_SimpleOverrides.CT_SimpleOverrides",
+          "loaded": true,
+          "class": "CurveTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/CT_Rich.CT_Rich",
+          "loaded": true,
+          "class": "CurveTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/CT_Composite.CT_Composite",
+          "loaded": true,
+          "class": "CompositeCurveTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/Curve_Float.Curve_Float",
+          "loaded": true,
+          "class": "CurveFloat"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/Curve_Vector.Curve_Vector",
+          "loaded": true,
+          "class": "CurveVector"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/Curve_LinearColor.Curve_LinearColor",
+          "loaded": true,
+          "class": "CurveLinearColor"
+        },
+        {
+          "asset": "/Game/Fixtures/StringTables/ST_Fixed.ST_Fixed",
+          "loaded": true,
+          "class": "StringTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Properties/DA_PrimaryAsset.DA_PrimaryAsset",
+          "loaded": true,
+          "class": "FixturePrimaryAsset"
+        },
+        {
+          "asset": "/Game/Fixtures/Meshes/SM_Fixture.SM_Fixture",
+          "loaded": true,
+          "class": "StaticMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Meshes/SM_Nanite.SM_Nanite",
+          "loaded": true,
+          "class": "StaticMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Meshes/SK_Fixture.SK_Fixture",
+          "loaded": true,
+          "class": "SkeletalMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/SKEL_Fixture.SKEL_Fixture",
+          "loaded": true,
+          "class": "Skeleton"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/AS_Fixture.AS_Fixture",
+          "loaded": true,
+          "class": "AnimSequence"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/AS_Additive.AS_Additive",
+          "loaded": true,
+          "class": "AnimSequence"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/AM_Fixture.AM_Fixture",
+          "loaded": true,
+          "class": "AnimMontage"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/BS_Fixture.BS_Fixture",
+          "loaded": true,
+          "class": "BlendSpace"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/PA_Fixture.PA_Fixture",
+          "loaded": true,
+          "class": "PoseAsset"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/AC_Fixture.AC_Fixture",
+          "loaded": true,
+          "class": "AnimComposite"
+        },
+        {
+          "asset": "/Game/Fixtures/Physics/PHYS_Fixture.PHYS_Fixture",
+          "loaded": true,
+          "class": "PhysicsAsset"
+        },
+        {
+          "asset": "/Game/Fixtures/Geometry/GC_Fixture.GC_Fixture",
+          "loaded": true,
+          "class": "GeometryCollection"
+        },
+        {
+          "asset": "/Game/Fixtures/Geometry/DM_Fixture.DM_Fixture",
+          "loaded": true,
+          "class": "DynamicMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Materials/M_Fixture.M_Fixture",
+          "loaded": true,
+          "class": "Material"
+        },
+        {
+          "asset": "/Game/Fixtures/Materials/MI_Fixture.MI_Fixture",
+          "loaded": true,
+          "class": "MaterialInstanceConstant"
+        },
+        {
+          "asset": "/Game/Fixtures/Materials/MPC_Fixture.MPC_Fixture",
+          "loaded": true,
+          "class": "MaterialParameterCollection"
+        },
+        {
+          "asset": "/Game/Fixtures/Sequences/LS_Fixture.LS_Fixture",
+          "loaded": true,
+          "class": "LevelSequence"
+        },
+        {
+          "asset": "/Game/Fixtures/Sequences/LS_Nested.LS_Nested",
+          "loaded": true,
+          "class": "LevelSequence"
+        },
+        {
+          "asset": "/Game/Fixtures/Effects/NS_Fixture.NS_Fixture",
+          "loaded": true,
+          "class": "NiagaraSystem"
+        },
+        {
+          "asset": "/Game/Fixtures/Effects/MS_Source.MS_Source",
+          "loaded": true,
+          "class": "MetaSoundSource"
+        },
+        {
+          "asset": "/Game/Fixtures/Effects/MS_Patch.MS_Patch",
+          "loaded": true,
+          "class": "MetaSoundPatch"
+        },
+        {
+          "asset": "/Game/Fixtures/Effects/VF_Static.VF_Static",
+          "loaded": true,
+          "class": "VectorFieldStatic"
+        },
+        {
+          "asset": "/Game/Fixtures/Foliage/FT_Fixture.FT_Fixture",
+          "loaded": true,
+          "class": "FoliageType_InstancedStaticMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Landscape/LI_Fixture.LI_Fixture",
+          "loaded": true,
+          "class": "LandscapeLayerInfoObject"
+        },
+        {
+          "asset": "/Game/Fixtures/Landscape/M_Landscape.M_Landscape",
+          "loaded": true,
+          "class": "Material"
+        },
+        {
+          "asset": "/Game/Fixtures/WorldPartition/DLA_Runtime.DLA_Runtime",
+          "loaded": true,
+          "class": "DataLayerAsset"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Landscape.Landscape",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/WorldPartition.WorldPartition",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Navigation.Navigation",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/BP_Fixture.BP_Fixture_C",
+          "loaded": true,
+          "class": "BlueprintGeneratedClass"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/BP_Components.BP_Components_C",
+          "loaded": true,
+          "class": "BlueprintGeneratedClass"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/BP_ComponentsChild.BP_ComponentsChild_C",
+          "loaded": true,
+          "class": "BlueprintGeneratedClass"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/E_Fixture.E_Fixture",
+          "loaded": true,
+          "class": "UserDefinedEnum"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/S_Fixture.S_Fixture",
+          "loaded": true,
+          "class": "UserDefinedStruct"
+        },
+        {
+          "asset": "/Game/Fixtures/Fonts/Font_Fixture.Font_Fixture",
+          "loaded": true,
+          "class": "Font"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Inline.SW_Inline",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Streaming.SW_Streaming",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_BinkAudio.SW_Format_BinkAudio",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_ADPCM.SW_Format_ADPCM",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_PCM.SW_Format_PCM",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_Opus.SW_Format_Opus",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_PlatformSpecific.SW_Format_PlatformSpecific",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_ProjectDefined.SW_Format_ProjectDefined",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_RADAudio.SW_Format_RADAudio",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SC_Fixture.SC_Fixture",
+          "loaded": true,
+          "class": "SoundCue"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Instancing.Instancing",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Streaming.Streaming",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Streaming_Sublevel.Streaming_Sublevel",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/BuildData/BuildData_Fixture.BuildData_Fixture",
+          "loaded": true,
+          "class": "MapBuildDataRegistry"
+        },
+        {
+          "asset": "/Game/Fixtures/PoseSearch/PS_Schema.PS_Schema",
+          "loaded": true,
+          "class": "PoseSearchSchema"
+        },
+        {
+          "asset": "/Game/Fixtures/PoseSearch/PSD_Fixture.PSD_Fixture",
+          "loaded": true,
+          "class": "PoseSearchDatabase"
+        },
+        {
+          "asset": "/Game/Fixtures/PCG/PCG_Fixture.PCG_Fixture",
+          "loaded": true,
+          "class": "PCGGraph"
+        },
+        {
+          "asset": "/Game/Fixtures/PCG/PCG_Parameters.PCG_Parameters",
+          "loaded": true,
+          "class": "PCGParamData"
+        },
+        {
+          "asset": "/Game/Fixtures/NNE/NNE_Identity.NNE_Identity",
+          "loaded": true,
+          "class": "NNEModelData"
+        },
+        {
+          "asset": "/Game/Fixtures/AudioAnalysis/Loudness_Fixture.Loudness_Fixture",
+          "loaded": true,
+          "class": "LoudnessNRT"
+        },
+        {
+          "asset": "/Game/Fixtures/AudioAnalysis/ConstantQ_Fixture.ConstantQ_Fixture",
+          "loaded": true,
+          "class": "ConstantQNRT"
+        },
+        {
+          "asset": "/Game/Fixtures/Midi/MIDI_Fixture.MIDI_Fixture",
+          "loaded": true,
+          "class": "MidiFile"
+        },
+        {
+          "asset": "/Game/Fixtures/Paper2D/Sprite_Fixture.Sprite_Fixture",
+          "loaded": true,
+          "class": "PaperSprite"
+        },
+        {
+          "asset": "/Game/Fixtures/Compute/CG_Fixture.CG_Fixture",
+          "loaded": true,
+          "class": "ComputeGraph"
+        },
+        {
+          "asset": "/Game/Fixtures/Geometry/GeoCache_Fixture.GeoCache_Fixture",
+          "loaded": true,
+          "class": "GeometryCache"
+        },
+        {
+          "asset": "/Game/Fixtures/ControlRig/CR_Fixture.CR_Fixture",
+          "loaded": true,
+          "class": "ControlRigRuntimeAsset"
+        }
+      ],
+      "textures": [
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC1.T_BC1",
+          "sourceFilename": "rgb.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC3.T_BC3",
+          "sourceFilename": "rgba.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT5",
+          "pixelFormatEnum": "PF_DXT5",
+          "pixelFormatValue": 7,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC4.T_BC4",
+          "sourceFilename": "grayscale.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "BC4",
+          "pixelFormatEnum": "PF_BC4",
+          "pixelFormatValue": 39,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC5.T_BC5",
+          "sourceFilename": "normal.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "BC5",
+          "pixelFormatEnum": "PF_BC5",
+          "pixelFormatValue": 23,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC6H.T_BC6H",
+          "sourceFilename": "hdr.exr",
+          "sourceFormat": "OpenEXR",
+          "classification": "HDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "BC6H",
+          "pixelFormatEnum": "PF_BC6H",
+          "pixelFormatValue": 55,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC7.T_BC7",
+          "sourceFilename": "rgba.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "BC7",
+          "pixelFormatEnum": "PF_BC7",
+          "pixelFormatValue": 56,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BGRA8.T_BGRA8",
+          "sourceFilename": "rgba.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_G8.T_G8",
+          "sourceFilename": "grayscale.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "G8",
+          "pixelFormatEnum": "PF_G8",
+          "pixelFormatValue": 3,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Mips.T_Mips",
+          "sourceFilename": "rgb.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 7
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Streaming.T_Streaming",
+          "sourceFilename": "streaming.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 512,
+          "height": 512,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 10
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Virtual.T_Virtual",
+          "sourceFilename": "streaming.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR virtual texture",
+          "loaded": true,
+          "width": 512,
+          "height": 512,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 0
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_UDIM.T_UDIM",
+          "sourceFilename": "udim.{1001,1002,1011,1012}.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR virtual texture (UDIM)",
+          "loaded": true,
+          "width": 256,
+          "height": 256,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 0
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Cube.T_Cube",
+          "sourceFilename": "generated BGRA8 faces",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 6,
+          "class": "TextureCube",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Array.T_Array",
+          "sourceFilename": "generated BGRA8 slices",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 4,
+          "class": "Texture2DArray",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Volume.T_Volume",
+          "sourceFilename": "generated BGRA8 voxels",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 8,
+          "height": 8,
+          "depth": 4,
+          "arraySize": 0,
+          "class": "VolumeTexture",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_G16.T_G16",
+          "sourceFilename": "generated 16-bit grayscale",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "G16",
+          "pixelFormatEnum": "PF_G16",
+          "pixelFormatValue": 4,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_R16F.T_R16F",
+          "sourceFilename": "generated half-float grayscale",
+          "sourceFormat": "Generated",
+          "classification": "HDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "PF_R16F",
+          "pixelFormatEnum": "PF_R16F",
+          "pixelFormatValue": 21,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_FloatRGBA.T_FloatRGBA",
+          "sourceFilename": "generated half-float RGBA",
+          "sourceFormat": "Generated",
+          "classification": "HDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "FloatRGBA",
+          "pixelFormatEnum": "PF_FloatRGBA",
+          "pixelFormatValue": 10,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_CubeArray.T_CubeArray",
+          "sourceFilename": "generated BGRA8 cube faces",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 12,
+          "class": "TextureCubeArray",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_IES.T_IES",
+          "sourceFilename": "generated light profile",
+          "sourceFormat": "Generated",
+          "classification": "Light profile",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "TextureLightProfile",
+          "pixelFormat": "G8",
+          "pixelFormatEnum": "PF_G8",
+          "pixelFormatValue": 3,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_CurveAtlas.T_CurveAtlas",
+          "sourceFilename": "generated linear color curve",
+          "sourceFormat": "Generated",
+          "classification": "HDR curve atlas",
+          "loaded": true,
+          "width": 64,
+          "height": 1,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "CurveLinearColorAtlas",
+          "pixelFormat": "FloatRGBA",
+          "pixelFormatEnum": "PF_FloatRGBA",
+          "pixelFormatValue": 10,
+          "mipCount": 1
+        }
+      ]
+    },
+    "Unversioned": {
+      "propertySerialization": "Unversioned",
+      "propertyFixtureLoaded": true,
+      "unversionedProperties": true,
+      "ioStoreCompressionModes": [
+        "Oodle",
+        "Zlib",
+        "Uncompressed",
+        "OodlePartitioned",
+        "OodleEncrypted"
+      ],
+      "containers": [
+        {
+          "name": "global.ucas",
+          "size": 2466784,
+          "sha256": "97930da72de87a08a560b7965fe45a96764b09de3ad02ac049f06d3c1a70c01f"
+        },
+        {
+          "name": "global.utoc",
+          "size": 650,
+          "sha256": "ad36e6816b83ec33749d0164decb00c690be5e27d6e82a7c9b5aa7297af4f97c"
+        },
+        {
+          "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.ucas",
+          "size": 906048,
+          "sha256": "543b008eb4a5e0ea1fbb18808d1f25097a968c26a40e3edcaebef9a76e72925a"
+        },
+        {
+          "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle-Windows.utoc",
+          "size": 11977,
+          "sha256": "01522af6b20614fd447e4b54af2e834fdcab8139e5d75a81829def16dd62598b"
+        },
+        {
+          "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.ucas",
+          "size": 906048,
+          "sha256": "9237d97c00391d917dd27f98157d2a5e6ed594440392f9874e16854c749fb183"
+        },
+        {
+          "name": "OodleEncrypted/CUE4ParseFixtures-Minimal-OodleEncrypted-Windows.utoc",
+          "size": 13580,
+          "sha256": "a3d83eb5f16d73d6a35c95184491d28487f083ed9b9749b083be68e68137c592"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s1.ucas",
+          "size": 254784,
+          "sha256": "fd7013d38e17c27c1fe72eeaecbc1f7c04b3b929b52299914f01e5807409d8de"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s2.ucas",
+          "size": 232048,
+          "sha256": "a4a0a53329b0ae20ed61195c8e2ccfcdfe21dd0bf0fe5ec6b7e531d85060a608"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows_s3.ucas",
+          "size": 181056,
+          "sha256": "e0c1314d6bd7a76974504f11b4d88d530cbc15f7a7abcf579474b8018f3d9953"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows.ucas",
+          "size": 234128,
+          "sha256": "f27deebc0cf300ec174e3056a700c6d06299e84ce4b10787a2bcbf8d545e1e67"
+        },
+        {
+          "name": "OodlePartitioned/CUE4ParseFixtures-Minimal-OodlePartitioned-Windows.utoc",
+          "size": 11977,
+          "sha256": "9bdbd29eebf22f86857ed49782e73e04d648e9a43651c0f1b2a2e86f8c44c783"
+        },
+        {
+          "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.ucas",
+          "size": 2165568,
+          "sha256": "c4458ac110ee08ea2a7c8ee775960a26625d808f5051177f52d0438c35cd98a5"
+        },
+        {
+          "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed-Windows.utoc",
+          "size": 11945,
+          "sha256": "ce6fee4080ae1cda83140632d89b3ca23357a6e79b9e4d996a0bc45cd7d14edf"
+        },
+        {
+          "name": "Zlib/CUE4ParseFixtures-Minimal-Zlib-Windows.ucas",
+          "size": 1039168,
+          "sha256": "cd6e9e52e45bff2b7fb0b641c101bf56c6107353d13c85cc8f3e1283c1e8a958"
+        },
+        {
+          "name": "Zlib/CUE4ParseFixtures-Minimal-Zlib-Windows.utoc",
+          "size": 11993,
+          "sha256": "882c1c828ed6f0e85e86a0594a3ac35078dc2eeaa4ef726c6fb238308db8d03f"
+        }
+      ],
+      "assets": [
+        {
+          "asset": "/Game/Fixtures/DataTables/DT_AllProperties.DT_AllProperties",
+          "loaded": true,
+          "class": "DataTable"
+        },
+        {
+          "asset": "/Game/Fixtures/DataTables/DT_Overrides.DT_Overrides",
+          "loaded": true,
+          "class": "DataTable"
+        },
+        {
+          "asset": "/Game/Fixtures/DataTables/DT_Composite.DT_Composite",
+          "loaded": true,
+          "class": "CompositeDataTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/CT_Simple.CT_Simple",
+          "loaded": true,
+          "class": "CurveTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/CT_SimpleOverrides.CT_SimpleOverrides",
+          "loaded": true,
+          "class": "CurveTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/CT_Rich.CT_Rich",
+          "loaded": true,
+          "class": "CurveTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/CT_Composite.CT_Composite",
+          "loaded": true,
+          "class": "CompositeCurveTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/Curve_Float.Curve_Float",
+          "loaded": true,
+          "class": "CurveFloat"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/Curve_Vector.Curve_Vector",
+          "loaded": true,
+          "class": "CurveVector"
+        },
+        {
+          "asset": "/Game/Fixtures/Curves/Curve_LinearColor.Curve_LinearColor",
+          "loaded": true,
+          "class": "CurveLinearColor"
+        },
+        {
+          "asset": "/Game/Fixtures/StringTables/ST_Fixed.ST_Fixed",
+          "loaded": true,
+          "class": "StringTable"
+        },
+        {
+          "asset": "/Game/Fixtures/Properties/DA_PrimaryAsset.DA_PrimaryAsset",
+          "loaded": true,
+          "class": "FixturePrimaryAsset"
+        },
+        {
+          "asset": "/Game/Fixtures/Meshes/SM_Fixture.SM_Fixture",
+          "loaded": true,
+          "class": "StaticMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Meshes/SM_Nanite.SM_Nanite",
+          "loaded": true,
+          "class": "StaticMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Meshes/SK_Fixture.SK_Fixture",
+          "loaded": true,
+          "class": "SkeletalMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/SKEL_Fixture.SKEL_Fixture",
+          "loaded": true,
+          "class": "Skeleton"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/AS_Fixture.AS_Fixture",
+          "loaded": true,
+          "class": "AnimSequence"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/AS_Additive.AS_Additive",
+          "loaded": true,
+          "class": "AnimSequence"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/AM_Fixture.AM_Fixture",
+          "loaded": true,
+          "class": "AnimMontage"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/BS_Fixture.BS_Fixture",
+          "loaded": true,
+          "class": "BlendSpace"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/PA_Fixture.PA_Fixture",
+          "loaded": true,
+          "class": "PoseAsset"
+        },
+        {
+          "asset": "/Game/Fixtures/Animations/AC_Fixture.AC_Fixture",
+          "loaded": true,
+          "class": "AnimComposite"
+        },
+        {
+          "asset": "/Game/Fixtures/Physics/PHYS_Fixture.PHYS_Fixture",
+          "loaded": true,
+          "class": "PhysicsAsset"
+        },
+        {
+          "asset": "/Game/Fixtures/Geometry/GC_Fixture.GC_Fixture",
+          "loaded": true,
+          "class": "GeometryCollection"
+        },
+        {
+          "asset": "/Game/Fixtures/Geometry/DM_Fixture.DM_Fixture",
+          "loaded": true,
+          "class": "DynamicMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Materials/M_Fixture.M_Fixture",
+          "loaded": true,
+          "class": "Material"
+        },
+        {
+          "asset": "/Game/Fixtures/Materials/MI_Fixture.MI_Fixture",
+          "loaded": true,
+          "class": "MaterialInstanceConstant"
+        },
+        {
+          "asset": "/Game/Fixtures/Materials/MPC_Fixture.MPC_Fixture",
+          "loaded": true,
+          "class": "MaterialParameterCollection"
+        },
+        {
+          "asset": "/Game/Fixtures/Sequences/LS_Fixture.LS_Fixture",
+          "loaded": true,
+          "class": "LevelSequence"
+        },
+        {
+          "asset": "/Game/Fixtures/Sequences/LS_Nested.LS_Nested",
+          "loaded": true,
+          "class": "LevelSequence"
+        },
+        {
+          "asset": "/Game/Fixtures/Effects/NS_Fixture.NS_Fixture",
+          "loaded": true,
+          "class": "NiagaraSystem"
+        },
+        {
+          "asset": "/Game/Fixtures/Effects/MS_Source.MS_Source",
+          "loaded": true,
+          "class": "MetaSoundSource"
+        },
+        {
+          "asset": "/Game/Fixtures/Effects/MS_Patch.MS_Patch",
+          "loaded": true,
+          "class": "MetaSoundPatch"
+        },
+        {
+          "asset": "/Game/Fixtures/Effects/VF_Static.VF_Static",
+          "loaded": true,
+          "class": "VectorFieldStatic"
+        },
+        {
+          "asset": "/Game/Fixtures/Foliage/FT_Fixture.FT_Fixture",
+          "loaded": true,
+          "class": "FoliageType_InstancedStaticMesh"
+        },
+        {
+          "asset": "/Game/Fixtures/Landscape/LI_Fixture.LI_Fixture",
+          "loaded": true,
+          "class": "LandscapeLayerInfoObject"
+        },
+        {
+          "asset": "/Game/Fixtures/Landscape/M_Landscape.M_Landscape",
+          "loaded": true,
+          "class": "Material"
+        },
+        {
+          "asset": "/Game/Fixtures/WorldPartition/DLA_Runtime.DLA_Runtime",
+          "loaded": true,
+          "class": "DataLayerAsset"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Landscape.Landscape",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/WorldPartition.WorldPartition",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Navigation.Navigation",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/BP_Fixture.BP_Fixture_C",
+          "loaded": true,
+          "class": "BlueprintGeneratedClass"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/BP_Components.BP_Components_C",
+          "loaded": true,
+          "class": "BlueprintGeneratedClass"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/BP_ComponentsChild.BP_ComponentsChild_C",
+          "loaded": true,
+          "class": "BlueprintGeneratedClass"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/E_Fixture.E_Fixture",
+          "loaded": true,
+          "class": "UserDefinedEnum"
+        },
+        {
+          "asset": "/Game/Fixtures/Blueprints/S_Fixture.S_Fixture",
+          "loaded": true,
+          "class": "UserDefinedStruct"
+        },
+        {
+          "asset": "/Game/Fixtures/Fonts/Font_Fixture.Font_Fixture",
+          "loaded": true,
+          "class": "Font"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Inline.SW_Inline",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Streaming.SW_Streaming",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_BinkAudio.SW_Format_BinkAudio",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_ADPCM.SW_Format_ADPCM",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_PCM.SW_Format_PCM",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_Opus.SW_Format_Opus",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_PlatformSpecific.SW_Format_PlatformSpecific",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_ProjectDefined.SW_Format_ProjectDefined",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SW_Format_RADAudio.SW_Format_RADAudio",
+          "loaded": true,
+          "class": "SoundWave"
+        },
+        {
+          "asset": "/Game/Fixtures/Audio/SC_Fixture.SC_Fixture",
+          "loaded": true,
+          "class": "SoundCue"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Instancing.Instancing",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Streaming.Streaming",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/Maps/Streaming_Sublevel.Streaming_Sublevel",
+          "loaded": true,
+          "class": "World"
+        },
+        {
+          "asset": "/Game/Fixtures/BuildData/BuildData_Fixture.BuildData_Fixture",
+          "loaded": true,
+          "class": "MapBuildDataRegistry"
+        },
+        {
+          "asset": "/Game/Fixtures/PoseSearch/PS_Schema.PS_Schema",
+          "loaded": true,
+          "class": "PoseSearchSchema"
+        },
+        {
+          "asset": "/Game/Fixtures/PoseSearch/PSD_Fixture.PSD_Fixture",
+          "loaded": true,
+          "class": "PoseSearchDatabase"
+        },
+        {
+          "asset": "/Game/Fixtures/PCG/PCG_Fixture.PCG_Fixture",
+          "loaded": true,
+          "class": "PCGGraph"
+        },
+        {
+          "asset": "/Game/Fixtures/PCG/PCG_Parameters.PCG_Parameters",
+          "loaded": true,
+          "class": "PCGParamData"
+        },
+        {
+          "asset": "/Game/Fixtures/NNE/NNE_Identity.NNE_Identity",
+          "loaded": true,
+          "class": "NNEModelData"
+        },
+        {
+          "asset": "/Game/Fixtures/AudioAnalysis/Loudness_Fixture.Loudness_Fixture",
+          "loaded": true,
+          "class": "LoudnessNRT"
+        },
+        {
+          "asset": "/Game/Fixtures/AudioAnalysis/ConstantQ_Fixture.ConstantQ_Fixture",
+          "loaded": true,
+          "class": "ConstantQNRT"
+        },
+        {
+          "asset": "/Game/Fixtures/Midi/MIDI_Fixture.MIDI_Fixture",
+          "loaded": true,
+          "class": "MidiFile"
+        },
+        {
+          "asset": "/Game/Fixtures/Paper2D/Sprite_Fixture.Sprite_Fixture",
+          "loaded": true,
+          "class": "PaperSprite"
+        },
+        {
+          "asset": "/Game/Fixtures/Compute/CG_Fixture.CG_Fixture",
+          "loaded": true,
+          "class": "ComputeGraph"
+        },
+        {
+          "asset": "/Game/Fixtures/Geometry/GeoCache_Fixture.GeoCache_Fixture",
+          "loaded": true,
+          "class": "GeometryCache"
+        },
+        {
+          "asset": "/Game/Fixtures/ControlRig/CR_Fixture.CR_Fixture",
+          "loaded": true,
+          "class": "ControlRigRuntimeAsset"
+        }
+      ],
+      "textures": [
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC1.T_BC1",
+          "sourceFilename": "rgb.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC3.T_BC3",
+          "sourceFilename": "rgba.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT5",
+          "pixelFormatEnum": "PF_DXT5",
+          "pixelFormatValue": 7,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC4.T_BC4",
+          "sourceFilename": "grayscale.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "BC4",
+          "pixelFormatEnum": "PF_BC4",
+          "pixelFormatValue": 39,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC5.T_BC5",
+          "sourceFilename": "normal.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "BC5",
+          "pixelFormatEnum": "PF_BC5",
+          "pixelFormatValue": 23,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC6H.T_BC6H",
+          "sourceFilename": "hdr.exr",
+          "sourceFormat": "OpenEXR",
+          "classification": "HDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "BC6H",
+          "pixelFormatEnum": "PF_BC6H",
+          "pixelFormatValue": 55,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BC7.T_BC7",
+          "sourceFilename": "rgba.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "BC7",
+          "pixelFormatEnum": "PF_BC7",
+          "pixelFormatValue": 56,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_BGRA8.T_BGRA8",
+          "sourceFilename": "rgba.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_G8.T_G8",
+          "sourceFilename": "grayscale.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "G8",
+          "pixelFormatEnum": "PF_G8",
+          "pixelFormatValue": 3,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Mips.T_Mips",
+          "sourceFilename": "rgb.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 64,
+          "height": 64,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 7
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Streaming.T_Streaming",
+          "sourceFilename": "streaming.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 512,
+          "height": 512,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 10
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Virtual.T_Virtual",
+          "sourceFilename": "streaming.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR virtual texture",
+          "loaded": true,
+          "width": 512,
+          "height": 512,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 0
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_UDIM.T_UDIM",
+          "sourceFilename": "udim.{1001,1002,1011,1012}.png",
+          "sourceFormat": "PNG",
+          "classification": "SDR virtual texture (UDIM)",
+          "loaded": true,
+          "width": 256,
+          "height": 256,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "DXT1",
+          "pixelFormatEnum": "PF_DXT1",
+          "pixelFormatValue": 5,
+          "mipCount": 0
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Cube.T_Cube",
+          "sourceFilename": "generated BGRA8 faces",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 6,
+          "class": "TextureCube",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Array.T_Array",
+          "sourceFilename": "generated BGRA8 slices",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 4,
+          "class": "Texture2DArray",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_Volume.T_Volume",
+          "sourceFilename": "generated BGRA8 voxels",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 8,
+          "height": 8,
+          "depth": 4,
+          "arraySize": 0,
+          "class": "VolumeTexture",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_G16.T_G16",
+          "sourceFilename": "generated 16-bit grayscale",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "G16",
+          "pixelFormatEnum": "PF_G16",
+          "pixelFormatValue": 4,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_R16F.T_R16F",
+          "sourceFilename": "generated half-float grayscale",
+          "sourceFormat": "Generated",
+          "classification": "HDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "PF_R16F",
+          "pixelFormatEnum": "PF_R16F",
+          "pixelFormatValue": 21,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_FloatRGBA.T_FloatRGBA",
+          "sourceFilename": "generated half-float RGBA",
+          "sourceFormat": "Generated",
+          "classification": "HDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "Texture2D",
+          "pixelFormat": "FloatRGBA",
+          "pixelFormatEnum": "PF_FloatRGBA",
+          "pixelFormatValue": 10,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_CubeArray.T_CubeArray",
+          "sourceFilename": "generated BGRA8 cube faces",
+          "sourceFormat": "Generated",
+          "classification": "SDR",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 12,
+          "class": "TextureCubeArray",
+          "pixelFormat": "B8G8R8A8",
+          "pixelFormatEnum": "PF_B8G8R8A8",
+          "pixelFormatValue": 2,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_IES.T_IES",
+          "sourceFilename": "generated light profile",
+          "sourceFormat": "Generated",
+          "classification": "Light profile",
+          "loaded": true,
+          "width": 16,
+          "height": 16,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "TextureLightProfile",
+          "pixelFormat": "G8",
+          "pixelFormatEnum": "PF_G8",
+          "pixelFormatValue": 3,
+          "mipCount": 1
+        },
+        {
+          "asset": "/Game/Fixtures/Textures/T_CurveAtlas.T_CurveAtlas",
+          "sourceFilename": "generated linear color curve",
+          "sourceFormat": "Generated",
+          "classification": "HDR curve atlas",
+          "loaded": true,
+          "width": 64,
+          "height": 1,
+          "depth": 0,
+          "arraySize": 0,
+          "class": "CurveLinearColorAtlas",
+          "pixelFormat": "FloatRGBA",
+          "pixelFormatEnum": "PF_FloatRGBA",
+          "pixelFormatValue": 10,
+          "mipCount": 1
+        }
+      ]
+    }
+  },
+  "pakFixtures": [
+    {
+      "name": "Oodle/CUE4ParseFixtures-Minimal-Oodle.pak",
+      "size": 60501,
+      "sha256": "23c79eb8b25da7b4aa59a0c2d79fb84935af8f2fdc7f20249e127d6f613bed80"
+    },
+    {
+      "name": "Uncompressed/CUE4ParseFixtures-Minimal-Uncompressed.pak",
+      "size": 250996,
+      "sha256": "5bcb3e5b2b2b5614335b6cc97f7f671c1bf86de997fbaf2907e2a9171922d10b"
+    }
+  ],
+  "legacyPakFixtures": [
+    {
+      "name": "Tagged/Oodle/CUE4ParseFixtures-Legacy-Tagged-Oodle.pak",
+      "size": 19069,
+      "sha256": "e7ef5248aa4aea927788d5441fce3154c4c8e9ac97c8f5f0eb1b2dcc61a57a38"
+    },
+    {
+      "name": "Tagged/OodleEncrypted/CUE4ParseFixtures-Legacy-Tagged-OodleEncrypted.pak",
+      "size": 19349,
+      "sha256": "2000ed9a604fcd9e99e98441ec44bf8b2f24c16cc066ac4f89e20ba2f1bcfa63"
+    },
+    {
+      "name": "Tagged/Uncompressed/CUE4ParseFixtures-Legacy-Tagged-Uncompressed.pak",
+      "size": 202425,
+      "sha256": "4e871061efbfdd3b709eb062138d89e3b208519ddbf844670726601f4e4e5aaa"
+    },
+    {
+      "name": "Tagged/Zlib/CUE4ParseFixtures-Legacy-Tagged-Zlib.pak",
+      "size": 21120,
+      "sha256": "346a9e85bce620d26bda79f77fa98c4cea15a37d1225fe77d27972d3aaa8854c"
+    },
+    {
+      "name": "Unversioned/Oodle/CUE4ParseFixtures-Legacy-Unversioned-Oodle.pak",
+      "size": 16221,
+      "sha256": "7751196402a2a7cb6ec8755c4ea9e4d0849899c9f87d16312dc8e58688629e85"
+    },
+    {
+      "name": "Unversioned/OodleEncrypted/CUE4ParseFixtures-Legacy-Unversioned-OodleEncrypted.pak",
+      "size": 16505,
+      "sha256": "418ae46855a9075dfab2b3383924b263695e19bd85b4378aebb3dac83865c5d8"
+    },
+    {
+      "name": "Unversioned/Uncompressed/CUE4ParseFixtures-Legacy-Unversioned-Uncompressed.pak",
+      "size": 191804,
+      "sha256": "da6bcef1d929b42dc0950d333bd0b86412e1076551513e8c6ee2401008d84e14"
+    },
+    {
+      "name": "Unversioned/Zlib/CUE4ParseFixtures-Legacy-Unversioned-Zlib.pak",
+      "size": 17442,
+      "sha256": "ab6d517bf0edd143b4949b07a35446bc584ac286e1cc6e3ade0b91837a8ae42d"
+    }
+  ],
+  "androidTexturePakFixtures": [
+    {
+      "name": "CUE4ParseFixtures-Android-Textures.pak",
+      "size": 38525,
+      "sha256": "c252582258d4eb21bbb3c30eeab4185ff610e8633db6df9d2340b1ac48333d2f"
+    }
+  ],
+  "patchFixtures": [
+    {
+      "name": "IoStore/CUE4ParseFixtures-PatchBase_0_P.ucas",
+      "size": 816,
+      "sha256": "6c99897a2ab3eaa4ff4636563bf7e6156f80fab5026ae6361ffc9471264f41de"
+    },
+    {
+      "name": "IoStore/CUE4ParseFixtures-PatchBase_0_P.utoc",
+      "size": 384,
+      "sha256": "6f084cd5925e15338d3791f028289bfc7cd42e691ef7d99ea7c0d3c45e586285"
+    },
+    {
+      "name": "IoStore/CUE4ParseFixtures-PatchBase.ucas",
+      "size": 1968,
+      "sha256": "b50da5d879c246ce776d940568800c81f12c37abc8be50a09d16287497496913"
+    },
+    {
+      "name": "IoStore/CUE4ParseFixtures-PatchBase.utoc",
+      "size": 488,
+      "sha256": "2255ce186190ef9393f41ba2c6722470681d956b301666dd3885c3b0a220d83c"
+    },
+    {
+      "name": "Pak/CUE4ParseFixtures-PatchBase_0_P.pak",
+      "size": 1850,
+      "sha256": "4978afa693d0f84bdb34e721b05a43dfeb1d9490acd834b7d6fe596bb0c2cd86"
+    },
+    {
+      "name": "Pak/CUE4ParseFixtures-PatchBase.pak",
+      "size": 3628,
+      "sha256": "72859d87265360ae64e614305d57f98161906eba0ce9dc15cd18ce191487ea7c"
+    }
+  ],
+  "assetPackages": [
+    "/Game/Fixtures/Maps/Empty",
+    "/Game/Fixtures/Maps/Landscape",
+    "/Game/Fixtures/Maps/WorldPartition",
+    "/Game/Fixtures/Maps/Navigation",
+    "/Game/Fixtures/Maps/Instancing",
+    "/Game/Fixtures/Maps/Streaming",
+    "/Game/Fixtures/Maps/Streaming_Sublevel",
+    "/Game/Fixtures/BuildData/BuildData_Fixture",
+    "/Game/Fixtures/Properties/DA_AllProperties",
+    "/Game/Fixtures/Properties/DA_PrimaryAsset",
+    "/Game/Fixtures/DataTables/DT_AllProperties",
+    "/Game/Fixtures/DataTables/DT_Overrides",
+    "/Game/Fixtures/DataTables/DT_Composite",
+    "/Game/Fixtures/Curves/CT_Simple",
+    "/Game/Fixtures/Curves/CT_SimpleOverrides",
+    "/Game/Fixtures/Curves/CT_Rich",
+    "/Game/Fixtures/Curves/CT_Composite",
+    "/Game/Fixtures/Curves/Curve_Float",
+    "/Game/Fixtures/Curves/Curve_Vector",
+    "/Game/Fixtures/Curves/Curve_LinearColor",
+    "/Game/Fixtures/StringTables/ST_Fixed",
+    "/Game/Fixtures/Textures/T_BC1",
+    "/Game/Fixtures/Textures/T_BC3",
+    "/Game/Fixtures/Textures/T_BC4",
+    "/Game/Fixtures/Textures/T_BC5",
+    "/Game/Fixtures/Textures/T_BC6H",
+    "/Game/Fixtures/Textures/T_BC7",
+    "/Game/Fixtures/Textures/T_BGRA8",
+    "/Game/Fixtures/Textures/T_G8",
+    "/Game/Fixtures/Textures/T_Mips",
+    "/Game/Fixtures/Textures/T_Streaming",
+    "/Game/Fixtures/Textures/T_Virtual",
+    "/Game/Fixtures/Textures/T_UDIM",
+    "/Game/Fixtures/Textures/T_Cube",
+    "/Game/Fixtures/Textures/T_Array",
+    "/Game/Fixtures/Textures/T_Volume",
+    "/Game/Fixtures/Textures/T_G16",
+    "/Game/Fixtures/Textures/T_R16F",
+    "/Game/Fixtures/Textures/T_FloatRGBA",
+    "/Game/Fixtures/Textures/T_CubeArray",
+    "/Game/Fixtures/Textures/T_IES",
+    "/Game/Fixtures/Textures/T_CurveAtlas",
+    "/Game/Fixtures/Meshes/SM_Fixture",
+    "/Game/Fixtures/Meshes/SM_Nanite",
+    "/Game/Fixtures/Meshes/SK_Fixture",
+    "/Game/Fixtures/Animations/SKEL_Fixture",
+    "/Game/Fixtures/Animations/AS_Fixture",
+    "/Game/Fixtures/Animations/AS_Additive",
+    "/Game/Fixtures/Animations/AM_Fixture",
+    "/Game/Fixtures/Animations/BS_Fixture",
+    "/Game/Fixtures/Animations/PA_Fixture",
+    "/Game/Fixtures/Animations/AC_Fixture",
+    "/Game/Fixtures/Physics/PHYS_Fixture",
+    "/Game/Fixtures/Geometry/GC_Fixture",
+    "/Game/Fixtures/Geometry/DM_Fixture",
+    "/Game/Fixtures/Materials/M_Fixture",
+    "/Game/Fixtures/Materials/MI_Fixture",
+    "/Game/Fixtures/Materials/MPC_Fixture",
+    "/Game/Fixtures/Sequences/LS_Fixture",
+    "/Game/Fixtures/Sequences/LS_Nested",
+    "/Game/Fixtures/Effects/NS_Fixture",
+    "/Game/Fixtures/Effects/MS_Source",
+    "/Game/Fixtures/Effects/MS_Patch",
+    "/Game/Fixtures/Effects/VF_Static",
+    "/Game/Fixtures/Foliage/FT_Fixture",
+    "/Game/Fixtures/Landscape/LI_Fixture",
+    "/Game/Fixtures/Landscape/M_Landscape",
+    "/Game/Fixtures/WorldPartition/DLA_Runtime",
+    "/Game/Fixtures/Blueprints/BP_Fixture",
+    "/Game/Fixtures/Blueprints/BP_Components",
+    "/Game/Fixtures/Blueprints/BP_ComponentsChild",
+    "/Game/Fixtures/Blueprints/E_Fixture",
+    "/Game/Fixtures/Blueprints/S_Fixture",
+    "/Game/Fixtures/Fonts/Font_Fixture",
+    "/Game/Fixtures/Audio/SW_Inline",
+    "/Game/Fixtures/Audio/SW_Streaming",
+    "/Game/Fixtures/Audio/SW_Format_BinkAudio",
+    "/Game/Fixtures/Audio/SW_Format_ADPCM",
+    "/Game/Fixtures/Audio/SW_Format_PCM",
+    "/Game/Fixtures/Audio/SW_Format_Opus",
+    "/Game/Fixtures/Audio/SW_Format_PlatformSpecific",
+    "/Game/Fixtures/Audio/SW_Format_ProjectDefined",
+    "/Game/Fixtures/Audio/SW_Format_RADAudio",
+    "/Game/Fixtures/Audio/SC_Fixture",
+    "/Game/Fixtures/PoseSearch/PS_Schema",
+    "/Game/Fixtures/PoseSearch/PSD_Fixture",
+    "/Game/Fixtures/PCG/PCG_Fixture",
+    "/Game/Fixtures/PCG/PCG_Parameters",
+    "/Game/Fixtures/NNE/NNE_Identity",
+    "/Game/Fixtures/AudioAnalysis/Loudness_Fixture",
+    "/Game/Fixtures/AudioAnalysis/ConstantQ_Fixture",
+    "/Game/Fixtures/Midi/MIDI_Fixture",
+    "/Game/Fixtures/Paper2D/Sprite_Fixture",
+    "/Game/Fixtures/Compute/CG_Fixture",
+    "/Game/Fixtures/Geometry/GeoCache_Fixture",
+    "/Game/Fixtures/ControlRig/CR_Fixture"
+  ],
+  "testContainerPackages": [
+    "/Game/Fixtures/Maps/Empty",
+    "/Game/Fixtures/Maps/Landscape",
+    "/Game/Fixtures/Maps/WorldPartition",
+    "/Game/Fixtures/Maps/Navigation",
+    "/Game/Fixtures/Maps/Instancing",
+    "/Game/Fixtures/Maps/Streaming",
+    "/Game/Fixtures/Maps/Streaming_Sublevel",
+    "/Game/Fixtures/BuildData/BuildData_Fixture",
+    "/Game/Fixtures/Properties/DA_AllProperties",
+    "/Game/Fixtures/Properties/DA_PrimaryAsset",
+    "/Game/Fixtures/DataTables/DT_AllProperties",
+    "/Game/Fixtures/DataTables/DT_Overrides",
+    "/Game/Fixtures/DataTables/DT_Composite",
+    "/Game/Fixtures/Curves/CT_Simple",
+    "/Game/Fixtures/Curves/CT_SimpleOverrides",
+    "/Game/Fixtures/Curves/CT_Rich",
+    "/Game/Fixtures/Curves/CT_Composite",
+    "/Game/Fixtures/Curves/Curve_Float",
+    "/Game/Fixtures/Curves/Curve_Vector",
+    "/Game/Fixtures/Curves/Curve_LinearColor",
+    "/Game/Fixtures/StringTables/ST_Fixed",
+    "/Game/Fixtures/Textures/T_BC1",
+    "/Game/Fixtures/Textures/T_BC3",
+    "/Game/Fixtures/Textures/T_BC4",
+    "/Game/Fixtures/Textures/T_BC5",
+    "/Game/Fixtures/Textures/T_BC6H",
+    "/Game/Fixtures/Textures/T_BC7",
+    "/Game/Fixtures/Textures/T_BGRA8",
+    "/Game/Fixtures/Textures/T_G8",
+    "/Game/Fixtures/Textures/T_Mips",
+    "/Game/Fixtures/Textures/T_Streaming",
+    "/Game/Fixtures/Textures/T_Virtual",
+    "/Game/Fixtures/Textures/T_UDIM",
+    "/Game/Fixtures/Textures/T_Cube",
+    "/Game/Fixtures/Textures/T_Array",
+    "/Game/Fixtures/Textures/T_Volume",
+    "/Game/Fixtures/Textures/T_G16",
+    "/Game/Fixtures/Textures/T_R16F",
+    "/Game/Fixtures/Textures/T_FloatRGBA",
+    "/Game/Fixtures/Textures/T_CubeArray",
+    "/Game/Fixtures/Textures/T_IES",
+    "/Game/Fixtures/Textures/T_CurveAtlas",
+    "/Game/Fixtures/Meshes/SM_Fixture",
+    "/Game/Fixtures/Meshes/SM_Nanite",
+    "/Game/Fixtures/Meshes/SK_Fixture",
+    "/Game/Fixtures/Animations/SKEL_Fixture",
+    "/Game/Fixtures/Animations/AS_Fixture",
+    "/Game/Fixtures/Animations/AS_Additive",
+    "/Game/Fixtures/Animations/AM_Fixture",
+    "/Game/Fixtures/Animations/BS_Fixture",
+    "/Game/Fixtures/Animations/PA_Fixture",
+    "/Game/Fixtures/Animations/AC_Fixture",
+    "/Game/Fixtures/Physics/PHYS_Fixture",
+    "/Game/Fixtures/Geometry/GC_Fixture",
+    "/Game/Fixtures/Geometry/DM_Fixture",
+    "/Game/Fixtures/Materials/M_Fixture",
+    "/Game/Fixtures/Materials/MI_Fixture",
+    "/Game/Fixtures/Materials/MPC_Fixture",
+    "/Game/Fixtures/Sequences/LS_Fixture",
+    "/Game/Fixtures/Sequences/LS_Nested",
+    "/Game/Fixtures/Effects/NS_Fixture",
+    "/Game/Fixtures/Effects/MS_Source",
+    "/Game/Fixtures/Effects/MS_Patch",
+    "/Game/Fixtures/Effects/VF_Static",
+    "/Game/Fixtures/Foliage/FT_Fixture",
+    "/Game/Fixtures/Landscape/LI_Fixture",
+    "/Game/Fixtures/Landscape/M_Landscape",
+    "/Game/Fixtures/WorldPartition/DLA_Runtime",
+    "/Game/Fixtures/Blueprints/BP_Fixture",
+    "/Game/Fixtures/Blueprints/BP_Components",
+    "/Game/Fixtures/Blueprints/BP_ComponentsChild",
+    "/Game/Fixtures/Blueprints/E_Fixture",
+    "/Game/Fixtures/Blueprints/S_Fixture",
+    "/Game/Fixtures/Fonts/Font_Fixture",
+    "/Game/Fixtures/Audio/SW_Inline",
+    "/Game/Fixtures/Audio/SW_Streaming",
+    "/Game/Fixtures/Audio/SW_Format_BinkAudio",
+    "/Game/Fixtures/Audio/SW_Format_ADPCM",
+    "/Game/Fixtures/Audio/SW_Format_PCM",
+    "/Game/Fixtures/Audio/SW_Format_Opus",
+    "/Game/Fixtures/Audio/SW_Format_PlatformSpecific",
+    "/Game/Fixtures/Audio/SW_Format_ProjectDefined",
+    "/Game/Fixtures/Audio/SW_Format_RADAudio",
+    "/Game/Fixtures/Audio/SC_Fixture",
+    "/Game/Fixtures/PoseSearch/PS_Schema",
+    "/Game/Fixtures/PoseSearch/PSD_Fixture",
+    "/Game/Fixtures/PCG/PCG_Fixture",
+    "/Game/Fixtures/PCG/PCG_Parameters",
+    "/Game/Fixtures/NNE/NNE_Identity",
+    "/Game/Fixtures/AudioAnalysis/Loudness_Fixture",
+    "/Game/Fixtures/AudioAnalysis/ConstantQ_Fixture",
+    "/Game/Fixtures/Midi/MIDI_Fixture",
+    "/Game/Fixtures/Paper2D/Sprite_Fixture",
+    "/Game/Fixtures/Compute/CG_Fixture",
+    "/Game/Fixtures/Geometry/GeoCache_Fixture",
+    "/Game/Fixtures/ControlRig/CR_Fixture",
+    "/Game/Fixtures/Maps/WorldPartition/_Generated_/D1R7UA0VD18MKP5K9AR4EIV91"
+  ],
+  "testContainerBulkPaths": [
+    "CUE4ParseFixtures/Content/Fixtures/Textures/T_Streaming.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Textures/T_Virtual.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Textures/T_UDIM.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Meshes/SM_Nanite.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Inline.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Streaming.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_BinkAudio.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ADPCM.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_PCM.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_Opus.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_PlatformSpecific.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ProjectDefined.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_RADAudio.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Geometry/GeoCache_Fixture.ubulk"
+  ],
+  "uobjectTypes": [
+    "/Script/CUE4ParseFixtures.ParserFixtureBaseData",
+    "/Script/CUE4ParseFixtures.ParserFixtureData",
+    "/Script/CUE4ParseFixtures.FixtureNestedStruct",
+    "/Script/CUE4ParseFixtures.FixtureTableRow",
+    "/Script/CUE4ParseFixtures.FixtureInstancedBase",
+    "/Script/CUE4ParseFixtures.FixtureInstancedScalar",
+    "/Script/CUE4ParseFixtures.FixtureInstancedComposite",
+    "/Script/CUE4ParseFixtures.FixtureInlineObject",
+    "/Script/CUE4ParseFixtures.FixtureEnum"
+  ],
+  "expectedValues": {
+    "dataAsset": {
+      "baseMarker": "0x0BADF00D",
+      "baseString": "Inherited_Base_Value",
+      "boolean": true,
+      "byte": "0xAB",
+      "int32": "0x12345678",
+      "int64": "0x1122334455667788",
+      "float": 1234.25,
+      "double": -987654.125,
+      "unicodeString": "CUE4Parse_日本語_äöü",
+      "name": "Fixture_Name_0xC0FFEE",
+      "guid": "DEADBEEF-01234567-89ABCDEF-13579BDF",
+      "enum": "Beta",
+      "integerArray": [
+        11,
+        22,
+        33,
+        44
+      ],
+      "nameSet": [
+        "Set_Alpha",
+        "Set_Beta",
+        "Set_日本語"
+      ]
+    },
+    "dataTable": {
+      "rowNames": [
+        "Alpha",
+        "Beta",
+        "Defaults"
+      ],
+      "Alpha": {
+        "number": "0x12345678",
+        "largeNumber": "0x1122334455667788",
+        "message": "Alpha_CUE4Parse_日本語_äöü",
+        "enum": "Alpha",
+        "values": [
+          11,
+          22,
+          33,
+          44
+        ]
+      },
+      "Beta": {
+        "number": -202020,
+        "largeNumber": "-9007199254740991",
+        "message": "Beta_ß_水_🚀",
+        "enum": "Beta",
+        "values": [
+          -7,
+          0,
+          7,
+          2147483647
+        ]
+      },
+      "Defaults": {
+        "number": 0,
+        "largeNumber": "0",
+        "message": "",
+        "enum": "None",
+        "values": []
+      }
+    }
+  }
+}

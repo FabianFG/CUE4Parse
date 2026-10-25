@@ -27,7 +27,6 @@ public readonly struct FGeometryCollectionMeshDescription
         SubSections = Ar.ReadArray(() => new FGeometryCollectionMeshElement(Ar));
         if (Ar.Game is GAME_MarvelRivals)
         {
-            
             _ = Ar.ReadArray(() => new FGeometryCollectionMeshElement(Ar));
         }
     }

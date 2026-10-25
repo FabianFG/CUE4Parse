@@ -2,14 +2,8 @@
 
 namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
-public class RawMeshRegionMembership
+public class RawMeshRegionMembership(FArchiveBigEndian Ar)
 {
-    public string[][] RegionNames;
-    public ushort[][][] Indices;
-
-    public RawMeshRegionMembership(FArchiveBigEndian Ar)
-    {
-        RegionNames = Ar.ReadArray(() => Ar.ReadArray(Ar.ReadString));
-        Indices = Ar.ReadArray(() => Ar.ReadArray(Ar.ReadArray<ushort>));
-    }
+    public string[][] RegionNames = Ar.ReadArray(() => Ar.ReadArray(Ar.ReadString));
+    public ushort[][][] Indices = Ar.ReadArray(() => Ar.ReadArray(Ar.ReadArray<ushort>));
 }

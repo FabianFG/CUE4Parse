@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.Utils;
@@ -64,7 +64,9 @@ public abstract class ExporterBase : IExporter
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default);
 
-    public async Task<ExportResult> ExportAsync(CancellationToken ct = default)
+    internal virtual IEnumerable<UObject> GetDependencies(CancellationToken ct) => [];
+
+    public virtual async Task<ExportResult> ExportAsync(CancellationToken ct = default)
     {
         try
         {
@@ -85,7 +87,7 @@ public abstract class ExporterBase : IExporter
         }
     }
 
-    private async Task<string> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
+    protected async Task<string> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
     {
         var (fileName, path) = ResolveOutputPath(file); // fileName may not be the real file name, it's just for logging
         Log.ForContext("FilePath", path).Information("Writing {FileName} ({ReadableFileSize:l})", fileName, file.Data.Length.GetReadableSize());

@@ -9,7 +9,7 @@ public sealed class ActorXAnimFormat : IAnimExportFormat
 {
     public string DisplayName => "ActorX (psa)";
 
-    public IReadOnlyList<ExportFile> Build(string objectName, ExportOptions options, CAnimSet animSet)
+    public IReadOnlyList<ExportFile> Build(string objectName, string objectPath, ExportOptions options, CAnimSet animSet)
     {
         var results = new List<ExportFile>(animSet.Sequences.Count);
         for (var i = 0; i < results.Capacity; i++)

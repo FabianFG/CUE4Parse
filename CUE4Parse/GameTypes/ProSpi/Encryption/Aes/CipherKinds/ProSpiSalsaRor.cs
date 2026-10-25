@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Numerics;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
 
@@ -14,9 +15,8 @@ public static partial class ProSpiEncryption
         for (var offset = 0; offset < payload.Length; offset += ChaChaBlockSize)
         {
             ProSpiSalsaRorBlock(state, spec.Rounds, block);
-            var blockSize = Math.Min(ChaChaBlockSize, payload.Length - offset);
-            for (var i = 0; i < blockSize; i++)
-                payload[offset + i] ^= block[i];
+            var len = offset + ChaChaBlockSize < payload.Length ? ChaChaBlockSize : payload.Length - offset;
+            TensorUtils.Xor(payload[offset..(offset + len)], block[..len]);
 
             if (++state[12] == 0)
                 state[13]++;

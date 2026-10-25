@@ -300,7 +300,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
         public FVector Abs() => new(MathF.Abs(X), MathF.Abs(Y), MathF.Abs(Z));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public float Size() => MathF.Sqrt(X * X + Y * Y + Z * Z);
+        public readonly float Size() => MathF.Sqrt(X * X + Y * Y + Z * Z);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float SizeSquared() => X * X + Y * Y + Z * Z;

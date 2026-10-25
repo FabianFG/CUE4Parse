@@ -37,12 +37,15 @@ public readonly struct FByteBulkDataHeader
     {
         CookedIndex = FBulkDataCookedIndex.Default;
 
-        if (Ar.Owner is IoPackage { BulkDataMap.Length: > 0 } iopkg)
+        // The bulk data map of the realm the export belongs to wins over the owner package's one.
+        // An optional segment has its own map, so using the package's would resolve wrong entries.
+        var bulkDataMap = Ar.BulkDataMap ?? (Ar.Owner as IoPackage)?.BulkDataMap;
+        if (bulkDataMap is { Length: > 0 })
         {
             var dataIndex = Ar.Read<int>();
-            if (dataIndex >= 0 && dataIndex < iopkg.BulkDataMap.Length)
+            if (dataIndex >= 0 && dataIndex < bulkDataMap.Length)
             {
-                var metaData = iopkg.BulkDataMap[dataIndex];
+                var metaData = bulkDataMap[dataIndex];
                 BulkDataFlags = (EBulkDataFlags) metaData.Flags;
                 ElementCount = (int) metaData.SerialSize;
                 SizeOnDisk = (uint) metaData.SerialSize; // ??
@@ -70,10 +73,30 @@ public readonly struct FByteBulkDataHeader
         }
 
         BulkDataFlags = Ar.Read<EBulkDataFlags>();
+        if (Ar.Game == GAME_APBReloaded && (BulkDataFlags & (EBulkDataFlags) 0x100) != 0)
+        {
+            BulkDataFlags &= ~(EBulkDataFlags) 0x100;
+            BulkDataFlags |= BULKDATA_ForceInlinePayload;
+        }
+
         ElementCount = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (int) Ar.Read<long>() : Ar.Read<int>();
         SizeOnDisk = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (uint) Ar.Read<long>() : Ar.Read<uint>();
-        OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
-        if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp)) // UE4.26 flag
+        if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22)
+        {
+            if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
+            {
+                OffsetInFile = Ar.Read<long>();
+            }
+            else
+            {
+                OffsetInFile = Ar.Position;
+            }
+        }
+        else
+        {
+            OffsetInFile = Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? Ar.Read<long>() : Ar.Read<int>();
+        }
+        if (!BulkDataFlags.HasFlag(BULKDATA_NoOffsetFixUp) && Ar.Owner is not null) // UE4.26 flag
         {
             OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;
         }
@@ -90,5 +113,7 @@ public readonly struct FByteBulkDataHeader
             Ar.Position += BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? sizeof(long) : sizeof(uint); // DuplicateSizeOnDisk
             Ar.Position += Ar.Ver >= EUnrealEngineObjectUE4Version.BULKDATA_AT_LARGE_OFFSETS ? sizeof(long) : sizeof(int); // DuplicateOffset
         }
+
+        if (Ar.Game == GAME_LetItDie) Ar.Position += 8;
     }
 }

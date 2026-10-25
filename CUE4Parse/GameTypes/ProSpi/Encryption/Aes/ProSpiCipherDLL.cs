@@ -11,7 +11,6 @@ public static partial class ProSpiEncryption
     private const string ProSpiDecryptorDllName = "ProSpiDecryptor";
 
     private static readonly object _cipherDllLock = new();
-    private static bool _cipherDllLoadAttempted;
     private static ProSpiDllDecryptDelegate? _cipherDecrypt;
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
@@ -56,15 +55,14 @@ public static partial class ProSpiEncryption
 
     private static ProSpiDllDecryptDelegate? GetDllDecrypt()
     {
-        if (_cipherDllLoadAttempted)
+        if (_cipherDecrypt != null)
             return _cipherDecrypt;
 
         lock (_cipherDllLock)
         {
-            if (_cipherDllLoadAttempted)
+            if (_cipherDecrypt != null)
                 return _cipherDecrypt;
 
-            _cipherDllLoadAttempted = true;
             if (!TryLoadCipherDll(out var handle, out var loadedPath))
             {
                 Log.Warning("ProSpi DLL unavailable: {DllName}", ProSpiDecryptorDllName);
@@ -79,6 +77,7 @@ public static partial class ProSpiEncryption
             }
 
             _cipherDecrypt = Marshal.GetDelegateForFunctionPointer<ProSpiDllDecryptDelegate>(export);
+
             Log.Information("ProSpi DLL loaded: {Path}", loadedPath);
             return _cipherDecrypt;
         }
@@ -137,11 +136,11 @@ public static partial class ProSpiEncryption
         if (string.IsNullOrEmpty(pakDirectory))
             return string.Empty;
 
-        var contentDirectory = Directory.GetParent(pakDirectory);
-        if (contentDirectory == null || !string.Equals(contentDirectory.Name, "Content", StringComparison.OrdinalIgnoreCase))
+        var parent = Directory.GetParent(pakDirectory);
+        if (parent == null || (!parent.Name.Equals("Content", StringComparison.OrdinalIgnoreCase) && !parent.Name.Equals("eBaseball PRO SPIRIT", StringComparison.OrdinalIgnoreCase)))
             return string.Empty;
 
-        var gameRoot = contentDirectory.Parent;
+        var gameRoot = parent.Name.Equals("Content", StringComparison.OrdinalIgnoreCase) ? parent.Parent : parent;
         if (gameRoot == null)
             return string.Empty;
 

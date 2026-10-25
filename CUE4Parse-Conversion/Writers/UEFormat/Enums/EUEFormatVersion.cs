@@ -12,6 +12,7 @@ public enum EUEFormatVersion
     SerializeAssetMetadata = 7,
     PreserveOriginalTransforms = 8,
     AddPoseExport = 9,
+    AttributeFormatRestructure = 10,
 
     VersionPlusOne,
     LatestVersion = VersionPlusOne - 1

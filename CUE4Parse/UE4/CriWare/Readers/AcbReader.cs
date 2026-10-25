@@ -1,11 +1,12 @@
+using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
+using SubstreamSharp;
 
-namespace CUE4Parse.UE4.CriWare.Readers;
+namespace CUE4Parse.UE4.Criware.Readers;
 
 [JsonConverter(typeof(AcbReaderConverter))]
 public sealed class AcbReader : IDisposable
 {
-    
     private readonly Stream _outerStream;
     private readonly long _offset;
     private readonly uint _awbOffset;
@@ -13,7 +14,9 @@ public sealed class AcbReader : IDisposable
 
     private readonly AcbParser _acbParser;
 
+    public string Name { get; }
     public Dictionary<string, List<Dictionary<string, object?>>> AtomCueSheetData => _acbParser.TableData;
+    public IReadOnlyDictionary<string, VLData> BinaryPayloads => _acbParser.BinaryPayloads;
 
     public AcbReader(Stream acbStream) : this(acbStream, 0) { }
 
@@ -28,6 +31,11 @@ public sealed class AcbReader : IDisposable
 
         if (rows != 1 || !name.Equals("Header"))
             throw new InvalidDataException("No Header table.");
+
+        var nameColumn = utfTable.GetColumn("Name");
+        Name = nameColumn >= 0 && utfTable.Query(0, nameColumn, out string acbName)
+            ? acbName
+            : Path.GetFileNameWithoutExtension((acbStream as FArchive)?.Name) ?? string.Empty;
 
         if (utfTable.Query(0, "AwbFile", out VLData awbValueData))
         {
@@ -55,7 +63,27 @@ public sealed class AcbReader : IDisposable
             return null;
         }
 
-        return new AwbReader(new SpliceStream(_outerStream, _awbOffset, _awbLength), true);
+        return new AwbReader(_outerStream.Substream(_awbOffset, _awbLength));
+    }
+
+    public bool TryGetBinaryPayload(string name, out byte[] data)
+    {
+        data = [];
+        if (!BinaryPayloads.TryGetValue(name, out var payload) || payload.Size > int.MaxValue || payload.Offset > _outerStream.Length - payload.Size)
+            return false;
+
+        var previousPosition = _outerStream.Position;
+        try
+        {
+            data = new byte[payload.Size];
+            _outerStream.Position = payload.Offset;
+            _outerStream.ReadExactly(data);
+            return true;
+        }
+        finally
+        {
+            _outerStream.Position = previousPosition;
+        }
     }
 
     public T? TryGetTableValue<T>(string tableName, string key) where T : class
@@ -90,8 +118,5 @@ public sealed class AcbReader : IDisposable
         return _acbParser.WaveformsFromCueId(cueId);
     }
 
-    public void Dispose()
-    {
-        _outerStream.Dispose();
-    }
+    public void Dispose() => _outerStream.Dispose();
 }

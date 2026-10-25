@@ -2,12 +2,11 @@ using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.GameTypes.PUBG.UE4.Lua;
 
-public class FGFPLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLua53Archive(name, data, versions)
+public class FGFPLuaArchive(string name, byte[] data) : FLua53Archive(name, data)
 {
     private readonly byte[] _stringKey =
     [
@@ -18,22 +17,22 @@ public class FGFPLuaArchive(string name, byte[] data, VersionContainer? versions
     ];
 
     // Strings are encrypted
-    public override string ReadLuaString()
+    public override byte[] ReadLuaStringBytes()
     {
         var sizeByte = Read<byte>();
         if (sizeByte == 0)
-            return string.Empty;
+            return [];
 
         var size = sizeByte == 0xFF ? Read<int>() : sizeByte;
         var length = size - 1;
 
         if (length <= 0)
-            return string.Empty;
+            return [];
 
         var buffer = ReadBytes(length);
         TensorUtils.Xor(buffer, _stringKey);
 
-        return Encoding.UTF8.GetString(buffer);
+        return buffer;
     }
 }
 
@@ -41,18 +40,8 @@ public class GameForPeaceLua
 {
     public static byte[] DecryptLuaBytecode(string name, byte[] encryptedData)
     {
-        using var Ar = new FGFPLuaArchive(name, encryptedData, null);
-
-        var lua = ReadBytecode(Ar);
-
-        using var msOut = new MemoryStream();
-        using (var writer = new FLua53ArchiveWriter(msOut))
-        {
-            FLuaWriter53.Write(writer, lua);
-            writer.Flush();
-        }
-
-        return msOut.ToArray();
+        using var Ar = new FGFPLuaArchive(name, encryptedData);
+        return new FLuaWriter53(ReadBytecode(Ar)).GetBuffer();
     }
 
     private static LuaBytecode ReadBytecode(FGFPLuaArchive Ar)
@@ -221,7 +210,8 @@ public class GameForPeaceLua
                 break;
             case 4:  // LUA_TSHRSTR
             case 20: // LUA_TLNGSTR
-                constant.StrData = Ar.ReadLuaString();
+                constant.Data = Ar.ReadLuaStringBytes();
+                constant.StrData = Encoding.UTF8.GetString(constant.Data);
                 break;
         }
 

@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers.USD;
@@ -16,7 +13,7 @@ public class UsdMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "USD Mesh (.usda)";
 
-    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, string objectPath, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
         var root = dto.ToSkelRoot();
@@ -46,7 +43,7 @@ public class UsdMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
+    public IReadOnlyList<ExportFile> BuildStaticMesh(string objectName, string objectPath, ExportOptions options, StaticMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
         var results = new List<ExportFile>();
 
@@ -68,7 +65,7 @@ public class UsdMeshFormat : IMeshExportFormat
         return results;
     }
 
-    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, ExportOptions options, SkeletonDto dto)
+    public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, string objectPath, ExportOptions options, SkeletonDto dto)
     {
         var root = dto.ToSkelRoot();
 
@@ -239,10 +236,14 @@ public class UsdMeshFormat : IMeshExportFormat
             uv[i] = UsdValue.Tuple(meshLod.Vertices[i].Uv.U, -meshLod.Vertices[i].Uv.V); // MIRROR_MESH
         }
 
-        var indices = new UsdValue[meshLod.Indices.Length];
-        for (var i = 0; i < indices.Length; i++)
+        var indexOffset = 0;
+        var indices = new UsdValue[meshLod.Sections.Sum(section => section.NumFaces) * 3];
+        foreach (var section in meshLod.Sections)
         {
-            indices[i] = UsdValue.Int((int) meshLod.Indices[i]);
+            foreach (var index in meshLod.Indices.AsSpan(section.FirstIndex, section.NumFaces * 3))
+            {
+                indices[indexOffset++] = UsdValue.Int((int) index);
+            }
         }
 
         lodPrim.Add(new UsdAttribute("point3f[]", "points", UsdValue.Array(points)));
@@ -278,6 +279,7 @@ public class UsdMeshFormat : IMeshExportFormat
             lodPrim.AddPrimvar("float[]", "primvars:displayOpacity", UsdValue.Array(opacities), "vertex");
         }
 
+        var faceOffset = 0;
         for (var i = 0; i < meshLod.Sections.Length; i++)
         {
             var subset = UsdPrim.Def("GeomSubset", $"Section_{i}");
@@ -285,7 +287,8 @@ public class UsdMeshFormat : IMeshExportFormat
             subset.Add(UsdAttribute.Uniform("token", "familyName", "materialBind"));
 
             var section = meshLod.Sections[i];
-            subset.Add(new UsdAttribute("int[]", "indices", UsdValue.Array(Enumerable.Range(section.FirstIndex / 3, section.NumFaces))));
+            subset.Add(new UsdAttribute("int[]", "indices", UsdValue.Array(Enumerable.Range(faceOffset, section.NumFaces))));
+            faceOffset += section.NumFaces;
             subset.Add(UsdAttribute.CustomUniform("int", "unrealMaterialIndex", section.MaterialIndex));
             subset.Add(UsdAttribute.CustomUniform("bool", "unrealCastShadow", section.CastShadow));
 

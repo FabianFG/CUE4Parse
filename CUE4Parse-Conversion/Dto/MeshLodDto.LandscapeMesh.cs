@@ -24,7 +24,8 @@ public partial class MeshLodDto<TVertex>
         // https://github.com/EpicGames/UnrealEngine/blob/5de4acb1f05e289620e0a66308ebe959a4d63468/Engine/Source/Editor/UnrealEd/Private/Fbx/FbxMainExport.cpp#L4657
         int minX = int.MaxValue, minY = int.MaxValue;
         int maxX = int.MinValue, maxY = int.MinValue;
-        var numFaces = components.Length * (componentSizeQuads * componentSizeQuads) * 2;
+        var facesPerComponent = componentSizeQuads * componentSizeQuads * 2;
+        var numFaces = components.Length * facesPerComponent;
         var indices = new List<uint>(numFaces * 3);
         for (var i = 0; i < components.Length; i++)
         {
@@ -155,6 +156,16 @@ public partial class MeshLodDto<TVertex>
             });
         }
 
+        var sections = new MeshSectionDto[components.Length];
+        for (var i = 0; i < components.Length; i++)
+        {
+            sections[i] = new MeshSectionDto(
+                index: i,
+                firstIndex: i * facesPerComponent * 3,
+                numFaces: facesPerComponent,
+                castShadow: false);
+        }
+
         bitmaps = bitmapTextures;
         heightmap = heightmapTexture;
         return new MeshLodDto<MeshVertex>(
@@ -162,7 +173,7 @@ public partial class MeshLodDto<TVertex>
             0,
             indices.ToArray(),
             vertices,
-            [new MeshSectionDto(0, 0, numFaces, false)],
+            sections,
             extraUvs,
             !weightmapColors.IsEmpty ? weightmapColors.Select(kvp => new MeshVertexColorDto(kvp.Key, kvp.Value)).ToArray() : null,
             1.0f);

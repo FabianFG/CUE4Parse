@@ -1954,6 +1954,22 @@
     "/Game/Fixtures/ControlRig/CR_Fixture",
     "/Game/Fixtures/Maps/WorldPartition/_Generated_/1WD4NAK7SVY0JF8AXYPOSA7U8"
   ],
+  "testContainerBulkPaths": [
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ADPCM.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_BinkAudio.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_Opus.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_PCM.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_PlatformSpecific.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_ProjectDefined.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Format_RADAudio.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Inline.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Audio/SW_Streaming.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Geometry/GeoCache_Fixture.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Meshes/SM_Nanite.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Textures/T_Streaming.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Textures/T_UDIM.ubulk",
+    "CUE4ParseFixtures/Content/Fixtures/Textures/T_Virtual.ubulk"
+  ],
   "uobjectTypes": [
     "/Script/CUE4ParseFixtures.ParserFixtureBaseData",
     "/Script/CUE4ParseFixtures.ParserFixtureData",

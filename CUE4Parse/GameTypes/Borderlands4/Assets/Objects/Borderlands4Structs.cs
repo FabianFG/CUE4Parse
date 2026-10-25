@@ -32,6 +32,7 @@ public static class Borderlands4Structs
             "DialogParameterValue" => new FDialogParameterValue(Ar),
             "DamageSourceContainer" => new FDamageSourceContainer(Ar),
             "GbxBlackboardEntryDefault" => new FGbxBlackboardEntryDefault(Ar),
+            "GbxExpressionVariablesContainer" => new FGbxExpressionVariablesContainer(Ar),
             "GbxBodyNodeSettings_SceneComponentInstanceData" => new FGbxInlineStruct(Ar),
 
             "NexusBitSet" or "DamageTags" or "GbxVenueTags"
@@ -137,4 +138,10 @@ public class FaceFXAnimId : IUStruct
         Group = fallback.GetOrDefault<FName>(nameof(Group));
         Name = fallback.GetOrDefault<FName>(nameof(Name));
     }
+}
+
+public class FGbxExpressionVariablesContainer(FAssetArchive Ar) : IUStruct
+{
+    public FFactExpression Expression = new FFactExpression(Ar);
+    public FStructFallback VariableContainer = new FStructFallback(Ar, "GbxExpressionVariablesContainer");
 }
