@@ -63,10 +63,10 @@ public static class FlipbookEncoder
 
     private static Image<Rgba32> ToImage(CFlipbookFrame frame, int width, int height)
     {
-        if (frame.Texture is not { } tex)
+        if (frame.Texture == null)
             return new Image<Rgba32>(width, height);
 
-        var src = tex.ToImage();
+        var src = frame.Texture.ToImage();
         if (src.Width == width && src.Height == height)
             return src;
 
