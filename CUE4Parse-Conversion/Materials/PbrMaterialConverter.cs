@@ -2,6 +2,7 @@ using System.Numerics;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse_Conversion.Options;
 using static CUE4Parse_Conversion.Materials.MaterialParameters;
 
 namespace CUE4Parse_Conversion.Materials;
@@ -43,7 +44,8 @@ internal static class PbrMaterialConverter
     private static Vector4 ResolveBaseColor(MaterialParameters parameters, EBlendMode blendMode)
     {
         var tint = Vector4.One;
-        if (parameters.GetBaseColorTint() is { } color)
+        var rules = new MeshExportRules(parameters.Source.Game);
+        if (rules.UseDiffuseColor && parameters.GetBaseColorTint() is { } color)
         {
             tint = new Vector4(Clamp(color.R), Clamp(color.G), Clamp(color.B), 1);
         }

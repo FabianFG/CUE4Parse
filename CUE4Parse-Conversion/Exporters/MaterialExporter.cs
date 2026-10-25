@@ -39,9 +39,10 @@ public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase
         var parameters = ReadParameters();
 
         var files = new List<ExportFile> { new JsonMaterialFormat().Build(ObjectName, parameters) };
-        if (Session.Options.MeshFormat == EMeshFormat.USD)
+        if (Session.Options.MeshFormat is EMeshFormat.USD)
         {
-            files.Add(new UsdMaterialFormat().Build(ObjectName, parameters, SaveDirectory));
+            var rules = new MeshExportRules(material.Game);
+            files.Add(new UsdMaterialFormat(rules.UseDiffuseColor).Build(ObjectName, parameters, SaveDirectory));
         }
 
         if (!Session.EmbedMaterials)
