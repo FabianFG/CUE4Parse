@@ -20,14 +20,11 @@ public static class SpriteDecoder
         {
             sheet = sourceTexture.Decode(platform);
             if (sheet == null) return null;
-
-            if (textureCache != null)
-                textureCache[cacheKey] = sheet;
+            textureCache?[cacheKey] = sheet;
         }
 
         var (x, y) = ((int)sprite.BakedSourceUV.X, (int)sprite.BakedSourceUV.Y);
-        var w = (int)sprite.BakedSourceDimension.X is var dimW && dimW > 0 ? dimW : sheet.Width - x;
-        var h = (int)sprite.BakedSourceDimension.Y is var dimH && dimH > 0 ? dimH : sheet.Height - y;
+        var (w, h) = ((int)sprite.BakedSourceDimension.X, (int)sprite.BakedSourceDimension.Y);
 
         pivot = sprite.BakedRenderData is [var v, ..]
             ? new FIntPoint(
