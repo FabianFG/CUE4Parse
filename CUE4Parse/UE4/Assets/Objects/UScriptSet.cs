@@ -12,7 +12,7 @@ public class UScriptSet
 {
     public readonly List<FPropertyTagType> Properties;
     // The elements a set saved against its defaults removes from them
-    public List<FPropertyTagType?> ElementsToRemove = [];
+    public IReadOnlyList<FPropertyTagType?> ElementsToRemove = [];
 
     public UScriptSet() => Properties = [];
 
@@ -62,9 +62,14 @@ public class UScriptSet
         if (readType != ReadType.RAW)
         {
             var numElementsToRemove = Ar.Read<int>();
-            for (var i = 0; i < numElementsToRemove; i++)
+            if (numElementsToRemove > 0)
             {
-                ElementsToRemove.Add(FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY));
+                var elementsToRemove = new List<FPropertyTagType?>(numElementsToRemove);
+                for (var i = 0; i < numElementsToRemove; i++)
+                {
+                    elementsToRemove.Add(FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY));
+                }
+                ElementsToRemove = elementsToRemove;
             }
         }
         if (Ar.Game is GAME_AshesOfCreation && Ar is FAoCDBCReader) Ar.Position += 4;

@@ -14,7 +14,9 @@ public class UScriptMap
 {
     public Dictionary<FPropertyTagType, FPropertyTagType?> Properties;
     // The keys a map saved against its defaults removes from them
-    public List<FPropertyTagType?> KeysToRemove = [];
+    public IReadOnlyList<FPropertyTagType?> KeysToRemove = [];
+    // UE writes -1 as the removal count when the map replaces its defaults instead of patching them
+    public bool ReplacesDefaults;
 
     public UScriptMap() => Properties = [];
 
@@ -56,9 +58,15 @@ public class UScriptMap
         if (readType != ReadType.RAW)
         {
             var numKeysToRemove = Ar.Read<int>();
-            for (var i = 0; i < numKeysToRemove; i++)
+            ReplacesDefaults = numKeysToRemove == -1;
+            if (numKeysToRemove > 0)
             {
-                KeysToRemove.Add(FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP));
+                var keysToRemove = new List<FPropertyTagType?>(numKeysToRemove);
+                for (var i = 0; i < numKeysToRemove; i++)
+                {
+                    keysToRemove.Add(FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP));
+                }
+                KeysToRemove = keysToRemove;
             }
         }
 
