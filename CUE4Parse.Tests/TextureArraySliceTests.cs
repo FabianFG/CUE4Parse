@@ -1,6 +1,5 @@
 using AssetRipper.TextureDecoder.Bc;
 using AssetRipper.TextureDecoder.Rgb.Formats;
-using CUE4Parse.UE4.Exceptions;
 using CUE4Parse_Conversion.Textures;
 
 namespace CUE4Parse.Tests;
@@ -73,11 +72,22 @@ public class TextureArraySliceTests
     [InlineData("BC1")]
     [InlineData("BC4")]
     [InlineData("BC7")]
-    public void TruncatedArraysAreRejected(string format)
+    public void TruncatedArraysKeepTheirCompleteSlices(string format)
     {
-        var (blockBytes, decode, _) = Formats[format];
-        var bytes = new byte[SliceBytes(4, 4, blockBytes) * 3 - 1];
+        var (blockBytes, decode, reference) = Formats[format];
+        var sliceBytes = SliceBytes(4, 4, blockBytes);
+        var bytes = new byte[sliceBytes * 3 - 1];
+        new Random(blockBytes).NextBytes(bytes);
 
-        Assert.Throws<ParserException>(() => TextureDecoder.DecodeSlices(bytes, 4, 4, 3, blockBytes, decode));
+        var decoded = TextureDecoder.DecodeSlices(bytes, 4, 4, 3, blockBytes, decode);
+
+        const int pixelBytes = 4 * 4 * 4;
+        Assert.Equal(pixelBytes * 3, decoded.Length);
+        for (var z = 0; z < 2; z++)
+        {
+            reference(bytes[(z * sliceBytes)..((z + 1) * sliceBytes)], 4, 4, out var expected);
+            Assert.Equal(expected, decoded[(z * pixelBytes)..((z + 1) * pixelBytes)]);
+        }
+        Assert.All(decoded[(2 * pixelBytes)..], value => Assert.Equal(0, value));
     }
 }

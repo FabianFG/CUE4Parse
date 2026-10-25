@@ -315,11 +315,13 @@ public static class TextureDecoder
         }
 
         var sliceBytes = (sizeX + 3) / 4 * ((sizeY + 3) / 4) * blockBytes;
-        if ((long) sliceBytes * sizeZ > bytes.Length)
-            throw new ParserException($"Texture array mip is truncated: {sizeZ} slices of {sizeX}x{sizeY} need {(long) sliceBytes * sizeZ} bytes, got {bytes.Length}");
+        var availableSlices = Math.Min(sizeZ, bytes.Length / sliceBytes);
+        if (availableSlices < sizeZ)
+            Log.Warning("Texture array mip is truncated: {SizeZ} slices of {SizeX}x{SizeY} need {Needed} bytes, got {Length}, leaving {Missing} slices empty",
+                sizeZ, sizeX, sizeY, (long) sliceBytes * sizeZ, bytes.Length, sizeZ - availableSlices);
 
         var output = new byte[pixelBytes * sizeZ];
-        for (var z = 0; z < sizeZ; z++)
+        for (var z = 0; z < availableSlices; z++)
         {
             decode(bytes.AsSpan(z * sliceBytes, sliceBytes), sizeX, sizeY, output.AsSpan(z * pixelBytes, pixelBytes));
         }
