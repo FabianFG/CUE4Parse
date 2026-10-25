@@ -28,9 +28,9 @@ public static class SpriteDecoder
 
         pivot = sprite.BakedRenderData is [var v, ..]
             ? new FIntPoint(
-                (int)MathF.Round(v.Z * sheet.Width - x - v.X * sprite.PixelsPerUnrealUnit),
-                (int)MathF.Round(v.W * sheet.Height - y + v.Y * sprite.PixelsPerUnrealUnit))
-            : new FIntPoint(w / 2, h / 2);
+                UnrealMathSSE.RoundToInt(v.Z * sheet.Width - x - v.X * sprite.PixelsPerUnrealUnit),
+                UnrealMathSSE.RoundToInt(v.W * sheet.Height - y + v.Y * sprite.PixelsPerUnrealUnit))
+            : new FIntPoint((w + 1) / 2, (h + 1) / 2);
 
         return sheet.Crop(x, y, w, h);
     }
