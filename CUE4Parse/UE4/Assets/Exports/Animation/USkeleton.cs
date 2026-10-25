@@ -53,10 +53,7 @@ public class USkeleton : UObject
             AnimRetargetSources = new Dictionary<FName, FReferencePose>(numOfRetargetSources);
             for (var i = 0; i < numOfRetargetSources; i++)
             {
-                var name = Ar.ReadFName();
-                var pose = new FReferencePose(Ar);
-                ReferenceSkeleton.AdjustBoneScales(pose.ReferencePose);
-                AnimRetargetSources[name] = pose;
+                AnimRetargetSources[Ar.ReadFName()] = new FReferencePose(Ar);
             }
         }
         else

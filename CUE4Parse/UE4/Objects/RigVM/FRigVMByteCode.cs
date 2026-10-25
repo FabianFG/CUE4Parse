@@ -8,7 +8,6 @@ namespace CUE4Parse.UE4.Objects.RigVM;
 
 public class FRigVMByteCode
 {
-    
     public List<IRigInstruction> Instructions = [];
     public string[] Entries = [];
     public FRigVMBranchInfo[] BranchInfos = [];
@@ -95,6 +94,7 @@ public class FRigVMByteCode
             ERigVMOpCode.InvokeEntry => new FRigVMInvokeEntryOp(Ar),
             ERigVMOpCode.JumpToBranch => Ar.Read<FRigVMJumpToBranchOp>(),
             ERigVMOpCode.RunInstructions => Ar.Read<FRigVMRunInstructionsOp>(),
+            ERigVMOpCode.InvokeCallable => new FRigVMInvokeCallableOp(Ar),
             _ => new FRigVMBaseOp(opCode),
         };
         return op;
@@ -113,12 +113,13 @@ public class FRigVMCallableArgument(FArchive Ar)
 public class FRigVMCallableInfo(FArchive Ar)
 {
     public int Index = Ar.Read<int>();
-    public FName Name = Ar.ReadFString();
+    public FName Name = Ar.ReadFName();
     public uint FunctionHash = Ar.Read<uint>();
     public FRigVMCallableArgument[] Arguments = Ar.ReadArray(() => new FRigVMCallableArgument(Ar));
     public int FirstInstruction = Ar.Read<int>();
     public int LastInstruction = Ar.Read<int>();
 }
+
 public readonly struct FRigVMBranchInfo
 {
     public readonly int Index;
@@ -347,4 +348,29 @@ public readonly struct FRigVMRunInstructionsOp : IRigInstruction
     public readonly FRigVMOperand Arg;
     public readonly int StartInstruction;
     public readonly int EndInstruction;
+}
+
+struct FRigVMInvokeCallableOp : IRigInstruction
+{
+    public readonly ERigVMOpCode OpCode;
+    public readonly ushort CallableIndex;
+    public readonly ushort ArgumentCount;
+    public readonly FRigVMOperand[] Arguments;
+
+    public FRigVMInvokeCallableOp(FArchive Ar)
+    {
+        OpCode = Ar.Read<ERigVMOpCode>();
+        CallableIndex = Ar.Read<ushort>();
+        // backwards compatibility for old opcodes
+        if(OpCode <= ERigVMOpCode.Execute_64_Operands)
+        {
+            ArgumentCount = (ushort) OpCode;
+            OpCode = ERigVMOpCode.Execute;
+        }
+        else
+        {
+            ArgumentCount = Ar.Read<ushort>();
+        }
+        Arguments = Ar.ReadArray<FRigVMOperand>(ArgumentCount);
+    }
 }

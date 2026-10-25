@@ -1,19 +1,20 @@
 ﻿using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material
 {
     public class CMaterialParams
     {
         // textures
-        public UUnrealMaterial? Diffuse = null;
-        public UUnrealMaterial? Normal = null;
-        public UUnrealMaterial? Specular = null;
-        public UUnrealMaterial? SpecPower = null;
-        public UUnrealMaterial? Opacity = null;
-        public UUnrealMaterial? Emissive = null;
-        public UUnrealMaterial? Cube = null;
-        public UUnrealMaterial? Mask = null; // multiple mask textures baked into a single one
-        public UUnrealMaterial? Misc = null; // M
+        public FPackageIndex? Diffuse = null;
+        public FPackageIndex? Normal = null;
+        public FPackageIndex? Specular = null;
+        public FPackageIndex? SpecPower = null;
+        public FPackageIndex? Opacity = null;
+        public FPackageIndex? Emissive = null;
+        public FPackageIndex? Cube = null;
+        public FPackageIndex? Mask = null; // multiple mask textures baked into a single one
+        public FPackageIndex? Misc = null; // M
 
         public bool IsTransparent = false;
         public bool HasTopDiffuseTexture = false;
@@ -46,7 +47,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public bool IsNull => Diffuse == null && Normal == null && Specular == null && SpecPower == null &&
                               Opacity == null && Emissive == null && Cube == null && Mask == null && Misc == null;
 
-        public void AppendAllTextures(IList<UUnrealMaterial> outTextures)
+        public void AppendAllTextures(IList<FPackageIndex> outTextures)
         {
             if (Diffuse != null) outTextures.Add(Diffuse);
             if (Normal != null) outTextures.Add(Normal);

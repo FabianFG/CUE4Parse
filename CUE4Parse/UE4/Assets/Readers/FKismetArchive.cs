@@ -16,15 +16,23 @@ namespace CUE4Parse.UE4.Assets.Readers;
 public class FKismetArchive : FArchive
 {
     private readonly byte[] _data;
+    private readonly FNameEntrySerialized[]? _nameMap;
     public readonly IPackage Owner;
     public int Index;
 
-    public FKismetArchive(string name, byte[] data, IPackage owner, VersionContainer? versions = null) : base(versions)
+    /// <summary>
+    /// Ordinal of the save realm the script bytecode was read from. See <see cref="FAssetArchive"/>.
+    /// </summary>
+    public readonly int RealmIndex;
+
+    public FKismetArchive(string name, byte[] data, IPackage owner, VersionContainer? versions = null, FNameEntrySerialized[]? nameMap = null, int realmIndex = 0) : base(versions)
     {
         _data = data;
         Name = name;
         Owner = owner;
         Length = _data.Length;
+        _nameMap = nameMap;
+        RealmIndex = realmIndex;
     }
 
     public KismetExpression ReadExpression()
@@ -198,12 +206,13 @@ public class FKismetArchive : FArchive
         }
         Index += 4;
 #if !NO_FNAME_VALIDATION
-        if (nameIndex < 0 || nameIndex >= Owner.NameMap.Length)
+        var nameMap = _nameMap ?? Owner.NameMap;
+        if (nameIndex < 0 || nameIndex >= nameMap.Length)
         {
-            throw new ParserException(this, $"FName could not be read, requested index {nameIndex}, name map size {Owner.NameMap.Length}");
+            throw new ParserException(this, $"FName could not be read, requested index {nameIndex}, name map size {nameMap.Length}");
         }
 #endif
-        return new FName(Owner.NameMap[nameIndex], nameIndex, extraIndex);
+        return new FName((_nameMap ?? Owner.NameMap)[nameIndex], nameIndex, extraIndex);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -244,12 +253,12 @@ public class FKismetArchive : FArchive
             SeekOrigin.Begin => offset,
             SeekOrigin.Current => Position + offset,
             SeekOrigin.End => Length + offset,
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(origin))
         };
         return Position;
     }
 
-    public override bool CanSeek { get; } = true;
+    public override bool CanSeek => true;
     public override long Length { get; }
     public override long Position { get; set; }
     public override string Name { get; }
@@ -264,5 +273,5 @@ public class FKismetArchive : FArchive
         return result;
     }
 
-    public override object Clone() => new FKismetArchive(Name, _data, Owner, Versions) {Position = Position};
+    public override object Clone() => new FKismetArchive(Name, _data, Owner, Versions, _nameMap, RealmIndex) {Position = Position};
 }

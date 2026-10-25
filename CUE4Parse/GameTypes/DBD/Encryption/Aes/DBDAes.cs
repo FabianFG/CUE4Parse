@@ -9,7 +9,7 @@ namespace CUE4Parse.GameTypes.DBD.Encryption.Aes;
 
 public static class DBDAes
 {
-    public static byte[] DbDDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] DbDDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         var aesKey = reader.AesKey;
         if (aesKey is null)

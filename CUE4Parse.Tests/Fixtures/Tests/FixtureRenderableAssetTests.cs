@@ -71,9 +71,9 @@ public class FixtureRenderableAssetTests
             "CUE4ParseFixtures/Content/Fixtures/Materials/MI_Fixture.uasset",
             "MI_Fixture");
 
-        var parent = Assert.IsType<UMaterial>(instance.Parent);
+        var parent = Assert.IsType<UMaterial>(instance.Parent?.Load());
         Assert.Equal("M_Fixture", parent.Name);
-        Assert.Contains(parent.ReferencedTextures, texture => texture.Name == "T_BC3");
+        Assert.Contains(parent.ReferencedTextures, texture => texture?.Name == "T_BC3");
 
         var scalar = Assert.Single(instance.ScalarParameterValues);
         Assert.Equal("FixtureRoughness", scalar.Name);
@@ -87,7 +87,7 @@ public class FixtureRenderableAssetTests
 
         var texture = Assert.Single(instance.TextureParameterValues);
         Assert.Equal("FixtureTexture", texture.Name);
-        Assert.Equal("T_BC3", Assert.IsType<UTexture2D>(texture.ParameterValue.Load<UTexture2D>()).Name);
+        Assert.Equal("T_BC3", Assert.IsType<UTexture2D>(texture.ParameterValue?.Load()).Name);
 
         var staticSwitch = Assert.Single(Assert.IsType<FStaticParameterSet>(instance.StaticParameters).StaticSwitchParameters);
         Assert.Equal("UseAlternateColor", staticSwitch.Name);
@@ -117,7 +117,7 @@ public class FixtureRenderableAssetTests
         Assert.Equal((0.9f, 0.15f, 0.05f, 1.0f),
             (parameters.Colors["AlternateColor"].R, parameters.Colors["AlternateColor"].G,
                 parameters.Colors["AlternateColor"].B, parameters.Colors["AlternateColor"].A));
-        Assert.Equal("T_BC3", Assert.IsType<UTexture2D>(parameters.Textures["FixtureTexture"]).Name);
+        Assert.Equal("T_BC3", Assert.IsType<UTexture2D>(parameters.Textures["FixtureTexture"].Load()).Name);
 
         // The minimal UE6 repack intentionally contains no inline or library shader payloads.
         if (FixtureGame < EGame.GAME_UE6_0)

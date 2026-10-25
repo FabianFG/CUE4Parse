@@ -1,3 +1,4 @@
+using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 
 namespace CUE4Parse.UE4.Lua.Readers;
@@ -5,6 +6,20 @@ namespace CUE4Parse.UE4.Lua.Readers;
 // Standard Lua 5.4 bytecode reader
 public static class FLua54Reader
 {
+    public static readonly LuaHeader DefaultHeader = new()
+    {
+        Signature = FLuaReader.LUA_SIGNATURE,
+        Version = 0x54,
+        Format = FLuaReader.LUAC_FORMAT,
+        LuacData = FLuaReader.LUAC_DATA,
+        InstructionSize = 4,
+        IntegerSize = 8,
+        NumberSize = 8,
+        LuacInt = FLuaReader.LUAC_INT,
+        LuacNum = FLuaReader.LUAC_NUM,
+        Closure = 1
+    };
+
     public static LuaBytecode ReadLuaBytecode(FLua54Archive Ar, Dictionary<byte, byte>? opcodeMapping = null) => new()
     {
         Header = ReadHeader(Ar),
@@ -84,7 +99,8 @@ public static class FLua54Reader
                 break;
             case 4:  // Short String
             case 20: // Long String
-                constant.StrData = Ar.ReadLuaString();
+                constant.Data = Ar.ReadLuaStringBytes();
+                constant.StrData = Encoding.UTF8.GetString(constant.Data);
                 break;
         }
 

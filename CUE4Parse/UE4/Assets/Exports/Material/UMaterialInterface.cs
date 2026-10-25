@@ -67,10 +67,10 @@ public class UMaterialInterface : UUnrealMaterial
 
     public override void GetParams(CMaterialParams parameters)
     {
-        if (FlattenedTexture?.TryLoad<UTexture>(out var flattenedTexture) == true) parameters.Diffuse = flattenedTexture;
-        if (MobileBaseTexture?.TryLoad<UTexture>(out var mobileBaseTexture) == true) parameters.Diffuse = mobileBaseTexture;
-        if (MobileNormalTexture?.TryLoad<UTexture>(out var mobileNormalTexture) == true) parameters.Normal = mobileNormalTexture;
-        if (MobileMaskTexture?.TryLoad<UTexture>(out var mobileMaskTexture) == true) parameters.Opacity = mobileMaskTexture;
+        if (FlattenedTexture != null) parameters.Diffuse = FlattenedTexture;
+        if (MobileBaseTexture != null) parameters.Diffuse = MobileBaseTexture;
+        if (MobileNormalTexture != null) parameters.Normal = MobileNormalTexture;
+        if (MobileMaskTexture != null) parameters.Opacity = MobileMaskTexture;
         parameters.UseMobileSpecular = bUseMobileSpecular;
         parameters.MobileSpecularPower = MobileSpecularPower;
         parameters.MobileSpecularMask = MobileSpecularMask;
@@ -78,17 +78,17 @@ public class UMaterialInterface : UUnrealMaterial
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialDepth depth)
     {
-        if (FlattenedTexture?.TryLoad<UTexture>(out var flattenedTexture) == true)
-            parameters.VerifyTexture("Diffuse", flattenedTexture, false);
-        if (MobileBaseTexture?.TryLoad<UTexture>(out var mobileBaseTexture) == true)
-            parameters.VerifyTexture("Diffuse", mobileBaseTexture, false);
-        if (MobileNormalTexture?.TryLoad<UTexture>(out var mobileNormalTexture) == true)
-            parameters.VerifyTexture("Normal", mobileNormalTexture, false);
+        if (FlattenedTexture != null)
+            parameters.VerifyTexture("Diffuse", FlattenedTexture, false);
+        if (MobileBaseTexture != null)
+            parameters.VerifyTexture("Diffuse", MobileBaseTexture, false);
+        if (MobileNormalTexture != null)
+            parameters.VerifyTexture("Normal", MobileNormalTexture, false);
 
         for (int i = 0; i < TextureStreamingData.Length; i++)
         {
             var name = TextureStreamingData[i].TextureName.Text;
-            if (!parameters.TryGetTexture2d(out var texture, name))
+            if (!parameters.Textures.TryGetValue(name, out var texture))
                 continue;
 
             parameters.VerifyTexture(name, texture, false);
@@ -132,10 +132,7 @@ public class UMaterialInterface : UUnrealMaterial
         {
             for (int i = 0; i < textureParameterInfos.Length; i++)
             {
-                var name = textureParameterInfos[i].Name.Text;
-                if (!textureValues[i].TryLoad(out UTexture texture)) continue;
-
-                parameters.VerifyTexture(name, texture);
+                parameters.VerifyTexture(textureParameterInfos[i].Name.Text, textureValues[i]);
             }
         }
     }
@@ -163,10 +160,7 @@ public class UMaterialInterface : UUnrealMaterial
         {
             for (int i = 0; i < textureParameterInfos.Length; i++)
             {
-                var name = textureParameterInfos[i].Name.Text;
-                if (!textureValues[i].TryLoad(out UTexture texture)) continue;
-
-                parameters.VerifyTexture(name, texture);
+                parameters.VerifyTexture(textureParameterInfos[i].Name.Text, textureValues[i]);
             }
         }
     }

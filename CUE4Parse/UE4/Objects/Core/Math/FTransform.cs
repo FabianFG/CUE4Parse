@@ -78,6 +78,11 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             SetFromMatrix(new FMatrix(inX, inY, inZ, inW));
         }
 
+        public FTransform(FMatrix matrix)
+        {
+            SetFromMatrix(matrix);
+        }
+
         public void SetFromMatrix(FMatrix inMatrix)
         {
             FMatrix m = new(inMatrix);

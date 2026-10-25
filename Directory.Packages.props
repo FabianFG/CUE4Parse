@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="AssetRipper.TextureDecoder" Version="2.6.2" />
+    <PackageVersion Include="Berrysoft.XXTea" Version="4.0.9" />
     <PackageVersion Include="Blake3" Version="3.0.2" />
     <PackageVersion Include="BouncyCastle.Cryptography" Version="2.6.2" />
     <PackageVersion Include="FixedMathSharp" Version="4.0.1" />
