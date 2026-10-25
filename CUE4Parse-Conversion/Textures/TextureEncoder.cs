@@ -4,8 +4,6 @@ using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using OffiUtils;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Tga;

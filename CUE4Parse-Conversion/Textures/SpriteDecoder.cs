@@ -40,9 +40,10 @@ public static class SpriteDecoder
         if (w <= 0 || h <= 0)
             (u, v, w, h) = (0, 0, importedWidth, importedHeight);
 
-        // Sprite sheets can be split into fractional cells, rounding only the size keeps every frame equally large
-        var x0 = Math.Clamp((int) MathF.Floor(u * scaleX), 0, sheet.Width - 1);
-        var y0 = Math.Clamp((int) MathF.Floor(v * scaleY), 0, sheet.Height - 1);
+        // Sprite sheets can be split into fractional cells. Rounding the origin and the size separately picks the texels
+        // UE samples and keeps every frame equally large.
+        var x0 = Math.Clamp(UnrealMathSSE.RoundToInt(u * scaleX), 0, sheet.Width - 1);
+        var y0 = Math.Clamp(UnrealMathSSE.RoundToInt(v * scaleY), 0, sheet.Height - 1);
         var cropWidth = Math.Clamp(UnrealMathSSE.RoundToInt(w * scaleX), 1, sheet.Width - x0);
         var cropHeight = Math.Clamp(UnrealMathSSE.RoundToInt(h * scaleY), 1, sheet.Height - y0);
         var crop = sheet.Crop(x0, y0, cropWidth, cropHeight);

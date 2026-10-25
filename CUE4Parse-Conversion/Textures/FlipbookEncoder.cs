@@ -12,13 +12,14 @@ namespace CUE4Parse_Conversion.Textures;
 public static class FlipbookEncoder
 {
     public static byte[] Encode(this CFlipbook flipbook, ExportOptions options, out string ext, CancellationToken cancellationToken = default) =>
-        flipbook.Encode(options.TextureFormat, out ext, options.TextureQuality, cancellationToken: cancellationToken);
+        flipbook.Encode(options.TextureFormat, out ext, options.TextureQuality, options.PngCompressionLevel, cancellationToken: cancellationToken);
 
     /// <summary>
     /// Encodes the flipbook as an animated WebP, or as an animated PNG for every other format, since JPEG and TGA can't
     /// hold animations. A flipbook without a positive frame rate only shows its first frame, so that becomes a still image.
     /// </summary>
-    public static byte[] Encode(this CFlipbook flipbook, ETextureFormat format, out string ext, int quality = 100, uint loopCount = 0, CancellationToken cancellationToken = default)
+    public static byte[] Encode(this CFlipbook flipbook, ETextureFormat format, out string ext, int quality = 100,
+        int pngCompressionLevel = 3, uint loopCount = 0, CancellationToken cancellationToken = default)
     {
         using var image = flipbook.ToImage(loopCount, cancellationToken);
         using var ms = new MemoryStream();
@@ -35,7 +36,7 @@ public static class FlipbookEncoder
         else
         {
             ext = "png";
-            image.SaveAsPng(ms);
+            image.SaveAsPng(ms, new PngEncoder { CompressionLevel = (PngCompressionLevel) Math.Clamp(pngCompressionLevel, 0, 9) });
         }
         return ms.ToArray();
     }
