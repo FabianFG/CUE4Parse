@@ -22,11 +22,11 @@ public enum ESpyjinxRarity : byte
 }
 public static class RarityUtil
 {
-    private static readonly FText _legendary = new FText("Spyjinx.Rarity", "Legendary", "4");
-    private static readonly FText _epic = new FText("Spyjinx.Rarity", "Epic", "3");
-    private static readonly FText _rare = new FText("Spyjinx.Rarity", "Rare", "2");
-    private static readonly FText _uncommon = new FText("Fort.Rarity", "Uncommon", "1");
-    private static readonly FText _common = new FText("Fort.Rarity", "Common", "0");
+    private static readonly FText _legendary = new FText("Spyjinx.Rarity", "Legendary", "Legendary");
+    private static readonly FText _epic = new FText("Spyjinx.Rarity", "Epic", "Epic");
+    private static readonly FText _rare = new FText("Spyjinx.Rarity", "Rare", "Rare");
+    private static readonly FText _uncommon = new FText("Spyjinx.Rarity", "Uncommon", "Uncommon");
+    private static readonly FText _common = new FText("Spyjinx.Rarity", "Common", "Common");
 
     public static FText GetNameText(this ESpyjinxRarity rarity) => rarity switch
     {
@@ -35,6 +35,6 @@ public static class RarityUtil
         ESpyjinxRarity.Epic => _epic,
         ESpyjinxRarity.Rare => _rare,
         ESpyjinxRarity.Common => _common,
-        _ => _uncommon
+        _ => _common
     };
 }
