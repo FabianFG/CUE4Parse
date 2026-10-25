@@ -4,6 +4,8 @@ using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using OffiUtils;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
 
 namespace CUE4Parse_Conversion.Textures;
@@ -283,7 +285,7 @@ public static class TextureEncoder
         var dataSpan = new ReadOnlySpan<byte>(texture.Data);
         var convertedData = nint.Zero;
 
-        SKColorType skColorType = SKColorType.Rgba8888;
+        var skColorType = SKColorType.Rgba8888;
         switch (texture.PixelFormat)
         {
             case EPixelFormat.PF_R8G8B8A8:
@@ -296,44 +298,70 @@ public static class TextureEncoder
             case EPixelFormat.PF_G8:
                 skColorType = SKColorType.Gray8;
                 break;
-            case EPixelFormat.PF_FloatRGB:
-            case EPixelFormat.PF_FloatRGBA:
-                convertedData = ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8);
-                break;
-            case EPixelFormat.PF_R32_FLOAT:
-            case EPixelFormat.PF_R32G32B32F:
-                convertedData = ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8);
-                break;
-            case EPixelFormat.PF_A32B32G32R32F:
-                convertedData = ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, true);
-                break;
-            case EPixelFormat.PF_A16B16G16R16:
-                convertedData = ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, true);
-                break;
-            case EPixelFormat.PF_G16:
-                convertedData = ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8);
-                break;
-            case EPixelFormat.PF_G16R16:
-                convertedData = ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, true);
-                break;
-            case EPixelFormat.PF_G16R16F:
-                convertedData = ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, true);
-                break;
-            case EPixelFormat.PF_G32R32F:
-                convertedData = ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, true);
-                break;
-            case EPixelFormat.PF_R16F:
-                convertedData = ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8);
-                break;
-            case EPixelFormat.PF_V8U8:
-                convertedData = ConvertV8U8ToRGBA(texture.Width, texture.Height, dataSpan);
-                break;
             default:
-                throw new NotImplementedException("Unsupported pixel format: " + texture.PixelFormat);
+                ConvertToRgba8(texture, out convertedData);
+                break;
         }
 
         var info = new SKImageInfo(texture.Width, texture.Height, skColorType, SKAlphaType.Unpremul);
         return InstallPixels(dataSpan, convertedData, info);
+    }
+
+    public static Image<Rgba32> ToImage(this CTexture texture)
+    {
+        switch (texture.PixelFormat)
+        {
+            case EPixelFormat.PF_R8G8B8A8:
+                return Image.LoadPixelData<Rgba32>(texture.Data, texture.Width, texture.Height);
+            case EPixelFormat.PF_A8R8G8B8:
+            case EPixelFormat.PF_B8G8R8A8:
+            {
+                using var bgra = Image.LoadPixelData<Bgra32>(texture.Data, texture.Width, texture.Height);
+                return bgra.CloneAs<Rgba32>();
+            }
+            case EPixelFormat.PF_R8:
+            case EPixelFormat.PF_G8:
+            {
+                using var gray = Image.LoadPixelData<L8>(texture.Data, texture.Width, texture.Height);
+                return gray.CloneAs<Rgba32>();
+            }
+            default:
+            {
+                var span = ConvertToRgba8(texture, out var ptr);
+                var image = Image.LoadPixelData<Rgba32>(span, texture.Width, texture.Height);
+                MemoryUtils.NativeFree(ptr);
+                return image;
+            }
+        }
+    }
+
+    private static Span<byte> ConvertToRgba8(CTexture texture, out nint ptr)
+    {
+        var dataSpan = new ReadOnlySpan<byte>(texture.Data);
+        return texture.PixelFormat switch
+        {
+            EPixelFormat.PF_FloatRGB or EPixelFormat.PF_FloatRGBA =>
+                ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, out ptr),
+            EPixelFormat.PF_R32_FLOAT or EPixelFormat.PF_R32G32B32F =>
+                ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, out ptr),
+            EPixelFormat.PF_A32B32G32R32F =>
+                ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, out ptr, true),
+            EPixelFormat.PF_A16B16G16R16 =>
+                ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, out ptr, true),
+            EPixelFormat.PF_G16 =>
+                ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, out ptr),
+            EPixelFormat.PF_G16R16 =>
+                ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, out ptr, true),
+            EPixelFormat.PF_G16R16F =>
+                ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, out ptr, true),
+            EPixelFormat.PF_G32R32F =>
+                ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, out ptr, true),
+            EPixelFormat.PF_R16F =>
+                ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, out ptr),
+            EPixelFormat.PF_V8U8 =>
+                ConvertV8U8ToRGBA(texture.Width, texture.Height, dataSpan, out ptr),
+            _ => throw new NotImplementedException("Unsupported pixel format: " + texture.PixelFormat)
+        };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -354,12 +382,12 @@ public static class TextureEncoder
         return (byte)Math.Clamp((float)value * 255.0f, 0, byte.MaxValue);
     }
 
-    private static unsafe nint ConvertV8U8ToRGBA(int width, int height, ReadOnlySpan<byte> data)
+    private static unsafe Span<byte> ConvertV8U8ToRGBA(int width, int height, ReadOnlySpan<byte> data, out nint retPtr)
     {
         int pixelCount = width * height;
         const int bytesPerPixel = 4;
 
-        MemoryUtils.NativeAlloc<byte>(pixelCount * bytesPerPixel, out var retPtr);
+        var span = MemoryUtils.NativeAlloc<byte>(pixelCount * bytesPerPixel, out retPtr);
         byte* dst = (byte*)retPtr;
 
         for (int i = 0; i < pixelCount; i++)
@@ -378,17 +406,17 @@ public static class TextureEncoder
             dst[offset + 3] = 255;
         }
 
-        return retPtr;
+        return span;
     }
 
-    private static unsafe nint ConvertTo8<T>(EPixelFormat pixelFormat, int width, int height, ReadOnlySpan<byte> inp, Func<T, byte> conversionFunc, bool flipOrder = false)
+    private static unsafe Span<byte> ConvertTo8<T>(EPixelFormat pixelFormat, int width, int height, ReadOnlySpan<byte> inp, Func<T, byte> conversionFunc, out nint retPtr, bool flipOrder = false)
     {
         if (!PixelFormatUtils.PixelFormats.TryGetValue(pixelFormat, out var formatInfo))
             throw new NotImplementedException("Unsupported pixel format: " + pixelFormat);
         int channelCount = formatInfo.NumComponents;
 
         //(4 bytes per pixel for RGBA)
-        MemoryUtils.NativeAlloc<byte>(width * height * 4, out var retPtr);
+        var span = MemoryUtils.NativeAlloc<byte>(width * height * 4, out retPtr);
 
         fixed (byte* inpPtr = inp)
         {
@@ -410,7 +438,7 @@ public static class TextureEncoder
                 }
             }
         }
-        return retPtr;
+        return span;
     }
 
     private static unsafe void FillMissingChannels(ref byte* outPtr, int channelCount)
