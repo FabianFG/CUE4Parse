@@ -4,13 +4,24 @@ public static class UsmapProperties
 {
     public static Struct ParseStruct(TypeMappings context, FUsmapReader Ar)
     {
-        if (Ar.Version >= EUsmapVersion.ExtendedMetadata)
-            _ = Ar.ReadName(); // owner package name (or null)
+        var package = Ar.Version >= EUsmapVersion.ExtendedMetadata ? Ar.ReadName() : null;
         var name = Ar.ReadName()!;
         var superType = Ar.ReadName();
         var flags = Ar.Version >= EUsmapVersion.ExtendedMetadata ? Ar.Read<uint>() : 0;
 
-        var propCountClassFlag = Ar.Version >= EUsmapVersion.ExtendedMetadata ? Ar.Read<int>() : Ar.Read<ushort>();
+        int propertyCount;
+        bool? isClass = null;
+        if (Ar.Version >= EUsmapVersion.ExtendedMetadata)
+        {
+            // 24-bit count, the top byte is 0 for classes and 1 for script structs
+            var packed = Ar.Read<uint>();
+            propertyCount = (int) (packed & 0xFFFFFF);
+            isClass = packed >> 24 == 0;
+        }
+        else
+        {
+            propertyCount = Ar.Read<ushort>();
+        }
         var serializablePropertyCount = Ar.Version >= EUsmapVersion.ExtendedMetadata ? Ar.Read<int>() : Ar.Read<ushort>();
         var properties = new Dictionary<int, PropertyInfo>();
         for (var i = 0; i < serializablePropertyCount; i++)
@@ -24,7 +35,7 @@ public static class UsmapProperties
             }
         }
 
-        return new Struct(context, name, superType, properties, propCountClassFlag, flags);
+        return new Struct(context, name, superType, properties, propertyCount, isClass, flags) { Package = package };
     }
 
     public static PropertyInfo ParsePropertyInfo(FUsmapReader Ar)

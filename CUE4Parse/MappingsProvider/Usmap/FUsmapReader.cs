@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
 
@@ -54,11 +55,9 @@ public sealed class FUsmapReader : FArchive
             return EPropertyFlags.None;
 
         var flagIndex = Read<ushort>();
+        // A bad index means the reader is out of step with the file, so everything after it would be garbage
         if (flagIndex >= _flagLut.Length)
-        {
-            Log.Error("Usmap property '{PropertyName}' has invalid flag index {FlagIndex} (table size {FlagLutLength})", propertyName, flagIndex, _flagLut.Length);
-            return EPropertyFlags.None;
-        }
+            throw new ParserException(this, $"Usmap property '{propertyName}' has invalid flag index {flagIndex} (table size {_flagLut.Length})");
         return _flagLut[flagIndex];
     }
 

@@ -8,25 +8,28 @@ public class Struct
     public readonly TypeMappings? Context;
     public string Name;
     public string? SuperType;
-    public Lazy<Struct?> Super = new((Struct?) null);
-    public Dictionary<int, PropertyInfo> Properties = new();
-    private readonly int _propCountClassFlag;
+    public Lazy<Struct?> Super;
+    public Dictionary<int, PropertyInfo> Properties;
+    public int PropertyCount;
+    // Whether the type is a class or a script struct, null when the mappings don't say
+    public bool? IsClass;
+    // EClassFlags for classes and EStructFlags for script structs, 0 when the mappings don't have them
     public uint Flags;
+    // The package the type belongs to, when the mappings have it
+    public string? Package;
 
     private Lazy<(Dictionary<int, PropertyInfo> Properties, int PropertyCount)>? _cookedSchema;
 
-    public int PropertyCount => _propCountClassFlag & 0xFFFFFF;
-    public bool IsClass => _propCountClassFlag >>> 24 == 0;
-
-    public Struct(TypeMappings? context, string name, int propCountClassFlag, uint flags = 0)
+    public Struct(TypeMappings? context, string name, int propertyCount, bool? isClass = null, uint flags = 0)
     {
-        _propCountClassFlag = propCountClassFlag;
         Context = context;
         Name = name;
+        PropertyCount = propertyCount;
+        IsClass = isClass;
         Flags = flags;
     }
 
-    public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propCountClassFlag, uint flags = 0) : this(context, name, propCountClassFlag, flags)
+    public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount, bool? isClass = null, uint flags = 0) : this(context, name, propertyCount, isClass, flags)
     {
         SuperType = superType;
         Super = new Lazy<Struct?>(() =>
@@ -120,7 +123,9 @@ public class Struct
 
 public class SerializedStruct : Struct
 {
-    public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, CountSlots(struc))
+    public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, CountSlots(struc),
+        struc switch { UClass => true, UScriptStruct => false, _ => null },
+        struc switch { UClass c => (uint) c.ClassFlags, UScriptStruct s => (uint) s.StructFlags, _ => 0 })
     {
         Super = new Lazy<Struct?>(() =>
         {
