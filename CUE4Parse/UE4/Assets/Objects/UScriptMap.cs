@@ -13,9 +13,11 @@ namespace CUE4Parse.UE4.Assets.Objects;
 public class UScriptMap
 {
     public Dictionary<FPropertyTagType, FPropertyTagType?> Properties;
-    // The keys a map saved against its defaults removes from them
-    public IReadOnlyList<FPropertyTagType?> KeysToRemove = [];
-    // UE writes -1 as the removal count when the map replaces its defaults instead of patching them
+    // The keys a map saved against its defaults removes from them. Keys that can't be read are left out
+    public IReadOnlyList<FPropertyTagType> KeysToRemove = [];
+    // UE writes -1 as the removal count when the map replaces its defaults instead of patching them.
+    // False doesn't always mean a patch: maps saved without defaults, such as maps inside arrays or map values,
+    // come with no removals and all their entries, and UE empties the map before loading them
     public bool ReplacesDefaults;
 
     public UScriptMap() => Properties = [];
@@ -61,10 +63,12 @@ public class UScriptMap
             ReplacesDefaults = numKeysToRemove == -1;
             if (numKeysToRemove > 0)
             {
-                var keysToRemove = new List<FPropertyTagType?>(numKeysToRemove);
+                EnsureCountFits(Ar, numKeysToRemove, "removed keys");
+                var keysToRemove = new List<FPropertyTagType>(numKeysToRemove);
                 for (var i = 0; i < numKeysToRemove; i++)
                 {
-                    keysToRemove.Add(FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP));
+                    if (FPropertyTagType.ReadPropertyTagType(Ar, tagData.InnerType, tagData.InnerTypeData, ReadType.MAP) is { } key)
+                        keysToRemove.Add(key);
                 }
                 KeysToRemove = keysToRemove;
             }
@@ -74,6 +78,7 @@ public class UScriptMap
 
         var type = readType == ReadType.RAW ? ReadType.RAW : ReadType.MAP;
         var numEntries = Ar.Read<int>();
+        EnsureCountFits(Ar, numEntries, "entries");
         Properties = new Dictionary<FPropertyTagType, FPropertyTagType?>(numEntries);
         for (var i = 0; i < numEntries; i++)
         {
@@ -90,5 +95,12 @@ public class UScriptMap
                  throw new ParserException(Ar, $"Failed to read {(isReadingValue ? "value" : "key")} for index {i} in map", e);
             }
         }
+    }
+
+    // Every key, value or element takes at least one byte, so a larger count comes from a misread and would only allocate memory
+    internal static void EnsureCountFits(FAssetArchive Ar, int count, string what)
+    {
+        if (count > Ar.Length - Ar.Position)
+            throw new ParserException(Ar, $"{count} {what} don't fit in the remaining archive size {Ar.Length - Ar.Position}");
     }
 }

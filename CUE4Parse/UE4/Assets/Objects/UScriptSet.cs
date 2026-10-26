@@ -11,8 +11,8 @@ namespace CUE4Parse.UE4.Assets.Objects;
 public class UScriptSet
 {
     public readonly List<FPropertyTagType> Properties;
-    // The elements a set saved against its defaults removes from them
-    public IReadOnlyList<FPropertyTagType?> ElementsToRemove = [];
+    // The elements a set saved against its defaults removes from them. Elements that can't be read are left out, as in Properties
+    public IReadOnlyList<FPropertyTagType> ElementsToRemove = [];
 
     public UScriptSet() => Properties = [];
 
@@ -64,10 +64,12 @@ public class UScriptSet
             var numElementsToRemove = Ar.Read<int>();
             if (numElementsToRemove > 0)
             {
-                var elementsToRemove = new List<FPropertyTagType?>(numElementsToRemove);
+                UScriptMap.EnsureCountFits(Ar, numElementsToRemove, "removed elements");
+                var elementsToRemove = new List<FPropertyTagType>(numElementsToRemove);
                 for (var i = 0; i < numElementsToRemove; i++)
                 {
-                    elementsToRemove.Add(FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY));
+                    if (FPropertyTagType.ReadPropertyTagType(Ar, innerType, tagData.InnerTypeData, ReadType.ARRAY) is { } element)
+                        elementsToRemove.Add(element);
                 }
                 ElementsToRemove = elementsToRemove;
             }
@@ -76,6 +78,7 @@ public class UScriptSet
 
         var type = readType == ReadType.RAW ? ReadType.RAW : ReadType.ARRAY;
         var num = Ar.Read<int>();
+        UScriptMap.EnsureCountFits(Ar, num, "elements");
         Properties = new List<FPropertyTagType>(num);
         for (var i = 0; i < num; i++)
         {
