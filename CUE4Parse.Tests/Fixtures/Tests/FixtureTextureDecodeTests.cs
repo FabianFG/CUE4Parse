@@ -353,6 +353,16 @@ public class FixtureTextureDecodeTests
         Assert.Equal((sourceTexture.PlatformData.SizeX, sourceTexture.PlatformData.SizeY),
             (cachedAtlas.Width, cachedAtlas.Height));
 
+        // Every pixel has to come from the sprite's rectangle in the atlas
+        var bpp = cachedAtlas.Data.Length / (cachedAtlas.Width * cachedAtlas.Height);
+        var originX = (int) MathF.Round(sprite.BakedSourceUV.X * cachedAtlas.Width / sourceTexture.ImportedSize.X);
+        var originY = (int) MathF.Round(sprite.BakedSourceUV.Y * cachedAtlas.Height / sourceTexture.ImportedSize.Y);
+        for (var y = 0; y < decoded.Height; y++)
+        {
+            Assert.Equal(cachedAtlas.Data.AsSpan(((originY + y) * cachedAtlas.Width + originX) * bpp, decoded.Width * bpp),
+                decoded.Data.AsSpan(y * decoded.Width * bpp, decoded.Width * bpp));
+        }
+
         var secondDecoded = sprite.Decode(textureCache: cache);
         Assert.NotNull(secondDecoded);
         Assert.Single(cache);

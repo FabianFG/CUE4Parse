@@ -1,6 +1,5 @@
 using CUE4Parse_Conversion.Options;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Gif;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Metadata;
@@ -27,32 +26,47 @@ public static class FlipbookEncoder
         if (format == ETextureFormat.Webp)
         {
             ext = "webp";
-            image.SaveAsWebp(ms, new WebpEncoder
+            // The async overloads take the token into the encoders, the stream is in memory so nothing actually waits
+            image.SaveAsWebpAsync(ms, new WebpEncoder
             {
                 Quality = quality,
                 FileFormat = quality == 100 ? WebpFileFormatType.Lossless : WebpFileFormatType.Lossy
-            });
+            }, cancellationToken).GetAwaiter().GetResult();
         }
         else
         {
             ext = "png";
-            image.SaveAsPng(ms, new PngEncoder { CompressionLevel = (PngCompressionLevel) Math.Clamp(pngCompressionLevel, 0, 9) });
+            image.SaveAsPngAsync(ms, new PngEncoder { CompressionLevel = (PngCompressionLevel) Math.Clamp(pngCompressionLevel, 0, 9) }, cancellationToken)
+                .GetAwaiter().GetResult();
         }
         return ms.ToArray();
     }
 
     public static Image<Rgba32> ToImage(this CFlipbook flipbook, uint loopCount = 0, CancellationToken cancellationToken = default)
     {
-        var animated = flipbook.FramesPerSecond > 0;
-        Image<Rgba32>? animation = null;
+        if (flipbook.Frames.Count == 0)
+            throw new ArgumentException("Flipbook has no frames", nameof(flipbook));
 
-        foreach (var frame in animated ? flipbook.Frames : flipbook.Frames.Take(1))
+        // Without a positive frame rate UE only shows the first frame, as it is, without the canvas the animation needs
+        if (flipbook.FramesPerSecond <= 0)
+        {
+            var first = flipbook.Frames[0];
+            return first.Texture?.ToImage() ?? new Image<Rgba32>(Math.Max(flipbook.Width, 1), Math.Max(flipbook.Height, 1));
+        }
+
+        Image<Rgba32>? animation = null;
+        var (elapsedFrames, elapsedMilliseconds) = (0, 0L);
+        foreach (var frame in flipbook.Frames)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // WebP delays are whole milliseconds. Rounding where each frame ends instead of each frame's length keeps
+            // the rounding error from adding up over the loop
+            elapsedFrames += frame.FrameRun;
+            var endMilliseconds = (long) Math.Round(elapsedFrames * 1000.0 / flipbook.FramesPerSecond);
             var image = ToImage(frame, flipbook.Width, flipbook.Height);
-            if (animated)
-                SetFrameMetadata(image.Frames.RootFrame.Metadata, frame.FrameRun / flipbook.FramesPerSecond);
+            SetFrameMetadata(image.Frames.RootFrame.Metadata, frame.FrameRun / flipbook.FramesPerSecond, endMilliseconds - elapsedMilliseconds);
+            elapsedMilliseconds = endMilliseconds;
 
             if (animation == null)
             {
@@ -64,11 +78,7 @@ public static class FlipbookEncoder
                 animation.Frames.AddFrame(image.Frames.RootFrame);
         }
 
-        if (animation == null)
-            throw new ArgumentException("Flipbook has no frames", nameof(flipbook));
-
-        if (animated)
-            SetAnimationMetadata(animation.Metadata, loopCount);
+        SetAnimationMetadata(animation!.Metadata, loopCount);
         return animation;
     }
 
@@ -93,13 +103,11 @@ public static class FlipbookEncoder
         pngMeta.RepeatCount = loopCount;
         pngMeta.AnimateRootFrame = true;
 
-        var repeatCount16 = (ushort)Math.Min(loopCount, ushort.MaxValue);
-        metadata.GetWebpMetadata().RepeatCount = repeatCount16;
-        metadata.GetGifMetadata().RepeatCount = repeatCount16;
+        metadata.GetWebpMetadata().RepeatCount = (ushort)Math.Min(loopCount, ushort.MaxValue);
     }
 
     // Every frame covers the whole canvas, so it replaces the previous one instead of being blended over it
-    private static void SetFrameMetadata(ImageFrameMetadata frameMeta, double durationSec)
+    private static void SetFrameMetadata(ImageFrameMetadata frameMeta, double durationSec, long webpDelayMilliseconds)
     {
         var pngFrame = frameMeta.GetPngMetadata();
         pngFrame.FrameDelay = ToPngFrameDelay(durationSec);
@@ -107,13 +115,9 @@ public static class FlipbookEncoder
         pngFrame.BlendMethod = PngBlendMethod.Source;
 
         var webpFrame = frameMeta.GetWebpMetadata();
-        webpFrame.FrameDelay = (uint)Math.Clamp(Math.Round(durationSec * 1000.0), 1, 0xFFFFFF);
+        webpFrame.FrameDelay = (uint)Math.Clamp(webpDelayMilliseconds, 1, 0xFFFFFF);
         webpFrame.DisposalMethod = WebpDisposalMethod.RestoreToBackground;
         webpFrame.BlendMethod = WebpBlendMethod.Source;
-
-        var gifFrame = frameMeta.GetGifMetadata();
-        gifFrame.FrameDelay = (int)Math.Clamp(Math.Round(durationSec * 100.0), 1, ushort.MaxValue);
-        gifFrame.DisposalMethod = GifDisposalMethod.RestoreToBackground;
     }
 
     // APNG stores the delay as a fraction of two 16-bit numbers. The first continued fraction convergent within float

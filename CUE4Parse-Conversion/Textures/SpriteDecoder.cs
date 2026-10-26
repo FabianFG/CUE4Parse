@@ -8,9 +8,14 @@ public static class SpriteDecoder
     public static CTexture? Decode(this UPaperSprite sprite, ETexturePlatform platform = ETexturePlatform.DesktopMobile, IDictionary<string, CTexture>? textureCache = null) =>
         sprite.Decode(out _, platform, textureCache);
 
-    public static CTexture? Decode(this UPaperSprite sprite, out FIntPoint pivot, ETexturePlatform platform = ETexturePlatform.DesktopMobile, IDictionary<string, CTexture>? textureCache = null)
+    public static CTexture? Decode(this UPaperSprite sprite, out FIntPoint pivot, ETexturePlatform platform = ETexturePlatform.DesktopMobile, IDictionary<string, CTexture>? textureCache = null) =>
+        sprite.Decode(out pivot, out _, platform, textureCache);
+
+    // scale is the size of the decoded mip relative to the imported texture the sprite's coordinates refer to
+    internal static CTexture? Decode(this UPaperSprite sprite, out FIntPoint pivot, out float scale, ETexturePlatform platform, IDictionary<string, CTexture>? textureCache)
     {
         pivot = default;
+        scale = 1;
 
         var sourceTexture = sprite.BakedSourceTexture?.Load<UTexture2D>();
         if (sourceTexture == null) return null;
@@ -23,6 +28,8 @@ public static class SpriteDecoder
             textureCache?[cacheKey] = sheet;
         }
 
+        if (sourceTexture.ImportedSize.X > 0)
+            scale = (float) sheet.Width / sourceTexture.ImportedSize.X;
         return sprite.Decode(sheet, sourceTexture.ImportedSize, out pivot);
     }
 

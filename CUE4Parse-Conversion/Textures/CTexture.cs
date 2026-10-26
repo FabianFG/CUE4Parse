@@ -25,7 +25,7 @@ public class CTexture
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(height, 0);
 
         if (x + width > Width || y + height > Height)
-            throw new ArgumentOutOfRangeException("Crop region is outside the texture bounds.");
+            throw new ArgumentException($"Crop region {x},{y} {width}x{height} is outside the {Width}x{Height} texture");
 
         if (x == 0 && y == 0 && width == Width && height == Height)
             return this;

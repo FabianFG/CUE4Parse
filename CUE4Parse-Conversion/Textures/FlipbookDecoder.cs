@@ -11,55 +11,66 @@ public static class FlipbookDecoder
 
         textureCache ??= new Dictionary<string, CTexture>();
         // Key frames often reuse a sprite, so every sprite is only cut out once
-        var sprites = new Dictionary<UPaperSprite, (CTexture Texture, FIntPoint Pivot)>();
+        var sprites = new Dictionary<UPaperSprite, (CTexture Texture, FIntPoint Pivot, float Scale)?>();
 
-        var rawFrames = new (CTexture? Texture, int FrameRun, FIntPoint Pivot)[flipbook.KeyFrames.Length];
-        var (maxPivotX, maxPivotY) = (int.MinValue, int.MinValue);
-
+        var keyFrames = new (CTexture? Texture, int FrameRun, FIntPoint Pivot)[flipbook.KeyFrames.Length];
         for (int i = 0; i < flipbook.KeyFrames.Length; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var kf = flipbook.KeyFrames[i];
-            CTexture? spriteTex = null;
-            FIntPoint pivot = default;
+            keyFrames[i] = (null, kf.FrameRun, default);
+            if (kf.Sprite is not { IsNull: false } || kf.FrameRun <= 0)
+                continue;
 
-            if (kf.Sprite is { IsNull: false })
+            // A sprite that can't be loaded or decoded leaves its frame empty, like a key frame without a sprite
+            var sprite = kf.LoadSprite();
+            if (sprite == null)
             {
-                var sprite = kf.LoadSprite();
-                if (sprite == null || !sprites.TryGetValue(sprite, out var decoded))
-                {
-                    if (sprite?.Decode(out pivot, platform, textureCache) is not { } texture)
-                    {
-                        Log.Warning("Flipbook '{Name}': Failed to decode keyframe {Index}, aborting flipbook decode", flipbook.Name, i);
-                        return null;
-                    }
-
-                    sprites[sprite] = decoded = (texture, pivot);
-                }
-
-                (spriteTex, pivot) = decoded;
-
-                if (pivot.X > maxPivotX) maxPivotX = pivot.X;
-                if (pivot.Y > maxPivotY) maxPivotY = pivot.Y;
+                Log.Warning("Flipbook '{Name}': Could not load the sprite of key frame {Index}, the frame stays empty", flipbook.Name, i);
+                continue;
             }
 
-            rawFrames[i] = (spriteTex, kf.FrameRun, pivot);
+            if (!sprites.TryGetValue(sprite, out var decoded))
+            {
+                decoded = sprite.Decode(out var pivot, out var scale, platform, textureCache) is { } texture ? (texture, pivot, scale) : null;
+                if (decoded == null)
+                    Log.Warning("Flipbook '{Name}': Could not decode sprite '{Sprite}' of key frame {Index}, the frame stays empty", flipbook.Name, sprite.Name, i);
+                sprites[sprite] = decoded;
+            }
+
+            if (decoded is { } value)
+                keyFrames[i] = (value.Texture, kf.FrameRun, value.Pivot);
         }
 
-        if (rawFrames.All(f => f.Texture == null)) return null;
-
-        if (sprites.Keys.Select(sprite => sprite.PixelsPerUnrealUnit).Distinct().Count() > 1)
+        var decodedSprites = sprites.Where(pair => pair.Value != null).ToList();
+        if (decodedSprites.Select(pair => pair.Key.PixelsPerUnrealUnit).Distinct().Count() > 1)
             Log.Warning("Flipbook '{Name}' mixes sprites with different pixels per unit, their frames are not rescaled", flipbook.Name);
+        if (decodedSprites.Select(pair => MathF.Round(pair.Value!.Value.Scale, 3)).Distinct().Count() > 1)
+            Log.Warning("Flipbook '{Name}' mixes sprites cut from different texture mip sizes, their frames are not rescaled", flipbook.Name);
 
-        var frames = new CFlipbookFrame[rawFrames.Length];
-        for (int i = 0; i < rawFrames.Length; i++)
+        return Assemble(keyFrames, flipbook.FramesPerSecond);
+    }
+
+    /// <summary>
+    /// Lines the key frames up on their pivots. Key frames with a run of 0 or less never show in UE, so they are left out.
+    /// </summary>
+    internal static CFlipbook? Assemble(IReadOnlyList<(CTexture? Texture, int FrameRun, FIntPoint Pivot)> keyFrames, float framesPerSecond)
+    {
+        var shown = keyFrames.Where(frame => frame.FrameRun > 0).ToList();
+        if (shown.All(frame => frame.Texture == null)) return null;
+
+        var maxPivotX = shown.Where(frame => frame.Texture != null).Max(frame => frame.Pivot.X);
+        var maxPivotY = shown.Where(frame => frame.Texture != null).Max(frame => frame.Pivot.Y);
+
+        var frames = new CFlipbookFrame[shown.Count];
+        for (int i = 0; i < shown.Count; i++)
         {
-            var (tex, frameRun, pivot) = rawFrames[i];
+            var (tex, frameRun, pivot) = shown[i];
             var offset = tex != null ? new FIntPoint(maxPivotX - pivot.X, maxPivotY - pivot.Y) : default;
             frames[i] = new CFlipbookFrame(tex, frameRun, offset);
         }
 
-        return new CFlipbook(frames, flipbook.FramesPerSecond);
+        return new CFlipbook(frames, framesPerSecond);
     }
 }

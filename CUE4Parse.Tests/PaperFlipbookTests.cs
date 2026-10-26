@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse_Conversion;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Textures;
 using SixLabors.ImageSharp;
@@ -121,6 +122,93 @@ public class PaperFlipbookTests
         }).ToArray();
 
         Assert.Equal([(2, 0, 1), (2, 2, 1), (2, 5, 1), (2, 7, 1)], crops);
+    }
+
+    [Fact]
+    public void FramesLineUpOnTheirPivots()
+    {
+        var flipbook = FlipbookDecoder.Assemble([(CoordinateTexture(4, 4), 1, new FIntPoint(2, 2)), (CoordinateTexture(2, 2), 1, new FIntPoint(1, 1))], 10)!;
+
+        Assert.Equal((4, 4), (flipbook.Width, flipbook.Height));
+        Assert.Equal(new FIntPoint(0, 0), flipbook.Frames[0].Offset);
+        Assert.Equal(new FIntPoint(1, 1), flipbook.Frames[1].Offset);
+    }
+
+    [Fact]
+    public void KeyFramesThatNeverShowAreLeftOut()
+    {
+        // UE skips key frames whose run is 0 or less
+        var texture = CoordinateTexture(2, 2);
+        var flipbook = FlipbookDecoder.Assemble([(texture, 0, default), (texture, -1, default), (texture, 2, default)], 10)!;
+
+        Assert.Equal(2, Assert.Single(flipbook.Frames).FrameRun);
+        Assert.Equal(2, flipbook.TotalFrames);
+    }
+
+    [Fact]
+    public void EmptyKeyFramesStayTransparent()
+    {
+        var flipbook = FlipbookDecoder.Assemble([(null, 1, default), (CoordinateTexture(2, 2), 1, new FIntPoint(1, 1))], 10)!;
+
+        Assert.Null(flipbook.Frames[0].Texture);
+        Assert.Equal((2, 2), (flipbook.Width, flipbook.Height));
+        Assert.Null(FlipbookDecoder.Assemble([(null, 1, default)], 10));
+    }
+
+    [Fact]
+    public void KeyFramesWithoutSpritesDontStopTheDecode()
+    {
+        var flipbook = new UPaperFlipbook { FramesPerSecond = 10, KeyFrames = [new FPaperFlipbookKeyFrame(null, 1), new FPaperFlipbookKeyFrame(null, 0)] };
+
+        // Nothing to show, but no exception either
+        Assert.Null(flipbook.Decode());
+    }
+
+    [Fact]
+    public void WebpDelaysDontDriftOverTheLoop()
+    {
+        // 24 one-frame keys at 24 fps: rounding each 41.67 ms frame on its own makes the loop 1008 ms long
+        var frames = Enumerable.Range(0, 24).Select(i => new CFlipbookFrame(new CTexture(2, 2, EPixelFormat.PF_R8G8B8A8,
+            Enumerable.Repeat(new byte[] { (byte) (i * 10), 0, 0, 255 }, 4).SelectMany(p => p).ToArray()))).ToList();
+
+        using var image = Image.Load<Rgba32>(new CFlipbook(frames, 24).Encode(ETextureFormat.Webp, out _));
+
+        Assert.Equal(24, image.Frames.Count);
+        var loop = 0L;
+        foreach (var frame in image.Frames)
+            loop += frame.Metadata.GetWebpMetadata().FrameDelay;
+        Assert.Equal(1000, loop);
+    }
+
+    [Fact]
+    public void StillImagesKeepTheFirstFramesSize()
+    {
+        var red = new CTexture(4, 4, EPixelFormat.PF_R8G8B8A8, Enumerable.Repeat(new byte[] { 255, 0, 0, 255 }, 16).SelectMany(p => p).ToArray());
+        var green = new CTexture(2, 2, EPixelFormat.PF_R8G8B8A8, Enumerable.Repeat(new byte[] { 0, 255, 0, 255 }, 4).SelectMany(p => p).ToArray());
+        var flipbook = new CFlipbook([new CFlipbookFrame(green, 1, new FIntPoint(1, 1)), new CFlipbookFrame(red)], 0);
+
+        using var image = Image.Load<Rgba32>(flipbook.Encode(ETextureFormat.Png, out _));
+
+        Assert.Equal((2, 2), (image.Width, image.Height));
+        Assert.Equal(new Rgba32(0, 255, 0, 255), image[0, 0]);
+    }
+
+    [Fact]
+    public void EncodingStopsWhenCancelled()
+    {
+        using var cancelled = new CancellationTokenSource();
+        cancelled.Cancel();
+
+        Assert.ThrowsAny<OperationCanceledException>(() => TwoFrames(15).Encode(ETextureFormat.Png, out _, cancellationToken: cancelled.Token));
+    }
+
+    [Fact]
+    public void ExportSessionsQueueFlipbooks()
+    {
+        var session = new ExportSession();
+        session.Add(new UPaperFlipbook { Name = "Flipbook" });
+
+        Assert.Equal(1, session.TotalQueued);
     }
 
     private static CFlipbook TwoFrames(float framesPerSecond)
