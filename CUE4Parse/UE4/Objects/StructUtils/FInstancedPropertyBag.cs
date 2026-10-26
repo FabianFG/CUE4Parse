@@ -1,8 +1,10 @@
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
@@ -72,51 +74,67 @@ public class FInstancedPropertyBag : IUStruct
 
         PropertyDescs = Ar.ReadArray(() => new FPropertyBagPropertyDesc(Ar));
 
-        if (Version >= EVersion.SerializeStructSize)
-            SerialSize = Ar.Read<int>();
-
-        // The values are the properties of a struct built from the descriptors
-        var payloadEnd = Ar.Position + SerialSize;
-        var properties = new List<FPropertyTag>();
-        try
+        if (Version < EVersion.SerializeStructSize)
         {
-            if (Ar.HasUnversionedProperties)
-                Assets.Exports.UObject.DeserializePropertiesUnversioned(properties, Ar, () => BuildSchema(Ar));
-            else
-                Assets.Exports.UObject.DeserializePropertiesTagged(properties, Ar, true);
-        }
-        catch (Exception e) when (Version >= EVersion.SerializeStructSize)
-        {
-            Log.Warning(e, "Failed to read FInstancedPropertyBag values, skipping {Size} bytes", SerialSize);
-            Ar.Position = payloadEnd;
+            Value = new FStructFallback(ReadValues(Ar));
             return;
         }
 
-        if (Version >= EVersion.SerializeStructSize)
-        {
-            var extra = Ar.Position - payloadEnd;
-            Ar.Position = payloadEnd;
-            if (extra > 0)
-            {
-                Log.Warning("FInstancedPropertyBag values ran {Extra} bytes past their size of {Size}, skipping them", extra, SerialSize);
-                return;
-            }
+        SerialSize = Ar.Read<int>();
+        if (SerialSize < 0 || SerialSize > Ar.Length - Ar.Position)
+            throw new ParserException(Ar, $"FInstancedPropertyBag value size {SerialSize} doesn't fit in the remaining {Ar.Length - Ar.Position} bytes");
 
-            // Not reaching the end means some value had the wrong size, like an enum with a wider underlying type
-            if (extra < 0)
-                Log.Warning("FInstancedPropertyBag values ended {Missing} bytes before their size of {Size}", -extra, SerialSize);
+        // The values get their own archive of SerialSize bytes, so a misread can't run into the rest of the package and
+        // counts read from the data can't be larger than the values themselves
+        var payload = new FAssetArchive(new FByteArchive(Ar.Name, Ar.ReadBytes(SerialSize), Ar.Versions), Ar.Owner, (int) Ar.AbsolutePosition - SerialSize);
+        payload.CopyRealmContextFrom(Ar);
+        List<FPropertyTag> properties;
+        try
+        {
+            properties = ReadValues(payload);
         }
+        catch (Exception e) when (e is not OutOfMemoryException)
+        {
+            Log.Warning(e, "Failed to read FInstancedPropertyBag values, skipping {Size} bytes", SerialSize);
+            return;
+        }
+
+        // Reads of a primitive that starts before the end don't throw, so a value that ran past its size shows up here
+        if (payload.Position > payload.Length)
+        {
+            Log.Warning("FInstancedPropertyBag values ran {Extra} bytes past their size of {Size}, skipping them", payload.Position - payload.Length, SerialSize);
+            return;
+        }
+
+        // Not reaching the end means some value had the wrong size, like an enum with a wider underlying type
+        if (payload.Position < payload.Length)
+            Log.Warning("FInstancedPropertyBag values ended {Missing} bytes before their size of {Size}", payload.Length - payload.Position, SerialSize);
 
         Value = new FStructFallback(properties);
     }
 
-    // The descriptors in order are the schema, each one becomes the property UE creates for it
+    // The values are the properties of a struct built from the descriptors
+    private List<FPropertyTag> ReadValues(FAssetArchive Ar)
+    {
+        var properties = new List<FPropertyTag>();
+        if (Ar.HasUnversionedProperties)
+            Assets.Exports.UObject.DeserializePropertiesUnversioned(properties, Ar, () => BuildSchema(Ar));
+        else
+            Assets.Exports.UObject.DeserializePropertiesTagged(properties, Ar, true);
+        return properties;
+    }
+
+    // The descriptors in order are the schema, each one becomes the property UE creates for it. UE leaves out the ones it
+    // can't create a property for, so they take no schema index
     private Struct BuildSchema(FAssetArchive Ar)
     {
         var properties = new Dictionary<int, PropertyInfo>(PropertyDescs.Length);
-        for (var i = 0; i < PropertyDescs.Length; i++)
+        var names = new HashSet<FName>();
+        foreach (var desc in PropertyDescs)
         {
-            var desc = PropertyDescs[i];
+            if (!CreatesProperty(Ar, desc) || !names.Add(desc.Name))
+                continue;
+
             var propertyType = BuildPropertyType(Ar, desc.ValueType, desc.ValueTypeObject);
 
             // Containers wrap the value type, the first one is the outermost
@@ -133,11 +151,21 @@ public class FInstancedPropertyBag : IUStruct
                 };
             }
 
-            properties[i] = new PropertyInfo(0, desc.Name.Text, propertyType, 1);
+            properties[properties.Count] = new PropertyInfo(0, desc.Name.Text, propertyType, 1);
         }
 
-        return new Struct(Ar.Owner?.Mappings, nameof(FInstancedPropertyBag), null, properties, PropertyDescs.Length);
+        return new Struct(Ar.Owner?.Mappings, nameof(FInstancedPropertyBag), null, properties, properties.Count);
     }
+
+    // SanitizePropertyDescs drops descriptors without a type (and repeated names, handled by the caller). Before 5.8,
+    // CreatePropertyFromDesc also returned no property for object and class types without a class
+    private static bool CreatesProperty(FAssetArchive Ar, FPropertyBagPropertyDesc desc) => desc.ValueType switch
+    {
+        EPropertyBagPropertyType.None => false,
+        EPropertyBagPropertyType.Object or EPropertyBagPropertyType.SoftObject or EPropertyBagPropertyType.Class or EPropertyBagPropertyType.SoftClass
+            => Ar.Game >= EGame.GAME_UE5_8 || desc.ValueTypeObject is { IsNull: false },
+        _ => true
+    };
 
     // User defined structs and enums aren't in the mappings, so load the asset the desc points at
     private static PropertyType BuildAssetType(FAssetArchive Ar, string type, FPackageIndex? valueTypeObject)
@@ -253,7 +281,7 @@ public struct FPropertyBagPropertyDesc
     private static EPropertyBagPropertyType ReadPropertyType(FAssetArchive Ar)
     {
         var type = Ar.Read<EPropertyBagPropertyType>();
-        if (Ar.Game >= EGame.GAME_UE5_8)
+        if (UsesSmallIntegerTypes(Ar))
             return type;
 
         return type switch
@@ -262,6 +290,14 @@ public struct FPropertyBagPropertyDesc
             EPropertyBagPropertyType.Int16 => EPropertyBagPropertyType.UInt64,
             _ => type
         };
+    }
+
+    // Builds from early 2026 have GAME_UE5_8 with either numbering. Mappings list the enum, so they settle it where they exist
+    private static bool UsesSmallIntegerTypes(FAssetArchive Ar)
+    {
+        if (Ar.Owner?.Mappings?.Enums.TryGetValue("EPropertyBagPropertyType", out var values) == true && values.TryGetValue(16, out var name))
+            return name.EndsWith("Int8", StringComparison.Ordinal);
+        return Ar.Game >= EGame.GAME_UE5_8;
     }
 }
 

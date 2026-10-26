@@ -1,6 +1,7 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
+using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.RigVM
 {
@@ -9,10 +10,15 @@ namespace CUE4Parse.UE4.Objects.RigVM
         public readonly int[] Segments;
         public readonly ERigVMRegisterType Type;
         public readonly FName CPPType;
+        // Each version only has one set of these, the JSON leaves out the others
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public readonly FPackageIndex? ScriptStruct; // UScriptStruct
-        public readonly FName ScriptStructPath; // pre-SerializeRigVMOffsetSegmentPaths: object path as FName
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public readonly FName? ScriptStructPath; // pre-SerializeRigVMOffsetSegmentPaths: object path as FName
         public readonly ushort ElementSize;
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public readonly FPackageIndex? ParentScriptStruct; // UScriptStruct
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public readonly string? CachedSegmentPath;
         public readonly int ArrayIndex;
 
