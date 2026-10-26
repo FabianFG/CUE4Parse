@@ -13,6 +13,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
 
     protected virtual IEnumerable<FPackageIndex?> MaterialReferences => [];
 
+    internal override bool HasDependencies => true;
     internal override IEnumerable<UObject> GetDependencies(CancellationToken ct)
     {
         foreach (var reference in MaterialReferences)

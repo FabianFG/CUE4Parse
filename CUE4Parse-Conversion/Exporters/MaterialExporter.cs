@@ -10,6 +10,7 @@ public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase
 {
     private CMaterialParams2? _parameters;
     private ExportSessionCache? _parameterCache;
+    internal override bool HasDependencies => true;
     internal override IEnumerable<UObject> GetDependencies(CancellationToken ct) => LoadTextures(ReadParameters(), ct);
 
     private static IEnumerable<UTexture> LoadTextures(CMaterialParams2 parameters, CancellationToken ct)

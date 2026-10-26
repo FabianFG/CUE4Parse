@@ -64,6 +64,7 @@ public abstract class ExporterBase : IExporter
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default);
 
+    internal virtual bool HasDependencies => false;
     internal virtual IEnumerable<UObject> GetDependencies(CancellationToken ct) => [];
 
     public virtual async Task<ExportResult> ExportAsync(CancellationToken ct = default)
