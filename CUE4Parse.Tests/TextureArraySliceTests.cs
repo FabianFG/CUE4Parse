@@ -1,6 +1,9 @@
 using AssetRipper.TextureDecoder.Bc;
 using AssetRipper.TextureDecoder.Rgb.Formats;
+using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse_Conversion.Textures;
+using CUE4Parse_Conversion.Textures.BC;
 
 namespace CUE4Parse.Tests;
 
@@ -8,7 +11,7 @@ public class TextureArraySliceTests
 {
     private delegate void ReferenceDecoder(byte[] slice, int sizeX, int sizeY, out byte[] output);
 
-    private static readonly Dictionary<string, (int BlockBytes, TextureDecoder.SliceDecoder Decode, ReferenceDecoder Reference)> Formats = new()
+    private static readonly Dictionary<string, (int BlockBytes, BCDecoder.LayerDecoder Decode, ReferenceDecoder Reference)> Formats = new()
     {
         ["BC1"] = (8, static (s, x, y, o) => Bc1.Decompress<ColorRGBA<byte>, byte>(s, x, y, o), static (byte[] s, int x, int y, out byte[] o) => Bc1.Decompress<ColorRGBA<byte>, byte>(s, x, y, out o)),
         ["BC2"] = (16, static (s, x, y, o) => Bc2.Decompress<ColorRGBA<byte>, byte>(s, x, y, o), static (byte[] s, int x, int y, out byte[] o) => Bc2.Decompress<ColorRGBA<byte>, byte>(s, x, y, out o)),
@@ -45,7 +48,7 @@ public class TextureArraySliceTests
         var bytes = new byte[sliceBytes * sizeZ];
         new Random(sizeX * 31 + sizeY).NextBytes(bytes);
 
-        var decoded = TextureDecoder.DecodeSlices(bytes, sizeX, sizeY, sizeZ, blockBytes, decode);
+        var decoded = TextureDecoder.DecodeSlices(bytes, sizeX, sizeY, sizeZ, 4, 4, blockBytes, decode);
 
         var pixelBytes = sizeX * sizeY * 4;
         Assert.Equal(pixelBytes * sizeZ, decoded.Length);
@@ -65,7 +68,7 @@ public class TextureArraySliceTests
         new Random(sizeX * 17 + sizeY).NextBytes(bytes);
 
         reference(bytes, sizeX, sizeY, out var expected);
-        Assert.Equal(expected, TextureDecoder.DecodeSlices(bytes, sizeX, sizeY, 1, blockBytes, decode));
+        Assert.Equal(expected, TextureDecoder.DecodeSlices(bytes, sizeX, sizeY, 1, 4, 4, blockBytes, decode));
     }
 
     [Theory]
@@ -79,15 +82,85 @@ public class TextureArraySliceTests
         var bytes = new byte[sliceBytes * 3 - 1];
         new Random(blockBytes).NextBytes(bytes);
 
-        var decoded = TextureDecoder.DecodeSlices(bytes, 4, 4, 3, blockBytes, decode);
+        var decoded = TextureDecoder.DecodeSlices(bytes, 4, 4, 3, 4, 4, blockBytes, decode);
 
+        // Only the two complete slices come back, so DecodeTextureArray leaves the third one null
         const int pixelBytes = 4 * 4 * 4;
-        Assert.Equal(pixelBytes * 3, decoded.Length);
+        Assert.Equal(pixelBytes * 2, decoded.Length);
         for (var z = 0; z < 2; z++)
         {
             reference(bytes[(z * sliceBytes)..((z + 1) * sliceBytes)], 4, 4, out var expected);
             Assert.Equal(expected, decoded[(z * pixelBytes)..((z + 1) * pixelBytes)]);
         }
-        Assert.All(decoded[(2 * pixelBytes)..], value => Assert.Equal(0, value));
+    }
+
+    [Fact]
+    public void ArraysWithoutACompleteSliceThrow()
+    {
+        var (blockBytes, decode, _) = Formats["BC1"];
+        var bytes = new byte[SliceBytes(16, 16, blockBytes) - 1];
+
+        Assert.Throws<ParserException>(() => TextureDecoder.DecodeSlices(bytes, 16, 16, 3, 4, 4, blockBytes, decode));
+    }
+
+    [Fact]
+    public void EmptySlicesDecodeToNothing()
+    {
+        var (blockBytes, decode, _) = Formats["BC1"];
+        Assert.Empty(TextureDecoder.DecodeSlices([], 0, 16, 3, 4, 4, blockBytes, decode));
+    }
+
+    public static TheoryData<EPixelFormat, int, int> WiringCases()
+    {
+        var data = new TheoryData<EPixelFormat, int, int>();
+        EPixelFormat[] formats =
+        [
+            EPixelFormat.PF_DXT1, EPixelFormat.PF_DXT3, EPixelFormat.PF_DXT5, EPixelFormat.PF_BC4, EPixelFormat.PF_BC5,
+            EPixelFormat.PF_BC6H, EPixelFormat.PF_BC6H_Signed, EPixelFormat.PF_BC7,
+            EPixelFormat.PF_ETC1, EPixelFormat.PF_ETC2_RGB, EPixelFormat.PF_ETC2_RGBA, EPixelFormat.PF_ETC2_R11_EAC, EPixelFormat.PF_ETC2_RG11_EAC,
+            EPixelFormat.PF_ASTC_4x4, EPixelFormat.PF_ASTC_8x5, EPixelFormat.PF_ASTC_12x12,
+        ];
+        foreach (var format in formats)
+        {
+            foreach (var (x, y) in new[] { (2, 2), (12, 20) })
+            {
+                data.Add(format, x, y);
+            }
+        }
+        return data;
+    }
+
+    // Goes through the real format switch, so a wrong block size or decoder at a call site shows up as a slice that
+    // doesn't match decoding that slice alone
+    [Theory]
+    [MemberData(nameof(WiringCases))]
+    public void DecodeBytesSplitsArraysAtTheFormatsSliceSize(EPixelFormat format, int sizeX, int sizeY)
+    {
+        TextureDecoder.UseAssetRipperTextureDecoder = true;
+        var info = PixelFormatUtils.PixelFormats[format];
+        const int sizeZ = 3;
+        var sliceBytes = (sizeX + info.BlockSizeX - 1) / info.BlockSizeX * ((sizeY + info.BlockSizeY - 1) / info.BlockSizeY) * info.BlockBytes;
+        var bytes = new byte[sliceBytes * sizeZ];
+        new Random((int) format * 97 + sizeX).NextBytes(bytes);
+        if (format.ToString().StartsWith("PF_ASTC"))
+        {
+            // AssetRipper's ASTC decoder throws on random blocks, so use constant colour (void extent) blocks with random colours
+            for (var block = 0; block < bytes.Length; block += 16)
+            {
+                ReadOnlySpan<byte> voidExtent = [0xFC, 0xFD, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+                voidExtent.CopyTo(bytes.AsSpan(block));
+            }
+        }
+
+        TextureDecoder.DecodeBytes(bytes, sizeX, sizeY, sizeZ, info, false, out var decoded, out var colorType);
+
+        var pixelBytes = sizeX * sizeY * 4;
+        Assert.Equal(pixelBytes * sizeZ, decoded.Length);
+        for (var z = 0; z < sizeZ; z++)
+        {
+            TextureDecoder.DecodeBytes(bytes[(z * sliceBytes)..((z + 1) * sliceBytes)], sizeX, sizeY, 1, info, false, out var expected, out var sliceColorType);
+            Assert.Equal(colorType, sliceColorType);
+            Assert.Equal(expected, decoded[(z * pixelBytes)..((z + 1) * pixelBytes)]);
+        }
     }
 }
