@@ -362,13 +362,6 @@ public sealed class RlAnimatedMaps
 
 public sealed class RigLogicSnapshot
 {
-    public const uint RldsMagic = 0x524C4453;
-    public const ushort ExpectedMajor = 13;
-    public const ushort ExpectedMinor = 2;
-
-    public bool HasRldsHeader;
-    public ushort MajorVersion;
-    public ushort MinorVersion;
     public RlConfiguration Configuration = new();
     public RlMetadata Metadata = new();
     public RlControls Controls = new();
@@ -383,21 +376,8 @@ public sealed class RigLogicSnapshot
 
     public static RigLogicSnapshot Read(TerseBinaryArchive ar, bool requireFullConsume = true)
     {
+        // FRigLogic::Dump writes the archive without a header, so it starts with the configuration
         var snapshot = new RigLogicSnapshot();
-        if (ar.PeekMagicBe(RldsMagic))
-        {
-            snapshot.HasRldsHeader = true;
-            ar.ReadUInt32();
-            snapshot.MajorVersion = ar.ReadUInt16();
-            snapshot.MinorVersion = ar.ReadUInt16();
-            if (snapshot.MajorVersion != ExpectedMajor || snapshot.MinorVersion != ExpectedMinor)
-                throw new InvalidDataException($"Unsupported RLDS version {snapshot.MajorVersion}.{snapshot.MinorVersion}; expected {ExpectedMajor}.{ExpectedMinor}");
-        }
-        else if (LooksLikeUnknownFrame(ar))
-        {
-            throw new InvalidDataException("Unsupported RigLogic snapshot framing; expected headerless Configuration or RLDS 13.2");
-        }
-
         snapshot.Configuration = RlConfiguration.Read(ar);
         snapshot.Metadata = RlMetadata.Read(ar);
 
@@ -406,10 +386,11 @@ public sealed class RigLogicSnapshot
 
         var mlType = Pop();
         var rbfType = Pop();
-        var bpcmType = Pop();
-        var quatType = Pop();
-        var twistType = Pop();
-        var mlJointType = Pop();
+        // JointsFactory only builds the four joint evaluators when there are joints to evaluate
+        var hasJoints = snapshot.Configuration.LoadJoints && snapshot.Metadata.LodCount > 0 && snapshot.Metadata.JointAttributeCount > 0;
+        var (bpcmType, quatType, twistType, mlJointType) = hasJoints
+            ? (Pop(), Pop(), Pop(), Pop())
+            : (RlEvaluatorType.Null, RlEvaluatorType.Null, RlEvaluatorType.Null, RlEvaluatorType.Null);
         var blendType = Pop();
         var animType = Pop();
         var psdType = Pop();
@@ -454,19 +435,4 @@ public sealed class RigLogicSnapshot
             ar.EnsureConsumed();
         return snapshot;
     }
-
-    private static bool LooksLikeUnknownFrame(TerseBinaryArchive ar)
-    {
-        if (ar.Remaining < 4)
-            return false;
-        var pos = ar.Position;
-        var b0 = ar.ReadUInt8();
-        var b1 = ar.ReadUInt8();
-        var b2 = ar.ReadUInt8();
-        var b3 = ar.ReadUInt8();
-        ar.Position = pos;
-        return IsAsciiLetter(b0) && IsAsciiLetter(b1) && IsAsciiLetter(b2) && IsAsciiLetter(b3);
-    }
-
-    private static bool IsAsciiLetter(byte value) => value is (>= (byte) 'A' and <= (byte) 'Z') or (>= (byte) 'a' and <= (byte) 'z');
 }

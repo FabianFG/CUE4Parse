@@ -1,11 +1,16 @@
 using System.Buffers.Binary;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using CUE4Parse.FileProvider;
 using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse_Conversion.DNA;
 using CUE4Parse.UE4.Assets.Exports.Rig;
@@ -97,14 +102,115 @@ public class DnaTests
         Assert.Equal(Ar.Length, Ar.Position);
     }
 
-    private static byte[] DnaFile(params (string Id, byte[] Data)[] layers)
+    [Fact]
+    public void LegacyAssetsKeepAGeometryDnaThatHasMeshes()
+    {
+        var behavior = DnaFile(("bhvr", JointGroupBehavior().ToArray()));
+        var geometry = DnaFile(("bhvr", EmptyBehavior().ToArray()), ("geom", new BigEndianStream().Int(1).Bytes(EmptyMesh()).ToArray()));
+        var Ar = LegacyAsset(behavior, geometry);
+
+        var asset = new UDNAAsset();
+        asset.Deserialize(Ar, Ar.Length);
+
+        Assert.Equal(behavior, asset.DNAData!.Value);
+        Assert.Equal(geometry, asset.GeometryDNAData!.Value);
+        Assert.Equal(Ar.Length, Ar.Position);
+    }
+
+    [Fact]
+    public void Dna22ReadsTheIndexTable()
+    {
+        // Only DNA 2.1 has the section lookup table
+        var file = DnaFile(2, ("bhvr", JointGroupBehavior().ToArray()));
+
+        var doc = DnaBinaryParser.Parse(new FArchiveBigEndian(new FByteArchive("dna", file)), 0);
+
+        Assert.True(DnaAssetQueries.TryGet(doc.Layers, "bhvr", out RawBehavior behavior));
+        Assert.Single(behavior.Joints.JointGroups);
+        Assert.Equal(file.Length, doc.ByteLength);
+    }
+
+    [Fact]
+    public void IndexEntriesPastTheEndDontStretchTheDna()
+    {
+        var file = DnaFile(5, ("bhvr", JointGroupBehavior().ToArray()));
+        BinaryPrimitives.WriteInt32BigEndian(file.AsSpan(3 + 4 + 4 + 12), int.MaxValue); // the layer's size
+
+        var doc = DnaBinaryParser.Parse(new FArchiveBigEndian(new FByteArchive("dna", file)), 0);
+
+        Assert.Equal(file.Length, doc.ByteLength);
+    }
+
+    [Fact]
+    public void ArrayCountsPastTheEndThrowBeforeAllocating()
+    {
+        var Ar = new FArchiveBigEndian(new FByteArchive("dna", new BigEndianStream().Int(int.MaxValue).Int(0).ToArray()));
+
+        Assert.Throws<ParserException>(() => Ar.ReadArray(() => Ar.Read<int>()));
+    }
+
+    [Fact]
+    public void RawPosesUseTheDnaUnits()
+    {
+        // The joint group's second output is the X rotation, 0.5 radians for control A
+        var dna = new FixtureDna(["A", "B"], ["root"], JointGroupBehavior(outputs: [0, 3], values: [1, 2, 4, 0.5f, 0, 0]).ToBehavior());
+        var descriptor = (RawDescriptor) RuntimeHelpers.GetUninitializedObject(typeof(RawDescriptor));
+        (descriptor.TranslationUnit, descriptor.RotationUnit) = (ETranslationUnit.M, ERotationUnit.Radians);
+        dna.Layers!["desc"] = descriptor;
+
+        Assert.True(dna.TryConvert(out var poses));
+
+        var key = Assert.Single(poses.Poses[0].Keys);
+        Assert.Equal(200f, key.Location.X, 3);
+        Assert.Equal(MathF.Sin(0.25f), MathF.Abs(key.Rotation.X), 4);
+        Assert.Equal(MathF.Cos(0.25f), key.Rotation.W, 4);
+    }
+
+    [Fact]
+    public void ConfigFieldsLeftOutUseTheOuterStructsDefaults()
+    {
+        // UE leaves RotationSign.ZAxis out because it matches FDNAConfig's default of Positive
+        var rotationSign = new FStructFallback([
+            Tag("XAxis", new EnumProperty(new FName("ERotationDirection::Positive"))),
+            Tag("YAxis", new EnumProperty(new FName("ERotationDirection::Positive"))),
+        ]);
+        var config = new FDNAConfig(new FStructFallback([Tag("RotationSign", new StructProperty(new FScriptStruct(rotationSign)))]));
+
+        Assert.Equal((ERotationDirection.Positive, ERotationDirection.Positive, ERotationDirection.Positive),
+            (config.RotationSign.XAxis, config.RotationSign.YAxis, config.RotationSign.ZAxis));
+        Assert.Equal((EDirection.Left, EDirection.Front, EDirection.Up),
+            (config.CoordinateSystem.XAxis, config.CoordinateSystem.YAxis, config.CoordinateSystem.ZAxis));
+        Assert.Equal(ERigLogicRotationType.Quaternions, new FRigLogicConfiguration(new FStructFallback()).RotationType);
+        Assert.Equal(ERigLogicCalculationType.AnyVector, new FRigLogicConfiguration().CalculationTypePerPlatform.Default);
+
+        static FPropertyTag Tag(string name, FPropertyTagType value) =>
+            new(new FName(name), new FName(value.GetType().Name), 0, 0, null, false, null, value);
+    }
+
+    private static FAssetArchive LegacyAsset(params byte[][] streams)
+    {
+        var data = new List<byte>();
+        data.Add(0); // no serialization control extensions
+        data.AddRange(BitConverter.GetBytes(0L)); // "None", no properties
+        data.AddRange(BitConverter.GetBytes(0)); // no object guid
+        foreach (var stream in streams)
+            data.AddRange(stream);
+        return new FAssetArchive(new FByteArchive("dna", data.ToArray(), new VersionContainer(EGame.GAME_UE5_7)), new FixturePackage());
+    }
+
+    // Offset, positions, texture coordinates, normals, layouts, faces, max influences, skin weights, blend shape targets
+    private static byte[] EmptyMesh() => new BigEndianStream().Int(0).EmptyArrays(3 + 2 + 3 + 3 + 1).UShort(0).EmptyArrays(2).ToArray();
+
+    private static byte[] DnaFile(params (string Id, byte[] Data)[] layers) => DnaFile(5, layers);
+
+    private static byte[] DnaFile(ushort minor, params (string Id, byte[] Data)[] layers)
     {
         var file = new BigEndianStream();
-        file.Bytes("DNA"u8.ToArray()).UShort(2).UShort(5).Int(layers.Length);
+        file.Bytes("DNA"u8.ToArray()).UShort(2).UShort(minor).Int(layers.Length);
         var offset = 3 + 4 + 4 + layers.Length * 16;
         foreach (var (id, layer) in layers)
         {
-            file.Bytes(Encoding.ASCII.GetBytes(id)).UShort(2).UShort(5).Int(offset).Int(layer.Length);
+            file.Bytes(Encoding.ASCII.GetBytes(id)).UShort(2).UShort(minor).Int(offset).Int(layer.Length);
             offset += layer.Length;
         }
         foreach (var (_, layer) in layers)
@@ -131,11 +237,11 @@ public class DnaTests
     }
 
     // Controls A and B, PSD 2 = 0.5 * A and PSD 3 = A * B, one joint group driving the translation of joint 0
-    private static BigEndianStream JointGroupBehavior() => new BigEndianStream()
+    private static BigEndianStream JointGroupBehavior(ushort[]? outputs = null, float[]? values = null) => new BigEndianStream()
         .UShort(2).EmptyArrays(6)
         .UShorts(2, 3, 3).UShorts(0, 0, 1).Floats(0.5f, 1, 1)
         .UShort(9).UShort(3).Int(1)
-        .UShorts(2).UShorts(0, 2, 3).UShorts(0, 1).Floats(1, 2, 4, 0, 0, 8).UShorts(0)
+        .UShorts(2).UShorts(0, 2, 3).UShorts(outputs ?? [0, 1]).Floats(values ?? [1, 2, 4, 0, 0, 8]).UShorts(0)
         .EmptyArrays(3)
         .EmptyArrays(7);
 

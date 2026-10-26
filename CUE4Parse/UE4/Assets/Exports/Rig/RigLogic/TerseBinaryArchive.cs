@@ -16,14 +16,6 @@ public sealed class TerseBinaryArchive
         Length = start + (length ?? (data.Length - start));
     }
 
-    public bool PeekMagicBe(uint expected)
-    {
-        if (Remaining < 4)
-            return false;
-        var value = BinaryPrimitives.ReadUInt32BigEndian(_data.AsSpan((int) Position, 4));
-        return value == expected;
-    }
-
     public byte ReadUInt8()
     {
         Ensure(1);

@@ -37,15 +37,13 @@ public static class DnaAssetQueries
         return null;
     }
 
+    // Layers are stored under their normalized id
     public static bool TryGet<T>(Dictionary<string, IRawBase> layers, string id, out T value) where T : class, IRawBase
     {
-        foreach (var kv in layers)
+        if (layers.TryGetValue(id, out var layer) && layer is T typed)
         {
-            if (DnaBinaryParser.NormalizeLayerId(kv.Key) == id && kv.Value is T typed)
-            {
-                value = typed;
-                return true;
-            }
+            value = typed;
+            return true;
         }
 
         value = null!;

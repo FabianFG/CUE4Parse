@@ -12,6 +12,9 @@ public abstract class UDNAObject : UObject, IDnaAsset
     public DNAVersion? Version { get; protected set; }
     public Dictionary<string, IRawBase>? Layers { get; protected set; }
     public Lazy<byte[]>? DNAData { get; protected set; }
+    // The separate geometry DNA of assets saved before the custom version, when it has meshes. Cooked assets only
+    // have an empty placeholder there
+    public Lazy<byte[]>? GeometryDNAData { get; protected set; }
     public string? DnaFileName { get; protected set; }
     public RigLogicSnapshot? Snapshot { get; protected set; }
 
@@ -88,11 +91,15 @@ public abstract class UDNAObject : UObject, IDnaAsset
         {
             try
             {
-                var (geometry, _) = ReadDnaStream(Ar);
+                var (geometry, geometryBytes) = ReadDnaStream(Ar);
                 if (DnaAssetQueries.TryGet(geometry.Layers, "geom", out RawGeometry geom))
+                {
                     behavior.Layers["geom"] = geom;
+                    if (geom.Meshes.Length > 0)
+                        GeometryDNAData = new Lazy<byte[]>(() => geometryBytes);
+                }
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not OutOfMemoryException)
             {
                 Log.Warning(e, "Failed to read the geometry DNA of {0}", Name);
             }
@@ -147,10 +154,11 @@ public class UDNA : UDNAObject
     {
         base.Deserialize(Ar, validPos);
         
-        DNAConfig = GetOrDefault<FDNAConfig>(nameof(DNAConfig));
+        // A config that matches the defaults isn't serialized at all
+        DNAConfig = GetOrDefault(nameof(DNAConfig), new FDNAConfig());
         bKeepDNAAfterInitialization = GetOrDefault<bool>(nameof(bKeepDNAAfterInitialization));
         bUseOptimizedCooking = GetOrDefault(nameof(bUseOptimizedCooking), true);
-        RigLogicConfiguration = GetOrDefault<FRigLogicConfiguration>(nameof(RigLogicConfiguration));
+        RigLogicConfiguration = GetOrDefault(nameof(RigLogicConfiguration), new FRigLogicConfiguration());
         
 
         if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject))

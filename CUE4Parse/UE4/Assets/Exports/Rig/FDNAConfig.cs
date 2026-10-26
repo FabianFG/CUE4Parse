@@ -45,11 +45,14 @@ public class FRotationSign : IUStruct
 
     public FRotationSign() { }
 
-    public FRotationSign(FStructFallback fallback)
+    public FRotationSign(FStructFallback fallback) : this(fallback, new FRotationSign()) { }
+
+    // Unversioned packages leave out the fields that match the defaults of the struct this one is a member of
+    public FRotationSign(FStructFallback fallback, FRotationSign defaults)
     {
-        XAxis = fallback.GetOrDefault<ERotationDirection>(nameof(XAxis));
-        YAxis = fallback.GetOrDefault<ERotationDirection>(nameof(YAxis));
-        ZAxis = fallback.GetOrDefault<ERotationDirection>(nameof(ZAxis));
+        XAxis = fallback.GetOrDefault(nameof(XAxis), defaults.XAxis);
+        YAxis = fallback.GetOrDefault(nameof(YAxis), defaults.YAxis);
+        ZAxis = fallback.GetOrDefault(nameof(ZAxis), defaults.ZAxis);
     }
 }
 
@@ -62,11 +65,14 @@ public class FCoordinateSystem : IUStruct
 
     public FCoordinateSystem() { }
 
-    public FCoordinateSystem(FStructFallback fallback)
+    public FCoordinateSystem(FStructFallback fallback) : this(fallback, new FCoordinateSystem()) { }
+
+    // Unversioned packages leave out the fields that match the defaults of the struct this one is a member of
+    public FCoordinateSystem(FStructFallback fallback, FCoordinateSystem defaults)
     {
-        XAxis = fallback.GetOrDefault<EDirection>(nameof(XAxis));
-        YAxis = fallback.GetOrDefault<EDirection>(nameof(YAxis));
-        ZAxis = fallback.GetOrDefault<EDirection>(nameof(ZAxis));
+        XAxis = fallback.GetOrDefault(nameof(XAxis), defaults.XAxis);
+        YAxis = fallback.GetOrDefault(nameof(YAxis), defaults.YAxis);
+        ZAxis = fallback.GetOrDefault(nameof(ZAxis), defaults.ZAxis);
     }
 }
 
@@ -84,6 +90,8 @@ public class FDNAConfig : IUStruct
     public ERotationSequence RotationSequence = ERotationSequence.XYZ;
     public EFaceWindingOrder FaceWindingOrder = EFaceWindingOrder.CW;
 
+    public FDNAConfig() { }
+
     public FDNAConfig(FStructFallback fallback)
     {
         Layers = fallback.GetOrDefault(nameof(Layers), (int) EDNADataLayer.All);
@@ -91,8 +99,10 @@ public class FDNAConfig : IUStruct
         MinLODPerPlatform = fallback.GetOrDefault(nameof(MinLODPerPlatform), MinLODPerPlatform);
         ExactLODs = fallback.GetOrDefault<byte[]>(nameof(ExactLODs), []);
         CoordinateSystemTransformPolicy = fallback.GetOrDefault(nameof(CoordinateSystemTransformPolicy), ECoordinateSystemTransformPolicy.Preserve);
-        CoordinateSystem = fallback.GetOrDefault(nameof(CoordinateSystem), CoordinateSystem);
-        RotationSign = fallback.GetOrDefault(nameof(RotationSign), RotationSign);
+        if (fallback.TryGetValue(out FStructFallback coordinateSystem, nameof(CoordinateSystem)))
+            CoordinateSystem = new FCoordinateSystem(coordinateSystem, CoordinateSystem);
+        if (fallback.TryGetValue(out FStructFallback rotationSign, nameof(RotationSign)))
+            RotationSign = new FRotationSign(rotationSign, RotationSign);
         RotationSequence = fallback.GetOrDefault(nameof(RotationSequence), ERotationSequence.XYZ);
         FaceWindingOrder = fallback.GetOrDefault(nameof(FaceWindingOrder), EFaceWindingOrder.CW);
     }
@@ -105,6 +115,6 @@ public class UDNAConfigHolder : UObject
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
-        Config = GetOrDefault<FDNAConfig>(nameof(Config));
+        Config = GetOrDefault(nameof(Config), new FDNAConfig());
     }
 }

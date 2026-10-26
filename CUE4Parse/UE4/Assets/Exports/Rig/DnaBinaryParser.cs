@@ -35,7 +35,8 @@ public static class DnaBinaryParser
         var version = new DNAVersion(endianAr);
         Dictionary<string, IRawBase> layers;
 
-        if (version.FileVersion < FileVersion.v23)
+        // Only DNA 2.1 has the section lookup table, every later version starts with the index table
+        if (version.FileVersion < FileVersion.v22)
         {
             var sectionLookupTable = new SectionLookupTable(endianAr);
             var indexTable = new IndexTable(sectionLookupTable, version);
@@ -52,6 +53,8 @@ public static class DnaBinaryParser
             var dnaEnd = startPos;
             foreach (var entry in indexTable.Entries)
                 dnaEnd = Math.Max(dnaEnd, startPos + entry.Offset + entry.Size);
+            // A corrupt entry can't make the DNA longer than the data it is in
+            dnaEnd = Math.Min(dnaEnd, endianAr.Length);
 
             endianAr.Position = dnaEnd;
             return new DnaBinaryDocument
@@ -98,7 +101,8 @@ public static class DnaBinaryParser
                     _ => throw new NotSupportedException($"Type '{layerId}' is currently not supported")
                 };
             }
-            catch (Exception e)
+            // An OutOfMemoryException means a misread count, carrying on would only hide it
+            catch (Exception e) when (e is not OutOfMemoryException)
             {
                 result = false;
                 Log.Error(e, "Failed to read DNA layer '{0}' correctly.", entry.Id.Trim('\0'));

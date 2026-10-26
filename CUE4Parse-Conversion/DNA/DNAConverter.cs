@@ -35,6 +35,7 @@ public static class DNAConverter
 
         convertedPoseAsset.CurveNames = [..dna.GetRawControlNames().Select(name => name.Replace(".", "_"))];
         var rotation = GetRotationConvention(dna);
+        var units = GetUnitScales(dna);
 
         for (var i = 0; i < dna.GetRawControlCount(); i++)
         {
@@ -49,7 +50,7 @@ public static class DNAConverter
             var n = 0;
             for (var jointIndex = 0; jointIndex < dna.GetJointCount(); ++jointIndex)
             {
-                AddEulerPoseKey(poseData, dna.GetJointName(jointIndex), jointOutputs, n, rotation);
+                AddEulerPoseKey(poseData, dna.GetJointName(jointIndex), jointOutputs, n, rotation, units);
                 n += 9;
             }
 
@@ -123,6 +124,17 @@ public static class DNAConverter
         return (ERotationSequence.XYZ, 1, 1, 1);
     }
 
+    // Raw joint values are in the DNA's own units. RigLogic's BPCMJointsBuilder turns radians into degrees, and the
+    // pose is in UE units, so metres become centimetres
+    private static (float Translation, float Rotation) GetUnitScales(IDnaAsset dna)
+    {
+        if (dna.Layers == null || !DnaAssetQueries.TryGet(dna.Layers, "desc", out RawDescriptor descriptor))
+            return (1, 1);
+
+        return (descriptor.TranslationUnit == ETranslationUnit.M ? 100 : 1,
+            descriptor.RotationUnit == ERotationUnit.Radians ? 180 / MathF.PI : 1);
+    }
+
     private static int ToSign(ERotationDirection direction) => direction == ERotationDirection.Negative ? -1 : 1;
 
     private static int NormalizeSign(int sign) => sign < 0 ? -1 : 1;
@@ -131,19 +143,20 @@ public static class DNAConverter
     // through as authored: a positive value on the first, second and third translation component
     // moves the joint left, down and forward respectively.
     private static void AddEulerPoseKey(CPoseData poseData, string jointName, IReadOnlyList<float> jointOutputs, int n,
-        (ERotationSequence Sequence, int SignX, int SignY, int SignZ) rotation)
+        (ERotationSequence Sequence, int SignX, int SignY, int SignZ) rotation, (float Translation, float Rotation) units = default)
     {
         if (n + 8 >= jointOutputs.Count)
             return;
 
+        var (translationScale, rotationScale) = units == default ? (1f, 1f) : units;
         var (qx, qy, qz, qw) = RigLogicEvaluator.EulerDegreesToQuat(
-            jointOutputs[n + 3], jointOutputs[n + 4], jointOutputs[n + 5],
+            jointOutputs[n + 3] * rotationScale, jointOutputs[n + 4] * rotationScale, jointOutputs[n + 5] * rotationScale,
             rotation.Sequence, rotation.SignX, rotation.SignY, rotation.SignZ);
 
         CPoseKey key = new
         (
             jointName,
-            new FVector(jointOutputs[n], jointOutputs[n + 1], jointOutputs[n + 2]),
+            new FVector(jointOutputs[n] * translationScale, jointOutputs[n + 1] * translationScale, jointOutputs[n + 2] * translationScale),
             new FQuat(qx, qy, qz, qw),
             new FVector(jointOutputs[n + 6], jointOutputs[n + 7], jointOutputs[n + 8])
         );

@@ -24,6 +24,9 @@ public sealed class DnaExporter(UDNAObject dna) : ExporterBase(dna)
         {
             new("dna", bytes, suffix)
         };
+        // Older uncooked assets keep their meshes in a second DNA file
+        if (dna.GeometryDNAData?.Value is { Length: > 0 } geometry)
+            results.Add(new ExportFile("dna", geometry, suffix + "_Geometry"));
 
         // The pose is extra, a DNA whose behavior can't be evaluated is still worth exporting
         if (!dna.TryConvert(out var convertedPoseAsset))
