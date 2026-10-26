@@ -10,7 +10,14 @@ public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase
 {
     private CMaterialParams2? _parameters;
     private ExportSessionCache? _parameterCache;
-    internal override IEnumerable<UObject> GetDependencies(CancellationToken ct) => LoadTextures(ReadParameters(), ct);
+    internal override IEnumerable<UObject> GetDependencies(CancellationToken ct)
+    {
+        foreach (var texture in LoadTextures(ReadParameters(), ct))
+            yield return texture;
+
+        if (Session.ResolveMaterial(material).OpacityTexture is { } opacity)
+            yield return opacity;
+    }
 
     private static IEnumerable<UTexture> LoadTextures(CMaterialParams2 parameters, CancellationToken ct)
     {
@@ -41,11 +48,10 @@ public sealed class MaterialExporter(UMaterialInterface material) : ExporterBase
         var files = new List<ExportFile> { new JsonMaterialFormat().Build(ObjectName, parameters) };
         if (Session.Options.MeshFormat is EMeshFormat.USD)
         {
-            var rules = new MeshExportRules(material.Game);
-            files.Add(new UsdMaterialFormat(rules.UseDiffuseColor).Build(ObjectName, parameters, SaveDirectory));
+            files.Add(new UsdMaterialFormat(Session).Build(ObjectName, Session.ResolveMaterial(material), SaveDirectory));
         }
 
-        if (!Session.EmbedMaterials)
+        if (!Session.AttachMaterials)
         {
             foreach (var texture in LoadTextures(parameters, ct))
             {

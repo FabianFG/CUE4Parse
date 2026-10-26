@@ -47,7 +47,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
     private ExportOptions? _options;
     internal ExportOptions Options => _options ?? throw new InvalidOperationException("Session is not currently running.");
 
-    public bool EmbedMaterials { get; private set; }
+    public bool AttachMaterials { get; private set; }
 
     public PbrMaterialDto ResolveMaterial(UMaterialInterface material, EMaterialDepth? depth = null)
         => Cache.ResolveMaterial(material, depth ?? Options.MaterialDepth);
@@ -136,8 +136,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             _options = options;
             _cache = new ExportSessionCache();
 
-            // Only glTF embeds materials as of now.
-            EmbedMaterials = options.MeshFormat is EMeshFormat.Gltf2 && options.ExportMaterials;
+            AttachMaterials = options.MeshFormat is EMeshFormat.Gltf2 or EMeshFormat.USD && options.ExportMaterials;
 
             var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
             var current = new List<ExporterBase>();
@@ -149,7 +148,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
                     break;
 
                 // Textures are processed first so embedded materials can reuse saved files
-                if (EmbedMaterials)
+                if (AttachMaterials)
                 {
                     CollectDependencies(current, parallelOptions);
                     await Parallel.ForEachAsync(current.OfType<TextureExporter>(), parallelOptions, Process).ConfigureAwait(false);
@@ -166,7 +165,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
 
             _options = null;
             _baseDirectory = null;
-            EmbedMaterials = false;
+            AttachMaterials = false;
             _cache?.Clear();
             _cache = null;
             Interlocked.Exchange(ref _running, 0);
@@ -182,7 +181,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         async ValueTask Process(ExporterBase exporter, CancellationToken token)
         {
             var result = await exporter.ExportAsync(token).ConfigureAwait(false);
-            if (EmbedMaterials && result.Success && exporter is TextureExporter texture)
+            if (AttachMaterials && result.Success && exporter is TextureExporter texture)
             {
                 texture.CacheTexturePath();
             }

@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse.UE4.Objects.Core.Math;

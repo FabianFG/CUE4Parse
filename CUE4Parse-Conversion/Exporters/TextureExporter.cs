@@ -90,7 +90,7 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
                 var file = new ExportFile(extension, data, layered ? $"{mipSuffix}_LAYER{i}" : mipSuffix);
                 files.Add(file);
 
-                if (Session.EmbedMaterials && index == firstMip && i == 0 && texture is not UTextureCube)
+                if (Session.AttachMaterials && index == firstMip && i == 0 && texture is not UTextureCube)
                 {
                     (_, _texturePath) = ResolveOutputPath(file);
                 }
