@@ -71,11 +71,37 @@ public class FPCGMetadataAttributeDesc
     {
         var fallback = new FStructFallback(Ar, "PCGMetadataAttributeDesc");
         Name = fallback.GetOrDefault(nameof(Name), fallbackName);
-        ValueType = fallback.GetOrDefault(nameof(ValueType), EPCGMetadataTypes.Unknown);
-        ContainerTypes = fallback.GetOrDefault<EPCGMetadataAttributeContainerTypes[]>(nameof(ContainerTypes), []);
+        ValueType = ReadEnum(fallback, nameof(ValueType), EPCGMetadataTypes.Unknown);
+        ContainerTypes = ReadContainerTypes(fallback);
         ValueTypeObject = fallback.GetOrDefault<FPackageIndex?>(nameof(ValueTypeObject));
-        KeyType = fallback.GetOrDefault(nameof(KeyType), EPCGMetadataTypes.Unknown);
+        KeyType = ReadEnum(fallback, nameof(KeyType), EPCGMetadataTypes.Unknown);
         KeyTypeObject = fallback.GetOrDefault<FPackageIndex?>(nameof(KeyTypeObject));
+    }
+
+    // A missing property keeps its default. A value that is there but doesn't convert (an enum value the mappings don't
+    // know) can't fall back to the default: the descriptor decides how much UE wrote after it
+    private static TEnum ReadEnum<TEnum>(FStructFallback fallback, string name, TEnum defaultValue) where TEnum : struct, Enum
+    {
+        if (fallback.Properties.FirstOrDefault(property => property.Name.Text == name)?.Tag is not { } tag)
+            return defaultValue;
+        return tag.GetValue(typeof(TEnum)) is TEnum value
+            ? value
+            : throw new ParserException($"PCG metadata attribute descriptor has a {name} of {tag} that isn't a known {typeof(TEnum).Name}");
+    }
+
+    private static EPCGMetadataAttributeContainerTypes[] ReadContainerTypes(FStructFallback fallback)
+    {
+        if (fallback.Properties.FirstOrDefault(property => property.Name.Text == nameof(ContainerTypes))?.Tag is not ArrayProperty { Value: { } array })
+            return [];
+
+        var containers = new EPCGMetadataAttributeContainerTypes[array.Properties.Count];
+        for (var i = 0; i < containers.Length; i++)
+        {
+            containers[i] = array.Properties[i].GetValue(typeof(EPCGMetadataAttributeContainerTypes)) is EPCGMetadataAttributeContainerTypes container
+                ? container
+                : throw new ParserException($"PCG metadata attribute descriptor has a container type of {array.Properties[i]} that isn't a known EPCGMetadataAttributeContainerTypes");
+        }
+        return containers;
     }
 
     // UE treats an attribute as a single value when its outer container is None
@@ -190,6 +216,7 @@ public abstract class FPCGMetadataAttributeBase
     public int AttributeId;
     public FPCGMetadataAttributeDesc Descriptor;
 
+    [Obsolete("Only reads the layout from before UE 5.8. Use ReadPCGMetadataAttribute, which handles every version.")]
     public FPCGMetadataAttributeBase(FAssetArchive Ar)
     {
         EntryToValueKeyMap = Ar.ReadMap(Ar.Read<long>, Ar.Read<int>);
@@ -220,7 +247,7 @@ public abstract class FPCGMetadataAttributeBase
                                      FFortniteMainBranchObjectVersion.Type.ConvertFPCGMetadataAttributeToGenericAttributes;
         var descriptor = usesDescriptorLayout
             ? new FPCGMetadataAttributeDesc(Ar, attributeName)
-            : new FPCGMetadataAttributeDesc((EPCGMetadataTypes) Ar.Read<int>(), attributeName);
+            : new FPCGMetadataAttributeDesc(ReadLegacyType(Ar), attributeName);
         var header = new FPCGMetadataAttributeHeader(Ar, descriptor, usesGenericValueLayout);
 
         // Like UE, single values of the legacy types keep their typed attribute, everything else is generic
@@ -232,6 +259,17 @@ public abstract class FPCGMetadataAttributeBase
         throw new ParserException(Ar, $"Unknown EPCGMetadataTypes value {desc.ValueType}");
     }
 
+    // Before the descriptor, the domain wrote the type as an int32 and only knew the legacy types
+    private static EPCGMetadataTypes ReadLegacyType(FAssetArchive Ar)
+    {
+        var type = Ar.Read<int>();
+        if (type < 0 || type >= (int) EPCGMetadataTypes.EndLegacyTypes)
+            throw new ParserException(Ar, $"Unknown EPCGMetadataTypes value {type}");
+        return (EPCGMetadataTypes) type;
+    }
+
+    // Keeps its own switch instead of reading through CreatePropertyTagData because typed attributes expose their
+    // element type (FPCGMetadataAttribute<float> and so on). PcgMetadataAttributeTests checks that both read the same bytes
     private static FPCGMetadataAttributeBase ReadTypedAttribute(
         FAssetArchive Ar, FPCGMetadataAttributeHeader header, bool usesGenericLayout)
     {
@@ -268,6 +306,7 @@ public class FPCGMetadataAttribute<T> : FPCGMetadataAttributeBase
     public T[] Values = [];
     public T DefaultValue = default!;
 
+    [Obsolete("Only reads the layout from before UE 5.8. Use FPCGMetadataAttributeBase.ReadPCGMetadataAttribute, which handles every version.")]
     public FPCGMetadataAttribute(FAssetArchive Ar, Func<T> getter) : base(Ar)
     {
         Values = Ar.ReadArray(getter);

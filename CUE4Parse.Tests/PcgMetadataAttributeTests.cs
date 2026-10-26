@@ -7,7 +7,9 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
+using CUE4Parse.UE4.Objects.Core.i18N;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.Core.Serialization;
 using CUE4Parse.UE4.Objects.PCG;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -151,6 +153,158 @@ public class PcgMetadataAttributeTests
         stream.AssertFullyRead();
     }
 
+    // Soft paths are left out: both readers use the same FSoftObjectPath constructor for them
+    public static TheoryData<EPCGMetadataTypes> LegacyTypes() =>
+    [
+        EPCGMetadataTypes.Float, EPCGMetadataTypes.Double, EPCGMetadataTypes.Integer32, EPCGMetadataTypes.Integer64,
+        EPCGMetadataTypes.Vector2, EPCGMetadataTypes.Vector, EPCGMetadataTypes.Vector4, EPCGMetadataTypes.Quaternion,
+        EPCGMetadataTypes.Transform, EPCGMetadataTypes.String, EPCGMetadataTypes.Boolean, EPCGMetadataTypes.Rotator,
+        EPCGMetadataTypes.Name,
+    ];
+
+    // Single values of the legacy types go through the typed reader, arrays of them through the property reader.
+    // Both have to read the same bytes per value, since the two switches describe the same types
+    [Theory]
+    [MemberData(nameof(LegacyTypes))]
+    public void TypedAndPropertyReadersAgreeOnLegacyTypes(EPCGMetadataTypes type)
+    {
+        var single = new PcgStream();
+        single.GenericHeader(type, []);
+        single.Value(type); // default
+        single.Int(2).Value(type).Value(type); // values
+
+        Assert.IsNotType<FPCGMetadataGenericAttribute>(single.ReadAttribute());
+        single.AssertFullyRead();
+
+        var array = new PcgStream();
+        array.GenericHeader(type, [EPCGMetadataAttributeContainerTypes.Array]);
+        array.Int(1).Value(type); // default
+        array.Int(1).Int(2).Value(type).Value(type); // values
+
+        var generic = Assert.IsType<FPCGMetadataGenericAttribute>(array.ReadAttribute());
+        Assert.Equal(2, Assert.IsType<ArrayProperty>(Assert.Single(generic.Values)).Value!.Properties.Count);
+        array.AssertFullyRead();
+    }
+
+    [Fact]
+    public void ParentedAttributesUseTheDomainDescriptor()
+    {
+        var stream = new PcgStream();
+        stream.Descriptor(EPCGMetadataTypes.Integer32, [EPCGMetadataAttributeContainerTypes.Array]);
+        stream.AttributeHeader(parentAttributeId: 2); // no descriptor of its own
+        stream.Int(0); // default []
+        stream.Int(1).Int(2).Int(5).Int(6); // values [[5, 6]]
+
+        var attribute = Assert.IsType<FPCGMetadataGenericAttribute>(stream.ReadAttribute());
+        Assert.Equal(2, attribute.ParentAttributeId);
+        Assert.Equal([5, 6], Elements<int>(Assert.Single(attribute.Values)));
+        stream.AssertFullyRead();
+    }
+
+    [Fact]
+    public void GenericValuesBeforeTheDomainDescriptorStillReadTheAttributeDescriptor()
+    {
+        // At ConvertFPCGMetadataAttributeToGenericAttributes the domain still writes the type as an int32
+        var versions = new FCustomVersionContainer([new FCustomVersion(FFortniteMainBranchObjectVersion.GUID,
+            (int) FFortniteMainBranchObjectVersion.Type.ConvertFPCGMetadataAttributeToGenericAttributes)]);
+        var stream = new PcgStream(customVersions: versions);
+        stream.Int((int) EPCGMetadataTypes.Float);
+        stream.AttributeHeader();
+        stream.Descriptor(EPCGMetadataTypes.Float, []);
+        stream.Float(1); // default
+        stream.Int(1).Float(2); // values
+
+        var attribute = Assert.IsType<FPCGMetadataAttribute<float>>(stream.ReadAttribute());
+        Assert.Equal(1f, attribute.DefaultValue);
+        Assert.Equal([2f], attribute.Values);
+        stream.AssertFullyRead();
+    }
+
+    [Fact]
+    public void RemovedSetAndMapValuesAreSkipped()
+    {
+        var set = new PcgStream();
+        set.GenericHeader(EPCGMetadataTypes.Integer32, [EPCGMetadataAttributeContainerTypes.Set]);
+        set.Int(2).Int(98).Int(99).Int(1).Int(7); // default {7}, two removed elements
+        set.Int(0); // no values
+
+        Assert.Equal([7], Elements<int>(Assert.IsType<FPCGMetadataGenericAttribute>(set.ReadAttribute()).DefaultValue));
+        set.AssertFullyRead();
+
+        var map = new PcgStream();
+        map.GenericHeader(EPCGMetadataTypes.Float, [EPCGMetadataAttributeContainerTypes.Map], keyType: EPCGMetadataTypes.Integer32);
+        map.Int(1).Int(42).Int(1).Int(3).Float(0.5f); // default {3: 0.5}, removed key 42
+        map.Int(0); // no values
+
+        var entry = Assert.Single(Assert.IsType<MapProperty>(Assert.IsType<FPCGMetadataGenericAttribute>(map.ReadAttribute()).DefaultValue).Value!.Properties);
+        Assert.Equal((3, 0.5f), (entry.Key.GetValue<int>(), entry.Value!.GetValue<float>()));
+        map.AssertFullyRead();
+    }
+
+    [Fact]
+    public void ByteAndTextValuesAreGeneric()
+    {
+        var bytes = new PcgStream();
+        bytes.GenericHeader(EPCGMetadataTypes.Byte, []);
+        bytes.Byte(7);
+        bytes.Int(2).Byte(1).Byte(2);
+
+        var byteAttribute = Assert.IsType<FPCGMetadataGenericAttribute>(bytes.ReadAttribute());
+        Assert.Equal([1, 2], byteAttribute.Values.Select(value => (int) value.GetValue<byte>()).ToArray());
+        bytes.AssertFullyRead();
+
+        var text = new PcgStream();
+        text.GenericHeader(EPCGMetadataTypes.Text, []);
+        text.Text("default");
+        text.Int(1).Text("first");
+
+        var textAttribute = Assert.IsType<FPCGMetadataGenericAttribute>(text.ReadAttribute());
+        Assert.Equal("first", Assert.Single(textAttribute.Values).GetValue<FText>()!.Text);
+        text.AssertFullyRead();
+    }
+
+    [Fact]
+    public void DescriptorValuesTheMappingsDontKnowThrow()
+    {
+        var type = new PcgStream();
+        type.GenericHeader((EPCGMetadataTypes) 200, []);
+        Assert.Throws<ParserException>(() => type.ReadAttribute());
+
+        var container = new PcgStream();
+        container.Descriptor(EPCGMetadataTypes.Float, [EPCGMetadataAttributeContainerTypes.Array], containerName: "EPCGMetadataAttributeContainerTypes::Unknown");
+        Assert.Throws<ParserException>(() => container.ReadAttribute());
+    }
+
+    [Fact]
+    public void LegacyTypeIdsOutOfRangeThrow()
+    {
+        var stream = new PcgStream(EGame.GAME_UE5_7);
+        stream.Int(256);
+        stream.AttributeHeader();
+
+        Assert.Throws<ParserException>(() => stream.ReadAttribute());
+    }
+
+    [Fact]
+    public void RepeatedAttributeNamesKeepTheLastAttribute()
+    {
+        var stream = new PcgStream(EGame.GAME_UE5_7);
+        stream.Int(2);
+        foreach (var value in new[] { 1, 2 })
+        {
+            stream.Name("Attribute");
+            stream.Int((int) EPCGMetadataTypes.Integer32);
+            stream.AttributeHeader();
+            stream.Int(1).Int(value); // values
+            stream.Int(0); // default
+        }
+        stream.Int(0); // ParentKeys
+
+        var attribute = Assert.IsType<FPCGMetadataAttribute<int>>(Assert.Single(stream.ReadDomain().Attributes).Value);
+        Assert.Equal([2], attribute.Values);
+        stream.AssertFullyRead();
+    }
+
     private static T[] Elements<T>(FPropertyTagType? container) => container switch
     {
         ArrayProperty array => array.Value!.Properties.Select(value => value.GetValue<T>()!).ToArray(),
@@ -169,10 +323,10 @@ public class PcgMetadataAttributeTests
         public readonly Dictionary<int, ResolvedObject> Imports = [];
         public readonly FixturePackage Package;
 
-        public PcgStream(EGame game = EGame.GAME_UE5_8)
+        public PcgStream(EGame game = EGame.GAME_UE5_8, FCustomVersionContainer? customVersions = null)
         {
             _writer = new BinaryWriter(_data);
-            _versions = new VersionContainer(game);
+            _versions = new VersionContainer(game, customVersions: customVersions);
             Package = new FixturePackage(_names, Imports, CreateMappings());
         }
 
@@ -215,10 +369,10 @@ public class PcgMetadataAttributeTests
             Double(scale).Double(scale).Double(scale);
         }
 
-        public void AttributeHeader()
+        public void AttributeHeader(int parentAttributeId = -1)
         {
             Int(0); // EntryToValueKeyMap
-            Int(-1); // ParentAttributeId
+            Int(parentAttributeId);
             Name("Attribute");
             Int(0); // AttributeId
         }
@@ -232,15 +386,15 @@ public class PcgMetadataAttributeTests
             Descriptor(valueType, containers, valueTypeObject, keyType);
         }
 
-        private void Descriptor(EPCGMetadataTypes valueType, EPCGMetadataAttributeContainerTypes[] containers,
-            int valueTypeObject, EPCGMetadataTypes keyType)
+        public void Descriptor(EPCGMetadataTypes valueType, EPCGMetadataAttributeContainerTypes[] containers,
+            int valueTypeObject = 0, EPCGMetadataTypes keyType = EPCGMetadataTypes.Unknown, string? containerName = null)
         {
             Properties(6);
             Name("Attribute");
             Byte((byte) valueType);
             Int(containers.Length);
             foreach (var container in containers)
-                Name($"EPCGMetadataAttributeContainerTypes::{container}");
+                Name(containerName ?? $"EPCGMetadataAttributeContainerTypes::{container}");
             Int(valueTypeObject);
             Byte((byte) keyType);
             Int(0);
@@ -252,7 +406,40 @@ public class PcgMetadataAttributeTests
             return FPCGMetadataAttributeBase.ReadPCGMetadataAttribute(_archive, new FName("Attribute"));
         }
 
+        public FPCGMetadataDomain ReadDomain()
+        {
+            _archive = new FAssetArchive(new FByteArchive("pcg", _data.ToArray(), _versions), Package);
+            return new FPCGMetadataDomain(_archive);
+        }
+
         public void AssertFullyRead() => Assert.Equal(_archive!.Length, _archive.Position);
+
+        // A text without history: flags, history type None, then its culture invariant string
+        public PcgStream Text(string value)
+        {
+            Int(0).Byte(0xFF).Int(1);
+            return Str(value);
+        }
+
+        // One sample value of a legacy type, as both UE layouts write it
+        public PcgStream Value(EPCGMetadataTypes type)
+        {
+            switch (type)
+            {
+                case EPCGMetadataTypes.Float: return Float(1.5f);
+                case EPCGMetadataTypes.Double: return Double(2.5);
+                case EPCGMetadataTypes.Integer32: return Int(3);
+                case EPCGMetadataTypes.Integer64: return Int(4).Int(0);
+                case EPCGMetadataTypes.Vector2: return Double(1).Double(2);
+                case EPCGMetadataTypes.Vector or EPCGMetadataTypes.Rotator: return Double(1).Double(2).Double(3);
+                case EPCGMetadataTypes.Vector4 or EPCGMetadataTypes.Quaternion: return Double(0).Double(0).Double(0).Double(1);
+                case EPCGMetadataTypes.Transform: Transform(new FVector(1, 2, 3), 1); return this;
+                case EPCGMetadataTypes.String: return Str("value");
+                case EPCGMetadataTypes.Boolean: return Byte(1);
+                case EPCGMetadataTypes.Name: return Name("Value");
+                default: throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+        }
 
         private static TypeMappings CreateMappings()
         {

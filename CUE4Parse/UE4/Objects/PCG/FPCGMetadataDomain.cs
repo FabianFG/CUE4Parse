@@ -15,7 +15,8 @@ public class FPCGMetadataDomain
         for (var i = 0; i < attributeCount; i++)
         {
             var attributeName = Ar.ReadFName();
-            Attributes.Add(attributeName, FPCGMetadataAttributeBase.ReadPCGMetadataAttribute(Ar, attributeName));
+            // UE keys attributes by name, so a repeated name replaces the earlier one
+            Attributes[attributeName] = FPCGMetadataAttributeBase.ReadPCGMetadataAttribute(Ar, attributeName);
         }
 
         ParentKeys = Ar.ReadArray<long>();
