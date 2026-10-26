@@ -50,7 +50,7 @@ internal sealed class DeferredObjectExporter : ExporterBase
         var exportIndex = owner.GetExportIndex(export.Name);
         if (!IsExportAt(owner, exportIndex, export))
         {
-            exportIndex = Array.FindIndex(owner.ExportsLazy, candidate => candidate.IsValueCreated && ReferenceEquals(candidate.Value, export));
+            exportIndex = Array.FindIndex(owner.ExportsLazy, candidate => candidate is { IsValueCreated: true } && ReferenceEquals(candidate.Value, export));
             if (exportIndex < 0) return null;
         }
 
@@ -65,7 +65,7 @@ internal sealed class DeferredObjectExporter : ExporterBase
     {
         if (!_export.TryGetTarget(out var export))
         {
-            var package = _provider.LoadPackage(_packageFile);
+            var package = _session?.ReloadPackage(_provider, _packageFile) ?? _provider.LoadPackage(_packageFile);
             export = package.GetExport(_exportIndex);
             if (export is null || !export.Name.Equals(ObjectName, StringComparison.OrdinalIgnoreCase) || export.ExportType != ClassName)
                 throw new InvalidOperationException($"Package '{package.Name}' no longer has {ClassName} '{ObjectName}' at export index {_exportIndex}.");

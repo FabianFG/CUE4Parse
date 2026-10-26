@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Tests.Fixtures;
 using CUE4Parse.UE4.Assets.Exports;
@@ -141,7 +142,7 @@ public class ExportSessionTests
         try
         {
             Assert.True(await Task.Run(() => started.Wait(TimeSpan.FromSeconds(10)), Ct));
-            Assert.False(session.Clear());
+            Assert.False(session.TryClear());
         }
         finally
         {
@@ -170,6 +171,60 @@ public class ExportSessionTests
 
         Assert.Equal([.. Enumerable.Range(1, count), count], reports.Select(report => report.Completed));
         Assert.All(reports, report => Assert.Equal(count, report.Total));
+    }
+
+    // A handler that takes long only holds up the worker that reports, the others keep exporting
+    [Fact]
+    public async Task RunAsync_SlowProgressHandlersDontStopOtherWorkers()
+    {
+        const int count = 8;
+        using var exported = new CountdownEvent(count);
+        var session = new ExportSession { MaxDegreeOfParallelism = 4 };
+        for (var i = 0; i < count; i++)
+            session.Add(new TestExporter($"Item{i}", enqueue: _ => exported.Signal()));
+        var othersFinished = (bool?) null;
+        using var directory = new TempDirectory();
+
+        await session.RunAsync(directory.Path, new ExportOptions(), new InlineProgress(_ =>
+        {
+            othersFinished ??= exported.Wait(TimeSpan.FromSeconds(10), Ct);
+        }), Ct);
+
+        Assert.True(othersFinished);
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public async Task RunAsync_ReloadsCollectedMeshesToCollectTheirMaterials(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization,
+            compression: FixtureCompression.Uncompressed);
+        var session = new ExportSession { MaxDegreeOfParallelism = 1 };
+        var mesh = QueueAsset(session, provider, skeletalMesh: true);
+        await AssertEventually(() => !mesh.IsAlive, "The queued mesh remained strongly referenced.");
+        using var directory = new TempDirectory();
+
+        // glTF with materials collects dependencies first, which has to load the mesh again
+        var results = await session.RunAsync(directory.Path, new ExportOptions(meshFormat: EMeshFormat.Gltf2), ct: Ct);
+
+        Assert.All(results, result => Assert.True(result.Success, result.Error?.ToString()));
+        Assert.Contains(results, result => result.ObjectPath.EndsWith("SK_Fixture"));
+    }
+
+    [Fact]
+    public async Task RunAsync_FailsTheExportWhenTheReloadedPackageChanged()
+    {
+        using var provider = CreateMountedIoStoreProvider(FixtureSerialization.Unversioned,
+            compression: FixtureCompression.Uncompressed);
+        var session = new ExportSession { MaxDegreeOfParallelism = 1 };
+        var texture = QueueTextureAtWrongIndex(session, provider);
+        await AssertEventually(() => !texture.IsAlive, "The queued texture remained strongly referenced.");
+        using var directory = new TempDirectory();
+
+        var result = Assert.Single(await session.RunAsync(directory.Path, new ExportOptions(), ct: Ct));
+
+        Assert.False(result.Success);
     }
 
     // glTF embeds materials, so textures, including the ones that are only held weakly, go before everything else
@@ -213,7 +268,7 @@ public class ExportSessionTests
         }
 
         Assert.True(landscape.IsAlive);
-        Assert.True(session.Clear());
+        Assert.True(session.TryClear());
     }
 
     private const string TexturePath = "CUE4ParseFixtures/Content/Fixtures/Textures/T_BGRA8.uasset";
@@ -223,6 +278,17 @@ public class ExportSessionTests
     {
         var texture = LoadExport<UTexture2D>(provider, TexturePath, "T_BGRA8");
         session.Add(texture);
+        return new WeakReference(texture);
+    }
+
+    // As if the package changed after the texture was queued: the export index no longer points at it
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference QueueTextureAtWrongIndex(ExportSession session, CUE4Parse.FileProvider.DefaultFileProvider provider)
+    {
+        var texture = LoadExport<UTexture2D>(provider, TexturePath, "T_BGRA8");
+        var deferred = Assert.IsType<DeferredObjectExporter>(DeferredObjectExporter.TryCreate(texture, new TextureExporter(texture)));
+        typeof(DeferredObjectExporter).GetField("_exportIndex", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(deferred, 999);
+        session.Add(deferred);
         return new WeakReference(texture);
     }
 

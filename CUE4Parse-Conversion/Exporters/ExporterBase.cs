@@ -45,7 +45,7 @@ public abstract class ExporterBase : IExporter
         ObjectPath = PackagePath + '.' + ObjectName;
         ClassName = className;
 
-        Log = CUE4ParseLog.Log.ForContext(GetType())
+        Log = Serilog.Log.ForContext(GetType())
             .ForContext(nameof(ObjectPath), ObjectPath)
             .ForContext(nameof(ClassName), ClassName)
             .ForContext("ExporterV2", true);

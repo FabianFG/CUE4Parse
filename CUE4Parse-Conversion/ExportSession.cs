@@ -1,7 +1,10 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using CUE4Parse.FileProvider;
+using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.GameTypes.Nascar.Assets.Exports;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
@@ -139,7 +142,10 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         return true;
     }
 
-    public bool Clear()
+    /// <summary>Empties the queue. Does nothing while a run is going on, use <see cref="TryClear"/> to find out.</summary>
+    public void Clear() => TryClear();
+
+    public bool TryClear()
     {
         lock (_stateLock)
         {
@@ -163,6 +169,23 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         Interlocked.Exchange(ref _totalQueued, 0);
     }
 
+    // Packages that deferred exporters loaded again, so assets of the same package reuse one load while it's alive
+    private readonly ConcurrentDictionary<string, WeakReference<IPackage>> _reloadedPackages = new(StringComparer.OrdinalIgnoreCase);
+
+    internal IPackage ReloadPackage(IFileProvider provider, GameFile file)
+    {
+        var reference = _reloadedPackages.GetOrAdd(file.Path, static _ => new WeakReference<IPackage>(null!));
+        lock (reference)
+        {
+            if (reference.TryGetTarget(out var package))
+                return package;
+
+            package = provider.LoadPackage(file);
+            reference.SetTarget(package);
+            return package;
+        }
+    }
+
     public async Task<IReadOnlyList<ExportResult>> RunAsync(string baseDirectory, ExportOptions options, IProgress<ExportProgress>? progress = null, CancellationToken ct = default)
     {
         lock (_stateLock)
@@ -172,6 +195,8 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         }
 
         var results = new List<ExportResult>();
+        var reports = new ConcurrentQueue<ExportProgress>();
+        var reporting = 0;
         var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism, CancellationToken = ct };
         try
         {
@@ -214,6 +239,9 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             EmbedMaterials = false;
             _cache?.Clear();
             _cache = null;
+            _reloadedPackages.Clear();
+            if (progress != null)
+                DrainReports();
             lock (_stateLock)
             {
                 Interlocked.Exchange(ref _running, 0);
@@ -242,17 +270,39 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         {
             var result = await exporter.ExportAsync(token).ConfigureAwait(false);
 
-            // Counting and reporting together keeps the progress in order while workers finish concurrently
+            // Reports are queued in the order the results are counted and handed to the handler by one worker at a
+            // time, so the progress stays in order without every worker waiting for a slow handler
             lock (results)
             {
                 results.Add(result);
                 var count = results.Count;
                 var stillQueued = Interlocked.Decrement(ref _totalQueued);
-                progress?.Report(new ExportProgress(count, count + stillQueued, result));
+                if (progress != null)
+                    reports.Enqueue(new ExportProgress(count, count + stillQueued, result));
             }
 
+            if (progress != null)
+                DrainReports();
             OnPropertyChanged(nameof(TotalQueued));
             OnPropertyChanged(nameof(HasQueuedItems));
+        }
+
+        // A worker that finds another one reporting leaves its report in the queue, the reporting one checks again
+        // after it lets go, so nothing is left behind
+        void DrainReports()
+        {
+            while (!reports.IsEmpty && Interlocked.CompareExchange(ref reporting, 1, 0) == 0)
+            {
+                try
+                {
+                    while (reports.TryDequeue(out var report))
+                        progress!.Report(report);
+                }
+                finally
+                {
+                    Volatile.Write(ref reporting, 0);
+                }
+            }
         }
     }
 
