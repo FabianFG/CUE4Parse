@@ -37,7 +37,12 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
             }
 
             if (!rules.ShouldExportSection(materialSection))
+            {
+#if DEBUG
+                Log.Debug("Skipping section {Section} of LOD {Lod} in {Path} due to export rules", materialSection.MaterialIndex, sourceLodIndex, owner.Path);
+#endif
                 continue;
+            }
 
             visibleSections.Add(materialSection);
         }
