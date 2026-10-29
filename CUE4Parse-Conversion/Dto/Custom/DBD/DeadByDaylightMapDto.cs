@@ -8,7 +8,7 @@ using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 
-namespace CUE4Parse_Conversion.Dto.Custom;
+namespace CUE4Parse_Conversion.Dto.Custom.DBD;
 
 public sealed class DeadByDaylightMapDto : SceneDto
 {
