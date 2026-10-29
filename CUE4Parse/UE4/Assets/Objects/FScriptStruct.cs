@@ -276,6 +276,7 @@ public class FScriptStruct
 
             "MarvelSoftObjectPath" when Ar.Game == GAME_MarvelRivals => new FMarvelSoftObjectPath(Ar),
             "SerializablePropertySoftPath" when Ar.Game == GAME_MarvelRivals => new FSerializablePropertySoftPath(Ar),
+            "DecalChannels" when Ar.Game == GAME_MarvelRivals => new FRawUIntStruct(),
 
             // Wuthering Waves
             "VectorDouble" => type == ReadType.ZERO ? new TIntVector3<double>() : Ar.Read<TIntVector3<double>>(),

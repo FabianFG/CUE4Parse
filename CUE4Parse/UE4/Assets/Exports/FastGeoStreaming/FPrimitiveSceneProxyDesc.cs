@@ -1,3 +1,5 @@
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -20,11 +22,26 @@ public class FSceneProxyDesc
     }
 }
 
-public struct FLightingChannels(FArchive Ar)
+[StructFallback]
+public struct FLightingChannels
 {
-    public bool bChannel0 = Ar.ReadBoolean();
-    public bool bChannel1 = Ar.ReadBoolean();
-    public bool bChannel2 = Ar.ReadBoolean();
+    public bool bChannel0;
+    public bool bChannel1;
+    public bool bChannel2;
+
+    public FLightingChannels(FArchive Ar)
+    {
+        bChannel0 = Ar.ReadBoolean();
+        bChannel1 = Ar.ReadBoolean();
+        bChannel2 = Ar.ReadBoolean();
+    }
+
+    public FLightingChannels(FStructFallback fallback)
+    {
+        bChannel0 = fallback.GetOrDefault(nameof(bChannel0), false);
+        bChannel1 = fallback.GetOrDefault(nameof(bChannel1), false);
+        bChannel2 = fallback.GetOrDefault(nameof(bChannel2), false);
+    }
 }
 
 public class FPrimitiveSceneProxyDesc(FArchive Ar)
