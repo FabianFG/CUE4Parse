@@ -28,9 +28,6 @@ internal sealed class FProceduralTileLayout(FProceduralTileCell[] cells, int map
                     continue;
 
                 var placement = SelectPlacement(cell, x, y) ?? throw new InvalidDataException($"No matching DBD tile at ({x}, {y}): type={cell.Type}, density={cell.Density}, path={cell.Path}, number={cell.Number}.");
-                if (placement.Tile.IsEscapeTile && placement.Width == 1 && placement.Height == 1 && FProceduralEscapeLayout.TryGetFlags(cells, mapWidth, mapHeight, x, y, out var escapeFlags))
-                    placement = placement with { Flags = escapeFlags };
-
                 AddPlacement(placement);
             }
         }
@@ -48,7 +45,7 @@ internal sealed class FProceduralTileLayout(FProceduralTileCell[] cells, int map
                     tile.MatchesDensity(cells[current.Y * mapWidth + current.X].Density) && double.IsFinite(tile.Weight) && tile.Weight > 0 &&
                     (tile.MaximumCount <= 0 || _placements.Count(placement => placement.Tile == tile) < tile.MaximumCount))
                 .Select(tile => new FProceduralTilePlacement(tile, current.X, current.Y, current.Flags))
-                .Where(placement => placement.Width == current.Width && placement.Height == current.Height)
+                .Where(placement => placement.Width == current.Width && placement.Height == current.Height && FProceduralEscapeLayout.CanSpawn(cells, mapWidth, mapHeight, placement))
                 .OrderBy(placement => placement.Tile.AssetPath, StringComparer.Ordinal).ToArray();
             if (replacements.Length == 0)
                 continue;
@@ -83,7 +80,7 @@ internal sealed class FProceduralTileLayout(FProceduralTileCell[] cells, int map
         if (bestGroup == null)
             return null;
 
-        return SelectWeighted(bestGroup.OrderBy(placement => placement.Tile.AssetPath, StringComparer.Ordinal).ToArray());
+        return SelectWeighted([.. bestGroup.OrderBy(placement => placement.Tile.AssetPath, StringComparer.Ordinal)]);
     }
 
     private FProceduralTilePlacement SelectWeighted(FProceduralTilePlacement[] candidates)
@@ -116,6 +113,18 @@ internal sealed class FProceduralTileLayout(FProceduralTileCell[] cells, int map
                 continue;
             if (tile.PathType != cell.Path)
                 continue;
+
+            if (tile.IsEscapeTile)
+            {
+                foreach (var flags in FProceduralEscapeLayout._outwardFlags)
+                {
+                    var escape = new FProceduralTilePlacement(tile, x, y, flags);
+                    if (FProceduralEscapeLayout.CanSpawn(cells, mapWidth, mapHeight, escape) && CanPlace(escape, cell))
+                        yield return escape;
+                }
+
+                continue;
+            }
 
             var placement = new FProceduralTilePlacement(tile, x, y, cell.Flags);
             if (CanPlace(placement, cell))

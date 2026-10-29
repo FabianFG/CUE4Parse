@@ -11,8 +11,12 @@ using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.GameTypes.DBD.Objects.ProceduralMaps.Assets;
 
-internal sealed class FProceduralMapAssets(IFileProvider provider)
+internal sealed class FProceduralMapAssets(IFileProvider provider, string tilesDirectory)
 {
+    private const string ThemePropertiesTableName = "LevelGen_ThemePropertiesDB";
+    private const string LightingTableName = "LevelGen_LightDataDB";
+    private const string ProceduralMapsTableName = "ProceduralMaps";
+
     private readonly ILookup<string, GameFile> _tables = FindTables(provider);
     private readonly UGameTypeModifierDefaults? _modifiers = provider.SafeLoadPackageObject<UGameTypeModifierDefaults>("/Game/Data/GameTypeModifierDefaults.GameTypeModifierDefaults");
 
@@ -26,28 +30,23 @@ internal sealed class FProceduralMapAssets(IFileProvider provider)
         return count >= 0 ? count : 7;
     }
 
-    public FThemeProperties ResolveTheme(string packagePath, CancellationToken ct)
-    {
-        var directories = packagePath.Split('/');
-        foreach (var (key, row) in ReadRows("LevelGen_ThemePropertiesDB", ct))
-        {
-            var theme = new FThemeProperties(row, key);
-            if (string.IsNullOrEmpty(theme.MapPath) || !directories.Contains(theme.MapPath, StringComparer.OrdinalIgnoreCase))
-                continue;
-
-            return theme;
-        }
-
-        throw new InvalidDataException($"No procedural theme is defined for tile map '{packagePath}'.");
-    }
-
     public List<FProceduralTile> LoadTiles(string tilePath, CancellationToken ct)
     {
-        var prefix = provider.FixPath($"/Game/Blueprints/Tiles/{tilePath}/");
+        var directories = GetContentDirectories(provider, tilesDirectory).ToArray();
+        var directorySuffix = '/' + tilesDirectory.Trim('/') + '/';
         var tiles = new List<FProceduralTile>();
-        foreach (var file in provider.Files.Values.Where(f => f.IsUePackage && f.Path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).OrderBy(f => f.Path, StringComparer.Ordinal))
+        foreach (var file in provider.Files.Values.Where(file => file.IsUePackage && file.Path.Contains(directorySuffix, StringComparison.OrdinalIgnoreCase))
+                     .OrderBy(file => file.Path, StringComparer.Ordinal))
         {
             ct.ThrowIfCancellationRequested();
+            var directory = directories.FirstOrDefault(directory => file.Path.StartsWith(directory.FilePath, StringComparison.OrdinalIgnoreCase));
+            if (directory.FilePath == null)
+                continue;
+
+            var packagePath = directory.PackagePath + file.PathWithoutExtension[directory.FilePath.Length..];
+            if (!packagePath.Contains(tilePath, StringComparison.OrdinalIgnoreCase))
+                continue;
+
             var package = provider.LoadPackage(file);
             if (package.GetExportOrNull<UBlueprintGeneratedClass>(file.NameWithoutExtension + "_C") is not { } blueprint)
                 continue;
@@ -58,14 +57,28 @@ internal sealed class FProceduralMapAssets(IFileProvider provider)
         }
 
         if (tiles.Count == 0)
-            throw new InvalidDataException($"No tile Blueprints found in '{prefix}'.");
+            throw new InvalidDataException($"No tile Blueprints found for theme path '{tilePath}' in '{tilesDirectory}'.");
 
         return tiles;
     }
 
+    public FThemeProperties ResolveTheme(string packagePath, CancellationToken ct)
+    {
+        foreach (var (key, row) in ReadRows(ThemePropertiesTableName, ct))
+        {
+            var theme = new FThemeProperties(row, key);
+            if (string.IsNullOrEmpty(theme.MapPath) || !packagePath.Contains(theme.MapPath, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            return theme;
+        }
+
+        throw new InvalidDataException($"No procedural theme is defined for tile map '{packagePath}'.");
+    }
+
     public UBlueprintGeneratedClass? LoadLighting(FName themeName, CancellationToken ct)
     {
-        foreach (var (key, row) in ReadRows("LevelGen_LightDataDB", ct))
+        foreach (var (key, row) in ReadRows(LightingTableName, ct))
         {
             var lighting = new FSceneLightingDescription(row);
             var name = lighting.ThemeName.IsNone ? key : lighting.ThemeName;
@@ -81,11 +94,12 @@ internal sealed class FProceduralMapAssets(IFileProvider provider)
 
     public FProceduralMap? LoadMap(string mapName, CancellationToken ct)
     {
-        foreach (var (key, row) in ReadRows("ProceduralMaps", ct))
+        foreach (var (key, row) in ReadRows(ProceduralMapsTableName, ct))
         {
             if (key.Text.Equals(mapName, StringComparison.OrdinalIgnoreCase))
                 return new FProceduralMap(row);
         }
+
         return null;
     }
 
@@ -105,14 +119,29 @@ internal sealed class FProceduralMapAssets(IFileProvider provider)
         }
     }
 
-    // Theme and lighting rows can live in either the base database or a DLC database
+    private static IEnumerable<(string PackagePath, string FilePath)> GetContentDirectories(IFileProvider provider, string directory)
+    {
+        directory = directory.Trim('/');
+        var path = $"/Game/{directory}/";
+        yield return (path, provider.FixPath(path));
+
+        var pluginsPath = provider.FixPath("/Game/Plugins/");
+        foreach (var plugin in provider.VirtualPaths.OrderBy(plugin => plugin.Key, StringComparer.Ordinal))
+        {
+            if (!plugin.Value.StartsWith(pluginsPath, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            path = $"/{plugin.Key}/{directory}/";
+            yield return (path, provider.FixPath(path));
+        }
+    }
+
     private static ILookup<string, GameFile> FindTables(IFileProvider provider)
     {
-        var dataPath = provider.FixPath("/Game/Data/");
-        var dlcPath = provider.FixPath("/Game/Data/Dlc/");
+        var directories = GetContentDirectories(provider, "Data").Select(directory => directory.FilePath).ToArray();
         return provider.Files.Values
-            .Where(file => file.IsUePackage && file.NameWithoutExtension is "LevelGen_ThemePropertiesDB" or "LevelGen_LightDataDB" or "ProceduralMaps")
-            .Where(file => file.Path.Equals(dataPath + file.Name, StringComparison.OrdinalIgnoreCase) || file.Path.StartsWith(dlcPath, StringComparison.OrdinalIgnoreCase))
+            .Where(file => file.IsUePackage && file.NameWithoutExtension is ThemePropertiesTableName or LightingTableName or ProceduralMapsTableName)
+            .Where(file => directories.Any(directory => file.Path.StartsWith(directory, StringComparison.OrdinalIgnoreCase)))
             .OrderBy(file => file.Path, StringComparer.Ordinal)
             .ToLookup(file => file.NameWithoutExtension, StringComparer.OrdinalIgnoreCase);
     }
