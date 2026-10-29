@@ -177,8 +177,7 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         // nanite lod always has SourceLodIndex 0, same as real lod 0, so we can't key off SourceLodIndex or they would collide
         // so use position in the list instead
 
-        var length = LODs.Count;
-        for (var i = 0; i < length; i++)
+        for (var i = 0; i < LODs.Count; i++)
         {
             var lod = LODs[i];
             if (lod.Sections.Length == 0) LODs.RemoveAt(i--);
