@@ -1,4 +1,4 @@
-﻿using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 
 namespace CUE4Parse.UE4.Objects.PhysicsEngine;
@@ -24,15 +24,15 @@ public readonly struct FBodyInstance : IUStruct
 
     public FBodyInstance(FStructFallback fallback)
     {
-        bSimulatePhysics = fallback.GetOrDefault<byte>(nameof(bSimulatePhysics)) != 0;
-        bOverrideMass = fallback.GetOrDefault<byte>(nameof(bOverrideMass)) != 0;
-        bEnableGravity = fallback.GetOrDefault<byte>(nameof(bEnableGravity), 1) != 0;
-        bUpdateKinematicFromSimulation = fallback.GetOrDefault<byte>(nameof(bUpdateKinematicFromSimulation)) != 0;
-        bGyroscopicTorqueEnabled = fallback.GetOrDefault<byte>(nameof(bGyroscopicTorqueEnabled)) != 0;
-        bAutoWeld = fallback.GetOrDefault<byte>(nameof(bAutoWeld)) != 0;
-        bStartAwake = fallback.GetOrDefault<byte>(nameof(bStartAwake), 1) != 0;
-        bGenerateWakeEvents = fallback.GetOrDefault<byte>(nameof(bGenerateWakeEvents)) != 0;
-        bUpdateMassWhenScaleChanges = fallback.GetOrDefault<byte>(nameof(bUpdateMassWhenScaleChanges)) != 0;
+        bSimulatePhysics = fallback.GetOrDefault(nameof(bSimulatePhysics), bSimulatePhysics);
+        bOverrideMass = fallback.GetOrDefault(nameof(bOverrideMass), bOverrideMass);
+        bEnableGravity = fallback.GetOrDefault(nameof(bEnableGravity), bEnableGravity);
+        bUpdateKinematicFromSimulation = fallback.GetOrDefault(nameof(bUpdateKinematicFromSimulation), bUpdateKinematicFromSimulation);
+        bGyroscopicTorqueEnabled = fallback.GetOrDefault(nameof(bGyroscopicTorqueEnabled), bGyroscopicTorqueEnabled);
+        bAutoWeld = fallback.GetOrDefault(nameof(bAutoWeld), bAutoWeld);
+        bStartAwake = fallback.GetOrDefault(nameof(bStartAwake), bStartAwake);
+        bGenerateWakeEvents = fallback.GetOrDefault(nameof(bGenerateWakeEvents), bGenerateWakeEvents);
+        bUpdateMassWhenScaleChanges = fallback.GetOrDefault(nameof(bUpdateMassWhenScaleChanges), bUpdateMassWhenScaleChanges);
 
         PositionSolverIterationCount = fallback.GetOrDefault(nameof(PositionSolverIterationCount), PositionSolverIterationCount);
         VelocitySolverIterationCount = fallback.GetOrDefault(nameof(VelocitySolverIterationCount), VelocitySolverIterationCount);
