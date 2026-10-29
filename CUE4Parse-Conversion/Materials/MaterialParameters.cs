@@ -9,7 +9,7 @@ using CUE4Parse_Conversion.Dto;
 namespace CUE4Parse_Conversion.Materials;
 
 /// <summary>Parses material inheritance and resolves PBR values from known parameter aliases.</summary>
-internal sealed partial class MaterialParameters
+public sealed partial class MaterialParameters
 {
     private static readonly string[] _baseColorTextures = [..CMaterialParams2.Diffuse[0], "Base", CMaterialParams2.FallbackDiffuse];
     private static readonly string[] _normalTextures = [..CMaterialParams2.Normals[0], CMaterialParams2.FallbackNormals];
@@ -40,6 +40,7 @@ internal sealed partial class MaterialParameters
     private readonly Lazy<MaterialParameters?> _parent;
     private readonly Lazy<MaterialParameters[]> _inheritance;
     private readonly Lazy<CMaterialParams2[]> _layers;
+    private readonly Lazy<HashSet<string>?> _activeTextureParameters;
     private readonly Lazy<CMaterialParams2> _combined;
     private readonly Lazy<PbrMaterialDto> _pbr;
 
@@ -65,6 +66,7 @@ internal sealed partial class MaterialParameters
         _layers = new Lazy<CMaterialParams2[]>(() => depth is EMaterialDepth.TopLayerOnly
             ? [_local.Value]
             : [.. _inheritance.Value.Select(layer => layer._local.Value)]);
+        _activeTextureParameters = new Lazy<HashSet<string>?>(() => GetActiveTextureParameters(material, depth));
         _combined = depth is EMaterialDepth.TopLayerOnly ? _local : new Lazy<CMaterialParams2>(CombineParameters);
         _pbr = new Lazy<PbrMaterialDto>(() => PbrMaterialConverter.Convert(this));
     }
@@ -117,6 +119,32 @@ internal sealed partial class MaterialParameters
         }
     }
 
+    public static HashSet<string>? GetActiveTextureParameters(UMaterialInterface material, EMaterialDepth depth)
+    {
+        var current = material;
+        var visited = new HashSet<UMaterialInterface>();
+        while (visited.Add(current))
+        {
+            var uniforms = current.LoadedMaterialResources.Select(resource => resource.LoadedShaderMap?.Content)
+                .OfType<FMaterialShaderMapContent>().Select(content => content.MaterialCompilationOutput?.UniformExpressionSet)
+                .OfType<FUniformExpressionSet>().ToArray();
+            if (uniforms.Length > 0)
+            {
+                var bindings = uniforms.SelectMany(uniform => uniform.UniformTextureParameters).SelectMany(parameters => parameters).ToArray();
+                if (bindings.Any(binding => binding.ParameterInfo is not { Association: EMaterialParameterAssociation.GlobalParameter }))
+                    return null;
+
+                var names = bindings.Select(binding => binding.ParameterInfo!.Name).Where(name => !name.IsNone).Select(name => name.Text).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                return names.Count > 0 ? names : null;
+            }
+
+            if (depth is EMaterialDepth.TopLayerOnly || current is not UMaterialInstance { bHasStaticPermutationResource: false, Parent: { } parent } || !parent.TryLoad<UMaterialInterface>(out current))
+                return null;
+        }
+
+        return null;
+    }
+
     public (EBlendMode BlendMode, float Cutoff, bool TwoSided) GetSurface()
     {
         var blendMode = EBlendMode.BLEND_Opaque;
@@ -155,7 +183,7 @@ internal sealed partial class MaterialParameters
     }
 
     public UTexture2D? GetBaseColorTexture() => GetTexture(_baseColorTextures) ?? GetFallbackColorTexture();
-    public UTexture2D? GetNormalTexture() => GetTexture(_normalTextures);
+    public UTexture2D? GetNormalTexture() => GetTexture(_normalTextures, matchSuffix: _activeTextureParameters.Value != null);
     public UTexture2D? GetEmissiveTexture() => GetTexture(_emissiveTextures);
     public UTexture2D? GetOcclusionTexture() => GetTexture(_occlusionTextures, matchSuffix: true);
 
@@ -194,7 +222,7 @@ internal sealed partial class MaterialParameters
         {
             foreach (var (name, layout) in _packedTextureNames)
             {
-                if (layer.Textures.TryGetValue(name, out var reference) && reference.TryLoad<UTexture2D>(out var texture))
+                if (layer.Textures.TryGetValue(name, out var reference) && IsTextureActive(name, reference) && reference.TryLoad<UTexture2D>(out var texture))
                     return (texture, layout);
             }
 
@@ -226,6 +254,7 @@ internal sealed partial class MaterialParameters
         {
             foreach (var (name, reference) in layer.Textures)
             {
+                if (!IsTextureActive(name, reference)) continue;
                 if (reference.TryLoad<UTexture2D>(out var texture) && texture != null && IsBaseColorTexture(name, texture))
                     return texture;
             }
@@ -281,13 +310,17 @@ internal sealed partial class MaterialParameters
         return parameters;
     }
 
-    private static UTexture2D? FindTexture(CMaterialParams2 parameters, IEnumerable<string> names)
-        => parameters.GetTextures(names).OfType<UTexture2D>().FirstOrDefault();
+    private bool IsTextureActive(string name, ILoadableObject reference) =>
+        _activeTextureParameters.Value is not { } active || active.Contains(name) || reference is FPackageIndex index && name == index.Name;
 
-    private static UTexture2D? FindTextureBySuffix(CMaterialParams2 parameters, string[] names)
+    private UTexture2D? FindTexture(CMaterialParams2 parameters, IEnumerable<string> names)
+        => parameters.GetTextures(names.Where(name => parameters.Textures.TryGetValue(name, out var reference) && IsTextureActive(name, reference))).OfType<UTexture2D>().FirstOrDefault();
+
+    private UTexture2D? FindTextureBySuffix(CMaterialParams2 parameters, string[] names)
     {
         foreach (var (name, reference) in parameters.Textures)
         {
+            if (!IsTextureActive(name, reference)) continue;
             var matchesName = MatchesTextureSuffix(name, names);
             // A loaded reference may have a different name, don't load unrelated assets to check it
             if (!matchesName && (reference is not FPackageIndex index || name != index.Name || index.ResolvedObject?.Object is not { IsValueCreated: true }))
@@ -301,13 +334,13 @@ internal sealed partial class MaterialParameters
         return null;
     }
 
-    private static (UTexture2D Texture, EMaterialTextureLayout Layout)? FindPackedTexture(CMaterialParams2 parameters, bool referencesOnly)
+    private (UTexture2D Texture, EMaterialTextureLayout Layout)? FindPackedTexture(CMaterialParams2 parameters, bool referencesOnly)
     {
         (UTexture2D Texture, EMaterialTextureLayout Layout)? result = null;
         foreach (var (name, reference) in parameters.Textures)
         {
             var isReference = reference is FPackageIndex index && name == index.Name;
-            if (isReference != referencesOnly)
+            if (isReference != referencesOnly || !IsTextureActive(name, reference))
                 continue;
 
             var layout = GetPackedTextureLayout(name);
