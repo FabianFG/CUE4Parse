@@ -72,16 +72,14 @@ public static partial class BCDecoder
         return blocksX * blocksY * blockSize;
     }
 
+    // integer approximation, identical to the float implementation for all values
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte GetZNormal(byte x, byte y)
     {
-        const float scale = 2.0f / 255.0f;
-        var xf = x * scale - 1;
-        var yf = y * scale - 1;
-        var zval = 1 - xf * xf - yf * yf;
-        var zval_ = MathF.Sqrt(zval > 0 ? zval : 0);
-        zval = zval_ < 1.0f ? zval_ : 1.0f;
-        return (byte) ((zval * 127) + 128);
+        var zval = 4 * (y * (255 - y) + x * (255 - x)) - 65025;
+        if (zval <= 0) return 128;
+        int sqrt = (int) Math.Sqrt(zval * 16130 + 9999);
+        return (byte) ((((sqrt << 8) + sqrt) >> 16) + 128);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -147,7 +145,6 @@ public static partial class BCDecoder
         Unsafe.Add(ref dst, 3) = ((r0 + 2 * r1) * 683) >> 11 | (((g0 + 2 * g1) * 683) >> 19) << 8 | (((b0 + 2 * b1) * 683) >> 11) << 16;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static ulong DecodeBCColors(ulong data)
     {
@@ -174,16 +171,16 @@ public static partial class BCDecoder
         }
         else
         {
-            // (x * 1636) >> 13 = x/5 in [0,1277]
+            // (x * 1639) >> 13 = x/5 in [0,1277]
             var diff = c1 - c0;
             var temp0 = 4 * c0 + c1 + 2;
-            cl |= (ulong) ((temp0 * 1636) >> 13) << 16;
+            cl |= (ulong) ((temp0 * 1639) >> 13) << 16;
             temp0 += diff;
-            cl |= (ulong) ((temp0 * 1636) >> 13) << 24;
+            cl |= (ulong) ((temp0 * 1639) >> 13) << 24;
             temp0 += diff;
-            cl |= (ulong) ((temp0 * 1636) >> 13) << 32;
+            cl |= (ulong) ((temp0 * 1639) >> 13) << 32;
             temp0 += diff;
-            cl |= (ulong) ((temp0 * 1636) >> 13) << 40;
+            cl |= (ulong) ((temp0 * 1639) >> 13) << 40;
             cl |= 0xFF00000000000000;
         }
         return cl;
@@ -193,23 +190,23 @@ public static partial class BCDecoder
     public static void DecodeBCBlock(ulong data, Span<byte> block)
     {
         var cl = DecodeBCColors(data);
-        var bits = (uint) (data >> 16);
-        block[0] = (byte) (cl >> (int) (((bits >> 0) & 7) << 3));
-        block[1] = (byte) (cl >> (int) (((bits >> 3) & 7) << 3));
-        block[2] = (byte) (cl >> (int) (((bits >> 6) & 7) << 3));
-        block[3] = (byte) (cl >> (int) (((bits >> 9) & 7) << 3));
-        block[4] = (byte) (cl >> (int) (((bits >> 12) & 7) << 3));
-        block[5] = (byte) (cl >> (int) (((bits >> 15) & 7) << 3));
-        block[6] = (byte) (cl >> (int) (((bits >> 18) & 7) << 3));
-        block[7] = (byte) (cl >> (int) (((bits >> 21) & 7) << 3));
-        bits = (uint) (data >> 40);
-        block[8] = (byte) (cl >> (int) (((bits >> 0) & 7) << 3));
-        block[9] = (byte) (cl >> (int) (((bits >> 3) & 7) << 3));
-        block[10] = (byte) (cl >> (int) (((bits >> 6) & 7) << 3));
-        block[11] = (byte) (cl >> (int) (((bits >> 9) & 7) << 3));
-        block[12] = (byte) (cl >> (int) (((bits >> 12) & 7) << 3));
-        block[13] = (byte) (cl >> (int) (((bits >> 15) & 7) << 3));
-        block[14] = (byte) (cl >> (int) (((bits >> 18) & 7) << 3));
-        block[15] = (byte) (cl >> (int) (((bits >> 21) & 7) << 3));
+        var bits2 = (int) (data >> 40);
+        block[15] = (byte) (cl >> ((bits2 >> 18) & 56));
+        block[14] = (byte) (cl >> ((bits2 >> 15) & 56));
+        block[13] = (byte) (cl >> ((bits2 >> 12) & 56));
+        block[12] = (byte) (cl >> ((bits2 >>  9) & 56));
+        block[11] = (byte) (cl >> ((bits2 >>  6) & 56));
+        block[10] = (byte) (cl >> ((bits2 >>  3) & 56));
+        block[ 9] = (byte) (cl >> ((bits2 >>  0) & 56));
+        block[ 8] = (byte) (cl >> ((bits2 <<  3) & 56));
+        var bits1 = (int) (data >> 16);
+        block[ 7] = (byte) (cl >> ((bits1 >> 18) & 56));
+        block[ 6] = (byte) (cl >> ((bits1 >> 15) & 56));
+        block[ 5] = (byte) (cl >> ((bits1 >> 12) & 56));
+        block[ 4] = (byte) (cl >> ((bits1 >>  9) & 56));
+        block[ 3] = (byte) (cl >> ((bits1 >>  6) & 56));
+        block[ 2] = (byte) (cl >> ((bits1 >>  3) & 56));
+        block[ 1] = (byte) (cl >> ((bits1 >>  0) & 56));
+        block[ 0] = (byte) (cl >> ((bits1 <<  3) & 56));
     }
 }
