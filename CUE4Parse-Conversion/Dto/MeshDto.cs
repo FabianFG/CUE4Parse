@@ -177,10 +177,12 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         // nanite lod always has SourceLodIndex 0, same as real lod 0, so we can't key off SourceLodIndex or they would collide
         // so use position in the list instead
 
-        for (var i = 0; i < LODs.Count; i++)
+        var length = LODs.Count;
+        for (var i = 0; i < length; i++)
         {
             var lod = LODs[i];
-            lod._suffix = i == 0 ? null : lod.IsNanite ? "_Nanite" : $"_LOD{lod.SourceLodIndex}";
+            if (lod.Sections.Length == 0) LODs.RemoveAt(i--);
+            else lod._suffix = i == 0 ? null : lod.IsNanite ? "_Nanite" : $"_LOD{lod.SourceLodIndex}";
         }
     }
 

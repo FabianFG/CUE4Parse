@@ -9,7 +9,7 @@ using CUE4Parse_Conversion.Dto;
 namespace CUE4Parse_Conversion.Materials;
 
 /// <summary>Parses material inheritance and resolves PBR values from known parameter aliases.</summary>
-public sealed partial class MaterialParameters
+internal sealed partial class MaterialParameters
 {
     private static readonly string[] _baseColorTextures = [..CMaterialParams2.Diffuse[0], "Base", CMaterialParams2.FallbackDiffuse];
     private static readonly string[] _normalTextures = [..CMaterialParams2.Normals[0], CMaterialParams2.FallbackNormals];
@@ -119,16 +119,16 @@ public sealed partial class MaterialParameters
         }
     }
 
-    public static HashSet<string>? GetActiveTextureParameters(UMaterialInterface material, EMaterialDepth depth)
+    private static HashSet<string>? GetActiveTextureParameters(UMaterialInterface material, EMaterialDepth depth)
     {
         var current = material;
         var visited = new HashSet<UMaterialInterface>();
         while (visited.Add(current))
         {
-            var uniforms = current.LoadedMaterialResources.Select(resource => resource.LoadedShaderMap?.Content)
+            var uniforms = current.LoadedMaterialResources?.Select(resource => resource.LoadedShaderMap?.Content)
                 .OfType<FMaterialShaderMapContent>().Select(content => content.MaterialCompilationOutput?.UniformExpressionSet)
                 .OfType<FUniformExpressionSet>().ToArray();
-            if (uniforms.Length > 0)
+            if (uniforms?.Length > 0)
             {
                 var bindings = uniforms.SelectMany(uniform => uniform.UniformTextureParameters).SelectMany(parameters => parameters).ToArray();
                 if (bindings.Any(binding => binding.ParameterInfo is not { Association: EMaterialParameterAssociation.GlobalParameter }))

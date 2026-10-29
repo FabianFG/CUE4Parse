@@ -11,7 +11,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Material;
 
 public class UMaterial : UMaterialInterface
 {
-
     public bool TwoSided { get; private set; }
     public bool bDisableDepthTest { get; private set; }
     public bool bIsMasked { get; private set; }
@@ -64,7 +63,7 @@ public class UMaterial : UMaterialInterface
                 var saved = Ar.Position;
                 try
                 {
-                    DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
+                    DeserializeInlineShaderMaps(Ar);
                     if (!Ar.IsFilterEditorOnly)
                     {
                         bool bLocalSavedCachedExpressionData_DEPRECATED = false;
