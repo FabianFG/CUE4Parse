@@ -180,7 +180,7 @@ public partial class USkeletalMesh : USkinnedAsset
                         fallbackLODModels[i].SerializeRenderItem(Ar, bHasVertexColors, NumVertexColorChannels);
                     }
 
-                    LODModels = LODModels.Concat(fallbackLODModels).ToArray();
+                    LODModels = [.. LODModels, .. fallbackLODModels];
                 }
 
                 switch (Ar.Game)
@@ -203,6 +203,7 @@ public partial class USkeletalMesh : USkinnedAsset
                         {
                             if (lod.VertexBufferGPUSkin?.VertsFloat == null)
                                 continue;
+
                             for (var i = 0; i < lod.VertexBufferGPUSkin.VertsFloat.Length; i++)
                             {
                                 var vert = lod.VertexBufferGPUSkin.VertsFloat[i];
@@ -231,7 +232,7 @@ public partial class USkeletalMesh : USkinnedAsset
         if (Ar.Game == GAME_WorldofJadeDynasty)
         {
             _ = new FStripDataFlags(Ar);
-            for (var i = 0; i < LODModels.Length; i++)
+            for (var i = 0; i < LODModels?.Length; i++)
             {
                 if (Ar.ReadBoolean() && GetOrDefault<bool>("bGenerateMeshDistanceField")) _ = new FDistanceFieldVolumeData5(Ar);
             }
@@ -312,13 +313,14 @@ public partial class USkeletalMesh : USkinnedAsset
             var bHaveSourceData = Ar.ReadBoolean();
             if (bHaveSourceData)
             {
-                new FStaticLODModel(Ar, bHasVertexColors);
+                _ = new FStaticLODModel(Ar, bHasVertexColors);
             }
         }
-        // if (bEnablePerPolyCollision)
-        // {
-        //     var bodySetup = new FPackageIndex(Ar);
-        // }
+
+        if (Ar.Game >= GAME_UE4_0 && bEnablePerPolyCollision)
+        {
+            _ = new FPackageIndex(Ar); // BodySetup 
+        }
 
         if (Ar.Game == GAME_OutlastTrials) Ar.Position += 1;
         if (Ar.Game == GAME_WeHappyFew) Ar.Position += 20;
