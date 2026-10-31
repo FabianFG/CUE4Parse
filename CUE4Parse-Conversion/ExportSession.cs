@@ -67,6 +67,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         return export switch
         {
             UTexture texture => Add(new TextureExporter(texture)),
+            UPaperFlipbook flipbook => Add(new FlipbookExporter(flipbook)),
             UMaterialInterface material => Add(new MaterialExporter(material)),
             USkinnedAsset skinnedAsset => Add(new SkinnedAssetExporter(skinnedAsset)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),

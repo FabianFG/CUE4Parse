@@ -1,5 +1,6 @@
 using CUE4Parse.FileProvider;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse_Conversion.Textures;
 using SkiaSharp;
@@ -317,6 +318,59 @@ public class FixtureTextureDecodeTests
         }
     }
 
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void TextureFixturesConvertToImageMatchingSkiaBitmaps(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+
+        foreach (var asset in new[] { "T_BC7", "T_BGRA8", "T_G8", "T_G16", "T_R16F", "T_FloatRGBA" })
+        {
+            var decoded = LoadTexture(provider, asset).Decode();
+            Assert.NotNull(decoded);
+            using var bitmap = decoded.ToSkBitmap();
+            AssertImageMatchesBitmap(decoded, bitmap);
+        }
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void PaperSpriteFixtureDecodesCroppedTextureAndPivot(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var sprite = LoadExport<UPaperSprite>(provider,
+            "CUE4ParseFixtures/Content/Fixtures/Paper2D/Sprite_Fixture.uasset", "Sprite_Fixture");
+        var sourceTexture = Assert.IsType<UTexture2D>(sprite.BakedSourceTexture?.Load());
+
+        var cache = new Dictionary<string, CTexture>();
+        var decoded = sprite.Decode(out var pivot, textureCache: cache);
+        Assert.NotNull(decoded);
+        Assert.Equal((16, 16), (decoded.Width, decoded.Height));
+        Assert.Equal(new FIntPoint(8, 8), pivot);
+        var cachedAtlas = Assert.Single(cache).Value;
+        Assert.Equal((sourceTexture.PlatformData.SizeX, sourceTexture.PlatformData.SizeY),
+            (cachedAtlas.Width, cachedAtlas.Height));
+
+        // Every pixel has to come from the sprite's rectangle in the atlas
+        var bpp = cachedAtlas.Data.Length / (cachedAtlas.Width * cachedAtlas.Height);
+        var originX = (int) MathF.Round(sprite.BakedSourceUV.X * cachedAtlas.Width / sourceTexture.ImportedSize.X);
+        var originY = (int) MathF.Round(sprite.BakedSourceUV.Y * cachedAtlas.Height / sourceTexture.ImportedSize.Y);
+        for (var y = 0; y < decoded.Height; y++)
+        {
+            Assert.Equal(cachedAtlas.Data.AsSpan(((originY + y) * cachedAtlas.Width + originX) * bpp, decoded.Width * bpp),
+                decoded.Data.AsSpan(y * decoded.Width * bpp, decoded.Width * bpp));
+        }
+
+        var secondDecoded = sprite.Decode(textureCache: cache);
+        Assert.NotNull(secondDecoded);
+        Assert.Single(cache);
+
+        using var bitmap = decoded.ToSkBitmap();
+        AssertImageMatchesBitmap(decoded, bitmap);
+    }
+
     private static SKBitmap CreateExpectedBitmap(TextureExpectation expectation)
     {
         if (expectation.Asset == "T_BC6H")
@@ -393,6 +447,22 @@ public class FixtureTextureDecodeTests
         var metrics = Measure(actual, expected);
         for (var channel = 0; channel < ChannelCount; channel++)
             AssertChannelMetric(expectation, metrics, channel);
+    }
+
+    private static void AssertImageMatchesBitmap(CTexture decoded, SKBitmap bitmap)
+    {
+        using var image = decoded.ToImage();
+        Assert.Equal((bitmap.Width, bitmap.Height), (image.Width, image.Height));
+        for (var y = 0; y < bitmap.Height; y++)
+        {
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                var expected = bitmap.GetPixel(x, y);
+                var actual = image[x, y];
+                Assert.Equal((expected.Red, expected.Green, expected.Blue, expected.Alpha),
+                    (actual.R, actual.G, actual.B, actual.A));
+            }
+        }
     }
 
     private static void AssertChannelMetric(TextureExpectation expectation, PixelMetrics metrics, int channel)

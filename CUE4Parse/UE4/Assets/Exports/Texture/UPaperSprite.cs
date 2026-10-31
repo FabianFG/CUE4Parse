@@ -21,7 +21,7 @@ public class UPaperSprite : UObject
         BakedSourceDimension = GetOrDefault(nameof(BakedSourceDimension), FVector2D.ZeroVector);
         BakedSourceTexture = GetOrDefault<FPackageIndex>(nameof(BakedSourceTexture));
         DefaultMaterial = GetOrDefault<FPackageIndex>(nameof(DefaultMaterial));
-        PixelsPerUnrealUnit = GetOrDefault(nameof(PixelsPerUnrealUnit), 1f);
+        PixelsPerUnrealUnit = GetOrDefault(nameof(PixelsPerUnrealUnit), 2.56f);
         BakedRenderData = GetOrDefault<FVector4[]>(nameof(BakedRenderData), []);
     }
 }
