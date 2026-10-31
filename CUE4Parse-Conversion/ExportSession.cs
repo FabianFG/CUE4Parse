@@ -76,7 +76,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
             UPoseAsset poseAsset => Add(new PoseAssetExporter(poseAsset)),
             UAnimationAsset animation => Add(new AnimationExporter(animation)),
-            UDNAAsset dna => Add(new DnaExporter(dna)),
+            UDNAObject dna => Add(new DnaExporter(dna)),
             UWorld world => Add(new WorldExporter(world)),
             UBlueprintGeneratedClass blueprint => Add(new BlueprintExporter(blueprint)),
             UPaperTileMap map when map.Game is EGame.GAME_DeadByDaylight => Add(new DeadByDaylightMapExporter(map)),
