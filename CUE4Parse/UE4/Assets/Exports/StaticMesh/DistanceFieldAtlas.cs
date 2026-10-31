@@ -106,12 +106,12 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
             bMostlyTwoSided = Ar.ReadBoolean();
             var mips = Ar.Game switch
             {
-                GAME_TheFinals or GAME_ArcRaiders => 2,
+                GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders => 2,
                 _ => DistanceField.NumMips
             };
             Mips = Ar.ReadArray(mips, () => new FSparseDistanceFieldMip(Ar));
             AlwaysLoadedMip = Ar.ReadArray<byte>();
-            if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
+            if (Ar.Game is GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders)
                 Ar.Position += 6;
             StreamableMips = new FByteBulkData(Ar);
         }

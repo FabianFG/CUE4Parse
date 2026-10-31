@@ -206,7 +206,7 @@ public enum EGame : uint
         GAME_MarvelRivals = GAME_UE5_3 + 1,
         GAME_BlackStigma = GAME_UE5_3 + 2,
         GAME_Valorant = GAME_UE5_3 + 3,
-        GAME_Placeholder7 = GAME_UE5_3 + 4,
+        GAME_TheFinalsTencent = GAME_UE5_3 + 4,
         GAME_Aion2 = GAME_UE5_3 + 5,
         GAME_Placeholder6 = GAME_UE5_3 + 6,
         GAME_Avowed = GAME_UE5_3 + 7,

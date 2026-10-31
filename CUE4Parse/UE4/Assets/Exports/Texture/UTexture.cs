@@ -127,9 +127,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
             if (Format == EPixelFormat.PF_Unknown)
             {
                 //?? check whether we can support this pixel format
-#if DEBUG
-                Log.Debug("Loading data for format {Format}", pixelFormatName);
-#endif
+
                 PlatformData = new FTexturePlatformData(Ar, this, bSerializeMipData);
 
                 if (Ar.Game is GAME_SeaOfThieves or GAME_DeltaForce or GAME_PUBGLite) Ar.Position += 4;
