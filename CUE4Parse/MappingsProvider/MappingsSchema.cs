@@ -11,15 +11,25 @@ public class Struct
     public Lazy<Struct?> Super;
     public Dictionary<int, PropertyInfo> Properties;
     public int PropertyCount;
+    // Whether the type is a class or a script struct, null when the mappings don't say
+    public bool? IsClass;
+    // EClassFlags for classes and EStructFlags for script structs, 0 when the mappings don't have them
+    public uint Flags;
+    // The package the type belongs to, when the mappings have it
+    public string? Package;
 
-    public Struct(TypeMappings? context, string name, int propertyCount)
+    private Lazy<(Dictionary<int, PropertyInfo> Properties, int PropertyCount)>? _cookedSchema;
+
+    public Struct(TypeMappings? context, string name, int propertyCount, bool? isClass = null, uint flags = 0)
     {
         Context = context;
         Name = name;
         PropertyCount = propertyCount;
+        IsClass = isClass;
+        Flags = flags;
     }
 
-    public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount) : this(context, name, propertyCount)
+    public Struct(TypeMappings? context, string name, string? superType, Dictionary<int, PropertyInfo> properties, int propertyCount, bool? isClass = null, uint flags = 0) : this(context, name, propertyCount, isClass, flags)
     {
         SuperType = superType;
         Super = new Lazy<Struct?>(() =>
@@ -34,36 +44,88 @@ public class Struct
         Properties = properties;
     }
 
-    public bool TryGetValue(int i, out PropertyInfo info)
+    public bool TryGetValue(int i, out PropertyInfo info) => TryGetValue(i, false, out info);
+
+    public bool TryGetValue(int i, bool filterEditorOnly, out PropertyInfo info)
     {
-        if (!Properties.TryGetValue(i, out info))
+        var (properties, propertyCount) = GetSchema(filterEditorOnly);
+        if (!properties.TryGetValue(i, out info))
         {
-            return i >= PropertyCount && Super.Value != null &&
-                   Super.Value.TryGetValue(i - PropertyCount, out info);
+            return i >= propertyCount && Super.Value != null &&
+                   Super.Value.TryGetValue(i - propertyCount, filterEditorOnly, out info);
         }
 
         return true;
     }
 
-    public int CountProperties(bool includeSuper)
+    public int CountProperties(bool includeSuper, bool filterEditorOnly = false)
     {
-        int total = 0;
+        var total = 0;
         var current = this;
 
         while (current != null)
         {
-            total += current.PropertyCount;
+            total += current.GetSchema(filterEditorOnly).PropertyCount;
             current = includeSuper ? current.Super.Value : null;
         }
 
         return total;
     }
+
+    private (Dictionary<int, PropertyInfo> Properties, int PropertyCount) GetSchema(bool filterEditorOnly)
+    {
+        if (!filterEditorOnly)
+            return (Properties, PropertyCount);
+
+        var cooked = _cookedSchema;
+        if (cooked == null)
+        {
+            cooked = new Lazy<(Dictionary<int, PropertyInfo>, int)>(BuildCookedSchema, LazyThreadSafetyMode.ExecutionAndPublication);
+            var existing = Interlocked.CompareExchange(ref _cookedSchema, cooked, null);
+            if (existing != null)
+                cooked = existing;
+        }
+
+        return cooked.Value;
+    }
+
+    private (Dictionary<int, PropertyInfo> Properties, int PropertyCount) BuildCookedSchema()
+    {
+        var skipped = 0;
+        for (var origIndex = 0; origIndex < PropertyCount; origIndex++)
+        {
+            if (Properties.TryGetValue(origIndex, out var info) && info.IsEditorOnly)
+                skipped++;
+        }
+
+        if (skipped == 0)
+            return (Properties, PropertyCount);
+
+        var cooked = new Dictionary<int, PropertyInfo>(Math.Max(0, Properties.Count - skipped));
+        skipped = 0;
+        for (var origIndex = 0; origIndex < PropertyCount; origIndex++)
+        {
+            if (!Properties.TryGetValue(origIndex, out var info))
+                continue;
+
+            if (info.IsEditorOnly)
+            {
+                skipped++;
+                continue;
+            }
+
+            cooked[origIndex - skipped] = info;
+        }
+
+        return (cooked, PropertyCount - skipped);
+    }
 }
 
 public class SerializedStruct : Struct
 {
-
-    public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, struc.ChildProperties.Length)
+    public SerializedStruct(TypeMappings? context, UStruct struc) : base(context, struc.Name, CountSlots(struc),
+        struc switch { UClass => true, UScriptStruct => false, _ => null },
+        struc switch { UClass c => (uint) c.ClassFlags, UScriptStruct s => (uint) s.StructFlags, _ => 0 })
     {
         Super = new Lazy<Struct?>(() =>
         {
@@ -78,7 +140,7 @@ public class SerializedStruct : Struct
                         return scriptStruct;
                     }
 
-                    Log.Warning("Missing prop mappings for type {0}", superStruct.Name);
+                    Log.Warning("Missing prop mappings for type {SuperName}", superStruct.Name);
                     return null;
                 }
 
@@ -87,33 +149,31 @@ public class SerializedStruct : Struct
 
             return null;
         });
+        // Every element of a fixed-size array takes its own schema slot, like in usmap files
         Properties = new Dictionary<int, PropertyInfo>();
-        for (var i = 0; i < struc.ChildProperties.Length; i++)
+        var slot = 0;
+        foreach (var field in struc.ChildProperties)
         {
-            var prop = (FProperty) struc.ChildProperties[i];
-            var propInfo = new PropertyInfo(Math.Min(i, prop.ArrayDim - 1), prop.Name.Text, new PropertyType(prop), prop.ArrayDim);
+            var prop = (FProperty) field;
             for (var j = 0; j < prop.ArrayDim; j++)
             {
-                Properties[i + j] = propInfo;
+                Properties[slot++] = new PropertyInfo(j, prop.Name.Text, new PropertyType(prop), prop.ArrayDim, prop.PropertyFlags);
             }
         }
     }
+
+    private static int CountSlots(UStruct struc) => struc.ChildProperties.Sum(field => ((FProperty) field).ArrayDim);
 }
 
-public class PropertyInfo : ICloneable
+public class PropertyInfo(int index, string name, PropertyType mappingType, int? arraySize = null, EPropertyFlags propertyFlags = EPropertyFlags.None) : ICloneable
 {
-    public int Index;
-    public string Name;
-    public int? ArraySize;
-    public PropertyType MappingType;
+    public string Name = name;
+    public int Index = index;
+    public int ArraySize = arraySize ?? 1;
+    public PropertyType MappingType = mappingType;
+    public EPropertyFlags PropertyFlags = propertyFlags;
 
-    public PropertyInfo(int index, string name, PropertyType mappingType, int? arraySize = null)
-    {
-        Index = index;
-        Name = name;
-        ArraySize = arraySize;
-        MappingType = mappingType;
-    }
+    public bool IsEditorOnly => PropertyFlags.HasFlag(EPropertyFlags.EditorOnly);
 
     public override string ToString() => $"{Index + 1}/{ArraySize} -> {Name}";
     public object Clone() => MemberwiseClone();

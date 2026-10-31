@@ -33,10 +33,10 @@ public class FRawHeader
         Fragments = fragments;
     }
 
-    public List<int> BuildIndices(Struct propMappings)
+    public List<int> BuildIndices(Struct propMappings, bool filterEditorOnly = false)
     {
         bool includeSuper = Flags.HasFlag(ERawHeaderFlags.SuperStructs);
-        int totalCount = propMappings.CountProperties(includeSuper);
+        int totalCount = propMappings.CountProperties(includeSuper, filterEditorOnly);
         var result = new List<int>(totalCount);
 
         uint current = 0;
