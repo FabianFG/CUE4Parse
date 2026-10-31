@@ -52,8 +52,10 @@ public class FFastGeoInstancedStaticMeshComponent : FFastGeoStaticMeshComponentB
             Ar.Position += 16;
             return;
         }
+        if (Ar.Game is GAME_PhantomBladeZero) Ar.SkipBulkArrayData();
         NavigationBounds = new FBox(Ar);
         SceneProxyDesc.InstancedStaticMeshSceneProxyDesc = new FInstancedStaticMeshSceneProxyDesc(Ar);
+        if (Ar.Game is GAME_PhantomBladeZero) Ar.Position += 4;
         SpatialHashes = Ar.Game >= GAME_UE5_8 ? Ar.ReadBulkArray(() => new FCompressedSpatialHashItem(Ar)) : [];
         PerInstanceRandomIDs = Ar.Game >= GAME_UE5_8 ? Ar.ReadBulkArray<float>() : [] ;
     }

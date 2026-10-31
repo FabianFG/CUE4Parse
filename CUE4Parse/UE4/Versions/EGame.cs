@@ -281,6 +281,7 @@ public enum EGame : uint
         GAME_ArcheAgeChronicles = GAME_UE5_7 + 12,
         GAME_Grounded2 = GAME_UE5_7 + 13,
         GAME_Subnautica2 = GAME_UE5_7 + 14,
+        GAME_PhantomBladeZero = GAME_UE5_7 + 15,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
         GAME_ConanExilesEnhanced = GAME_UE5_8 + 1,
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),

@@ -65,5 +65,6 @@ public class FFastGeoPrimitiveComponent : FFastGeoComponent
         SceneProxyDesc = new FSceneProxyDesc(Ar);
         if (Ar.Game is GAME_GearsofWarEDay) Ar.Position += 41;
         if (Ar.Game is GAME_Splitgate2) Ar.Position += 4;
+        if (Ar.Game is GAME_PhantomBladeZero) Ar.Position += 13;
     }
 }

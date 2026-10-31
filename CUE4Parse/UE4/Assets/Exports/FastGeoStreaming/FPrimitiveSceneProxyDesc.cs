@@ -54,7 +54,7 @@ public class FPrimitiveSceneProxyDesc(FArchive Ar)
     public bool bVisibleInReflectionCaptures = Ar.ReadBoolean();
     public bool bVisibleInRealTimeSkyCaptures = Ar.ReadBoolean();
     public bool bVisibleInRayTracing = Ar.ReadBoolean();
-    public bool bVisibleInReflections = Ar.Game >= GAME_UE5_8 && Ar.ReadBoolean();
+    public bool bVisibleInReflections = Ar.Game >= GAME_UE5_8 || Ar.Game is GAME_PhantomBladeZero && Ar.ReadBoolean();
     public bool bRenderInDepthPass = Ar.ReadBoolean();
     public bool bRenderInMainPass = Ar.ReadBoolean();
     public bool bTreatAsBackgroundForOcclusion = Ar.ReadBoolean();
@@ -191,6 +191,11 @@ public class FStaticMeshSceneProxyDesc
         if (Ar.Game is GAME_GearsofWarEDay)
         {
             Ar.Position += 84;
+            return;
+        }
+        if (Ar.Game is GAME_PhantomBladeZero)
+        {
+            Ar.Position += 108;
             return;
         }
         if (Ar.Game is GAME_Splitgate2)

@@ -52,11 +52,18 @@ public class FWwisePackagedFile : FStructFallback
         return new FWwisePackagedFile(pfFallback);
     }
 
+    private bool SkipPBZData(FAssetArchive Ar)
+    {
+        return Path.GetDirectoryName(Ar.Name) is { } folder && folder.EndsWith("Wwise") && Ar.Read<int>() != 0;
+    }
+
     public void SerializeBulkData(FAssetArchive Ar)
     {
         var name = PathName.IsNone ? Hash.ToString() : PathName.ToString();
         if (PackagingStrategy is EWwisePackagingStrategy.BulkData)
         {
+            if (Ar.Game is GAME_PhantomBladeZero && SkipPBZData(Ar)) Ar.Position += 4;
+
             var bulkData = new FByteBulkData(Ar);
             if (!bulkData.TryCreateReader("AkAssetData", out FArchive dataAr)) return;
 
@@ -68,6 +75,8 @@ public class FWwisePackagedFile : FStructFallback
             // i know it's ugly, but i don't see other solution without rewriting everything
             catch (RIFFSectionSizeException)
             {
+                if (Ar.Game is GAME_PhantomBladeZero && SkipPBZData(Ar)) Ar.Position += 4;
+
                 if (PrefetchSize == 0)
                 {
                     BulkData = null;
