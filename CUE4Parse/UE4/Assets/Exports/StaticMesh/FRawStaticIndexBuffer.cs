@@ -5,6 +5,11 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 public class FRawStaticIndexBuffer() : FRawIndexBuffer
 {
+    public FRawStaticIndexBuffer(uint[] indices) : this()
+    {
+        SetIndices(indices);
+    }
+
     public FRawStaticIndexBuffer(FArchive Ar) : this()
     {
         if (Ar.Ver < EUnrealEngineObjectUE4Version.SUPPORT_32BIT_STATIC_MESH_INDICES)

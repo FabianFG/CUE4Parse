@@ -109,15 +109,21 @@ public class UsdMeshFormat : IMeshExportFormat
     {
         if (materials is not { Length: > 0 }) return null;
 
-        var seen = new HashSet<string>();
+        // One child per StaticMaterials slot so GeomSubset unrealMaterialIndex stays aligned.
+        // SlotName is the material asset name (MeshMaterialDto), so shared materials must get
+        // unique prim names — collapsing duplicates shifts every later binding (e.g. Daimon).
+        var seen = new HashSet<string>(StringComparer.Ordinal);
         var scope = UsdPrim.Def("Scope", "Materials");
-        foreach (var material in materials)
+        for (var i = 0; i < materials.Length; i++)
         {
-            var name = material.SlotName;
-            if (!seen.Add(name)) continue;
+            var material = materials[i];
+            var pathKey = material.SlotName;
+            var name = pathKey;
+            if (!seen.Add(name))
+                name = $"{pathKey}_{i}";
 
             var materialPrim = UsdPrim.Def("Material", name);
-            if (materialPaths?.TryGetValue(name, out var path) == true)
+            if (materialPaths?.TryGetValue(pathKey, out var path) == true)
             {
                 materialPrim.SetReference(new UsdReferenceList([new UsdReference(path)]));
             }

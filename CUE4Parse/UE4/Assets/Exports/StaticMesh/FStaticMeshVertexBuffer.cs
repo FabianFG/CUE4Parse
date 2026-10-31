@@ -17,6 +17,14 @@ public class FStaticMeshVertexBuffer
     public bool UseHighPrecisionTangentBasis;
     [JsonIgnore] public FStaticMeshUVItem[] UV = [];  // TangentsData ?
 
+    public FStaticMeshVertexBuffer(int numTexCoords, int numVertices, FStaticMeshUVItem[] uv)
+    {
+        NumTexCoords = numTexCoords;
+        Strides = -1;
+        NumVertices = numVertices;
+        UV = uv;
+    }
+
     public FStaticMeshVertexBuffer(FArchive Ar)
     {
         var stripDataFlags = new FStripDataFlags(Ar, FPackageFileVersion.CreateUE4Version(EUnrealEngineObjectUE4Version.STATIC_SKELETAL_MESH_SERIALIZATION_FIX));

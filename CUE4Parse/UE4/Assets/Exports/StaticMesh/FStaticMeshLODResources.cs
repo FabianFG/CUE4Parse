@@ -30,6 +30,15 @@ public class FStaticMeshLODResources
     public FRawStaticIndexBuffer? AdjacencyIndexBuffer { get; private set; }
     public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null || PositionVertexBuffer == null;
 
+    public FStaticMeshLODResources(FStaticMeshSection[] sections, FPositionVertexBuffer? positionVertexBuffer, FStaticMeshVertexBuffer? vertexBuffer, FRawStaticIndexBuffer? indexBuffer, FColorVertexBuffer? colorVertexBuffer = null)
+    {
+        Sections = sections;
+        PositionVertexBuffer = positionVertexBuffer;
+        VertexBuffer = vertexBuffer;
+        IndexBuffer = indexBuffer;
+        ColorVertexBuffer = colorVertexBuffer;
+    }
+
     public enum EClassDataStripFlag : byte
     {
         CDSF_AdjacencyData = 1,

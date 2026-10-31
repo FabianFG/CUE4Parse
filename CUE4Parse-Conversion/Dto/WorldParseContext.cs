@@ -26,4 +26,18 @@ internal sealed class WorldParseContext
 
         return dto;
     }
+
+    public SceneComponentDto GetRoot(SceneComponentDto component)
+    {
+        var current = component;
+        var visited = new HashSet<SceneComponentDto>();
+        while (visited.Add(current) &&
+               current._attachParent is { IsNull: false } parentPtr &&
+               _registry.TryGetValue(parentPtr, out var parent) &&
+               parent is SceneComponentDto parentScene)
+        {
+            current = parentScene;
+        }
+        return current;
+    }
 }

@@ -40,7 +40,7 @@ public class ComponentDto : LightObjectDto
                 {
                     UStaticMeshComponent sm when sm.GetStaticMesh() is { IsNull: false } mesh => sm switch
                     {
-                        UInstancedStaticMeshComponent ism => new InstancedStaticMeshComponentDto(mesh, ism, owner),
+                        UInstancedStaticMeshComponent ism when ism.GetInstances() is { Length: > 0 } => new InstancedStaticMeshComponentDto(mesh, ism, owner),
                         USplineMeshComponent spline => new SplineMeshComponentDto(mesh, spline, owner),
                         _ => new StaticMeshComponentDto(mesh, sm, owner)
                     },
