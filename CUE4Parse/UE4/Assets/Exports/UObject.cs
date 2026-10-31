@@ -358,6 +358,22 @@ public class UObject : AbstractPropertyHolder
         else
             propMappings = new SerializedStruct(Ar.Owner!.Mappings, struc);
 
+        DeserializePropertiesUnversioned(properties, Ar, header, propMappings, type);
+    }
+
+    // For schemas that don't come from a UStruct, like the descriptors of a property bag. The schema is only built if there are values.
+    internal static void DeserializePropertiesUnversioned(List<FPropertyTag> properties, FAssetArchive Ar, Func<Struct> createSchema)
+    {
+        var header = new FUnversionedHeader(Ar);
+        if (!header.HasValues)
+            return;
+
+        var propMappings = createSchema();
+        DeserializePropertiesUnversioned(properties, Ar, header, propMappings, propMappings.Name);
+    }
+
+    private static void DeserializePropertiesUnversioned(List<FPropertyTag> properties, FAssetArchive Ar, FUnversionedHeader header, Struct? propMappings, string type)
+    {
         if (propMappings == null)
         {
             throw new ParserException(Ar, "Missing prop mappings for type " + type);
