@@ -1,5 +1,6 @@
 ﻿using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Objects.Engine;
+using CUE4Parse.GameTypes.GhostwireTokyo.Assets;
 
 namespace CUE4Parse_Conversion.Dto;
 
@@ -28,6 +29,7 @@ public sealed class WorldDto : SceneDto
             }
         }
 
+        var worldPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var ptr in world.StreamingLevels ?? [])
         {
             ct.ThrowIfCancellationRequested();
@@ -35,10 +37,18 @@ public sealed class WorldDto : SceneDto
             {
                 case ULevelStreaming { WorldAsset: { } worldAsset } streaming when worldAsset.TryLoad<UWorld>(out var w):
                 {
-                    StreamingLevels.Add(new StreamingLevel(w, streaming));
+                    if (worldPaths.Add(w.GetPathName()))
+                        StreamingLevels.Add(new StreamingLevel(w, streaming));
                     break;
                 }
             }
+        }
+
+        foreach (var child in GhostwireWorldResolver.ResolveRootChildren(world, ct))
+        {
+            ct.ThrowIfCancellationRequested();
+            if (worldPaths.Add(child.GetPathName()))
+                StreamingLevels.Add(new StreamingLevel(child, true));
         }
     }
 }

@@ -18,6 +18,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+        if (Ar.Position == validPos) return; // template/CDO with no extra ISM-specific data serialized
 
         InstanceStartCullDistance = GetOrDefault(nameof(InstanceStartCullDistance), InstanceStartCullDistance);
         InstanceEndCullDistance = GetOrDefault(nameof(InstanceEndCullDistance), InstanceEndCullDistance);
@@ -166,16 +167,15 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
 
     public FInstancedStaticMeshInstanceData[] GetInstances() // PerInstanceSMData
     {
-        var current = this;
-        while (true) {
-            if (current.PerInstanceSMData is { Length: > 0 }) {
-                return current.PerInstanceSMData;
+        UInstancedStaticMeshComponent? current = this;
+        var visited = new HashSet<UInstancedStaticMeshComponent>();
+        while (current is not null && visited.Add(current)) { // templates may reference themselves
+            if (current.PerInstanceSMData is { Length: > 0 } data) {
+                return data;
             }
             current = current.Template?.Load<UInstancedStaticMeshComponent>();
-            if (current == null) {
-                return [];
-            }
         }
+        return [];
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

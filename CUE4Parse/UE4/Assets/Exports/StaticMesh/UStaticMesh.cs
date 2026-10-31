@@ -27,6 +27,7 @@ public class UStaticMesh : UObject
     {
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
+        var afterProps = Ar.Position;
         LODForCollision = GetOrDefault(nameof(LODForCollision), 0);
 
         var stripDataFlags = new FStripDataFlags(Ar);
@@ -178,7 +179,24 @@ public class UStaticMesh : UObject
 
         if (Ar.Ver > EUnrealEngineObjectUE4Version.STATIC_MESH_SOCKETS)
         {
-            Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
+            if (Ar.Game == GAME_GhostwireTokyo)
+            {
+                try
+                {
+                    Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
+                }
+                catch (Exception)
+                {
+                    Ar.Position = afterProps;
+                    LoadGhostwireMaterials(Ar);
+                    RenderData = new GhostwireStaticMeshRenderData(Ar, validPos, StaticMaterials.Length);
+                    return;
+                }
+            }
+            else
+            {
+                Sockets = Ar.ReadArray(() => new FPackageIndex(Ar));
+            }
         }
 
         if (!Ar.IsFilterEditorOnly || Ar.Game < GAME_UE4_0)
@@ -190,6 +208,13 @@ public class UStaticMesh : UObject
         // https://github.com/EpicGames/UnrealEngine/blob/ue5-main/Engine/Source/Runtime/Engine/Private/StaticMesh.cpp#L6701
         if (bCooked)
         {
+            if (Ar.Game == GAME_GhostwireTokyo)
+            {
+                LoadGhostwireMaterials(Ar);
+                RenderData = new GhostwireStaticMeshRenderData(Ar, validPos, StaticMaterials.Length);
+                return;
+            }
+
             RenderData = Ar.Game switch
             {
                 GAME_DeadIsland2 => new FDeadIsland2StaticMeshRenderData(Ar),
@@ -324,6 +349,24 @@ public class UStaticMesh : UObject
             GAME_GangstarMirageCity => 20,
             _ => 0
         };
+    }
+
+    private void LoadGhostwireMaterials(FAssetArchive Ar)
+    {
+        if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
+        {
+            StaticMaterials = GetOrDefault("StaticMaterials", Array.Empty<FStaticMaterial>());
+        }
+        else if (TryGetValue(out FPackageIndex[] materials, "Materials"))
+        {
+            StaticMaterials = new FStaticMaterial[materials.Length];
+            for (var i = 0; i < materials.Length; i++)
+                StaticMaterials[i] = new FStaticMaterial(materials[i]);
+        }
+
+        Materials = new FPackageIndex?[StaticMaterials.Length];
+        for (var i = 0; i < Materials.Length; i++)
+            Materials[i] = StaticMaterials[i].MaterialInterface;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
