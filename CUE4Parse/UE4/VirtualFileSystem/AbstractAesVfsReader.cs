@@ -21,7 +21,7 @@ public abstract partial class AbstractAesVfsReader : AbstractVfsReader, IAesVfsR
     public int EncryptedFileCount { get; protected set; }
     public bool bDecrypted { get; protected set; }
 
-    protected AbstractAesVfsReader(string path, VersionContainer versions) : base(path, versions)
+    protected AbstractAesVfsReader(string path, VersionContainer? versions) : base(path, versions)
     {
         // yes
     }

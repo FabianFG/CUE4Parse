@@ -64,7 +64,8 @@ public class UStaticMeshComponent : UMeshComponent
         if (meshIdx.IsNull)
             return null;
         mesh = meshIdx.Load<UStaticMesh>();
-        StaticMeshRef = new WeakReference<UStaticMesh>(mesh);
+        if (mesh is not null)
+            StaticMeshRef = new WeakReference<UStaticMesh>(mesh);
         return mesh;
     }
 

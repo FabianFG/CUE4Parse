@@ -38,11 +38,11 @@ public class FKDTree
         var bIsLeafNode = !bAnyNodeChild1 && !bAnyNodeChild2;
         if (bIsLeafNode)
         {
-            node.Leaf = Ar.Read<FKDTreeNode.leaf>();
+            node.Leaf = Ar.Read<FKDTreeNode.LeafNode>();
         }
         else
         {
-            node.NonLeaf = Ar.Read<FKDTreeNode.nonleaf>();
+            node.NonLeaf = Ar.Read<FKDTreeNode.NonLeafNode>();
         }
 
         if (bAnyNodeChild1)
@@ -61,8 +61,8 @@ public class FKDTree
 [JsonConverter(typeof(KDTreeNodeConverter))]
 public class FKDTreeNode
 {
-    public leaf? Leaf;
-    public nonleaf? NonLeaf;
+    public LeafNode? Leaf;
+    public NonLeafNode? NonLeaf;
     public int child1 = -1;
     public int child2 = -1;
     public int Index;
@@ -72,13 +72,13 @@ public class FKDTreeNode
         Index = index;
     }
 
-    public struct leaf
+    public struct LeafNode
     {
         public int left;
         public int right;
     }
 
-    public struct nonleaf
+    public struct NonLeafNode
     {
         public int divfeat; //!< Dimension used for subdivision.
         /// The values used for subdivision.
@@ -89,8 +89,14 @@ public class FKDTreeNode
 
 public class KDTreeNodeConverter : JsonConverter<FKDTreeNode>
 {
-    public override void WriteJson(JsonWriter writer, FKDTreeNode value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FKDTreeNode? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
         if (value.Leaf != null)
         {

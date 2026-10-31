@@ -169,7 +169,10 @@ public class FNaniteResources
         byte[] buffer = ArrayPool<byte>.Shared.Rent((int)page.BulkSize);
         try
         {
-            Buffer.BlockCopy(pageIndex < NumRootPages ? RootData : StreamablePages.Data, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
+            var pageData = pageIndex < NumRootPages ? RootData : StreamablePages?.Data;
+            if (pageData is null)
+                throw new InvalidOperationException("Missing Nanite streamable pages");
+            Buffer.BlockCopy(pageData, (int) page.BulkOffset, buffer, 0, (int) page.BulkSize);
 
             using var pageArchive = new FByteArchive($"NaniteStreamablePage{pageIndex}", buffer, versionContainer);
             outPage = new FNaniteStreamableData(pageArchive, this, pageIndex);

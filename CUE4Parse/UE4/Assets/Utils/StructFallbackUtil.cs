@@ -27,7 +27,7 @@ namespace CUE4Parse.UE4.Assets.Utils
             else
             {
                 // Or automatically map the values using reflection
-                value = Activator.CreateInstance(type);
+                value = Activator.CreateInstance(type)!;
                 ObjectMapper?.Map(fallback, value);
             }
             return value;

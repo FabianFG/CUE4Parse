@@ -66,6 +66,8 @@ public class HoKWDefaultFileProvider : DefaultFileProvider
         foreach (var files in directory.EnumerateFiles("*.db", option).GroupBy(x => x.DirectoryName))
         {
             var dir = files.Key;
+            if (dir is null) continue;
+
             var file = Path.Combine(dir, dir.SubstringAfterLast('\\') + ".db");
             if (File.Exists(file) && RegisterDbVfs(new FileInfo(file), out var reader))
             {
@@ -81,7 +83,7 @@ public class HoKWDefaultFileProvider : DefaultFileProvider
 
         try
         {
-            var reader = new HoKdbFileReader(mainIndex, null, Versions);
+            var reader = new HoKdbFileReader(mainIndex, this, Versions);
             await reader.BuildIndex(GeneratedIndexFolder, indexFile).ConfigureAwait(false);
         }
         catch (Exception)

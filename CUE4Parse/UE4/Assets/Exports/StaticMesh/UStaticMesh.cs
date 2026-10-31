@@ -113,7 +113,7 @@ public class UStaticMesh : UObject
                 Bounds = bounds
             };
 
-            Materials = new FPackageIndex[RenderData.LODs[0].Sections.Length];
+            Materials = new FPackageIndex[RenderData.LODs![0].Sections.Length];
             for (var i = 0; i < RenderData.LODs[0].Sections.Length; i++)
             {
                 Materials[i] = RenderData.LODs[0].Sections[i].Material!;

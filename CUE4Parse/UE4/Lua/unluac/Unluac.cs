@@ -32,7 +32,11 @@ public class Unluac : IDisposable
 
     public Unluac(nint handle)
     {
-        ArgumentNullException.ThrowIfNull(handle);
+        if (handle == 0)
+        {
+            throw new ArgumentException("Handle must not be zero.");
+        }
+        
         Handle = handle;
 
         _createIsolate = Marshal.GetDelegateForFunctionPointer<unluac_create_isolate>(NativeLibrary.GetExport(Handle, nameof(unluac_create_isolate)));

@@ -136,8 +136,14 @@ public class FExpressionInput : IUStruct
 
 public class FExpressionInputConverter : JsonConverter<FExpressionInput>
 {
-    public override void WriteJson(JsonWriter writer, FExpressionInput value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, FExpressionInput? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         if (value.FallbackStruct is not null)
         {
             serializer.Serialize(writer, value.FallbackStruct);

@@ -14,7 +14,7 @@ public class FPropertyDataWithObjects : FStructFallback
         var data = Ar.ReadArray<byte>();
         var objects = new FPropertryDataObjectContainer(Ar);
         using var byteAr = new FByteArchive("FPropertyDataWithObjects", data, Ar.Versions);
-        using var objectAr = new FOW2ObjectsArchive(byteAr, Ar.Owner, objects, bHasVersion);
+        using var objectAr = new FOW2ObjectsArchive(byteAr, Ar.Owner!, objects, bHasVersion);
         UObject.DeserializePropertiesTagged(Properties, objectAr, false);
     }
 }

@@ -30,7 +30,9 @@ namespace CUE4Parse.UE4.Assets.Exports.Animation
 
         public float GetValidPlayRate()
         {
-            float seqPlayRate = AnimReference.TryLoad(out UAnimSequenceBase sequenceBase) ? sequenceBase.RateScale : 1.0f;
+            float seqPlayRate = 1.0f;
+            if (AnimReference.TryLoad(out var sequenceExport) && sequenceExport is UAnimSequenceBase sequenceBase)
+                seqPlayRate = sequenceBase.RateScale;
             float finalPlayRate = seqPlayRate * AnimPlayRate;
             return (UnrealMath.IsNearlyZero(finalPlayRate) ? 1.0f : finalPlayRate);
         }

@@ -35,11 +35,11 @@ namespace CUE4Parse.UE4.VirtualFileSystem
             set => Versions.Ver = value;
         }
 
-        protected AbstractVfsReader(string path, VersionContainer versions)
+        protected AbstractVfsReader(string path, VersionContainer? versions)
         {
             Path = path;
             Name = path.Replace('\\', '/').SubstringAfterLast('/');
-            Versions = versions;
+            Versions = versions ?? new VersionContainer();
             Files = new Dictionary<string, GameFile>();
         }
 

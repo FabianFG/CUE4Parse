@@ -37,7 +37,7 @@ public class FRigVMMemoryContainer
             }
             else
             {
-                view = new List<object>();
+                view = new List<object?>();
                 for (var sliceIndex = 0; sliceIndex < register.SliceCount; sliceIndex++)
                 {
                     object? cView = register.Type switch
@@ -47,7 +47,7 @@ public class FRigVMMemoryContainer
                         ERigVMRegisterType.Struct or ERigVMRegisterType.String => Ar.ReadArray(Ar.ReadFString),
                         _ => null
                     };
-                    ((List<object>) view).Add(cView);
+                    ((List<object?>) view).Add(cView);
                 }
             }
             register.View = view;

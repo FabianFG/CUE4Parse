@@ -19,7 +19,7 @@ namespace CUE4Parse.UE4.Assets.Readers
             InnerArchive = Ar;
         }
 
-        public FObjectAndNameAsStringProxyArchive(FArchive Ar, IPackage owner, int absoluteOffset = 0) : base(Ar, owner, absoluteOffset)
+        public FObjectAndNameAsStringProxyArchive(FArchive Ar, IPackage? owner, int absoluteOffset = 0) : base(Ar, owner, absoluteOffset)
         {
             InnerArchive = Ar;
         }
@@ -66,8 +66,9 @@ namespace CUE4Parse.UE4.Assets.Readers
             var path = ReadFString();
             return new Lazy<T?>(() =>
             {
-                Debug.Assert(Owner.Provider != null, "Owner.Provider != null");
-                return Owner.Provider.TryLoadPackageObject<T>(path, out var obj) ? obj : null;
+                var provider = Owner?.Provider;
+                Debug.Assert(provider != null, "Owner.Provider != null");
+                return provider != null && provider.TryLoadPackageObject<T>(path, out var obj) ? obj : null;
             });
         }
     }

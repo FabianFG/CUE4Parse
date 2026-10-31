@@ -19,7 +19,7 @@ public class FSkeletalMaterial
     public FMeshUVChannelInfo? UVChannelData;
     public FPackageIndex? OverlayMaterialInterface;
 
-    public FSkeletalMaterial(FPackageIndex materialInterface)
+    public FSkeletalMaterial(FPackageIndex? materialInterface)
     {
         MaterialInterface = materialInterface;
     }
@@ -76,6 +76,6 @@ public class FSkeletalMaterial
     {
         MaterialInterface = fallback.GetOrDefault(nameof(MaterialInterface), new FPackageIndex());
         MaterialSlotName = fallback.GetOrDefault<FName>(nameof(MaterialSlotName), "None");
-        UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo>(nameof(UVChannelData), null);
+        UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo?>(nameof(UVChannelData), null);
     }
 }

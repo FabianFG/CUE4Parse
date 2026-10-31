@@ -24,7 +24,7 @@ public sealed class HoKdbFileReader : AbstractAesVfsReader
     private readonly IReadOnlyList<HoKdbContainerStream> _containerStreams;
     public readonly IVfsFileProvider Provider;
 
-    private FArchive? Ar;
+    private FArchive Ar;
 
     public HoKdbFileReader(FileInfo filePath, IVfsFileProvider provider, VersionContainer? versions = null) : base(System.IO.Path.ChangeExtension(filePath.FullName, ".pak"), versions)
     {

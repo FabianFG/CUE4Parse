@@ -155,7 +155,7 @@ public class ULandscapeComponent : UPrimitiveComponent
         return new FIntRect(new FIntPoint(minX, minY), new FIntPoint(maxX, maxY));
     }
 
-    public UTexture2D? GetHeightmap() => GetOrDefault<UTexture2D>("HeightmapTexture", null);
+    public UTexture2D? GetHeightmap() => GetOrDefault<UTexture2D?>("HeightmapTexture");
     public UTexture2D[] GetWeightmapTextures() => WeightmapTextures.Value;
 
     public FWeightmapLayerAllocationInfo[] GetWeightmapLayerAllocations() => WeightmapLayerAllocations;

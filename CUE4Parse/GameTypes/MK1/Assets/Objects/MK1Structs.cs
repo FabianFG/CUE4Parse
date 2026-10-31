@@ -85,9 +85,9 @@ public class FCompiledTimelinePredicate(FAssetArchive Ar) : IUStruct
 {
 
     public byte[] Unknown = Ar.ReadArray<byte>();
-    public object[] Parameters = Ar.ReadArray(() => ReadParameterValue(Ar));
+    public object?[] Parameters = Ar.ReadArray(() => ReadParameterValue(Ar));
 
-    public static object ReadParameterValue(FAssetArchive Ar)
+    public static object? ReadParameterValue(FAssetArchive Ar)
     {
         var type = Ar.ReadFName();
         object? res = type.Text switch
@@ -110,7 +110,7 @@ public class FCompiledTimelinePredicate(FAssetArchive Ar) : IUStruct
 
 public class FGameParameterBase(FAssetArchive Ar) : IUStruct
 {
-    public object Value = FCompiledTimelinePredicate.ReadParameterValue(Ar);
+    public object? Value = FCompiledTimelinePredicate.ReadParameterValue(Ar);
     public byte[] data = Ar.ReadArray<byte>(6);
     public FName Type = Ar.ReadFName();
 }

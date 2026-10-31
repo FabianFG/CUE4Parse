@@ -107,7 +107,8 @@ public static class FAion2PropertyReader
 
             foreach (var index in Enumerable.Range(0, propCount))
             {
-                propMappings.TryGetValue(index, out var info);
+                if (!propMappings.TryGetValue(index, out var info) || info is null)
+                    continue;
 
                 var tag = new FPropertyTag()
                 {

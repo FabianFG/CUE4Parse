@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -77,7 +78,7 @@ public class OpElement
     public const int FFunctionRef = 2;
     public const int Float = 3;
 
-    public bool TryGet<T>(out T outValue)
+    public bool TryGet<T>([MaybeNullWhen(false)] out T outValue)
     {
         if (this is OpElement<T> op)
         {

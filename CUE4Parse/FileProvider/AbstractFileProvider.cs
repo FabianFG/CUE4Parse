@@ -191,7 +191,10 @@ namespace CUE4Parse.FileProvider
             TryGetGameFile(path, Files, out file);
 
         public int LoadLocalization(ELanguage language = ELanguage.English, CancellationToken cancellationToken = default)
-            => LoadLocalization(GetLanguageCode(language), cancellationToken);
+        {
+            ChangeCulture(GetLanguageCode(language));
+            return Internationalization.Count;
+        }
 
         [Obsolete("use Provider.ChangeCulture instead")]
         public int LoadLocalization(string culture, CancellationToken cancellationToken = default)

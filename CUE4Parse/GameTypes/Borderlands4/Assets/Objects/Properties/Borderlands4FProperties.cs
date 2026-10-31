@@ -59,8 +59,14 @@ public class GbxDefPtrProperty : FPropertyTagType<FGbxDefPtr>
 
 public class GbxDefPtrPropertyConverter : JsonConverter<GbxDefPtrProperty>
 {
-    public override void WriteJson(JsonWriter writer, GbxDefPtrProperty value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, GbxDefPtrProperty? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         serializer.Serialize(writer, value.Value);
     }
 
@@ -73,7 +79,7 @@ public class GbxDefPtrPropertyConverter : JsonConverter<GbxDefPtrProperty>
 
 public class FGameDataHandleProperty : FProperty
 {
-    public ulong Flags;
+    public new ulong Flags;
 
     public override void Deserialize(FAssetArchive Ar)
     {
@@ -125,8 +131,14 @@ public class GameDataHandleProperty : FPropertyTagType<FGameDataHandle>
 
 public class GameDataHandlePropertyConverter : JsonConverter<GameDataHandleProperty>
 {
-    public override void WriteJson(JsonWriter writer, GameDataHandleProperty value, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, GameDataHandleProperty? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         serializer.Serialize(writer, value.Value);
     }
 

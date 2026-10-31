@@ -122,7 +122,6 @@ public class UBinaryAsset : UObject
 
         UScriptArray ReadArray(FArchive Ar)
         {
-            var pos = Ar.Position;
             var type = Ar.Read<byte>();
 
             var length = type switch
@@ -138,7 +137,7 @@ public class UBinaryAsset : UObject
             var properties = new List<FPropertyTagType>(length);
             for (int i = 0; i < length; i++)
             {
-                properties.Add(ReadOctopathPropertyTagType(Ar));
+                properties.Add(ReadOctopathPropertyTagType(Ar)!);
             }
 
             return new UScriptArray(properties, "");

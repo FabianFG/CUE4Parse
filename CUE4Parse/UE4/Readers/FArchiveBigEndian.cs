@@ -48,7 +48,7 @@ public class FArchiveBigEndian : FArchive
     {
         var size = Unsafe.SizeOf<T>();
         Span<byte> span = stackalloc byte[size];
-        Read(span);
+        ReadExactly(span);
 
         var layout = Layouts.GetOrAdd(typeof(T), BuildLayout(typeof(T)));
         foreach (var field in layout)

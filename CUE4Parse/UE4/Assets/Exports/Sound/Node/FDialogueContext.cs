@@ -18,21 +18,24 @@ public struct FDialogueContext
 
     public static bool operator ==(FDialogueContext left, FDialogueContext right)
     {
-        var leftSpeaker = left.Speaker.ResolvedObject?.GetFullName();
-        var rightSpeaker = right.Speaker.ResolvedObject?.GetFullName();
+        var leftSpeaker = left.Speaker?.ResolvedObject?.GetFullName();
+        var rightSpeaker = right.Speaker?.ResolvedObject?.GetFullName();
 
-        if (!leftSpeaker?.Equals(rightSpeaker, StringComparison.OrdinalIgnoreCase) ?? true)
+        if (!string.Equals(leftSpeaker, rightSpeaker, StringComparison.OrdinalIgnoreCase))
             return false;
 
-        if (left.Targets.Length != right.Targets.Length)
+        var leftTargets = left.Targets ?? [];
+        var rightTargets = right.Targets ?? [];
+
+        if (leftTargets.Length != rightTargets.Length)
             return false;
 
-        for (var i = 0; i < left.Targets.Length; i++)
+        for (var i = 0; i < leftTargets.Length; i++)
         {
-            var leftTarget = left.Targets[i].ResolvedObject?.GetFullName();
-            var rightTarget = right.Targets[i].ResolvedObject?.GetFullName();
+            var leftTarget = leftTargets[i].ResolvedObject?.GetFullName();
+            var rightTarget = rightTargets[i].ResolvedObject?.GetFullName();
 
-            if (!leftTarget?.Equals(rightTarget, StringComparison.OrdinalIgnoreCase) ?? true)
+            if (!string.Equals(leftTarget, rightTarget, StringComparison.OrdinalIgnoreCase))
                 return false;
         }
 
@@ -40,4 +43,21 @@ public struct FDialogueContext
     }
 
     public static bool operator !=(FDialogueContext left, FDialogueContext right) => !(left == right);
+
+    public override bool Equals(object? obj) => obj is FDialogueContext other && this == other;
+
+    public bool Equals(FDialogueContext other) => this == other;
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Speaker?.ResolvedObject?.GetFullName(), StringComparer.OrdinalIgnoreCase);
+        var targets = Targets ?? [];
+        hash.Add(targets.Length);
+        foreach (var target in targets)
+        {
+            hash.Add(target.ResolvedObject?.GetFullName(), StringComparer.OrdinalIgnoreCase);
+        }
+        return hash.ToHashCode();
+    }
 }

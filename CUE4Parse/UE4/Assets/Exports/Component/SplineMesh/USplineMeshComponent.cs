@@ -210,7 +210,7 @@ public class USplineMeshComponent : UStaticMeshComponent
             var mesh = GetLoadedStaticMesh();
             if (mesh != null) {
                 var meshBounds = mesh!.RenderData!.Bounds;
-                var meshMinZ = GetAxisValueRef(ref meshBounds.Origin, ForwardAxis) -
+                var meshMinZ = GetAxisValueRef(ref meshBounds!.Origin, ForwardAxis) -
                                GetAxisValueRef(ref meshBounds.BoxExtent, ForwardAxis);
                 var meshRangeZ = 2 * GetAxisValueRef(ref meshBounds.BoxExtent, ForwardAxis);
 

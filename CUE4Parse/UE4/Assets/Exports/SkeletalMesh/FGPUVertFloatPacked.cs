@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
 public class FGPUVertFloatPacked : FSkelMeshVertexBase
 {
-    public FVectorIntervalFixed32GPU Pos;
+    public new FVectorIntervalFixed32GPU Pos;
     public override FMeshUVFloat[] UVs { get; }
 
     public FGPUVertFloatPacked()

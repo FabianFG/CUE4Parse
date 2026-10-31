@@ -42,7 +42,7 @@ public class FOW2FPropertyTag : FPropertyTag
         Size = data.Length;
         Objects = new FPropertryDataObjectContainer(Ar);
         using var byteAr = new FByteArchive("FOW2ObjectsArchive", data, Ar.Versions);
-        using var objectAr = new FOW2ObjectsArchive(byteAr, Ar.Owner, Objects, bHasVersion);
+        using var objectAr = new FOW2ObjectsArchive(byteAr, Ar.Owner!, Objects, bHasVersion);
 
         var idk = objectAr.Read<int>();
         if (PropertyType.Text == "ArrayProperty")

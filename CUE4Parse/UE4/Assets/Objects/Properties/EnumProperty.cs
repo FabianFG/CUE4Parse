@@ -59,7 +59,7 @@ public class EnumProperty : FPropertyTagType<FName>
             return string.Concat(enumName, "::", index);
         }
 
-        if (Ar.Owner.Mappings != null &&
+        if (Ar?.Owner?.Mappings != null &&
             Ar.Owner.Mappings.Enums.TryGetValue(enumName, out var values) &&
             values.TryGetValue(index, out var member))
         {

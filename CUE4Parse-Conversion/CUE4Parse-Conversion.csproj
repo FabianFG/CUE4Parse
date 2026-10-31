@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>CUE4Parse_Conversion</RootNamespace>
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<Description>CUE4Parse Conversion</Description>
   </PropertyGroup>

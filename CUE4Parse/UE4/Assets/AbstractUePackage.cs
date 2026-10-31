@@ -165,7 +165,7 @@ public abstract class ResolvedObject(IPackage package, int exportIndex = -1) : I
                 continue;
             }
 
-            if (Package.Mappings?.Types.TryGetValue(name, out var struc) != true || struc.SuperType == name) break;
+            if (Package.Mappings?.Types.TryGetValue(name, out var struc) != true || struc is null || struc.SuperType == name) break;
             name = struc.SuperType;
         }
 
@@ -181,7 +181,7 @@ public abstract class ResolvedObject(IPackage package, int exportIndex = -1) : I
 
     public void GetFullName(bool includeOuterMostName, StringBuilder resultString, bool includeClassPackage = false)
     {
-        resultString.Append(includeClassPackage ? Class?.GetPathName() : Class?.Name);
+        resultString.Append(includeClassPackage ? Class?.GetPathName() : Class?.Name.Text);
         resultString.Append('\'');
         GetPathName(includeOuterMostName, resultString);
         resultString.Append('\'');
@@ -261,7 +261,7 @@ public abstract class ResolvedObject(IPackage package, int exportIndex = -1) : I
     public override string ToString() => GetFullName();
 }
 
-public class ResolvedLoadedObject(UObject uobject) : ResolvedObject(uobject.Owner)
+public class ResolvedLoadedObject(UObject uobject) : ResolvedObject(uobject.Owner!)
 {
     public override FName Name => new(uobject.Name);
     public override ResolvedObject? Outer => uobject.Outer;

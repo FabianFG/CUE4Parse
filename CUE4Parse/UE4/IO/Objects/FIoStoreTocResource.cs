@@ -54,7 +54,7 @@ namespace CUE4Parse.UE4.IO.Objects
         {
             _tocAr = Ar;
             var streamBuffer = new byte[Ar.Length];
-            Ar.Read(streamBuffer, 0, streamBuffer.Length);
+            Ar.ReadExactly(streamBuffer, 0, streamBuffer.Length);
 
             if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
             {

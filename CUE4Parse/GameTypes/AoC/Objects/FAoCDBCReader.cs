@@ -537,6 +537,12 @@ public class FAoCDBCReaderConverter : JsonConverter<FAoCDBCReader>
 
     public override void WriteJson(JsonWriter writer, FAoCDBCReader? value, JsonSerializer serializer)
     {
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
+
         writer.WriteStartObject();
 
         writer.WritePropertyName(nameof(value.Chunks));

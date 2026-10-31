@@ -116,7 +116,7 @@ namespace CUE4Parse.UE4.Readers
         {
             CheckReadSize(length);
             var buffer = new byte[length];
-            Read(buffer, 0, length);
+            ReadExactly(buffer, 0, length);
             return buffer;
         }
 
