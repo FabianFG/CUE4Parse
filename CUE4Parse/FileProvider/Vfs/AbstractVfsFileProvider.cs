@@ -22,7 +22,6 @@ using CUE4Parse.GameTypes.PMA.Encryption.Aes;
 using CUE4Parse.GameTypes.ProSpi.Encryption.Aes;
 using CUE4Parse.GameTypes.Rennsport.Encryption.Aes;
 using CUE4Parse.GameTypes.SD.Encryption.Aes;
-using CUE4Parse.GameTypes.SilverPalace.Encryption;
 using CUE4Parse.GameTypes.Snowbreak.Encryption.Aes;
 using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Encryption;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.Aes;
@@ -100,7 +99,6 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_RocoKingdomWorld => RocoKingdomWorldAes.RocoKingdomWorldDecrypt,
                 GAME_DragonSwordAwakening => DragonSwordAes.DragonSwordDecrypt,
                 GAME_eBaseballProSpirit => ProSpiEncryption.ProSpiDecrypt,
-                GAME_SilverPalace => SilverPalaceAes.SilverPalaceDecrypt,
                 GAME_ValorantSource => ValorantSourceAes.ValorantSourceDecrypt,
                 GAME_PUBGMobile or GAME_PUBGLite => PUBGMobileAes.PUBGMobileDecrypt,
                 GAME_GangstarMirageCity => GangstarMirageCityAes.GangstarMirageCityDecrypt,
