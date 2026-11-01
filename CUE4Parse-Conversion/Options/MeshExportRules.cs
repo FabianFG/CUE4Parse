@@ -22,6 +22,6 @@ public sealed class MeshExportRules(EGame? game, MeshMaterialDto[] materials)
             return true;
 
         var slot = materials[section.MaterialIndex];
-        return slot.Material is not { IsNull: true } || !slot.SlotName.StartsWith("lambert", StringComparison.OrdinalIgnoreCase);
+        return slot.Material is not { IsNull: true } || !slot.Name.StartsWith("lambert", StringComparison.OrdinalIgnoreCase);
     }
 }

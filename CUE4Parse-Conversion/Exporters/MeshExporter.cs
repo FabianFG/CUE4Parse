@@ -45,7 +45,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
             if (slot.Material?.TryLoad<UMaterialInterface>(out var material) == true)
             {
                 Session.Add(material);
-                paths?[slot.SlotName] = Resolve(material, "usda");
+                paths?[slot.Name] = Resolve(material, "usda");
             }
         }
 

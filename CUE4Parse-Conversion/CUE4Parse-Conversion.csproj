@@ -27,8 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Resources\Detex.dll" />
-    <EmbeddedResource Include="Resources\Detex.dll" />
     <None Remove="Resources\tegra_swizzle_x64.dll" />
     <EmbeddedResource Include="Resources\tegra_swizzle_x64.dll" />
     <None Remove="Resources\crunch.dll" />
