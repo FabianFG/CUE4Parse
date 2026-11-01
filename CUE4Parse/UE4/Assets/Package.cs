@@ -4,6 +4,7 @@ using CUE4Parse.FileProvider;
 using CUE4Parse.GameTypes.ACE7.Encryption;
 using CUE4Parse.GameTypes.RL.Encryption.Aes;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -32,6 +33,7 @@ namespace CUE4Parse.UE4.Assets
         public FSoftObjectPath[] SoftObjectPaths { get; }
         public List<byte[]>? EditorThumbnails { get; }
         public FPackageTrailer? Trailer { get; }
+        public FWorldTileInfo? WorldTileInfo { get; }
 
         private ExportLoader[] _exportLoaders; // Nonnull if useLazySerialization is false
 
@@ -91,6 +93,15 @@ namespace CUE4Parse.UE4.Assets
 
             // Decompresses CompressedChunks and Decrypts Rocket league encrypted files
             DecryptAndDecompress(uassetAr, Summary);
+
+            try
+            {
+                WorldTileInfo = FWorldTileInfo.Read(uassetAr, Summary);
+            }
+            catch (Exception e)
+            {
+                Log.Warning(e, "Failed to read world tile info in {0}", Name);
+            }
 
             uassetAr.SeekAbsolute(Summary.NameOffset, SeekOrigin.Begin);
             NameMap = new FNameEntrySerialized[Summary.NameCount];

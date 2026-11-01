@@ -1,3 +1,5 @@
+using CUE4Parse.FileProvider;
+using CUE4Parse.UE4.Assets;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -72,6 +74,29 @@ public class FWorldTileInfo
     public FWorldTileLODInfo[] LODList;
     /** Sorting order */
     public int ZOrder;
+
+    public static FWorldTileInfo? Read(FAssetArchive archive, FPackageFileSummary summary)
+    {
+        if (summary.WorldTileInfoDataOffset <= 0) return null;
+
+        archive.SeekAbsolute(summary.WorldTileInfoDataOffset, SeekOrigin.Begin);
+        return new FWorldTileInfo(archive);
+    }
+
+    public static FWorldTileInfo? ReadUmap(IFileProvider provider, string packageName)
+    {
+        if (provider == null || string.IsNullOrEmpty(packageName)) return null;
+
+        var path = provider.FixPath(packageName);
+        var slash = path.LastIndexOf('/');
+        var dot = path.LastIndexOf('.');
+        if (dot > slash) path = path[..dot];
+        path += ".umap";
+
+        if (!provider.Files.TryGetValue(path, out var gameFile)) return null;
+
+        return provider.LoadPackage(gameFile) is Package package ? package.WorldTileInfo : null;
+    }
 
     public FWorldTileInfo(FAssetArchive Ar)
     {
