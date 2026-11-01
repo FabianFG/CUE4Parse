@@ -1,12 +1,13 @@
 ﻿using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<TNaniteVertex> FromNaniteClusters<TNaniteVertex>(MeshDto<TNaniteVertex> owner, FCluster[] clusters, int sectionCount, int numTexCoords, int numVertices) where TNaniteVertex : struct, IMeshVertex, INaniteVertex<TNaniteVertex>
+    internal static MeshLodDto<TNaniteVertex> FromNaniteClusters<TNaniteVertex>(MeshDto<TNaniteVertex> owner, ExportOptions options, FCluster[] clusters, int sectionCount, int numTexCoords, int numVertices) where TNaniteVertex : struct, IMeshVertex, INaniteVertex<TNaniteVertex>
     {
         var sections = new MeshSectionDto[sectionCount];
         for (var i = 0; i < sectionCount; i++)
@@ -93,7 +94,7 @@ public partial class MeshLodDto<TVertex>
             }
         });
 
-        return new MeshLodDto<TNaniteVertex>(owner, uint.MaxValue, indices, vertices, sections, extraUvs, vertexColors, 1.0f, false);
+        return new MeshLodDto<TNaniteVertex>(owner, options, uint.MaxValue, indices, vertices, sections, extraUvs, vertexColors, 1.0f, false);
 
         int FetchAdd(ref int location, int value) => Interlocked.Add(ref location, value) - value;
     }
