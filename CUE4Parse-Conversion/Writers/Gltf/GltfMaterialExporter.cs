@@ -15,7 +15,7 @@ internal sealed class GltfMaterialExporter(ExportOptions options, ExportSession 
 
     public MaterialBuilder Build(MeshMaterialDto? slot, string fallbackName)
     {
-        var name = slot?.SlotName ?? fallbackName;
+        var name = slot?.Name ?? fallbackName;
         try
         {
             if (options.ExportMaterials && slot?.Material is { } reference && reference.TryLoad<UMaterialInterface>(out var material))

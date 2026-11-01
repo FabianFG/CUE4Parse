@@ -12,11 +12,6 @@ public sealed class SkinnedAssetExporter(USkinnedAsset originalMesh) : MeshExpor
 
     protected override IReadOnlyList<ExportFile> BuildFiles(USkinnedAsset originalMesh, IMeshExportFormat format)
     {
-        if (Session.Options.ExportMorphTargets)
-        {
-            originalMesh.PopulateMorphTargetVerticesData();
-        }
-
         using var dto = new SkeletalMeshDto(originalMesh, Session.Options);
         if (dto.LODs.Count == 0)
         {

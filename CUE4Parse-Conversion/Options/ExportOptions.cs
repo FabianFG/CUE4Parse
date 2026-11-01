@@ -40,6 +40,7 @@ public class ExportOptions(
 
     public readonly bool ExportMorphTargets = exportMorphTargets;
     public readonly ESocketFormat SocketFormat = socketFormat;
+    public readonly bool ExportSockets = socketFormat != ESocketFormat.None;
 
     public readonly EFileCompressionFormat CompressionFormat = meshFormat == EMeshFormat.UEFormat ? compressionFormat : EFileCompressionFormat.None;
 }

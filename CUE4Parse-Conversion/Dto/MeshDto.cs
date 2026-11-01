@@ -39,14 +39,18 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         Materials = materials;
     }
 
-    protected MeshDto(UStaticMesh mesh) : base(mesh)
+    protected MeshDto(UStaticMesh mesh, ExportOptions options) : base(mesh)
     {
         Materials = new MeshMaterialDto[mesh.StaticMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
         {
             Materials[i] = new MeshMaterialDto(mesh.StaticMaterials[i]);
         }
-        Sockets = mesh.Sockets;
+
+        if (options.ExportSockets)
+        {
+            Sockets = mesh.Sockets;
+        }
     }
 
     protected MeshDto(UIRMesh mesh, int meshIndex) : base(mesh, meshIndex > 0 ? $"{mesh.Name}_{meshIndex}" : mesh.Name)
@@ -76,7 +80,7 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
         }
     }
 
-    protected MeshDto(USkinnedAsset mesh) : base(mesh)
+    protected MeshDto(USkinnedAsset mesh, ExportOptions options) : base(mesh)
     {
         Materials = new MeshMaterialDto[mesh.SkeletalMaterials.Length];
         for (var i = 0; i < Materials.Length; i++)
@@ -84,17 +88,23 @@ public abstract class MeshDto<TVertex> : ObjectDto where TVertex : struct, IMesh
             Materials[i] = new MeshMaterialDto(mesh.SkeletalMaterials[i]);
         }
 
-        var sockets = new List<FPackageIndex>(mesh.Sockets);
-        if (mesh.Skeleton.TryLoad<USkeleton>(out var skeleton))
+        if (options.ExportSockets)
         {
-            sockets.AddRange(skeleton.Sockets);
+            var sockets = new List<FPackageIndex>(mesh.Sockets);
+            if (mesh.Skeleton.TryLoad<USkeleton>(out var skeleton))
+            {
+                sockets.AddRange(skeleton.Sockets);
+            }
+            Sockets = [.. sockets];
         }
-        Sockets = sockets.ToArray();
     }
 
-    protected MeshDto(USkeleton skeleton) : base(skeleton)
+    protected MeshDto(USkeleton skeleton, ExportOptions options) : base(skeleton)
     {
-        Sockets = skeleton.Sockets;
+        if (options.ExportSockets)
+        {
+            Sockets = skeleton.Sockets;
+        }
     }
 
     public MeshMaterialDto? GetMaterial(MeshSectionDto section)
@@ -223,7 +233,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
         SetLodSuffixes();
     }
 
-    public StaticMeshDto(UStaticMesh mesh, ExportOptions options, USplineMeshComponent? spline = null) : base(mesh)
+    public StaticMeshDto(UStaticMesh mesh, ExportOptions options, USplineMeshComponent? spline = null) : base(mesh, options)
     {
         ArgumentNullException.ThrowIfNull(mesh.RenderData?.LODs, "Mesh has no LOD data");
         ArgumentNullException.ThrowIfNull(mesh.RenderData?.Bounds, "Mesh has no bounds");
@@ -366,7 +376,7 @@ public class SkeletonDto : MeshDto<SkinnedMeshVertex>
     public string? SkeletonPathName { get; private set; }
     public FVirtualBone[]? VirtualBones { get; private set; }
 
-    protected SkeletonDto(USkinnedAsset mesh) : base(mesh)
+    protected SkeletonDto(USkinnedAsset mesh, ExportOptions options) : base(mesh, options)
     {
         var refSkeleton = mesh.ReferenceSkeleton;
         Bones = new MeshBoneDto[refSkeleton.FinalRefBonePose.Length];
@@ -383,7 +393,7 @@ public class SkeletonDto : MeshDto<SkinnedMeshVertex>
         }
     }
 
-    public SkeletonDto(USkeleton skeleton) : base(skeleton)
+    public SkeletonDto(USkeleton skeleton, ExportOptions options) : base(skeleton, options)
     {
         var refSkeleton = skeleton.ReferenceSkeleton;
         Bones = new MeshBoneDto[refSkeleton.FinalRefBonePose.Length];
@@ -418,22 +428,27 @@ public sealed class SkeletalMeshDto : SkeletonDto
     public FPackageIndex[]? MorphTargets { get; private set; }
     public FPackageIndex[]? AssetUserData { get; private set; }
 
-    public SkeletalMeshDto(USkinnedAsset mesh, ExportOptions options) : base(mesh)
+    public SkeletalMeshDto(USkinnedAsset mesh, ExportOptions options) : base(mesh, options)
     {
         ArgumentNullException.ThrowIfNull(mesh.LODModels, "Mesh has no LOD data");
         ArgumentNullException.ThrowIfNull(mesh.LODInfo, "Mesh has no LOD info");
 
         FBox? bounds = mesh.Bounds?.GetBox();
         PhysicsAsset = mesh.PhysicsAsset;
-        MorphTargets = mesh.MorphTargets;
+        if (options.ExportMorphTargets)
+        {
+            mesh.PopulateMorphTargetVerticesData();
+            MorphTargets = mesh.MorphTargets;
+        }
         AssetUserData = mesh.AssetUserData;
 
-        if (options.NaniteMeshFormat != ENaniteMeshFormat.NaniteOnly) // just so we don't waste time
+        var hasMorphs = MorphTargets is { Length: > 0 };
+        if (options.NaniteMeshFormat != ENaniteMeshFormat.NaniteOnly || hasMorphs) // just so we don't waste time
         {
             ParseMeshRenderData(mesh, options);
         }
 
-        var shouldParseNanite = options.NaniteMeshFormat != ENaniteMeshFormat.NoNanite && MorphTargets is { Length: > 0 } && options.ExportMorphTargets || LODs.Count == 0;
+        var shouldParseNanite = options.NaniteMeshFormat != ENaniteMeshFormat.NoNanite && !hasMorphs || LODs.Count == 0;
         if (shouldParseNanite && mesh.NaniteResources is { PageStreamingStates.Length: > 0 } nanite)
         {
             ParseNaniteResources(this, nanite, options);

@@ -22,7 +22,7 @@ public static class MeshConverter
     {
         try
         {
-            var converted = new SkeletonDto(originalSkeleton);
+            var converted = new SkeletonDto(originalSkeleton, new ExportOptions());
             bones = converted.Bones;
             box = converted.Bounds;
         }
