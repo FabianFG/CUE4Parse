@@ -76,29 +76,29 @@ public static partial class BCDecoder
                 }
                 else
                 {
-                    var bits = (uint)(data >> 16);
+                    var bits = (int)(data >> 16);
                     var offset = xPixelOffset;
-                    outputSpan[offset    ] = colors[(int)((bitmask >>  0) & 3)] | (uint)((byte)(cl >> (int)(((bits >>  0) & 7) << 3)) << 24);
-                    outputSpan[offset + 1] = colors[(int)((bitmask >>  2) & 3)] | (uint)((byte)(cl >> (int)(((bits >>  3) & 7) << 3)) << 24);
-                    outputSpan[offset + 2] = colors[(int)((bitmask >>  4) & 3)] | (uint)((byte)(cl >> (int)(((bits >>  6) & 7) << 3)) << 24);
-                    outputSpan[offset + 3] = colors[(int)((bitmask >>  6) & 3)] | (uint)((byte)(cl >> (int)(((bits >>  9) & 7) << 3)) << 24);
+                    outputSpan[offset    ] = colors[(int)((bitmask >>  0) & 3)] | (uint)((byte)(cl >> ((bits <<  3) & 56)) << 24);
+                    outputSpan[offset + 1] = colors[(int)((bitmask >>  2) & 3)] | (uint)((byte)(cl >> ((bits >>  0) & 56)) << 24);
+                    outputSpan[offset + 2] = colors[(int)((bitmask >>  4) & 3)] | (uint)((byte)(cl >> ((bits >>  3) & 56)) << 24);
+                    outputSpan[offset + 3] = colors[(int)((bitmask >>  6) & 3)] | (uint)((byte)(cl >> ((bits >>  6) & 56)) << 24);
                     offset += sizeX;
-                    outputSpan[offset    ] = colors[(int)((bitmask >>  8) & 3)] | (uint)((byte)(cl >> (int)(((bits >> 12) & 7) << 3)) << 24);
-                    outputSpan[offset + 1] = colors[(int)((bitmask >> 10) & 3)] | (uint)((byte)(cl >> (int)(((bits >> 15) & 7) << 3)) << 24);
-                    outputSpan[offset + 2] = colors[(int)((bitmask >> 12) & 3)] | (uint)((byte)(cl >> (int)(((bits >> 18) & 7) << 3)) << 24);
-                    outputSpan[offset + 3] = colors[(int)((bitmask >> 14) & 3)] | (uint)((byte)(cl >> (int)(((bits >> 21) & 7) << 3)) << 24);
+                    outputSpan[offset    ] = colors[(int)((bitmask >>  8) & 3)] | (uint)((byte)(cl >> ((bits >>  9) & 56)) << 24);
+                    outputSpan[offset + 1] = colors[(int)((bitmask >> 10) & 3)] | (uint)((byte)(cl >> ((bits >> 12) & 56)) << 24);
+                    outputSpan[offset + 2] = colors[(int)((bitmask >> 12) & 3)] | (uint)((byte)(cl >> ((bits >> 15) & 56)) << 24);
+                    outputSpan[offset + 3] = colors[(int)((bitmask >> 14) & 3)] | (uint)((byte)(cl >> ((bits >> 18) & 56)) << 24);
 
-                    bits = (uint) (data >> 40);
+                    bits = (int) (data >> 40);
                     offset += sizeX;
-                    outputSpan[offset    ] = colors[(int)((bitmask >> 16) & 3)] | (uint)((byte)(cl >> (int)(((bits >>  0) & 7) << 3)) << 24);
-                    outputSpan[offset + 1] = colors[(int)((bitmask >> 18) & 3)] | (uint)((byte)(cl >> (int)(((bits >>  3) & 7) << 3)) << 24);
-                    outputSpan[offset + 2] = colors[(int)((bitmask >> 20) & 3)] | (uint)((byte)(cl >> (int)(((bits >>  6) & 7) << 3)) << 24);
-                    outputSpan[offset + 3] = colors[(int)((bitmask >> 22) & 3)] | (uint)((byte)(cl >> (int)(((bits >>  9) & 7) << 3)) << 24);
+                    outputSpan[offset    ] = colors[(int)((bitmask >> 16) & 3)] | (uint)((byte)(cl >> ((bits <<  3) & 56)) << 24);
+                    outputSpan[offset + 1] = colors[(int)((bitmask >> 18) & 3)] | (uint)((byte)(cl >> ((bits >>  0) & 56)) << 24);
+                    outputSpan[offset + 2] = colors[(int)((bitmask >> 20) & 3)] | (uint)((byte)(cl >> ((bits >>  3) & 56)) << 24);
+                    outputSpan[offset + 3] = colors[(int)((bitmask >> 22) & 3)] | (uint)((byte)(cl >> ((bits >>  6) & 56)) << 24);
                     offset += sizeX;
-                    outputSpan[offset    ] = colors[(int)((bitmask >> 24) & 3)] | (uint)((byte)(cl >> (int)(((bits >> 12) & 7) << 3)) << 24);
-                    outputSpan[offset + 1] = colors[(int)((bitmask >> 26) & 3)] | (uint)((byte)(cl >> (int)(((bits >> 15) & 7) << 3)) << 24);
-                    outputSpan[offset + 2] = colors[(int)((bitmask >> 28) & 3)] | (uint)((byte)(cl >> (int)(((bits >> 18) & 7) << 3)) << 24);
-                    outputSpan[offset + 3] = colors[(int)((bitmask >> 30) & 3)] | (uint)((byte)(cl >> (int)(((bits >> 21) & 7) << 3)) << 24);
+                    outputSpan[offset    ] = colors[(int)((bitmask >> 24) & 3)] | (uint)((byte)(cl >> ((bits >>  9) & 56)) << 24);
+                    outputSpan[offset + 1] = colors[(int)((bitmask >> 26) & 3)] | (uint)((byte)(cl >> ((bits >> 12) & 56)) << 24);
+                    outputSpan[offset + 2] = colors[(int)((bitmask >> 28) & 3)] | (uint)((byte)(cl >> ((bits >> 15) & 56)) << 24);
+                    outputSpan[offset + 3] = colors[(int)((bitmask >> 30) & 3)] | (uint)((byte)(cl >> ((bits >> 18) & 56)) << 24);
                 }
                 xPixelOffset += 4;
             }

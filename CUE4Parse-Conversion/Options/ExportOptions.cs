@@ -19,11 +19,13 @@ public class ExportOptions(
     ESocketFormat socketFormat = ESocketFormat.Bone,
     EFileCompressionFormat compressionFormat = EFileCompressionFormat.None,
     int pngCompressionLevel = 3,
-    bool tgaRleCompression = true)
+    bool tgaRleCompression = true,
+    bool includeDisabledMeshSections = false)
 {
     public readonly EMeshFormat MeshFormat = meshFormat;
     public readonly ENaniteMeshFormat NaniteMeshFormat = naniteMeshFormat;
     public readonly EMeshQuality MeshQuality = meshQuality;
+    public readonly bool IncludeDisabledMeshSections = includeDisabledMeshSections;
 
     public readonly ETexturePlatform TexturePlatform = texturePlatform;
     public readonly ETextureFormat TextureFormat = meshFormat == EMeshFormat.USD ? ETextureFormat.Png : textureFormat; // USD pipeline requires PNG textures

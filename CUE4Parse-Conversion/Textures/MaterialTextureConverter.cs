@@ -99,16 +99,7 @@ internal static class MaterialTextureConverter
         if (layout is EMaterialTextureLayout.ORM)
             return;
 
-        var (occlusion, roughness, metallic) = layout switch
-        {
-            EMaterialTextureLayout.RMA => (2, 0, 1),
-            EMaterialTextureLayout.ROM => (1, 0, 2),
-            EMaterialTextureLayout.RSM => (-1, 0, 2),
-            EMaterialTextureLayout.MRA or EMaterialTextureLayout.MRO => (2, 1, 0),
-            EMaterialTextureLayout.SRM or EMaterialTextureLayout.HRM => (-1, 1, 2),
-            _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null)
-        };
-
+        var (occlusion, roughness, metallic) = layout.GetPackedChannels();
         for (var i = 0; i < pixels.Length; i += 4)
         {
             var roughnessValue = pixels[i + roughness];

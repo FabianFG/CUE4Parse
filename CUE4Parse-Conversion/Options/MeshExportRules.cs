@@ -10,8 +10,10 @@ public sealed class MeshExportRules(EGame? game, MeshMaterialDto[] materials)
 
     public bool UseDiffuseColor => game is not EGame.GAME_DeadByDaylight;
 
-    public bool ShouldExportSection(MeshSectionDto section)
+    public bool ShouldExportSection(MeshSectionDto section, ExportOptions options)
     {
+        if (options.IncludeDisabledMeshSections)
+            return true;
         if (section.bDisabled)
             return false;
 

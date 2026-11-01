@@ -60,7 +60,7 @@ public class UMaterialInstance : UMaterialInterface
                     }
                     try
                     {
-                        DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
+                        DeserializeInlineShaderMaps(Ar);
                     }
                     catch (Exception e)
                     {

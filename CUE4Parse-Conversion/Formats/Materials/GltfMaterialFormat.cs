@@ -19,11 +19,9 @@ internal sealed class GltfMaterialFormat(ExportOptions options, ExportSession se
         material.WithBaseColor(source.BaseColor).WithDoubleSide(source.DoubleSided);
         if (source.BlendMode is EBlendMode.BLEND_Masked)
         {
-            // This is just a guess to prevent making whole mesh invisible
-            var useMask = source.DoubleSided || source.OpacityTexture != null || source.BaseColor.W < 1;
-            material.WithAlpha(useMask ? AlphaMode.MASK : AlphaMode.OPAQUE, source.AlphaCutoff);
+            material.WithAlpha(source.UseOpacity ? AlphaMode.MASK : AlphaMode.OPAQUE, source.AlphaCutoff);
         }
-        else if (source.BlendMode is EBlendMode.BLEND_Translucent or EBlendMode.BLEND_Additive or EBlendMode.BLEND_AlphaComposite)
+        else if (source.UseOpacity)
         {
             material.WithAlpha(AlphaMode.BLEND);
         }
@@ -41,8 +39,7 @@ internal sealed class GltfMaterialFormat(ExportOptions options, ExportSession se
             material.WithChannelImage(KnownChannel.Occlusion, orm);
         }
 
-        // A failed image decode should leave a neutral surface rather than glTF's metallic default
-        material.WithMetallicRoughness(source.OrmTexture != null && orm == null ? 0 : source.Metallic, source.Roughness);
+        material.WithMetallicRoughness(source.GetMetallic(orm != null), source.Roughness);
 
         var hasEmission = AttachTexture(material, KnownChannel.Emissive, source.EmissiveTexture);
         if (hasEmission != null || source.Emissive != Vector3.Zero)
@@ -101,7 +98,7 @@ internal sealed class GltfMaterialFormat(ExportOptions options, ExportSession se
     // Core glTF requires PNG/JPG, regardless of the texture export format chosen
     private string? GetReusableTexturePath(UTexture texture, bool allowJpeg = false)
     {
-        if (!session.EmbedMaterials)
+        if (!session.AttachMaterials)
             return null;
 
         var path = session.Cache.GetTexturePath(texture);

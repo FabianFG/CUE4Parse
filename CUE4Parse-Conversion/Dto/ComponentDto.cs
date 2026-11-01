@@ -1,5 +1,7 @@
 using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.GameTypes.DBD.Assets.Exports.Components;
+using CUE4Parse_Conversion.Dto.Custom.DBD;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
@@ -64,12 +66,13 @@ public class ComponentDto : LightObjectDto
                         UDirectionalLightComponent directionalLight => new DirectionalLightComponentDto(directionalLight, owner),
                         _ => new SceneComponentDto(light, owner)
                     },
-                    UIRMeshComponent irmc => new IRMeshCComponentDto(irmc, owner),
+                    UIRMeshComponent irmc => new IRMeshCComponentDto(irmc, owner), // Custom
                     // UAudioComponent audio => new AudioComponent(audio),
                     // UTextRenderComponent text => new TextRenderComponent(text),
                     // UCameraComponent camera => new CameraComponent(camera),
                     _ => new SceneComponentDto(scene, owner),
                 },
+                UDBDInstancedFoliageComponent foliage => new DBDInstancedFoliageComponentDto(foliage, owner), // Custom
                 { } data => new ComponentDto(data, owner),
                 null => null,
             };
@@ -210,6 +213,11 @@ public abstract class MeshComponentDto : PrimitiveComponentDto
         MeshPtr = meshPtr;
         OverrideMaterials = [];
     }
+
+    protected MeshComponentDto(FPackageIndex meshPtr, FPackageIndex?[] overrideMaterials, ActorDto owner) : this(meshPtr, owner)
+    {
+        OverrideMaterials = overrideMaterials;
+    }
 }
 
 /// <summary>
@@ -256,6 +264,11 @@ public class StaticMeshComponentDto : MeshComponentDto
     {
 
     }
+
+    protected StaticMeshComponentDto(FPackageIndex meshPtr, FPackageIndex?[] overrideMaterials, ActorDto owner) : base(meshPtr, overrideMaterials, owner)
+    {
+
+    }
 }
 
 public class InstancedStaticMeshComponentDto : StaticMeshComponentDto
@@ -273,6 +286,11 @@ public class InstancedStaticMeshComponentDto : StaticMeshComponentDto
     }
 
     public InstancedStaticMeshComponentDto(FPackageIndex meshPtr, FTransform[] transforms, ActorDto owner) : base(meshPtr, owner)
+    {
+        Transforms = transforms;
+    }
+
+    public InstancedStaticMeshComponentDto(FPackageIndex meshPtr, FTransform[] transforms, FPackageIndex?[] overrideMaterials, ActorDto owner) : base(meshPtr, overrideMaterials, owner)
     {
         Transforms = transforms;
     }

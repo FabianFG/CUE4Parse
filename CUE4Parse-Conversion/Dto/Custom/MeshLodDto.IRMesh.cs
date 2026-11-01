@@ -4,18 +4,19 @@ using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using GenericReader;
+using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<MeshVertex> FromIRMesh(StaticMeshDto owner, UIRMesh originalMesh, int partIndex)
+    internal static MeshLodDto<MeshVertex> FromIRMesh(StaticMeshDto owner, ExportOptions options, UIRMesh originalMesh, int partIndex)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(partIndex, originalMesh.Info.PartCount);
 
         var partSections = originalMesh.Sections.Where(x => x.PartIndex == partIndex).ToArray();
         var minLod = partSections.Min(x => x.LOD);
-        partSections = partSections.Where(x => x.LOD == minLod).ToArray();
+        partSections = [.. partSections.Where(x => x.LOD == minLod)];
 
         var vertCount = partSections.Max(x => x.MaxVertexIndex) + 1;
         var triCount = partSections[^1].FirstIndex + partSections[^1].NumTriangles * 3;
@@ -76,6 +77,6 @@ public partial class MeshLodDto<TVertex>
             TensorPrimitives.Add(span, (uint)sec.MinVertexIndex, span);
         }
 
-        return new MeshLodDto<MeshVertex>(owner, 0, indexBuffer, vertices, sections, extraUvs, null, 1.0f, true);
+        return new MeshLodDto<MeshVertex>(owner, options, 0, indexBuffer, vertices, sections, extraUvs, null, 1.0f, true);
     }
 }

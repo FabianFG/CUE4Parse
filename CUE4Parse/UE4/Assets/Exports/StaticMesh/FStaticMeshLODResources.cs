@@ -160,7 +160,7 @@ public class FStaticMeshLODResources
                 var rawDataHeaderSize = Ar.Game >= GAME_UE5_6 ? 6 * 4 : 0; // RawDataHeader = 6x uint32
                 Ar.Position += rawDataHeaderSize + Ar.Game switch
                 {
-                    GAME_TheFinals or GAME_ArcRaiders => 12,
+                    GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders => 12,
                     GAME_ArenaBreakoutMobile or GAME_GangstarMirageCity => 44,
                     GAME_NeedForSpeedMobile => 32,
                     GAME_SuicideSquad => 29,
@@ -178,7 +178,7 @@ public class FStaticMeshLODResources
             // uint32 ReversedIBsSize       = 0;
             Ar.Position += 12;
 
-            if (Ar.Game is GAME_StarWarsJediSurvivor or GAME_TheFinals or GAME_ArcRaiders) Ar.Position += 4;
+            if (Ar.Game is GAME_StarWarsJediSurvivor or GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders) Ar.Position += 4;
             if (Ar.Game is GAME_NeedForSpeedMobile)
             {
                 var count = Ar.Read<int>();
@@ -360,7 +360,7 @@ public class FStaticMeshLODResources
         {
             Ar.SkipMultipleBulkArrayData(4);
         }
-        if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
+        if (Ar.Game is GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders)
         {
             _ = new FRawStaticIndexBuffer(Ar);
             Ar.Position += 4; // Vert count

@@ -1,5 +1,3 @@
-using CUE4Parse.GameTypes._1047Games.Objects;
-
 namespace CUE4Parse.UE4.Assets.Exports.FastGeoStreaming;
 
 public class FFastGeoComponentCluster
@@ -11,6 +9,7 @@ public class FFastGeoComponentCluster
     public FFastGeoSkinnedMeshComponent[] SkinnedMeshComponents = [];
     public FFastGeoInstancedSkinnedMeshComponent[] InstancedSkinnedMeshComponents = [];
     public FFastGeoProceduralISMComponent[] ProceduralISMComponents = [];
+    public FFastGeoDecalComponent[] DecalComponents = [];
 
     public FFastGeoComponentCluster(FFastGeoArchive Ar)
     {
@@ -23,11 +22,13 @@ public class FFastGeoComponentCluster
         if (Ar.Game is GAME_SilverPalace) return;
         if (Ar.Game is GAME_Splitgate2)
         {
-            _ = Ar.ReadArray(() => new FSplitgate2FastGeoComponent(Ar));
+            DecalComponents = Ar.ReadArray(() => new FFastGeoDecalComponent(Ar));
             return;
         }
         SkinnedMeshComponents = Ar.ReadArray(() => new FFastGeoSkinnedMeshComponent(Ar));
         InstancedSkinnedMeshComponents = Ar.ReadArray(() => new FFastGeoInstancedSkinnedMeshComponent(Ar));
         ProceduralISMComponents = Ar.Game >= GAME_UE5_7 ? Ar.ReadArray(() => new FFastGeoProceduralISMComponent(Ar)) : [];
+
+        if (Ar.Game is GAME_PhantomBladeZero) DecalComponents = Ar.ReadArray(() => new FFastGeoDecalComponent(Ar));
     }
 }
