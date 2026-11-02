@@ -108,8 +108,25 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
         Debug.Assert(srcHeight >= 0 && srcWidth >= 0);
 
         int numSrcPixels = srcWidth * srcHeight;
-        Debug.Assert(sourceDataBytes == (numSrcPixels + (destWidth + destHeight) * 2 - 4) * 2); // 2 bytes (height) for each pixel, plus 2 bytes (normal x/y) for each border pixel
         Debug.Assert(destDataBytes == destWidth * destHeight * 4);
+
+        var bHasStoredNormals = mip.StorageFormat == ELandscapeTextureStorageFormat.HeightsAndNormals;
+        if (bHasStoredNormals)
+        {
+            // nothing to test it on
+            // LandscapeTextureStorageProvider.cpp https://github.com/EpicGames/UnrealEngine/commit/769ba73d9717fd46ac3ef2fd584228de58237d26
+            Debug.Assert(sourceDataBytes == numSrcPixels * 4); // 2 bytes (height) for each pixel, plus 2 bytes (normal x/y) for each pixel
+
+            fixed (byte* srcPtr = sourceData)
+            fixed (byte* dstPtr = destData)
+            {
+                DecodeHeightsAndNormals(srcPtr, dstPtr, destWidth, destHeight, srcWidth, numSrcPixels, bHasDuplicateData, mipBoundaryOffset);
+                if (bHasDuplicateData) RegenerateDuplicateRowsAndColumns(dstPtr, destWidth, destHeight, mipBoundaryOffset);
+            }
+            return;
+        }
+
+        Debug.Assert(sourceDataBytes == (numSrcPixels + (destWidth + destHeight) * 2 - 4) * 2); // 2 bytes (height) for each pixel, plus 2 bytes (normal x/y) for each border pixel
 
         // Save some multiplying by premultiplying the grid scales, mip scale and ZScale
         var premultU16 = CalculatePremultU16(mipIndex, LandscapeGridScale);
@@ -242,6 +259,7 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
                         dst++;
                         prevColumnOffset = -1;
                     }
+                    previousRowOffset = 1;
                 }
             }
 
@@ -281,35 +299,85 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
                     DecodeNormal(0, y, dstPtr);
                 }
                 Debug.Assert(src == &srcPtr[sourceDataBytes]);
+            }
 
-                // Copy all duplicate row/column data once all height/normal data is set
-                if (bHasDuplicateData)
+            // Copy all duplicate row/column data once all height/normal data is set
+            if (bHasDuplicateData) RegenerateDuplicateRowsAndColumns(dstPtr, destWidth, destHeight, mipBoundaryOffset);
+        }
+    }
+
+    private unsafe void DecodeHeightsAndNormals(byte* srcPtr, byte* dstPtr, int destWidth, int destHeight, int srcWidth, int numSrcPixels, bool bHasDuplicateData, int mipBoundaryOffset)
+    {
+        // The heights and the normals are stored in two planes, both delta encoded in the same (duplicate removed) scan order.
+        // We walk both at once, so that each destination pixel is written exactly once.
+        // (delta decoding initial values must match the initial values used during encoding)
+        ushort cc = 32768;
+        byte normalX = 128;
+        byte normalY = 128;
+
+        var duplicateRowsSkipped = 0;
+        for (var y = 0; y < destHeight; y++)
+        {
+            // Duplicate rows are regenerated once all other data is written
+            if (bHasDuplicateData && IsDuplicateCoord(y, mipBoundaryOffset))
+            {
+                duplicateRowsSkipped++;
+                continue;
+            }
+
+            // Offset the src since the data has removed all of the duplicate rows
+            var srcLineOffsetInPixels = (y - duplicateRowsSkipped) * srcWidth;
+            byte* heightSrc = &srcPtr[srcLineOffsetInPixels * 2];
+            byte* normalSrc = &srcPtr[(numSrcPixels + srcLineOffsetInPixels) * 2];
+            FColor* dst = (FColor*)&dstPtr[y * destWidth * 4];
+
+            for (var x = 0; x < destWidth; x++)
+            {
+                // Duplicate columns are regenerated once all other data is written
+                if (bHasDuplicateData && IsDuplicateCoord(x, mipBoundaryOffset))
                 {
-                    // For each duplicate row, copy the pixels above
-                    for (var y = mipBoundaryOffset; y < destHeight; y += mipBoundaryOffset)
-                    {
-                        Debug.Assert(IsDuplicateCoord(y, mipBoundaryOffset));
-                        FColor* dst = (FColor*)&dstPtr[y * destWidth * 4];
-
-                        for (var x = 0; x < destWidth; x++)
-                        {
-                            *dst = dst[-destWidth];
-                            dst++;
-                        }
-                    }
-
-                    // For each duplicate column, copy the pixels to the left
-                    for (var x = mipBoundaryOffset; x < destWidth; x += mipBoundaryOffset)
-                    {
-                        Debug.Assert(IsDuplicateCoord(x, mipBoundaryOffset));
-                        FColor* dst = (FColor*)&dstPtr[x * 4];
-                        for (var y = 0; y < destHeight; y++)
-                        {
-                            *dst = dst[-1];
-                            dst += destWidth;
-                        }
-                    }
+                    dst++;
+                    continue;
                 }
+
+                ushort deltaHeight = (ushort)(heightSrc[0] * 256 + heightSrc[1]);
+                cc += deltaHeight;
+                normalX += normalSrc[0];
+                normalY += normalSrc[1];
+
+                *dst = new FColor((byte)(cc >> 8), (byte)(cc & 0xff), normalX, normalY);
+
+                heightSrc += 2;
+                normalSrc += 2;
+                dst++;
+            }
+        }
+    }
+
+    private unsafe void RegenerateDuplicateRowsAndColumns(byte* dstPtr, int destWidth, int destHeight, int mipBoundaryOffset)
+    {
+        // For each duplicate row, copy the pixels above
+        for (var y = mipBoundaryOffset; y < destHeight; y += mipBoundaryOffset)
+        {
+            Debug.Assert(IsDuplicateCoord(y, mipBoundaryOffset));
+            FColor* dst = (FColor*)&dstPtr[y * destWidth * 4];
+
+            for (var x = 0; x < destWidth; x++)
+            {
+                *dst = dst[-destWidth];
+                dst++;
+            }
+        }
+
+        // For each duplicate column, copy the pixels to the left
+        for (var x = mipBoundaryOffset; x < destWidth; x += mipBoundaryOffset)
+        {
+            Debug.Assert(IsDuplicateCoord(x, mipBoundaryOffset));
+            FColor* dst = (FColor*)&dstPtr[x * 4];
+            for (var y = 0; y < destHeight; y++)
+            {
+                *dst = dst[-1];
+                dst += destWidth;
             }
         }
     }
