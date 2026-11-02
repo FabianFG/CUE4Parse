@@ -173,7 +173,7 @@ public class PaperFlipbookTests
         var frames = Enumerable.Range(0, 24).Select(i => new CFlipbookFrame(new CTexture(2, 2, EPixelFormat.PF_R8G8B8A8,
             Enumerable.Repeat(new byte[] { (byte) (i * 10), 0, 0, 255 }, 4).SelectMany(p => p).ToArray()))).ToList();
 
-        using var image = Image.Load<Rgba32>(new CFlipbook(frames, 24).Encode(new ExportOptions(animatedImageFormat: EAnimatedImageFormat.Webp), out _));
+        using var image = Image.Load<Rgba32>(new CFlipbook(frames, 24).Encode(new ExportOptions(animatedTextureFormat: EAnimatedTextureFormat.Webp), out _));
 
         Assert.Equal(24, image.Frames.Count);
         var loop = 0L;
@@ -221,11 +221,11 @@ public class PaperFlipbookTests
     }
 
     [Theory]
-    [InlineData(EAnimatedImageFormat.Png)]
-    [InlineData(EAnimatedImageFormat.Webp)]
-    public void FramesReplaceThePreviousFrame(EAnimatedImageFormat format)
+    [InlineData(EAnimatedTextureFormat.Png)]
+    [InlineData(EAnimatedTextureFormat.Webp)]
+    public void FramesReplaceThePreviousFrame(EAnimatedTextureFormat format)
     {
-        using var image = Image.Load<Rgba32>(TwoFrames(15).Encode(new ExportOptions(animatedImageFormat: format), out _));
+        using var image = Image.Load<Rgba32>(TwoFrames(15).Encode(new ExportOptions(animatedTextureFormat: format), out _));
 
         Assert.Equal(2, image.Frames.Count);
         Assert.Equal(new Rgba32(0, 255, 0, 255), image.Frames[1][1, 1]);
@@ -243,13 +243,13 @@ public class PaperFlipbookTests
     }
 
     [Theory]
-    [InlineData(EAnimatedImageFormat.Png)]
-    [InlineData(EAnimatedImageFormat.Webp)]
-    public void FlipbooksWithoutFrameRateShowTheirFirstFrame(EAnimatedImageFormat format)
+    [InlineData(EAnimatedTextureFormat.Png)]
+    [InlineData(EAnimatedTextureFormat.Webp)]
+    public void FlipbooksWithoutFrameRateShowTheirFirstFrame(EAnimatedTextureFormat format)
     {
         var flipbook = TwoFrames(0);
 
-        using var image = Image.Load<Rgba32>(flipbook.Encode(new ExportOptions(animatedImageFormat: format), out _));
+        using var image = Image.Load<Rgba32>(flipbook.Encode(new ExportOptions(animatedTextureFormat: format), out _));
 
         Assert.Single(image.Frames);
         Assert.Equal(new Rgba32(255, 0, 0, 255), image[0, 0]);

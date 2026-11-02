@@ -35,7 +35,7 @@ public static class FlipbookEncoder
                 image.SaveAsPng(ms, new PngEncoder { CompressionLevel = (PngCompressionLevel) options.PngCompressionLevel });
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(options), options.AnimatedTextureFormat, "Unsupported animated image format");
+                throw new ArgumentOutOfRangeException(nameof(options), options.AnimatedTextureFormat, "Unsupported animated texture format");
         }
 
         return ms.ToArray();
@@ -133,7 +133,7 @@ public static class FlipbookEncoder
                 metadata.GetGifMetadata().RepeatCount = 0;
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(options), options.AnimatedTextureFormat, "Unsupported animated image format");
+                throw new ArgumentOutOfRangeException(nameof(options), options.AnimatedTextureFormat, "Unsupported animated texture format");
         }
     }
 
@@ -160,7 +160,7 @@ public static class FlipbookEncoder
                 gifFrame.DisposalMethod = GifDisposalMethod.RestoreToBackground;
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(options), options.AnimatedTextureFormat, "Unsupported animated image format");
+                throw new ArgumentOutOfRangeException(nameof(options), options.AnimatedTextureFormat, "Unsupported animated texture format");
         }
     }
 
