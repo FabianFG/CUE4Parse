@@ -29,7 +29,7 @@ public class FixtureRenderableAssetTests
 
         Assert.True(mesh.bCooked);
         Assert.Equal(["Primary", "Secondary"],
-            mesh.StaticMaterials.Select(material => material.MaterialSlotName.Text).ToArray());
+            mesh.StaticMaterials.Select(material => Assert.NotNull(material.MaterialSlotName).Text).ToArray());
 
         var lods = Assert.IsType<FStaticMeshLODResources[]>(mesh.RenderData?.LODs);
         Assert.Equal(2, lods.Length);
@@ -145,7 +145,7 @@ public class FixtureRenderableAssetTests
             "SM_Nanite");
 
         Assert.True(mesh.bCooked);
-        Assert.Equal("NaniteSurface", Assert.Single(mesh.StaticMaterials).MaterialSlotName.Text);
+        Assert.Equal("NaniteSurface", Assert.NotNull(Assert.Single(mesh.StaticMaterials).MaterialSlotName).Text);
         var resources = Assert.IsType<FNaniteResources>(mesh.RenderData?.NaniteResources);
         Assert.Equal(2_048u, resources.NumInputTriangles);
         Assert.Equal(1_089u, resources.NumInputVertices);
