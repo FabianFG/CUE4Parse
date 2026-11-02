@@ -14,6 +14,7 @@ using CUE4Parse.GameTypes.DreamStar.Encryption.Aes;
 using CUE4Parse.GameTypes.Embark.Encryption.Aes;
 using CUE4Parse.GameTypes.INikki.Encryption.Aes;
 using CUE4Parse.GameTypes.MindsEye.Encryption.Aes;
+using CUE4Parse.GameTypes.MonsterHunterOutlanders.Encryption.Aes;
 using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
 using CUE4Parse.GameTypes.NFS.Mobile.Encryption.Aes;
 using CUE4Parse.GameTypes.NMZ.Encryption.Aes;
@@ -90,6 +91,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
                 GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
                 GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
+                GAME_MonsterHunterOutlanders => MonsterHunterOutlandersAes.MonsterHunterOutlandersDecrypt,
                 GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
                 GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
                 GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
