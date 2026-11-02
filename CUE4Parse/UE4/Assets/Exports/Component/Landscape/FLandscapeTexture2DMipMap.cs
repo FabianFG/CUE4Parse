@@ -17,12 +17,14 @@ public class FLandscapeTexture2DMipMap
     public ELandscapeTextureStorageFormat StorageFormat = ELandscapeTextureStorageFormat.HeightsWithEdgeNormals;
     public readonly FByteBulkData BulkData;
 
-    public FLandscapeTexture2DMipMap(FAssetArchive Ar)
+    public FLandscapeTexture2DMipMap(FAssetArchive Ar) : this(Ar, Ar.Game >= GAME_UE6_0) { }
+
+    public FLandscapeTexture2DMipMap(FAssetArchive Ar, bool hasStorageFormat)
     {
         SizeX = Ar.Read<int>();
         SizeY = Ar.Read<int>();
         bCompressed = Ar.ReadBoolean();
-        if (Ar.Game >= GAME_UE6_0)
+        if (hasStorageFormat)
         {
             StorageFormat = Ar.Read<ELandscapeTextureStorageFormat>();
         }
