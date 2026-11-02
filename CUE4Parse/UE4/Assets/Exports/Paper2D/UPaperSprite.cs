@@ -2,7 +2,7 @@
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse.UE4.Assets.Exports.Texture;
+namespace CUE4Parse.UE4.Assets.Exports.Paper2D;
 
 public class UPaperSprite : UObject
 {
@@ -21,7 +21,7 @@ public class UPaperSprite : UObject
         BakedSourceDimension = GetOrDefault(nameof(BakedSourceDimension), FVector2D.ZeroVector);
         BakedSourceTexture = GetOrDefault<FPackageIndex>(nameof(BakedSourceTexture));
         DefaultMaterial = GetOrDefault<FPackageIndex>(nameof(DefaultMaterial));
-        PixelsPerUnrealUnit = GetOrDefault(nameof(PixelsPerUnrealUnit), 1f);
+        PixelsPerUnrealUnit = GetOrDefault(nameof(PixelsPerUnrealUnit), 2.56f);
         BakedRenderData = GetOrDefault<FVector4[]>(nameof(BakedRenderData), []);
     }
 }

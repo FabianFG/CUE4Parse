@@ -1,7 +1,11 @@
 using CUE4Parse.FileProvider;
+using CUE4Parse.UE4.Assets.Exports.Paper2D;
 using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse_Conversion.Textures;
+using CUE4Parse_Conversion.Options;
+using CUE4Parse_Conversion.Textures.Paper2D;
 using SkiaSharp;
 using static CUE4Parse.Tests.Fixtures.FixtureTestUtilities;
 
@@ -65,7 +69,7 @@ public class FixtureTextureDecodeTests
                 expectation.Asset);
             AssertCookedPlatformData(texture, expectation);
 
-            var decoded = texture.Decode();
+            var decoded = texture.Decode(new ExportOptions());
             Assert.NotNull(decoded);
             using var actual = decoded.ToSkBitmap();
             Assert.Equal(expectation.DecodedFormat, decoded.PixelFormat);
@@ -141,7 +145,7 @@ public class FixtureTextureDecodeTests
         Assert.Equal([EPixelFormat.PF_DXT1], virtualData.LayerTypes);
         Assert.NotEmpty(virtualData.Chunks);
 
-        var decoded = texture.Decode();
+        var decoded = texture.Decode(new ExportOptions());
         Assert.NotNull(decoded);
         using var actual = decoded.ToSkBitmap();
         using var expected = CreateExpectedUdimBitmap();
@@ -169,7 +173,7 @@ public class FixtureTextureDecodeTests
             "T_Cube");
         Assert.Equal(EPixelFormat.PF_B8G8R8A8, cube.Format);
         Assert.Equal(6, cube.PlatformData.GetNumSlices());
-        var decodedCube = cube.Decode();
+        var decodedCube = cube.Decode(new ExportOptions());
         Assert.NotNull(decodedCube);
         using (var bitmap = decodedCube.ToSkBitmap())
         {
@@ -184,7 +188,7 @@ public class FixtureTextureDecodeTests
             "T_Array");
         Assert.Equal(EPixelFormat.PF_B8G8R8A8, array.Format);
         Assert.Equal(4, array.PlatformData.GetNumSlices());
-        var slices = array.DecodeTextureArray();
+        var slices = array.DecodeTextureArray(new ExportOptions());
         Assert.NotNull(slices);
         Assert.Equal(4, slices.Length);
         for (var slice = 0; slice < slices.Length; slice++)
@@ -203,7 +207,7 @@ public class FixtureTextureDecodeTests
         var firstVolumeMip = volume.GetFirstMip();
         Assert.NotNull(firstVolumeMip);
         Assert.Equal(4, firstVolumeMip.SizeZ);
-        var decodedVolume = volume.Decode();
+        var decodedVolume = volume.Decode(new ExportOptions());
         Assert.NotNull(decodedVolume);
         using (var bitmap = decodedVolume.ToSkBitmap())
         {
@@ -219,7 +223,7 @@ public class FixtureTextureDecodeTests
         Assert.Equal(EPixelFormat.PF_B8G8R8A8, cubeArray.Format);
         Assert.Equal(12, cubeArray.PlatformData.GetNumSlices());
         var cubeArrayMip = Assert.IsType<FTexture2DMipMap>(cubeArray.GetFirstMip());
-        var decodedFirstSlice = cubeArray.Decode(cubeArrayMip);
+        var decodedFirstSlice = cubeArray.DecodeMip(cubeArray.GetFirstMipIndex(), new ExportOptions());
         Assert.NotNull(decodedFirstSlice);
         using (var bitmap = decodedFirstSlice!.ToSkBitmap())
         {
@@ -274,7 +278,7 @@ public class FixtureTextureDecodeTests
         Assert.Equal(EPixelFormat.PF_G8, lightProfile.Format);
         Assert.Equal(1250.5f, lightProfile.Brightness);
         Assert.Equal(0.03125f, lightProfile.TextureMultiplier);
-        var decodedLightProfile = lightProfile.Decode();
+        var decodedLightProfile = lightProfile.Decode(new ExportOptions());
         Assert.NotNull(decodedLightProfile);
         using (var bitmap = decodedLightProfile.ToSkBitmap())
         {
@@ -289,7 +293,7 @@ public class FixtureTextureDecodeTests
         Assert.Equal(64u, atlas.Get<uint>("TextureSize"));
         Assert.Equal("Curve_LinearColor",
             Assert.Single(atlas.Get<FPackageIndex[]>("GradientCurves")).Name);
-        var decodedAtlas = atlas.Decode();
+        var decodedAtlas = atlas.Decode(new ExportOptions());
         Assert.NotNull(decodedAtlas);
         using (var bitmap = decodedAtlas.ToSkBitmap())
         {
@@ -309,12 +313,65 @@ public class FixtureTextureDecodeTests
             Assert.Equal(expectedFormat, texture.Format);
             Assert.Equal((16, 16, 1),
                 (texture.PlatformData.SizeX, texture.PlatformData.SizeY, texture.PlatformData.Mips.Length));
-            var decoded = texture.Decode();
+            var decoded = texture.Decode(new ExportOptions());
             Assert.NotNull(decoded);
             var bitmap = decoded.ToSkBitmap();
             Assert.Equal((16, 16), (bitmap.Width, bitmap.Height));
             return bitmap;
         }
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void TextureFixturesConvertToImageMatchingSkiaBitmaps(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+
+        foreach (var asset in new[] { "T_BC7", "T_BGRA8", "T_G8", "T_G16", "T_R16F", "T_FloatRGBA" })
+        {
+            var decoded = LoadTexture(provider, asset).Decode(new ExportOptions());
+            Assert.NotNull(decoded);
+            using var bitmap = decoded.ToSkBitmap();
+            AssertImageMatchesBitmap(decoded, bitmap);
+        }
+    }
+
+    [Theory]
+    [InlineData(FixtureSerialization.Tagged)]
+    [InlineData(FixtureSerialization.Unversioned)]
+    public void PaperSpriteFixtureDecodesCroppedTextureAndPivot(FixtureSerialization serialization)
+    {
+        using var provider = CreateMountedIoStoreProvider(serialization);
+        var sprite = LoadExport<UPaperSprite>(provider,
+            "CUE4ParseFixtures/Content/Fixtures/Paper2D/Sprite_Fixture.uasset", "Sprite_Fixture");
+        var sourceTexture = Assert.IsType<UTexture2D>(sprite.BakedSourceTexture?.Load());
+
+        var cache = new Dictionary<string, CTexture>();
+        var decoded = sprite.Decode(out var pivot, new ExportOptions(), textureCache: cache);
+        Assert.NotNull(decoded);
+        Assert.Equal((16, 16), (decoded.Width, decoded.Height));
+        Assert.Equal(new FIntPoint(8, 8), pivot);
+        var cachedAtlas = Assert.Single(cache).Value;
+        Assert.Equal((sourceTexture.PlatformData.SizeX, sourceTexture.PlatformData.SizeY),
+            (cachedAtlas.Width, cachedAtlas.Height));
+
+        // Every pixel has to come from the sprite's rectangle in the atlas
+        var bpp = cachedAtlas.Data.Length / (cachedAtlas.Width * cachedAtlas.Height);
+        var originX = (int) MathF.Round(sprite.BakedSourceUV.X * cachedAtlas.Width / sourceTexture.ImportedSize.X);
+        var originY = (int) MathF.Round(sprite.BakedSourceUV.Y * cachedAtlas.Height / sourceTexture.ImportedSize.Y);
+        for (var y = 0; y < decoded.Height; y++)
+        {
+            Assert.Equal(cachedAtlas.Data.AsSpan(((originY + y) * cachedAtlas.Width + originX) * bpp, decoded.Width * bpp),
+                decoded.Data.AsSpan(y * decoded.Width * bpp, decoded.Width * bpp));
+        }
+
+        var secondDecoded = sprite.Decode(new ExportOptions(), textureCache: cache);
+        Assert.NotNull(secondDecoded);
+        Assert.Single(cache);
+
+        using var bitmap = decoded.ToSkBitmap();
+        AssertImageMatchesBitmap(decoded, bitmap);
     }
 
     private static SKBitmap CreateExpectedBitmap(TextureExpectation expectation)
@@ -337,7 +394,7 @@ public class FixtureTextureDecodeTests
         var reference = SKBitmap.Decode(path);
         Assert.NotNull(reference);
 
-        if (expectation.Asset is "T_BC4" or "T_EAC_R11")
+        if (expectation.Asset == "T_EAC_R11")
         {
             for (var y = 0; y < reference.Height; y++)
                 for (var x = 0; x < reference.Width; x++)
@@ -379,7 +436,7 @@ public class FixtureTextureDecodeTests
 
     private static void AssertDecodedBitmap(UTexture2D texture, TextureExpectation expectation)
     {
-        var decoded = texture.Decode();
+        var decoded = texture.Decode(new ExportOptions());
         Assert.NotNull(decoded);
         using var actual = decoded.ToSkBitmap();
         using var expected = CreateExpectedBitmap(expectation);
@@ -393,6 +450,22 @@ public class FixtureTextureDecodeTests
         var metrics = Measure(actual, expected);
         for (var channel = 0; channel < ChannelCount; channel++)
             AssertChannelMetric(expectation, metrics, channel);
+    }
+
+    private static void AssertImageMatchesBitmap(CTexture decoded, SKBitmap bitmap)
+    {
+        using var image = decoded.ToImage();
+        Assert.Equal((bitmap.Width, bitmap.Height), (image.Width, image.Height));
+        for (var y = 0; y < bitmap.Height; y++)
+        {
+            for (var x = 0; x < bitmap.Width; x++)
+            {
+                var expected = bitmap.GetPixel(x, y);
+                var actual = image[x, y];
+                Assert.Equal((expected.Red, expected.Green, expected.Blue, expected.Alpha),
+                    (actual.R, actual.G, actual.B, actual.A));
+            }
+        }
     }
 
     private static void AssertChannelMetric(TextureExpectation expectation, PixelMetrics metrics, int channel)
@@ -482,7 +555,7 @@ public class FixtureTextureDecodeTests
         for (var mipIndex = 0; mipIndex < mipCount; mipIndex++)
         {
             var expectedDimension = Math.Max(1, baseSize >> mipIndex);
-            var decoded = texture.DecodeMip(mipIndex);
+            var decoded = texture.DecodeMip(mipIndex, new ExportOptions());
             Assert.NotNull(decoded);
             Assert.Equal(expectedDimension, decoded.Width);
             Assert.Equal(expectedDimension, decoded.Height);
