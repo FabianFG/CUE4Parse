@@ -1,36 +1,45 @@
+using CUE4Parse.UE4.Assets.Exports.Paper2D;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse_Conversion.Options;
 
-namespace CUE4Parse_Conversion.Textures;
+namespace CUE4Parse_Conversion.Textures.Paper2D;
 
 public static class SpriteDecoder
 {
-    public static CTexture? Decode(this UPaperSprite sprite, ETexturePlatform platform = ETexturePlatform.DesktopMobile, IDictionary<string, CTexture>? textureCache = null) =>
-        sprite.Decode(out _, platform, textureCache);
+    public static CTexture? Decode(this UPaperSprite sprite, ExportOptions options, IDictionary<string, CTexture>? textureCache = null, CancellationToken cancellationToken = default)
+        => sprite.Decode(out _, options, textureCache, cancellationToken);
 
-    public static CTexture? Decode(this UPaperSprite sprite, out FIntPoint pivot, ETexturePlatform platform = ETexturePlatform.DesktopMobile, IDictionary<string, CTexture>? textureCache = null) =>
-        sprite.Decode(out pivot, out _, platform, textureCache);
+    public static CTexture? Decode(this UPaperSprite sprite, out FIntPoint pivot, ExportOptions options, IDictionary<string, CTexture>? textureCache = null, CancellationToken cancellationToken = default)
+        => sprite.Decode(out pivot, out _, options, textureCache, cancellationToken);
 
     // scale is the size of the decoded mip relative to the imported texture the sprite's coordinates refer to
-    internal static CTexture? Decode(this UPaperSprite sprite, out FIntPoint pivot, out float scale, ETexturePlatform platform, IDictionary<string, CTexture>? textureCache)
+    internal static CTexture? Decode(this UPaperSprite sprite, out FIntPoint pivot, out float scale, ExportOptions options, IDictionary<string, CTexture>? textureCache, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         pivot = default;
         scale = 1;
 
         var sourceTexture = sprite.BakedSourceTexture?.Load<UTexture2D>();
-        if (sourceTexture == null) return null;
+        if (sourceTexture == null)
+            return null;
 
         var cacheKey = sourceTexture.GetPathName();
         if (textureCache == null || !textureCache.TryGetValue(cacheKey, out var sheet))
         {
-            sheet = sourceTexture.Decode(platform);
-            if (sheet == null) return null;
+            sheet = sourceTexture.Decode(options, cancellationToken);
+            if (sheet == null)
+                return null;
+
             textureCache?[cacheKey] = sheet;
         }
 
         if (sourceTexture.ImportedSize.X > 0)
             scale = (float) sheet.Width / sourceTexture.ImportedSize.X;
-        return sprite.Decode(sheet, sourceTexture.ImportedSize, out pivot);
+
+        var decoded = sprite.Decode(sheet, sourceTexture.ImportedSize, out pivot);
+        cancellationToken.ThrowIfCancellationRequested();
+        return decoded;
     }
 
     /// <summary>
@@ -45,7 +54,9 @@ public static class SpriteDecoder
         var (u, v) = (sprite.BakedSourceUV.X, sprite.BakedSourceUV.Y);
         var (w, h) = (sprite.BakedSourceDimension.X, sprite.BakedSourceDimension.Y);
         if (w <= 0 || h <= 0)
+        {
             (u, v, w, h) = (0, 0, importedWidth, importedHeight);
+        }
 
         // Sprite sheets can be split into fractional cells. Rounding the origin and the size separately picks the texels
         // UE samples and keeps every frame equally large.
@@ -82,11 +93,11 @@ public static class SpriteDecoder
     // bRotatedInSourceImage is editor-only, but rotated sprites swap which texture axis follows which position axis
     private static bool IsRotatedInSourceImage(FVector4[] renderData, float ppuu, int width, int height)
     {
-        float Spread(Func<FVector4, float> offset) => renderData.Max(offset) - renderData.Min(offset);
-
         var upright = Spread(v => v.X * ppuu - v.Z * width) + Spread(v => v.Y * ppuu + v.W * height);
         var rotated = Spread(v => v.X * ppuu - v.W * height) + Spread(v => v.Y * ppuu - v.Z * width);
         return rotated < upright;
+
+        float Spread(Func<FVector4, float> offset) => renderData.Max(offset) - renderData.Min(offset);
     }
 
     // Atlases store rotated sprites turned 90 degrees clockwise

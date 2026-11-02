@@ -1,6 +1,6 @@
 using CUE4Parse.UE4.Objects.Core.Math;
 
-namespace CUE4Parse_Conversion.Textures;
+namespace CUE4Parse_Conversion.Textures.Paper2D;
 
 public class CFlipbookFrame(CTexture? texture, int frameRun = 1, FIntPoint offset = default)
 {

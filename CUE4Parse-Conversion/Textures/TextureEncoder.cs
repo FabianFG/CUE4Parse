@@ -13,58 +13,57 @@ namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureEncoder
 {
-    public static byte[] Encode(this CTexture bitmap, ExportOptions options, out string ext)
-        => EncodeTexture(bitmap, options.TextureFormat, options.ExportHdrTexturesAsHdr, out ext, options.TextureQuality, options.PngCompressionLevel, options.TgaRleCompression);
-    public static byte[] Encode(this CTexture bitmap, ETextureFormat format, bool saveHdrAsHdr, out string ext, int quality = 100, int pngCompressionLevel = 3, bool tgaRleCompression = true)
-        => EncodeTexture(bitmap, format, saveHdrAsHdr, out ext, quality, Math.Clamp(pngCompressionLevel, 0, 9), tgaRleCompression);
-    private static byte[] EncodeTexture(CTexture bitmap, ETextureFormat format, bool saveHdrAsHdr, out string ext, int quality, int pngCompressionLevel, bool tgaRleCompression)
+    public static byte[] Encode(this CTexture bitmap, ExportOptions options, out string ext, CancellationToken cancellationToken = default)
     {
-        if (saveHdrAsHdr && PixelFormatUtils.IsHDR(bitmap.PixelFormat))
+        cancellationToken.ThrowIfCancellationRequested();
+        if (options.ExportHdrTexturesAsHdr && PixelFormatUtils.IsHDR(bitmap.PixelFormat))
         {
             ext = "hdr";
             return bitmap.ToHdrBitmap();
         }
 
-        switch (format)
+        switch (options.TextureFormat)
         {
             case ETextureFormat.Png:
             {
                 ext = "png";
                 using var bmp = bitmap.ToSkBitmap();
                 using var pixels = bmp.PeekPixels();
-                using var data = pixels.Encode(GetPngOptions(pngCompressionLevel));
+                using var data = pixels.Encode(GetPngOptions(options));
                 return data.ToArray();
             }
             case ETextureFormat.Jpeg:
             {
                 ext = "jpg";
                 using var bmp = bitmap.ToSkBitmap();
-                using var data = bmp.Encode(SKEncodedImageFormat.Jpeg, quality);
+                using var data = bmp.Encode(SKEncodedImageFormat.Jpeg, options.TextureQuality);
                 return data.ToArray();
             }
             case ETextureFormat.Webp:
             {
                 ext = "webp";
                 using var bmp = bitmap.ToSkBitmap();
-                using var data = bmp.Encode(SKEncodedImageFormat.Webp, quality);
+                using var data = bmp.Encode(SKEncodedImageFormat.Webp, options.TextureQuality);
                 return data.ToArray();
             }
             case ETextureFormat.Tga:
+            {
                 ext = "tga";
-                return EncodeTga(bitmap, tgaRleCompression);
-            default: throw new NotImplementedException("Unsupported texture format: " + format);
-            //TODO: ETextureFormat.Dds
+                return EncodeTga(bitmap, options);
+            }
+            default:
+                throw new NotImplementedException("Unsupported texture format: " + options.TextureFormat);
         }
     }
 
     // This way it makes it slightly faster and smaller for low compression levels
-    internal static SKPngEncoderOptions GetPngOptions(int compressionLevel)
+    internal static SKPngEncoderOptions GetPngOptions(ExportOptions options)
     {
-        var filters = compressionLevel <= 3 ? SKPngEncoderFilterFlags.Sub | SKPngEncoderFilterFlags.Up : SKPngEncoderFilterFlags.AllFilters;
-        return new SKPngEncoderOptions(filters, compressionLevel);
+        var filters = options.PngCompressionLevel <= 3 ? SKPngEncoderFilterFlags.Sub | SKPngEncoderFilterFlags.Up : SKPngEncoderFilterFlags.AllFilters;
+        return new SKPngEncoderOptions(filters, options.PngCompressionLevel);
     }
 
-    private static byte[] EncodeTga(CTexture bitmap, bool compress)
+    private static byte[] EncodeTga(CTexture bitmap, ExportOptions options)
     {
         using var skBitmap = bitmap.ToSkBitmap();
         using var pixels = skBitmap.PeekPixels();
@@ -80,7 +79,7 @@ public static class TextureEncoder
         image.Save(stream, new TgaEncoder
         {
             BitsPerPixel = TgaBitsPerPixel.Pixel32,
-            Compression = compress ? TgaCompression.RunLength : TgaCompression.None
+            Compression = options.TgaRleCompression ? TgaCompression.RunLength : TgaCompression.None
         });
 
         return stream.ToArray();
@@ -291,9 +290,22 @@ public static class TextureEncoder
             case EPixelFormat.PF_G8:
                 skColorType = SKColorType.Gray8;
                 break;
-            default:
+            case EPixelFormat.PF_FloatRGB:
+            case EPixelFormat.PF_FloatRGBA:
+            case EPixelFormat.PF_R32_FLOAT:
+            case EPixelFormat.PF_R32G32B32F:
+            case EPixelFormat.PF_A32B32G32R32F:
+            case EPixelFormat.PF_A16B16G16R16:
+            case EPixelFormat.PF_G16:
+            case EPixelFormat.PF_G16R16:
+            case EPixelFormat.PF_G16R16F:
+            case EPixelFormat.PF_G32R32F:
+            case EPixelFormat.PF_R16F:
+            case EPixelFormat.PF_V8U8:
                 ConvertToRgba8(texture, out convertedData);
                 break;
+            default:
+                throw new NotImplementedException("Unsupported pixel format: " + texture.PixelFormat);
         }
 
         var info = new SKImageInfo(texture.Width, texture.Height, skColorType, SKAlphaType.Unpremul);
@@ -318,13 +330,31 @@ public static class TextureEncoder
                 using var gray = Image.LoadPixelData<L8>(texture.Data, texture.Width, texture.Height);
                 return gray.CloneAs<Rgba32>();
             }
-            default:
+            case EPixelFormat.PF_FloatRGB:
+            case EPixelFormat.PF_FloatRGBA:
+            case EPixelFormat.PF_R32_FLOAT:
+            case EPixelFormat.PF_R32G32B32F:
+            case EPixelFormat.PF_A32B32G32R32F:
+            case EPixelFormat.PF_A16B16G16R16:
+            case EPixelFormat.PF_G16:
+            case EPixelFormat.PF_G16R16:
+            case EPixelFormat.PF_G16R16F:
+            case EPixelFormat.PF_G32R32F:
+            case EPixelFormat.PF_R16F:
+            case EPixelFormat.PF_V8U8:
             {
                 var span = ConvertToRgba8(texture, out var ptr);
-                var image = Image.LoadPixelData<Rgba32>(span, texture.Width, texture.Height);
-                MemoryUtils.NativeFree(ptr);
-                return image;
+                try
+                {
+                    return Image.LoadPixelData<Rgba32>(span, texture.Width, texture.Height);
+                }
+                finally
+                {
+                    MemoryUtils.NativeFree(ptr);
+                }
             }
+            default:
+                throw new NotImplementedException("Unsupported pixel format: " + texture.PixelFormat);
         }
     }
 
@@ -333,47 +363,28 @@ public static class TextureEncoder
         var dataSpan = new ReadOnlySpan<byte>(texture.Data);
         return texture.PixelFormat switch
         {
-            EPixelFormat.PF_FloatRGB or EPixelFormat.PF_FloatRGBA =>
-                ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, out ptr),
-            EPixelFormat.PF_R32_FLOAT or EPixelFormat.PF_R32G32B32F =>
-                ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, out ptr),
-            EPixelFormat.PF_A32B32G32R32F =>
-                ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, out ptr, true),
-            EPixelFormat.PF_A16B16G16R16 =>
-                ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, out ptr, true),
-            EPixelFormat.PF_G16 =>
-                ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, out ptr),
-            EPixelFormat.PF_G16R16 =>
-                ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, out ptr, true),
-            EPixelFormat.PF_G16R16F =>
-                ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, out ptr, true),
-            EPixelFormat.PF_G32R32F =>
-                ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, out ptr, true),
-            EPixelFormat.PF_R16F =>
-                ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, out ptr),
-            EPixelFormat.PF_V8U8 =>
-                ConvertV8U8ToRGBA(texture.Width, texture.Height, dataSpan, out ptr),
+            EPixelFormat.PF_FloatRGB or EPixelFormat.PF_FloatRGBA => ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, out ptr),
+            EPixelFormat.PF_R32_FLOAT or EPixelFormat.PF_R32G32B32F => ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, out ptr),
+            EPixelFormat.PF_A32B32G32R32F => ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, out ptr, true),
+            EPixelFormat.PF_A16B16G16R16 => ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, out ptr, true),
+            EPixelFormat.PF_G16 => ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, out ptr),
+            EPixelFormat.PF_G16R16 => ConvertTo8<ushort>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, Convert16To8, out ptr, true),
+            EPixelFormat.PF_G16R16F => ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, out ptr, true),
+            EPixelFormat.PF_G32R32F => ConvertTo8<float>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertFloatTo8, out ptr, true),
+            EPixelFormat.PF_R16F => ConvertTo8<Half>(texture.PixelFormat, texture.Width, texture.Height, dataSpan, ConvertHalfTo8, out ptr),
+            EPixelFormat.PF_V8U8 => ConvertV8U8ToRGBA(texture.Width, texture.Height, dataSpan, out ptr),
             _ => throw new NotImplementedException("Unsupported pixel format: " + texture.PixelFormat)
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte Convert16To8(ushort value)
-    {
-        return FColor.Requantize16to8(value);
-    }
+    private static byte Convert16To8(ushort value) => FColor.Requantize16to8(value);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static byte ConvertFloatTo8(float value) => (byte) Math.Clamp(value * 255.0f, 0, byte.MaxValue);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte ConvertFloatTo8(float value)
-    {
-        return (byte)Math.Clamp(value * 255.0f, 0, byte.MaxValue);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte ConvertHalfTo8(Half value)
-    {
-        return (byte)Math.Clamp((float)value * 255.0f, 0, byte.MaxValue);
-    }
+    private static byte ConvertHalfTo8(Half value) => (byte)Math.Clamp((float)value * 255.0f, 0, byte.MaxValue);
 
     private static unsafe Span<byte> ConvertV8U8ToRGBA(int width, int height, ReadOnlySpan<byte> data, out nint retPtr)
     {

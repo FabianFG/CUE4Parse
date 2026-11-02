@@ -1,13 +1,15 @@
-using CUE4Parse.UE4.Assets.Exports.Texture;
+using CUE4Parse.UE4.Assets.Exports.Paper2D;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse_Conversion.Options;
 
-namespace CUE4Parse_Conversion.Textures;
+namespace CUE4Parse_Conversion.Textures.Paper2D;
 
 public static class FlipbookDecoder
 {
-    public static CFlipbook? Decode(this UPaperFlipbook flipbook, ETexturePlatform platform = ETexturePlatform.DesktopMobile, IDictionary<string, CTexture>? textureCache = null, CancellationToken cancellationToken = default)
+    public static CFlipbook? Decode(this UPaperFlipbook flipbook, ExportOptions options, IDictionary<string, CTexture>? textureCache = null, CancellationToken cancellationToken = default)
     {
-        if (flipbook.KeyFrames.Length == 0) return null;
+        if (flipbook.KeyFrames.Length == 0)
+            return null;
 
         textureCache ??= new Dictionary<string, CTexture>();
         // Key frames often reuse a sprite, so every sprite is only cut out once
@@ -33,9 +35,11 @@ public static class FlipbookDecoder
 
             if (!sprites.TryGetValue(sprite, out var decoded))
             {
-                decoded = sprite.Decode(out var pivot, out var scale, platform, textureCache) is { } texture ? (texture, pivot, scale) : null;
+                decoded = sprite.Decode(out var pivot, out var scale, options, textureCache, cancellationToken) is { } texture ? (texture, pivot, scale) : null;
                 if (decoded == null)
+                {
                     Log.Warning("Flipbook '{Name}': Could not decode sprite '{Sprite}' of key frame {Index}, the frame stays empty", flipbook.Name, sprite.Name, i);
+                }
                 sprites[sprite] = decoded;
             }
 
@@ -45,9 +49,14 @@ public static class FlipbookDecoder
 
         var decodedSprites = sprites.Where(pair => pair.Value != null).ToList();
         if (decodedSprites.Select(pair => pair.Key.PixelsPerUnrealUnit).Distinct().Count() > 1)
+        {
             Log.Warning("Flipbook '{Name}' mixes sprites with different pixels per unit, their frames are not rescaled", flipbook.Name);
+        }
+
         if (decodedSprites.Select(pair => MathF.Round(pair.Value!.Value.Scale, 3)).Distinct().Count() > 1)
+        {
             Log.Warning("Flipbook '{Name}' mixes sprites cut from different texture mip sizes, their frames are not rescaled", flipbook.Name);
+        }
 
         return Assemble(keyFrames, flipbook.FramesPerSecond);
     }
@@ -58,7 +67,8 @@ public static class FlipbookDecoder
     internal static CFlipbook? Assemble(IReadOnlyList<(CTexture? Texture, int FrameRun, FIntPoint Pivot)> keyFrames, float framesPerSecond)
     {
         var shown = keyFrames.Where(frame => frame.FrameRun > 0).ToList();
-        if (shown.All(frame => frame.Texture == null)) return null;
+        if (shown.All(frame => frame.Texture == null))
+            return null;
 
         var maxPivotX = shown.Where(frame => frame.Texture != null).Max(frame => frame.Pivot.X);
         var maxPivotY = shown.Where(frame => frame.Texture != null).Max(frame => frame.Pivot.Y);

@@ -2,7 +2,7 @@ using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse.UE4.Assets.Exports.Texture;
+namespace CUE4Parse.UE4.Assets.Exports.Paper2D;
 
 [StructFallback]
 public class FPaperFlipbookKeyFrame : IUStruct

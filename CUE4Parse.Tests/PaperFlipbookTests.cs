@@ -1,8 +1,10 @@
+using CUE4Parse.UE4.Assets.Exports.Paper2D;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Textures;
+using CUE4Parse_Conversion.Textures.Paper2D;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -161,7 +163,7 @@ public class PaperFlipbookTests
         var flipbook = new UPaperFlipbook { FramesPerSecond = 10, KeyFrames = [new FPaperFlipbookKeyFrame(null, 1), new FPaperFlipbookKeyFrame(null, 0)] };
 
         // Nothing to show, but no exception either
-        Assert.Null(flipbook.Decode());
+        Assert.Null(flipbook.Decode(new ExportOptions()));
     }
 
     [Fact]
@@ -171,7 +173,7 @@ public class PaperFlipbookTests
         var frames = Enumerable.Range(0, 24).Select(i => new CFlipbookFrame(new CTexture(2, 2, EPixelFormat.PF_R8G8B8A8,
             Enumerable.Repeat(new byte[] { (byte) (i * 10), 0, 0, 255 }, 4).SelectMany(p => p).ToArray()))).ToList();
 
-        using var image = Image.Load<Rgba32>(new CFlipbook(frames, 24).Encode(ETextureFormat.Webp, out _));
+        using var image = Image.Load<Rgba32>(new CFlipbook(frames, 24).Encode(new ExportOptions(animatedImageFormat: EAnimatedImageFormat.Webp), out _));
 
         Assert.Equal(24, image.Frames.Count);
         var loop = 0L;
@@ -187,7 +189,7 @@ public class PaperFlipbookTests
         var green = new CTexture(2, 2, EPixelFormat.PF_R8G8B8A8, Enumerable.Repeat(new byte[] { 0, 255, 0, 255 }, 4).SelectMany(p => p).ToArray());
         var flipbook = new CFlipbook([new CFlipbookFrame(green, 1, new FIntPoint(1, 1)), new CFlipbookFrame(red)], 0);
 
-        using var image = Image.Load<Rgba32>(flipbook.Encode(ETextureFormat.Png, out _));
+        using var image = Image.Load<Rgba32>(flipbook.Encode(new ExportOptions(), out _));
 
         Assert.Equal((2, 2), (image.Width, image.Height));
         Assert.Equal(new Rgba32(0, 255, 0, 255), image[0, 0]);
@@ -199,7 +201,7 @@ public class PaperFlipbookTests
         using var cancelled = new CancellationTokenSource();
         cancelled.Cancel();
 
-        Assert.ThrowsAny<OperationCanceledException>(() => TwoFrames(15).Encode(ETextureFormat.Png, out _, cancellationToken: cancelled.Token));
+        Assert.ThrowsAny<OperationCanceledException>(() => TwoFrames(15).Encode(new ExportOptions(), out _, cancelled.Token));
     }
 
     [Fact]
@@ -219,11 +221,11 @@ public class PaperFlipbookTests
     }
 
     [Theory]
-    [InlineData(ETextureFormat.Png)]
-    [InlineData(ETextureFormat.Webp)]
-    public void FramesReplaceThePreviousFrame(ETextureFormat format)
+    [InlineData(EAnimatedImageFormat.Png)]
+    [InlineData(EAnimatedImageFormat.Webp)]
+    public void FramesReplaceThePreviousFrame(EAnimatedImageFormat format)
     {
-        using var image = Image.Load<Rgba32>(TwoFrames(15).Encode(format, out _));
+        using var image = Image.Load<Rgba32>(TwoFrames(15).Encode(new ExportOptions(animatedImageFormat: format), out _));
 
         Assert.Equal(2, image.Frames.Count);
         Assert.Equal(new Rgba32(0, 255, 0, 255), image.Frames[1][1, 1]);
@@ -233,7 +235,7 @@ public class PaperFlipbookTests
     [Fact]
     public void PngFrameDelaysFitIntoSixteenBits()
     {
-        using var image = Image.Load<Rgba32>(TwoFrames(59.94f).Encode(ETextureFormat.Png, out _));
+        using var image = Image.Load<Rgba32>(TwoFrames(59.94f).Encode(new ExportOptions(), out _));
 
         var delays = image.Frames.Select(frame => frame.Metadata.GetPngMetadata().FrameDelay).ToArray();
         Assert.Equal(1 / 59.94, delays[0].ToDouble(), 1e-6);
@@ -241,13 +243,13 @@ public class PaperFlipbookTests
     }
 
     [Theory]
-    [InlineData(ETextureFormat.Png)]
-    [InlineData(ETextureFormat.Webp)]
-    public void FlipbooksWithoutFrameRateShowTheirFirstFrame(ETextureFormat format)
+    [InlineData(EAnimatedImageFormat.Png)]
+    [InlineData(EAnimatedImageFormat.Webp)]
+    public void FlipbooksWithoutFrameRateShowTheirFirstFrame(EAnimatedImageFormat format)
     {
         var flipbook = TwoFrames(0);
 
-        using var image = Image.Load<Rgba32>(flipbook.Encode(format, out _));
+        using var image = Image.Load<Rgba32>(flipbook.Encode(new ExportOptions(animatedImageFormat: format), out _));
 
         Assert.Single(image.Frames);
         Assert.Equal(new Rgba32(255, 0, 0, 255), image[0, 0]);
@@ -260,7 +262,7 @@ public class PaperFlipbookTests
     [InlineData(ETextureFormat.Tga)]
     public void FormatsWithoutAnimationFallBackToPng(ETextureFormat format)
     {
-        var data = TwoFrames(15).Encode(format, out var ext);
+        var data = TwoFrames(15).Encode(new ExportOptions(textureFormat: format), out var ext);
 
         Assert.Equal("png", ext);
         using var image = Image.Load<Rgba32>(data);

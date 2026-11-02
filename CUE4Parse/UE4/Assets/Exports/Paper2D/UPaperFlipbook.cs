@@ -1,7 +1,7 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.UObject;
 
-namespace CUE4Parse.UE4.Assets.Exports.Texture;
+namespace CUE4Parse.UE4.Assets.Exports.Paper2D;
 
 public class UPaperFlipbook : UObject
 {
