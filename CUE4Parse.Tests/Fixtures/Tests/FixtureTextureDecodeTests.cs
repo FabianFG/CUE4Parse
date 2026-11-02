@@ -1,4 +1,5 @@
 using CUE4Parse.FileProvider;
+using CUE4Parse.Tests.Textures;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse_Conversion.Textures;
@@ -51,6 +52,28 @@ public class FixtureTextureDecodeTests
             if (expectation.MipCount > 1)
                 AssertEveryMipDecodes(texture, expectation.Width, expectation.MipCount);
         }
+    }
+
+    [Fact]
+    public void BcFixtureMipsMatchAssetRipperDecoders()
+    {
+        using var provider = CreateMountedIoStoreProvider(FixtureSerialization.Tagged);
+
+        var compared = 0;
+        foreach (var expectation in TextureExpectations.Where(static expectation => BCReferenceDecoder.IsSupported(expectation.CookedFormat)))
+        {
+            var texture = LoadTexture(provider, expectation.Asset);
+            for (var mipIndex = 0; mipIndex < texture.PlatformData.Mips.Length; mipIndex++)
+            {
+                var mip = texture.PlatformData.Mips[mipIndex];
+                var data = Assert.IsType<byte[]>(mip.BulkData?.Data);
+                BCReferenceDecoder.AssertMatches(texture.Format, data, mip.SizeX, mip.SizeY, $"{expectation.Asset} mip {mipIndex}");
+                compared++;
+            }
+        }
+
+        // BC1, BC3, BC4, BC5, BC6H and BC7 plus the mip chains of T_Mips and T_Streaming
+        Assert.Equal(23, compared);
     }
 
     [Fact]
@@ -337,7 +360,17 @@ public class FixtureTextureDecodeTests
         var reference = SKBitmap.Decode(path);
         Assert.NotNull(reference);
 
-        if (expectation.Asset is "T_BC4" or "T_EAC_R11")
+        if (expectation.Asset is "T_BC4")
+        {
+            // BC4 decodes to grey, the scalar is copied to red, green and blue
+            for (var y = 0; y < reference.Height; y++)
+                for (var x = 0; x < reference.Width; x++)
+                {
+                    var value = reference.GetPixel(x, y).Red;
+                    reference.SetPixel(x, y, new SKColor(value, value, value, 255));
+                }
+        }
+        else if (expectation.Asset is "T_EAC_R11")
         {
             for (var y = 0; y < reference.Height; y++)
                 for (var x = 0; x < reference.Width; x++)
