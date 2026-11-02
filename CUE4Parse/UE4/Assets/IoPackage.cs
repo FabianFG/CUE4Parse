@@ -120,8 +120,8 @@ public sealed class IoPackage : AbstractUePackage
         ExportMap = baseRealm.ExportMap;
         BulkDataMap = baseRealm.BulkDataMap;
         ImportedPublicExportHashes = baseRealm.ImportedPublicExportHashes;
-        ImportedPackages = baseRealm.ImportedPackages;
-        ImportedPackagesAllVersions = baseRealm.ImportedPackagesAllVersions;
+        ImportedPackages = new Lazy<IoPackage?[]>(() => baseRealm.ImportedPackages.Select(package => package.Value).ToArray());
+        ImportedPackagesAllVersions = new Lazy<IPackage?[][]>(() => baseRealm.ImportedPackagesAllVersions.Select(packages => packages.Value).ToArray());
 
         if (!CanDeserialize) return;
 
@@ -136,7 +136,11 @@ public sealed class IoPackage : AbstractUePackage
 
         // Populate lazy exports, the optional segment directly follows the base realm exports
         ExportsLazy = new Lazy<UObject>[ExportMapLength];
-        foreach (var realm in _realms) PopulateExports(realm);
+        foreach (var realm in _realms)
+        {
+            realm.ExportDataLocations = new ExportDataLocation?[realm.ExportMap.Length];
+            PopulateExports(realm);
+        }
 
         IsFullyLoaded = true;
     }
@@ -307,47 +311,32 @@ public sealed class IoPackage : AbstractUePackage
             realm.Archive.BulkDataMap = realm.BulkDataMap;
         }
 
-        // Preload dependencies
-        realm.ImportedPackages = new Lazy<IoPackage?[]>(() =>
+        // Resolve package dependencies only when an import refers to that package.
+        realm.ImportedPackages = new Lazy<IoPackage?>[realm.ImportedPackageIds.Length];
+        realm.ImportedPackagesAllVersions = new Lazy<IPackage?[]>[realm.ImportedPackageIds.Length];
+        for (var i = 0; i < realm.ImportedPackageIds.Length; i++)
         {
-            var packages = new IoPackage?[realm.ImportedPackageIds.Length];
-            for (var i = 0; i < realm.ImportedPackageIds.Length; i++)
+            var packageIndex = i;
+            realm.ImportedPackages[packageIndex] = new Lazy<IoPackage?>(() =>
             {
                 // An optional segment references exports of the package it belongs to, which is this one.
                 // Resolving it through the file provider would build a second, unmerged instance of it.
-                if (IsSelfReference(realm.ImportedPackageIds[i]))
-                {
-                    packages[i] = this;
-                    continue;
-                }
+                if (IsSelfReference(realm.ImportedPackageIds[packageIndex])) return this;
 
-                provider?.TryLoadPackage(realm.ImportedPackageIds[i], out packages[i]);
-            }
-            return packages;
-        });
-
-        realm.ImportedPackagesAllVersions = new Lazy<IPackage?[][]>(() =>
-        {
-            var packages = new IPackage?[realm.ImportedPackageIds.Length][];
-            for (var i = 0; i < realm.ImportedPackageIds.Length; i++)
+                if (provider is not null && provider.TryLoadPackage(realm.ImportedPackageIds[packageIndex], out var package))
+                    return package;
+                return null;
+            });
+            realm.ImportedPackagesAllVersions[packageIndex] = new Lazy<IPackage?[]>(() =>
             {
-                if (IsSelfReference(realm.ImportedPackageIds[i]))
-                {
-                    packages[i] = [this];
-                    continue;
-                }
+                if (IsSelfReference(realm.ImportedPackageIds[packageIndex])) return [this];
 
-                var package = realm.ImportedPackages.Value[i];
-                if (package == null)
-                {
-                    packages[i] = [];
-                    continue;
-                }
+                var package = realm.ImportedPackages[packageIndex].Value;
+                if (package == null) return [];
 
-                packages[i] = provider?.TryLoadPackages(package.Name, out var packagesList) == true ? [.. packagesList] : [];
-            }
-            return packages;
-        });
+                return provider?.TryLoadPackages(package.Name, out var packagesList) == true ? [.. packagesList] : [];
+            });
+        }
 
         return realm;
 
@@ -485,8 +474,15 @@ public sealed class IoPackage : AbstractUePackage
             if (entry.CommandType != EExportCommandType.ExportCommandType_Serialize)
                 return 0; // Skip ExportCommandType_Create
 
-            var export = realm.ExportMap[entry.LocalExportIndex];
-            ExportsLazy[realm.ExportBaseIndex + (int) entry.LocalExportIndex] = new Lazy<UObject>(() =>
+            var localExportIndex = checked((int) entry.LocalExportIndex);
+            var export = realm.ExportMap[localExportIndex];
+            if (realm.ExportDataLocations[localExportIndex] is not null)
+                throw new InvalidDataException($"Export {localExportIndex} has multiple serialize commands.");
+            var absoluteOffset = newPos
+                ? checked(realm.CookedHeaderSize - realm.AllExportDataOffset)
+                : checked((int) export.CookedSerialOffset - pos);
+            realm.ExportDataLocations[localExportIndex] = new ExportDataLocation(pos, absoluteOffset);
+            ExportsLazy[realm.ExportBaseIndex + localExportIndex] = new Lazy<UObject>(() =>
             {
                 // Create
                 var obj = ConstructObject(ResolveObjectIndex(realm, export.ClassIndex), this, export.ObjectFlags);
@@ -499,7 +495,7 @@ public sealed class IoPackage : AbstractUePackage
 
                 // Serialize
                 var Ar = (FAssetArchive) uassetAr.Clone();
-                Ar.AbsoluteOffset = newPos ? realm.CookedHeaderSize - realm.AllExportDataOffset : (int) export.CookedSerialOffset - pos;
+                Ar.AbsoluteOffset = absoluteOffset;
                 Ar.Position = pos;
                 DeserializeObject(obj, Ar, (long) export.CookedSerialSize);
                 obj.Flags |= EObjectFlags.RF_LoadCompleted;
@@ -508,6 +504,53 @@ public sealed class IoPackage : AbstractUePackage
             });
             return (int) export.CookedSerialSize;
         }
+    }
+
+    /// <summary>
+    /// Reads the serialized bytes for one export from its package realm. This is a bounded raw
+    /// archive read; it does not decode object properties or include external bulk-data payloads.
+    /// </summary>
+    /// <param name="exportIndex">Package-global export index, including optional-segment exports.</param>
+    /// <param name="maximumSize">Maximum number of bytes the caller is willing to allocate.</param>
+    /// <param name="data">The exact serialized export bytes, or an empty array when no serialize command exists.</param>
+    /// <returns>True when the export has a serialize command; false when it has no serialized payload.</returns>
+    public bool TryReadExportData(int exportIndex, int maximumSize, out byte[] data)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(maximumSize);
+        if ((uint) exportIndex >= (uint) ExportMapLength)
+            throw new ArgumentOutOfRangeException(nameof(exportIndex));
+
+        var realm = _realms.First(candidate =>
+            exportIndex >= candidate.ExportBaseIndex && exportIndex < candidate.ExportBaseIndex + candidate.ExportMap.Length);
+        if (realm.ExportDataLocations is null)
+            throw new InvalidOperationException("Export data locations are unavailable because this package cannot deserialize exports.");
+
+        var localExportIndex = exportIndex - realm.ExportBaseIndex;
+        var location = realm.ExportDataLocations[localExportIndex];
+        if (location is null)
+        {
+            data = [];
+            return false;
+        }
+
+        var serialSize = realm.ExportMap[localExportIndex].CookedSerialSize;
+        if (serialSize > (ulong) maximumSize)
+            throw new ArgumentOutOfRangeException(nameof(maximumSize), maximumSize,
+                $"Export data is {serialSize} bytes, exceeding the requested limit.");
+
+        var archive = (FAssetArchive) realm.Archive.Clone();
+        archive.AbsoluteOffset = location.Value.AbsoluteOffset;
+        archive.Position = location.Value.Position;
+        data = new byte[checked((int) serialSize)];
+        var totalRead = 0;
+        while (totalRead < data.Length)
+        {
+            var read = archive.Read(data, totalRead, data.Length - totalRead);
+            if (read <= 0)
+                throw new EndOfStreamException($"Expected {data.Length} export bytes, but read only {totalRead}.");
+            totalRead += read;
+        }
+        return true;
     }
 
     public override int GetExportIndex(string name, StringComparison comparisonType = StringComparison.Ordinal)
@@ -592,22 +635,21 @@ public sealed class IoPackage : AbstractUePackage
         if (index.IsPackageImport)
         {
             var importedPublicExportHashes = realm.ImportedPublicExportHashes;
-            var importedPackages = realm.ImportedPackages.Value;
+            var importedPackages = realm.ImportedPackages;
             if (importedPublicExportHashes != null)
             {
                 var packageImportRef = index.AsPackageImportRef;
                 if (packageImportRef.ImportedPackageIndex < importedPackages.Length)
                 {
                     var exportHash = importedPublicExportHashes[packageImportRef.ImportedPublicExportHashIndex];
-                    var pkg = importedPackages[packageImportRef.ImportedPackageIndex];
+                    var pkg = importedPackages[packageImportRef.ImportedPackageIndex].Value;
                     if (pkg?.FindExportByPublicExportHash(exportHash) is { } export)
                     {
                         return export;
                     }
 
                     // search all previous versions
-                    var importedPackagesAllVersions = realm.ImportedPackagesAllVersions.Value;
-                    var packages = importedPackagesAllVersions[packageImportRef.ImportedPackageIndex];
+                    var packages = realm.ImportedPackagesAllVersions[packageImportRef.ImportedPackageIndex].Value;
                     foreach (var asset in packages)
                     {
                         switch (asset)
@@ -636,7 +678,7 @@ public sealed class IoPackage : AbstractUePackage
                 var packageImportRef = index.AsPackageImportRef;
                 if (packageImportRef.ImportedPackageIndex < importedPackages.Length)
                 {
-                    var pkg = importedPackages[packageImportRef.ImportedPackageIndex];
+                    var pkg = importedPackages[packageImportRef.ImportedPackageIndex].Value;
                     if (pkg != null)
                     {
                         for (var exportIndex = 0; exportIndex < pkg.ExportMap.Length; ++exportIndex)
@@ -651,8 +693,9 @@ public sealed class IoPackage : AbstractUePackage
             }
             else
             {
-                foreach (var pkg in importedPackages)
+                foreach (var importedPackage in importedPackages)
                 {
+                    var pkg = importedPackage.Value;
                     if (pkg?.FindExportByGlobalImportIndex(index) is { } export)
                     {
                         return export;
@@ -660,8 +703,9 @@ public sealed class IoPackage : AbstractUePackage
                 }
 
                 // search all previous versions
-                foreach (var packages in realm.ImportedPackagesAllVersions.Value)
+                foreach (var importedPackagesAllVersions in realm.ImportedPackagesAllVersions)
                 {
+                    var packages = importedPackagesAllVersions.Value;
                     foreach (var asset in packages)
                     {
                         switch (asset)
@@ -757,9 +801,12 @@ public sealed class IoPackage : AbstractUePackage
         public int CookedHeaderSize;
         public int AllExportDataOffset;
         public int ExportBaseIndex;
-        public Lazy<IoPackage?[]> ImportedPackages = null!;
-        public Lazy<IPackage?[][]> ImportedPackagesAllVersions = null!;
+        public ExportDataLocation?[] ExportDataLocations = null!;
+        public Lazy<IoPackage?>[] ImportedPackages = null!;
+        public Lazy<IPackage?[]>[] ImportedPackagesAllVersions = null!;
     }
+
+    private readonly record struct ExportDataLocation(int Position, int AbsoluteOffset);
 
     private class ResolvedPakExportObject(int exportIndex, Package package) : ResolvedObject(package, exportIndex)
     {
