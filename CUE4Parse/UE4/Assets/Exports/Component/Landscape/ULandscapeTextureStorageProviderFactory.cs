@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
@@ -31,9 +32,55 @@ public class ULandscapeTextureStorageProviderFactory : UTextureAllMipDataProvide
         NumNonStreamingMips = Ar.Read<int>();
         LandscapeGridScale = new FVector(Ar);
 
-        Mips = Ar.ReadArray(() => new FLandscapeTexture2DMipMap(Ar));
+        Mips = ReadMips(Ar, validPos);
 
         Texture = new FPackageIndex(Ar);
+    }
+
+    // ue6-main added a storage format byte to every mip without a version bump (769ba73d, 15 September 2026),
+    // so UE6 packages cooked before it don't have it. The layout that ends right before the texture index wins.
+    private static FLandscapeTexture2DMipMap[] ReadMips(FAssetArchive Ar, long validPos)
+    {
+        if (Ar.Game < GAME_UE6_0)
+            return Ar.ReadArray(() => new FLandscapeTexture2DMipMap(Ar, false));
+
+        var start = Ar.Position;
+        if (TryReadMips(Ar, validPos, true, out var mips) || TryReadMips(Ar, validPos, false, out mips))
+            return mips;
+
+        Ar.Position = start;
+        return Ar.ReadArray(() => new FLandscapeTexture2DMipMap(Ar, true));
+    }
+
+    private static bool TryReadMips(FAssetArchive Ar, long validPos, bool hasStorageFormat, out FLandscapeTexture2DMipMap[] mips)
+    {
+        var start = Ar.Position;
+        var count = Ar.Read<int>();
+        mips = [];
+
+        // Every mip takes at least 16 bytes, which also bounds the allocation
+        if (count >= 0 && count <= (validPos - Ar.Position) / 16)
+        {
+            try
+            {
+                var result = new FLandscapeTexture2DMipMap[count];
+                for (var i = 0; i < count && Ar.Position < validPos; i++)
+                    result[i] = new FLandscapeTexture2DMipMap(Ar, hasStorageFormat);
+
+                if (Ar.Position + sizeof(int) == validPos && Array.TrueForAll(result, mip => mip != null))
+                {
+                    mips = result;
+                    return true;
+                }
+            }
+            catch (Exception e) when (e is ParserException or IndexOutOfRangeException)
+            {
+                // A misaligned read hit an invalid bool or the end of the data
+            }
+        }
+
+        Ar.Position = start;
+        return false;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
