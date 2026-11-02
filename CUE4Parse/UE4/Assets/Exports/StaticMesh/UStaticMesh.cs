@@ -41,6 +41,8 @@ public class UStaticMesh : UObject
 
         if (Ar.Game == GAME_WutheringWaves && GetOrDefault<bool>("bUseStandaloneBodySetup"))
             BodySetup = GetOrDefault<FPackageIndex>("StandaloneBodySetup");
+        else if (Ar.Game is GAME_GhostwireTokyo && TryGetValue(out bool bTngUseBodySetup, "bTngUseBodySetup"))
+            BodySetup = new FPackageIndex();
         else
             BodySetup = new FPackageIndex(Ar);
 

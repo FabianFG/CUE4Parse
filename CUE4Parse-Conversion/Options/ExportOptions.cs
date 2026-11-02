@@ -20,7 +20,8 @@ public class ExportOptions(
     EFileCompressionFormat compressionFormat = EFileCompressionFormat.None,
     int pngCompressionLevel = 3,
     bool tgaRleCompression = true,
-    bool includeDisabledMeshSections = false)
+    bool includeDisabledMeshSections = false,
+    EAnimatedTextureFormat animatedTextureFormat = EAnimatedTextureFormat.Auto)
 {
     public readonly EMeshFormat MeshFormat = meshFormat;
     public readonly ENaniteMeshFormat NaniteMeshFormat = naniteMeshFormat;
@@ -29,6 +30,16 @@ public class ExportOptions(
 
     public readonly ETexturePlatform TexturePlatform = texturePlatform;
     public readonly ETextureFormat TextureFormat = meshFormat == EMeshFormat.USD ? ETextureFormat.Png : textureFormat; // USD pipeline requires PNG textures
+    public readonly EAnimatedTextureFormat AnimatedTextureFormat = animatedTextureFormat switch
+    {
+        EAnimatedTextureFormat.Auto => textureFormat switch
+        {
+            ETextureFormat.Png or ETextureFormat.Jpeg or ETextureFormat.Tga => EAnimatedTextureFormat.Png,
+            ETextureFormat.Webp => EAnimatedTextureFormat.Webp,
+            _ => throw new ArgumentOutOfRangeException(nameof(textureFormat), textureFormat, "Unsupported texture format")
+        },
+        _ => animatedTextureFormat
+    };
     public readonly int TextureQuality = Math.Clamp(textureQuality, 1, 100);
     public readonly int PngCompressionLevel = Math.Clamp(pngCompressionLevel, 0, 9);
     public readonly bool TgaRleCompression = tgaRleCompression;

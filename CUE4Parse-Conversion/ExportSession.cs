@@ -19,6 +19,7 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.Engine.Animation;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Exporters;
+using CUE4Parse_Conversion.Exporters.Paper2D;
 using CUE4Parse_Conversion.Exporters.Custom;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse_Conversion.Options;
@@ -67,6 +68,8 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         return export switch
         {
             UTexture texture => Add(new TextureExporter(texture)),
+            UPaperFlipbook flipbook => Add(new FlipbookExporter(flipbook)),
+            UPaperSprite sprite => Add(new SpriteExporter(sprite)),
             UMaterialInterface material => Add(new MaterialExporter(material)),
             USkinnedAsset skinnedAsset => Add(new SkinnedAssetExporter(skinnedAsset)),
             UStaticMesh staticMesh => Add(new StaticMeshExporter(staticMesh)),
@@ -240,7 +243,7 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
         var fullPath = Path.Combine(BaseDirectory.FullName, savePath) + nameSuffix + '.' + ext.ToLower();
         var dir = Path.GetDirectoryName(fullPath) ?? throw new InvalidOperationException($"Cannot determine directory for path: {fullPath}");
         Directory.CreateDirectory(dir);
-        return fullPath.Replace('/', '\\');
+        return fullPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
