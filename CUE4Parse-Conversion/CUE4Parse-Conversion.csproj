@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="CUE4Parse.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Resources" />
   </ItemGroup>
 

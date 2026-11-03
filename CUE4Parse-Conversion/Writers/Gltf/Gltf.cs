@@ -22,7 +22,7 @@ public class Gltf
 
     public readonly ModelRoot Model;
 
-    public Gltf(string name, MeshLodDto<MeshVertex> lod, ExportOptions? options = null) : this(name, lod, options ?? new ExportOptions(), null) { }
+    public Gltf(string name, MeshLodDto<MeshVertex> lod, ExportOptions options) : this(name, lod, options, null) { }
 
     internal Gltf(string name, MeshLodDto<MeshVertex> lod, ExportOptions options, GltfMaterialExporter? materials)
     {
@@ -35,8 +35,8 @@ public class Gltf
         Model = sceneBuilder.ToGltf2();
     }
 
-    public Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, ExportOptions? options = null)
-        : this(name, lod, options ?? new ExportOptions(), null) { }
+    public Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, ExportOptions options)
+        : this(name, lod, options, null) { }
 
     internal Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, ExportOptions options, GltfMaterialExporter? materials)
     {

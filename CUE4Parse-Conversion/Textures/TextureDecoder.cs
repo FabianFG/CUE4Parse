@@ -9,6 +9,7 @@ using CUE4Parse_Conversion.Textures.BC;
 using CUE4Parse_Conversion.Textures.ETC;
 using CUE4Parse_Conversion.Textures.Crunch;
 using CUE4Parse_Conversion.Textures.Custom;
+using CUE4Parse_Conversion.Options;
 using CUE4Parse.Compression;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Exceptions;
@@ -22,28 +23,22 @@ public static class TextureDecoder
     public static bool UseAssetRipperTextureDecoder { get; set; } = false;
     //internal static readonly bool IsWindows = OperatingSystem.IsWindows();
 
-    public static CTexture? Decode(this UTexture texture, int maxMipSize, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetMipIndexByMaxSize(maxMipSize), platform);
-    public static CTexture? Decode(this UTexture texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeMip(texture.GetFirstMipIndex(), platform);
-    public static CTexture? Decode(this UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile, int zLayer = 0)
+    public static CTexture? Decode(this UTexture texture, int maxMipSize, ExportOptions options, CancellationToken cancellationToken = default)
+        => texture.DecodeMip(texture.GetMipIndexByMaxSize(maxMipSize), options, cancellationToken: cancellationToken);
+
+    public static CTexture? Decode(this UTexture texture, ExportOptions options, CancellationToken cancellationToken = default)
+        => texture.DecodeMip(texture.GetFirstMipIndex(), options, cancellationToken: cancellationToken);
+
+    public static CTexture? DecodeMip(this UTexture texture, int mipIndex, ExportOptions options, int zLayer = 0, CancellationToken cancellationToken = default)
     {
-        if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
-            return DecodeVT(texture, vt);
-
-        if (mip is null) return null; // TODO: we should let it throw the exception
-
-        DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
-        return new CTexture(sizeX, sizeY, colorType, data);
-    }
-
-    public static CTexture? DecodeMip(this UTexture texture, int mipIndex, ETexturePlatform platform = ETexturePlatform.DesktopMobile, int zLayer = 0)
-    {
+        cancellationToken.ThrowIfCancellationRequested();
         if (texture.PlatformData is { FirstMipToSerialize: >= 0, VTData: { } vt } && vt.IsInitialized())
             return DecodeVT(texture, vt, mipIndex);
 
         var mip = texture.GetMip(mipIndex);
         if (mip is null) return null; // TODO: we should let it throw the exception
 
-        DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
+        DecodeTexture(texture, mip, options, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
         return new CTexture(sizeX, sizeY, colorType, data);
     }
 
@@ -209,13 +204,18 @@ public static class TextureDecoder
         }
     }
 
-    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeTextureArray(texture.GetFirstMipIndex(), platform);
-    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, int mipIndex, ETexturePlatform platform = ETexturePlatform.DesktopMobile) => texture.DecodeTextureArray(texture.GetMip(mipIndex), platform);
-    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, FTexture2DMipMap? mip, ETexturePlatform platform = ETexturePlatform.DesktopMobile)
+    public static CTexture[]? DecodeTextureArray(this UTexture2DArray texture, ExportOptions options, CancellationToken cancellationToken = default)
+        => texture.DecodeTextureArray(texture.GetFirstMipIndex(), options, cancellationToken);
+
+    public static CTexture[]? DecodeTextureArray(this UTexture2DArray texture, int mipIndex, ExportOptions options, CancellationToken cancellationToken = default)
+        => texture.DecodeTextureArray(texture.GetMip(mipIndex), options, cancellationToken);
+
+    public static unsafe CTexture[]? DecodeTextureArray(this UTexture2DArray texture, FTexture2DMipMap? mip, ExportOptions options, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (mip is null) return null; // TODO: we should let it throw the exception
 
-        DecodeTexture(texture, mip, platform, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
+        DecodeTexture(texture, mip, options, out var data, out var colorType, out var sizeX, out var sizeY, out var sizeZ);
 
         var bitmaps = new CTexture[sizeZ];
         var bytesPerPixel = GetBytesPerPixel(colorType);
@@ -233,7 +233,7 @@ public static class TextureDecoder
         return bitmaps;
     }
 
-    private static void DecodeTexture(UTexture texture, FTexture2DMipMap? mip, ETexturePlatform platform, out byte[] data, out EPixelFormat colorType, out int sizeX, out int sizeY, out int sizeZ)
+    private static void DecodeTexture(UTexture texture, FTexture2DMipMap? mip, ExportOptions options, out byte[] data, out EPixelFormat colorType, out int sizeX, out int sizeY, out int sizeZ)
     {
         var format = texture.Format;
         if (mip?.BulkData?.Data is not { Length: > 0 } bytes)
@@ -270,7 +270,7 @@ public static class TextureDecoder
             bytes = CrunchDecoder.DecompressMip(bytes, sizeX, sizeY, sizeZ, formatInfo);
 
         // If the platform requires deswizzling, check if we should even try.
-        if (platform is not ETexturePlatform.DesktopMobile)
+        if (options.TexturePlatform is not ETexturePlatform.DesktopMobile)
         {
             var blockSizeX = mip.SizeX / formatInfo.BlockSizeX;
             var blockSizeY = mip.SizeY / formatInfo.BlockSizeY;
@@ -280,7 +280,7 @@ public static class TextureDecoder
         }
 
         // Handle deswizzling if necessary.
-        switch (platform)
+        switch (options.TexturePlatform)
         {
             case ETexturePlatform.XboxAndPlaystation4:
                 bytes = PlatformDeswizzlers.DeswizzleXBPS4(bytes, mip, formatInfo);
