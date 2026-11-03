@@ -19,7 +19,7 @@ public class FSkinWeightInfo
         BoneWeight = new ushort[NUM_INFLUENCES_UE4];
     }
 
-    public FSkinWeightInfo(FArchive Ar, bool bExtraBoneInfluences, bool bUse16BitBoneIndex = false, bool bUse16BitBoneWeight = false, int length = 0)
+    public FSkinWeightInfo(FArchive Ar, bool bExtraBoneInfluences, bool bUse16BitBoneIndex = false, bool bUse16BitBoneWeight = false, int length = 0) : this()
     {
         this.bUse16BitBoneWeight = bUse16BitBoneWeight;
         var numSkelInfluences = bExtraBoneInfluences ? EXTRA_BONE_INFLUENCES : NUM_INFLUENCES_UE4;
@@ -33,10 +33,11 @@ public class FSkinWeightInfo
         else
         {
             var BoneArray = Ar.ReadArray<short>(NUM_INFLUENCES_UE4);
+
             for (int i = 0; i < NUM_INFLUENCES_UE4; i++)
             {
-                BoneIndex![i] = (ushort) (BoneArray[i] & 0xFF);
-                BoneWeight![i] = (ushort) ((BoneArray[i] >> 8) & 0xFF);
+                BoneIndex[i] = (ushort) (BoneArray[i] & 0xFF);
+                BoneWeight[i] = (ushort) ((BoneArray[i] >> 8) & 0xFF);
             }
         }
     }

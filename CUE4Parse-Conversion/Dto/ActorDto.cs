@@ -4,6 +4,7 @@ using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse_Conversion.Dto;
 
@@ -37,32 +38,35 @@ public class ActorDto : ObjectDto
             IsVisible = !hidden;
         }
 
-        var DrawScale = actor.GetOrDefault("DrawScale", 1.0f);
-
-        var location = actor.GetOrDefault(
-            "Location",
-            actor.GetOrDefault(
-                "RelativeLocation",
-                actor.GetOrDefault("Translation", FVector.ZeroVector)));
-
-        var prePivot = actor.GetOrDefault("PrePivot", FVector.ZeroVector);
-
-        Location = location - prePivot;
-
-        if (actor.TryGetValue(out FRotator rotation, "Rotation"))
+        if (actor.Game < EGame.GAME_UE4_0)
         {
-            Rotation = rotation;
-        }
+            var DrawScale = actor.GetOrDefault("DrawScale", 1.0f);
 
-        Scale = actor.GetOrDefault("DrawScale3D", FVector.OneVector * DrawScale);
+            var location = actor.GetOrDefault(
+                "Location",
+                actor.GetOrDefault(
+                    "RelativeLocation",
+                    actor.GetOrDefault("Translation", FVector.ZeroVector)));
 
-        if (RootComponent is { } roota && Location is { } loc)
-        {
-            var transform = roota.Transform;
-            transform.Translation = loc;
-            if (Rotation is { } rot) transform.Rotation = rot.Quaternion();
-            if (Scale is { } scale) transform.Scale3D = scale;
-            roota.Transform = transform;
+            var prePivot = actor.GetOrDefault("PrePivot", FVector.ZeroVector);
+
+            Location = location - prePivot;
+
+            if (actor.TryGetValue(out FRotator rotation, "Rotation"))
+            {
+                Rotation = rotation;
+            }
+
+            Scale = actor.GetOrDefault("DrawScale3D", FVector.OneVector * DrawScale);
+
+            if (RootComponent is { } root && Location is { } loc)
+            {
+                var transform = root.Transform;
+                transform.Translation = loc;
+                if (Rotation is { } rot) transform.Rotation = rot.Quaternion();
+                if (Scale is { } scale) transform.Scale3D = scale;
+                root.Transform = transform;
+            }
         }
 
         // TODO: TextureData

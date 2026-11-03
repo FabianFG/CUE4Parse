@@ -69,12 +69,12 @@ public class FPoly
             Ar.Read<short>(); // PanV
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.LightMapScaleAddedToPoly && Ar.Ver < EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.LightMapScaleAddedToPoly)
         {
             LightMapScale = Ar.Read<float>();
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS && Ar.Game < GAME_UE4_0)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS && Ar.Ver < EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS)
         {
             Ar.Read<float>(); // ShadowMapScale
         }
