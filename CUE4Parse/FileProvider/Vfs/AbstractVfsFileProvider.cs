@@ -91,7 +91,6 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_InfinityNikki => InfinityNikkiAes.InfinityNikkiDecrypt,
                 GAME_Spectre => SpectreDivideAes.SpectreDecrypt,
                 GAME_MindsEye => MindsEyeAes.MindsEyeDecrypt,
-                GAME_MonsterHunterOutlanders => MonsterHunterOutlandersAes.MonsterHunterOutlandersDecrypt,
                 GAME_NeedForSpeedMobile => NFSMobileAes.NFSMobileDecrypt,
                 GAME_OnePieceAmbition => OnePieceAmbitionEncryption.OnePieceAmbitionDecrypt,
                 GAME_UnchartedWatersOrigin => UnchartedWatersOriginAes.UnchartedWatersOriginDecrypt,
@@ -107,6 +106,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_PUBGMobile or GAME_PUBGLite => PUBGMobileAes.PUBGMobileDecrypt,
                 GAME_GangstarMirageCity => GangstarMirageCityAes.GangstarMirageCityDecrypt,
                 GAME_ChasingKaleidoRIDER => CKREncryption.CKRDecrypt,
+                GAME_MonsterHunterOutlanders => MonsterHunterOutlandersAes.MonsterHunterOutlandersDecrypt,
                 _ => null
             };
         }
