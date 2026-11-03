@@ -4,6 +4,8 @@ namespace CUE4Parse.GameTypes.DBD.Objects.ProceduralMaps.Layout.Tiles;
 
 internal static class FProceduralEscapeLayout
 {
+    internal static readonly int[] _outwardFlags = [0, 6, 3, 5];
+
     public static IReadOnlyList<FProceduralTilePlacement> Build(FProceduralTileCell[] cells, int width, int height, IReadOnlyList<FProceduralTile> tiles, int seed, int count, CancellationToken ct,
         IReadOnlyList<FProceduralTilePlacement>? existingEscapes = null)
     {
@@ -59,6 +61,23 @@ internal static class FProceduralEscapeLayout
         }
 
         return result;
+    }
+
+    internal static bool CanSpawn(FProceduralTileCell[] cells, int width, int height, FProceduralTilePlacement placement)
+    {
+        if (placement.X + placement.Width > width || placement.Y + placement.Height > height)
+            return false;
+
+        for (var y = placement.Y; y < placement.Y + placement.Height; y++)
+        {
+            for (var x = placement.X; x < placement.X + placement.Width; x++)
+            {
+                if (TryGetFlags(cells, width, height, x, y, out var flags) && flags == placement.Flags)
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     internal static bool TryGetFlags(FProceduralTileCell[] cells, int width, int height, int x, int y, out int flags)

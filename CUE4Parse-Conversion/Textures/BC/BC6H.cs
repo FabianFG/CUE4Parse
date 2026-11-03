@@ -137,17 +137,12 @@ public static partial class BCDecoder
 
     public static uint Interpolate(uint a, uint b, int weight)
     {
-        return (uint)(((int)a * (64 - weight) + (int)b * weight + 32) >> 6);
-    }
-
-    public static uint InterpolateNew(uint a, uint b, int weight)
-    {
-        return (uint)((((int)a << 6)+ ((int)b-(int)a) * weight + 32) >> 6);
+        return (uint) ((((int) a << 6) + ((int) b - (int) a) * weight + 32) >> 6);
     }
 
     public static ushort FinishUnquantize(uint val)
     {
-        return (ushort)((((int)val << 5) - (int)val) >> 6); // scale the magnitude by 31 / 64
+        return (ushort) ((((int) val << 5) - (int) val) >> 6); // scale the magnitude by 31 / 64
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -160,7 +155,7 @@ public static partial class BCDecoder
         return BinaryPrimitives.ReverseEndianness(value);
     }
 
-    public static void DecodeBC6HBlock(ulong data1, ulong data2, Span<ulong> decompressedBlock)//, out int mode)
+    public static void DecodeBC6HBlock(ulong data1, ulong data2, Span<ulong> decompressedBlock)
     {
         Span<uint> r = stackalloc uint[4]; // wxyz
         Span<uint> g = stackalloc uint[4];
@@ -432,68 +427,56 @@ public static partial class BCDecoder
             b[i] = Unquantize(b[i], actualBits0Mode);
         }
 
-        int decompressedOffset = 0;
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        uint FastInterpolate(uint a, int b, int weight)
+        {
+            return (uint) (a + b * weight) >> 6;
+        }
+
         var output = decompressedBlock[..16];
         if (mode >= 10)
         {
             var indexBits = data2 >> 1;
-            ReadOnlySpan<int> weights = BC6HTables.AWeight4;
-            for (int i = 0; i < 4; ++i)
+            uint indexMask = 0x0F;
+            // precalculate for fast interpolate
+            var (r00, r1) = ((r[0] << 6) + 32, (int)r[1] - (int)r[0]);
+            var (g00, g1) = ((g[0] << 6) + 32, (int)g[1] - (int)g[0]);
+            var (b00, b1) = ((b[0] << 6) + 32, (int)b[1] - (int)b[0]);
+            for (int i = 0; i < 16; ++i)
             {
-                for (int j = 0; j < 4; ++j)
-                {
-                    int bitsCount = 4;
-                    uint indexMask = 0x0F;
-                    if ((i | j) == 0)
-                    {
-                        bitsCount = 3;
-                        indexMask = 0x07;
-                    }
+                var anchor = (i - 1) >>> 31;
+                int bitsCount = 4 - anchor;
+                int index = (int)(indexBits & (indexMask >> anchor));
+                indexBits >>= bitsCount;
 
-                    int index = (int)(indexBits & indexMask);
-                    indexBits >>= bitsCount;
+                var weight = BC6HTables.AWeight4[index];
+                ushort rFinal = FinishUnquantize(FastInterpolate(r00, r1, weight));
+                ushort gFinal = FinishUnquantize(FastInterpolate(g00, g1, weight));
+                ushort bFinal = FinishUnquantize(FastInterpolate(b00, b1, weight));
 
-                    var weight = weights[index];
-                    ushort rFinal = FinishUnquantize(InterpolateNew(r[0], r[1], weight));
-                    ushort gFinal = FinishUnquantize(InterpolateNew(g[0], g[1], weight));
-                    ushort bFinal = FinishUnquantize(InterpolateNew(b[0], b[1], weight));
-
-                    output[decompressedOffset++] = rFinal | (ulong)gFinal << 16 | (ulong)bFinal << 32 | (ulong)0x3C << 56;
-                }
+                output[i] = rFinal | (ulong)gFinal << 16 | (ulong)bFinal << 32 | (ulong)0x3C << 56;
             }
         }
         else
         {
             uint partition = (z >> 12) & 0x1F;
             var indexBits = data2 >> 18;
-            ReadOnlySpan<int> weights = BC6HTables.AWeight3;
-            for (int i = 0; i < 4; ++i)
+            uint indexMask = 0x07;
+            var partitionTable = BC6HTables.PartitionSets[partition];
+            for (int i = 0; i < 16; ++i)
             {
-                for (int j = 0; j < 4; ++j)
-                {
-                    int partitionSet = BC6HTables.PartitionSets[partition][i][j];
-                    uint indexMask = 0x07;
-                    int bitsCount = 3;
-                    // fix-up index is specified with one less bit
-                    // The fix-up index for subset 0 is always index 0
-                    if ((partitionSet & 0x80) != 0)
-                    {
-                        bitsCount--;
-                        indexMask = (1U << bitsCount) - 1;
-                    }
+                int partitionSet = partitionTable[i];
+                var anchor = partitionSet >> 7;
+                int bitsCount = 3 - anchor;
+                var weight = BC6HTables.AWeight3[(int)(indexBits & (indexMask >> anchor))];
+                indexBits >>= bitsCount;
 
-                    partitionSet &= 0x01;
-                    int index = (int)(indexBits & indexMask);
-                    indexBits >>= bitsCount;
+                int p = (partitionSet & 0x01) * 2;
+                ushort rFinal = FinishUnquantize(Interpolate(r[p], r[p + 1], weight));
+                ushort gFinal = FinishUnquantize(Interpolate(g[p], g[p + 1], weight));
+                ushort bFinal = FinishUnquantize(Interpolate(b[p], b[p + 1], weight));
 
-                    int ep_i = partitionSet * 2;
-                    var weight = weights[index];
-                    ushort rFinal = FinishUnquantize(InterpolateNew(r[ep_i], r[ep_i + 1], weight));
-                    ushort gFinal = FinishUnquantize(InterpolateNew(g[ep_i], g[ep_i + 1], weight));
-                    ushort bFinal = FinishUnquantize(InterpolateNew(b[ep_i], b[ep_i + 1], weight));
-
-                    output[decompressedOffset++] = rFinal | (ulong)gFinal << 16 | (ulong)bFinal << 32 | (ulong)0x3C << 56;
-                }
+                output[i] = rFinal | (ulong)gFinal << 16 | (ulong)bFinal << 32 | (ulong)0x3C << 56;
             }
         }
     }

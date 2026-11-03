@@ -19,7 +19,15 @@ public class UWorldComposition : UObject
     {
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
+
         if (Ar.Position >= validPos) return;
+        if (Ar.Game is GAME_GhostwireTokyo)
+        {
+            WorldRoot = "None";
+            Tiles = Ar.ReadArray(() => new FWorldCompositionTile(Ar));
+            return;
+        }
+
         WorldRoot = Ar.ReadFString();
         Tiles = Ar.ReadArray(() => new FWorldCompositionTile(Ar));
         TilesStreaming = Ar.ReadArray(() => new FPackageIndex(Ar));
@@ -102,18 +110,17 @@ public class FWorldTileInfo
         }
 
         if (Ar.Game is GAME_WorldofJadeDynasty) Ar.Position += 4;
-        if (Ar.Game is GAME_DuneAwakening)
+        else if (Ar.Game is GAME_DuneAwakening)
         {
             Ar.SkipFString();
             Ar.SkipFString();
         }
-        if (Ar.Game is GAME_InfinityNikki)
+        else if (Ar.Game is GAME_InfinityNikki)
         {
             Ar.Position += 12;
             Ar.SkipFString();
         }
-
-        if (Ar.Game is GAME_PlayerUnknownsBattlegrounds or GAME_Lego2KDrive) return;
+        else if (Ar.Game is GAME_PlayerUnknownsBattlegrounds or GAME_Lego2KDrive or GAME_GhostwireTokyo) return;
 
         if (Ar.Ver < EUnrealEngineObjectUE5Version.LARGE_WORLD_COORDINATES)
         {
@@ -136,7 +143,7 @@ public class FWorldTileLayer
     {
         Name = Ar.ReadFString();
         Reserved0 = Ar.Read<int>();
-        Reserved1 = Ar.Game == GAME_PlayerUnknownsBattlegrounds ? new FIntPoint() :Ar.Read<FIntPoint>();
+        Reserved1 = Ar.Game == GAME_PlayerUnknownsBattlegrounds ? new FIntPoint() : Ar.Read<FIntPoint>();
         if (Ar.Ver >= EUnrealEngineObjectUE4Version.WORLD_LEVEL_INFO_UPDATED)
         {
             StreamingDistance = Ar.Read<int>();

@@ -18,8 +18,8 @@ public class UsdMeshFormat : IMeshExportFormat
         var results = new List<ExportFile>();
         var root = dto.ToSkelRoot();
 
-        var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
-        if (sockets is not null) root.Add(sockets);
+        if (dto.Sockets is { Length: > 0 } sockets)
+            root.Add(CreateSockets(sockets));
 
         var materials = CreateMaterials(dto.Materials, materialPaths);
         if (materials is not null) root.Add(materials);
@@ -28,7 +28,7 @@ public class UsdMeshFormat : IMeshExportFormat
         {
             var lodPrim = CreateLod(lod, lod._suffix, materials);
             lodPrim.Add(new UsdRelationship("skel:skeleton", root.Children[0]));
-            if (options.ExportMorphTargets && dto.MorphTargets is { Length: > 0 } morphTargets)
+            if (dto.MorphTargets is { Length: > 0 } morphTargets)
             {
                 AddBlendShapes(lodPrim, morphTargets, lod.SourceLodIndex);
             }
@@ -47,7 +47,7 @@ public class UsdMeshFormat : IMeshExportFormat
     {
         var results = new List<ExportFile>();
 
-        var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
+        var sockets = dto.Sockets is { Length: > 0 } ? CreateSockets(dto.Sockets) : null;
         var materials = CreateMaterials(dto.Materials, materialPaths);
 
         foreach (var lod in dto.LODs)
@@ -69,17 +69,15 @@ public class UsdMeshFormat : IMeshExportFormat
     {
         var root = dto.ToSkelRoot();
 
-        var sockets = options.SocketFormat != ESocketFormat.None ? CreateSockets(dto.Sockets) : null;
-        if (sockets is not null) root.Add(sockets);
+        if (dto.Sockets is { Length: > 0 } sockets)
+            root.Add(CreateSockets(sockets));
 
         var stage = new UsdStage(root);
         return [new ExportFile("usda", stage.SerializeToBinary())];
     }
 
-    private UsdPrim? CreateSockets(FPackageIndex[]? sockets, ESocketFormat format = ESocketFormat.None)
+    private UsdPrim CreateSockets(FPackageIndex[] sockets)
     {
-        if (sockets is not { Length: > 0 } || format == ESocketFormat.None) return null;
-
         var scope = UsdPrim.Def("Scope", "Sockets");
         foreach (var ptr in sockets)
         {
@@ -113,7 +111,7 @@ public class UsdMeshFormat : IMeshExportFormat
         var scope = UsdPrim.Def("Scope", "Materials");
         foreach (var material in materials)
         {
-            var name = material.SlotName;
+            var name = material.Name;
             if (!seen.Add(name)) continue;
 
             var materialPrim = UsdPrim.Def("Material", name);

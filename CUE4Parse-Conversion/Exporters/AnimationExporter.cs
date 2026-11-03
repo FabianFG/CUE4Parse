@@ -1,4 +1,4 @@
-﻿using CUE4Parse_Conversion.Animations;
+using CUE4Parse_Conversion.Animations;
 using CUE4Parse_Conversion.Formats.Animations;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Animation;

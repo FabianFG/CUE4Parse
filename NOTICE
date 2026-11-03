@@ -23,10 +23,10 @@ This library includes material developed by the following third-party libraries:
 - VGAudio (https://github.com/Thealexbarney/VGAudio/blob/master/LICENSE) - Copyright (c) 2016 Thealexbarney. Licensed under the MIT License.
 - SubstreamSharp (https://github.com/connorhaigh/SubstreamSharp/blob/master/Licence.txt) - Copyright (c) 2021 Connor Haigh. Licensed under the MIT License.
 - crunch (https://github.com/EpicGames/UnrealEngine/blob/4.27/Engine/Source/ThirdParty/Crunch/src/license.txt) - Copyright (c) 2010-2016 Richard Geldreich, Jr. and Binomial LLC. Licensed under the ZLIB license.
-- SwiftShader (https://swiftshader.googlesource.com/SwiftShader/+/HEAD/src/Device/ETC_Decoder.cpp) - Copyright 2016 The SwiftShader Authors. Licensed under the Apache License 2.0. Portions of the ETC decoder were translated to C# and modified.
 - AssetRipper.TextureDecoder (https://github.com/AssetRipper/AssetRipper.TextureDecoder/blob/master/LICENSE) - Copyright (c) 2022 ds5678. Licensed under the MIT License.
 - FFVII-Rebirth-Mesh-Patcher (https://github.com/nikolaybutnik/FFVII-Rebirth-Mesh-Patcher/blob/main/LICENSE) - Copyright (c) 2026 nikolaybutnik. Licensed under the MIT License.
 - Berrysoft.XXTea (https://github.com/Berrysoft/Berrysoft.XXTea/blob/master/LICENSE) - Copyright (c) 2019 Berrysoft. Licensed under the MIT License.
+- detex (https://github.com/hglm/detex/blob/master/LICENSE) - Copyright (c) 2015 Harm Hanemaaijer <fgenfb@yahoo.com>. Licensed under the ISC License.
 
 ---------------------------------------------------------------------------
 
@@ -35,7 +35,7 @@ LICENSE TEXTS
 2. MS-PL License
 3. Apache License 2.0
 4. Blake3 BSD 2-Clause License
-5. ISC-style License
+5. ISC License
 6. crunch ZLIB license
 
 ---------------------------------------------------------------------------
@@ -305,7 +305,7 @@ licensed under the Apache License 2.0.
 
 ---------------------------------------------------------------------------
 
-ISC-style License (VGMStream)
+ISC License
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above

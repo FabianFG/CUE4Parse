@@ -69,14 +69,17 @@ internal sealed class FProceduralMapDefinition
         }
 
         var provider = map.Owner!.Provider!;
-        var assets = new FProceduralMapAssets(provider);
+        var levelGenerator = provider.SafeLoadPackageObject<AProceduralLevelBuilder>("/Game/ProceduralLevelGeneration/LevelGenerator.Default__LevelGenerator_C");
+        if (levelGenerator == null || string.IsNullOrEmpty(levelGenerator.PathToTilesDirectory))
+            throw new InvalidDataException("LevelGenerator has no PathToTilesDirectory.");
+
+        var assets = new FProceduralMapAssets(provider, levelGenerator.PathToTilesDirectory);
         var theme = assets.ResolveTheme(map.Owner.Name, ct);
         Tiles = assets.LoadTiles(theme.TilePath, ct);
         GenerationData = provider.SafeLoadPackageObject<UProceduralGenerationData>("/Game/ProceduralLevelGeneration/ProceduralGenerationData.ProceduralGenerationData");
 
-        var levelGenerator = provider.SafeLoadPackageObject("/Game/ProceduralLevelGeneration/LevelGenerator.Default__LevelGenerator_C");
         PopulationSettings = new FProceduralPopulationSettings(levelGenerator, GenerationData?.ProceduralTileWidth ?? 1600, Width);
-        QuadTileWeightRateOfDecay = levelGenerator?.GetOrDefault("QuadTileWeightRateOfDecay", 0.01f) ?? 0.01f;
+        QuadTileWeightRateOfDecay = levelGenerator.QuadTileWeightRateOfDecay;
 
         var population = GenerationData?.ManagedElementsPopulation ?? [];
         ManagedElementsPopulation = assets.LoadMap(map.Name, ct) is { } mapData

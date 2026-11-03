@@ -23,7 +23,7 @@ public class UMaterialInterface : UUnrealMaterial
 
     public FStructFallback? CachedExpressionData;
     public FMaterialTextureInfo[] TextureStreamingData = Array.Empty<FMaterialTextureInfo>();
-    public List<FMaterialResource> LoadedMaterialResources = new();
+    public List<FMaterialResource>? LoadedMaterialResources { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -165,7 +165,7 @@ public class UMaterialInterface : UUnrealMaterial
         }
     }
 
-    public void DeserializeInlineShaderMaps(FAssetArchive Ar, ICollection<FMaterialResource> loadedResources)
+    protected void DeserializeInlineShaderMaps(FAssetArchive Ar)
     {
         var numLoadedResources = Ar.Read<int>();
         if (numLoadedResources > 0)
@@ -182,11 +182,12 @@ public class UMaterialInterface : UUnrealMaterial
                 resourceAr = new FMaterialResourceProxyReader(ShaderMapsAr);
             }
 
+            LoadedMaterialResources = new List<FMaterialResource>(numLoadedResources);
             for (var resourceIndex = 0; resourceIndex < numLoadedResources; ++resourceIndex)
             {
                 var loadedResource = new FMaterialResource();
                 loadedResource.DeserializeInlineShaderMap(resourceAr);
-                loadedResources.Add(loadedResource);
+                LoadedMaterialResources.Add(loadedResource);
             }
         }
     }

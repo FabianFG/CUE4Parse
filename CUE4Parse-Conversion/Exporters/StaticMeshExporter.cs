@@ -10,11 +10,11 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public sealed class StaticMeshExporter(UStaticMesh originalMesh) : MeshExporter<UStaticMesh>(originalMesh)
 {
-    protected override IEnumerable<FPackageIndex?> MaterialReferences => originalMesh.StaticMaterials.Select(slot => slot.MaterialInterface);
+    protected override IEnumerable<FPackageIndex?> MaterialReferences => Mesh.StaticMaterials.Select(slot => slot.MaterialInterface);
 
     protected override IReadOnlyList<ExportFile> BuildFiles(UStaticMesh originalMesh, IMeshExportFormat format)
     {
-        using var dto = new StaticMeshDto(originalMesh, Session.Options.MeshQuality, Session.Options.NaniteMeshFormat);
+        using var dto = new StaticMeshDto(originalMesh, Session.Options);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Static mesh has no LODs");
@@ -27,11 +27,11 @@ public sealed class StaticMeshExporter(UStaticMesh originalMesh) : MeshExporter<
 
 public sealed class GeometryCollectionExporter(UGeometryCollection originalMesh) : MeshExporter<UGeometryCollection>(originalMesh)
 {
-    protected override IEnumerable<FPackageIndex?> MaterialReferences => originalMesh.Materials;
+    protected override IEnumerable<FPackageIndex?> MaterialReferences => Mesh.Materials;
 
     protected override IReadOnlyList<ExportFile> BuildFiles(UGeometryCollection originalMesh, IMeshExportFormat format)
     {
-        using var dto = new StaticMeshDto(originalMesh, Session.Options.NaniteMeshFormat);
+        using var dto = new StaticMeshDto(originalMesh, Session.Options);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Geometry collection mesh has no LODs");

@@ -22,7 +22,7 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
 
     internal string? _suffix;
 
-    private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColorDto[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false, bool isNanite = false)
+    private MeshLodDto(MeshDto<TVertex> owner, ExportOptions options, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUvs, MeshVertexColorDto[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false, bool isNanite = false)
     {
         var rules = new MeshExportRules(owner.Game, owner.Materials);
         var visibleSections = new List<MeshSectionDto>(sections.Length);
@@ -36,8 +36,11 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
                 materialSection = new MeshSectionDto(materialIndex, section);
             }
 
-            if (!rules.ShouldExportSection(materialSection))
+            if (!rules.ShouldExportSection(materialSection, options))
+            {
+                Log.Information("Skipping section {Section} of LOD {Lod} in {Path} due to export rules", materialSection.MaterialIndex, sourceLodIndex, owner.Path);
                 continue;
+            }
 
             visibleSections.Add(materialSection);
         }
@@ -53,8 +56,8 @@ public partial class MeshLodDto<TVertex> where TVertex : struct, IMeshVertex
         IsTwoSided = isTwoSided;
     }
 
-    private MeshLodDto(MeshDto<TVertex> owner, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
-        : this(owner, sourceLodIndex, indices, vertices, sections, extraUv, vertexColors != null ? [new MeshVertexColorDto("COL0", vertexColors)] : null, screenSize, isTwoSided)
+    private MeshLodDto(MeshDto<TVertex> owner, ExportOptions options, uint sourceLodIndex, uint[] indices, TVertex[] vertices, MeshSectionDto[] sections, FMeshUVFloat[][] extraUv, FColor[]? vertexColors = null, float screenSize = 0.0f, bool isTwoSided = false)
+        : this(owner, options, sourceLodIndex, indices, vertices, sections, extraUv, vertexColors != null ? [new MeshVertexColorDto("COL0", vertexColors)] : null, screenSize, isTwoSided)
     {
 
     }

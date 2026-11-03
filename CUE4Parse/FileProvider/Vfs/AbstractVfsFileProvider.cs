@@ -96,7 +96,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile => ABIDecryption.ABIDecrypt,
                 GAME_BloodBowl3 => BloodBowl3Aes.BloodBowl3Decrypt,
                 GAME_AssaultFireFuture => AssaultFireFutureAes.AssaultFireFutureDecrypt,
-                GAME_ArcRaiders or GAME_TheFinals => EmbarkAes.EmbarkDecrypt,
+                GAME_ArcRaiders or GAME_TheFinals or GAME_TheFinalsTencent => EmbarkAes.EmbarkDecrypt,
                 GAME_RocoKingdomWorld => RocoKingdomWorldAes.RocoKingdomWorldDecrypt,
                 GAME_DragonSwordAwakening => DragonSwordAes.DragonSwordDecrypt,
                 GAME_eBaseballProSpirit => ProSpiEncryption.ProSpiDecrypt,

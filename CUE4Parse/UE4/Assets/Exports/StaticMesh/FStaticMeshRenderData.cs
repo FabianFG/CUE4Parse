@@ -124,7 +124,7 @@ public class FStaticMeshRenderData
                         }
                     }
 
-                    if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
+                    if (Ar.Game is GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders)
                         _ = Ar.ReadArray(() => new FDistanceFieldVolumeData5(Ar));
                 }
             }

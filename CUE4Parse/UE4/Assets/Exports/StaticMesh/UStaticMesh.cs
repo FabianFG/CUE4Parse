@@ -63,6 +63,8 @@ public class UStaticMesh : UObject
 
         if (Ar.Game == GAME_WutheringWaves && GetOrDefault<bool>("bUseStandaloneBodySetup"))
             BodySetup = GetOrDefault<FPackageIndex>("StandaloneBodySetup");
+        else if (Ar.Game is GAME_GhostwireTokyo && TryGetValue(out bool bTngUseBodySetup, "bTngUseBodySetup"))
+            BodySetup = new FPackageIndex();
         else
             BodySetup = new FPackageIndex(Ar);
 
@@ -301,7 +303,7 @@ public class UStaticMesh : UObject
             case GAME_FateTrigger or GAME_GhostsofTabor or GAME_Aion2 or GAME_Bringer:
                 Ar.Position += 4;
                 break;
-            case GAME_TheFinals or GAME_ArcRaiders when Ar.ReadBoolean():
+            case GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders when Ar.ReadBoolean():
                 Ar.SkipMultipleBulkArrayData(5);
                 break;
             case GAME_ValorantSource when Ar.ReadBoolean():

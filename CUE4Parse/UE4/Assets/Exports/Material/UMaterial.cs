@@ -63,7 +63,7 @@ public class UMaterial : UMaterialInterface
                 var saved = Ar.Position;
                 try
                 {
-                    DeserializeInlineShaderMaps(Ar, LoadedMaterialResources);
+                    DeserializeInlineShaderMaps(Ar);
                     if (!Ar.IsFilterEditorOnly)
                     {
                         bool bLocalSavedCachedExpressionData_DEPRECATED = false;

@@ -22,7 +22,7 @@ public static class MeshConverter
     {
         try
         {
-            var converted = new SkeletonDto(originalSkeleton);
+            var converted = new SkeletonDto(originalSkeleton, new ExportOptions());
             bones = converted.Bones;
             box = converted.Bounds;
         }
@@ -40,7 +40,7 @@ public static class MeshConverter
     {
         try
         {
-            convertedMesh = new StaticMeshDto(spline, quality);
+            convertedMesh = new StaticMeshDto(spline, new ExportOptions(meshQuality: quality));
         }
         catch (Exception e)
         {
@@ -55,7 +55,7 @@ public static class MeshConverter
     {
         try
         {
-            convertedMesh = new StaticMeshDto(originalMesh, quality, naniteFormat, spline);
+            convertedMesh = new StaticMeshDto(originalMesh, new ExportOptions(meshQuality: quality, naniteMeshFormat: naniteFormat), spline);
         }
         catch (Exception e)
         {
@@ -70,7 +70,7 @@ public static class MeshConverter
     {
         try
         {
-            convertedMesh = new SkeletalMeshDto(originalMesh, quality);
+            convertedMesh = new SkeletalMeshDto(originalMesh, new ExportOptions(meshQuality: quality));
         }
         catch (Exception e)
         {
@@ -88,7 +88,7 @@ public static class MeshConverter
 
         try
         {
-            convertedMesh = new LandscapeMeshDto(landscape, flags, landscapeComponents);
+            convertedMesh = new LandscapeMeshDto(landscape, new ExportOptions(), flags, landscapeComponents);
 
             if (convertedMesh.HeightmapTexture is { } heightmap)
             {
