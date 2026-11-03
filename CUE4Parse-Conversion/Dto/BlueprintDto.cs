@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Exports;
+using CUE4Parse.GameTypes.DBD.Objects.ProceduralMaps.Blueprints;
+using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -30,7 +31,7 @@ public class BlueprintActorDto : ActorDto
 
     }
 
-    private BlueprintActorDto(UBlueprintGeneratedClass blueprint, HashSet<string> ancestry, int depth) : base(blueprint)
+    internal BlueprintActorDto(UBlueprintGeneratedClass blueprint, HashSet<string> ancestry, int depth) : base(blueprint)
     {
         var classKey = blueprint.GetPathName();
         var nativeByName = new Dictionary<string, SceneComponentDto>(StringComparer.Ordinal);
@@ -209,9 +210,15 @@ public class BlueprintActorDto : ActorDto
                 scsByVariable[(owner.Name, variableName)] = component;
                 scsByName.TryAdd(variableName, component);
 
-                if (template.TryLoad<UChildActorComponent>(out var childActorComponent))
+                var componentTemplate = template.Load();
+                if (componentTemplate is UChildActorComponent childActorComponent)
                 {
-                    TryCreateChildActor(childActorComponent, component);
+                    if (childActorComponent.GetOrDefault<FPackageIndex?>("ChildActorClass") is { IsNull: false } classPtr && classPtr.TryLoad<UBlueprintGeneratedClass>(out var childClass))
+                        TryCreateChildActor(childClass, component);
+                }
+                else if (componentTemplate != null && FActorSpawnerVisualization.GetBlueprint(componentTemplate) is { } visualizationClass)
+                {
+                    TryCreateChildActor(visualizationClass, component);
                 }
             }
 
@@ -258,17 +265,13 @@ public class BlueprintActorDto : ActorDto
             return null;
         }
 
-        void TryCreateChildActor(UChildActorComponent childActorComponent, SceneComponentDto component)
+        void TryCreateChildActor(UBlueprintGeneratedClass childClass, SceneComponentDto component)
         {
             if (depth >= MaxChildActorDepth)
             {
                 Log.Warning("Child actor depth limit reached at {Component}", component.Name);
                 return;
             }
-
-            if (childActorComponent.GetOrDefault<FPackageIndex?>("ChildActorClass") is not { IsNull: false } classPtr ||
-                !classPtr.TryLoad<UBlueprintGeneratedClass>(out var childClass))
-                return;
 
             var childKey = childClass.GetPathName();
             if (childKey == classKey || ancestry.Contains(childKey))
@@ -278,7 +281,11 @@ public class BlueprintActorDto : ActorDto
             }
 
             var child = new BlueprintActorDto(childClass, new HashSet<string>(ancestry, StringComparer.Ordinal) { classKey }, depth + 1);
-            if (child.RootComponent is not { } childRoot) return;
+            if (child.RootComponent is not { } childRoot)
+            {
+                child.Dispose();
+                return;
+            }
 
             // the child actor is spawned at the component's transform
             childRoot.Transform = FTransform.Identity;

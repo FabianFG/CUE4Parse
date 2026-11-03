@@ -1,11 +1,14 @@
 using CUE4Parse.GameTypes.Nascar.Assets.Exports;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Formats.Meshes;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Exporters.Custom;
 
 public sealed class IRMeshExporter(UIRMesh originalMesh) : MeshExporter<UIRMesh>(originalMesh)
 {
+    protected override IEnumerable<FPackageIndex?> MaterialReferences => originalMesh.Materials;
+
     protected override IReadOnlyList<ExportFile> BuildFiles(UIRMesh originalMesh, IMeshExportFormat format)
     {
         var result = new List<ExportFile>();

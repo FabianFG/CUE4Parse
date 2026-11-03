@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.Utils;
@@ -63,6 +63,8 @@ public abstract class ExporterBase : IExporter
     }
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default);
+
+    internal virtual IEnumerable<UObject> GetDependencies(CancellationToken ct) => [];
 
     public virtual async Task<ExportResult> ExportAsync(CancellationToken ct = default)
     {

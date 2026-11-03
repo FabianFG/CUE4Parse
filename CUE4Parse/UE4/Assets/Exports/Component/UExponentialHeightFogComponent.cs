@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component;
@@ -11,6 +12,8 @@ public class UExponentialHeightFogComponent : USceneComponent
     public float FogMaxOpacity { get; private set; } = 1.0f;
     public float StartDistance { get; private set; } = 0.0f;
     public FLinearColor FogInscatteringLuminance { get; private set; } = new(0.0f, 0.0f, 0.0f, 1.0f);
+    public FPackageIndex? InscatteringColorCubemap { get; private set; }
+    public FLinearColor InscatteringTextureTint { get; private set; } = new(1.0f, 1.0f, 1.0f, 1.0f);
     public FLinearColor DirectionalInscatteringLuminance { get; private set; } = new(0.0f, 0.0f, 0.0f, 1.0f);
     public float DirectionalInscatteringExponent { get; private set; } = 4.0f;
     public float DirectionalInscatteringStartDistance { get; private set; } = 10000.0f;
@@ -24,6 +27,8 @@ public class UExponentialHeightFogComponent : USceneComponent
         FogMaxOpacity = GetOrDefault(nameof(FogMaxOpacity), FogMaxOpacity);
         StartDistance = GetOrDefault(nameof(StartDistance), StartDistance);
         FogInscatteringLuminance = GetOrDefault(nameof(FogInscatteringLuminance), FogInscatteringLuminance);
+        InscatteringColorCubemap = GetOrDefault<FPackageIndex>(nameof(InscatteringColorCubemap));
+        InscatteringTextureTint = GetOrDefault(nameof(InscatteringTextureTint), InscatteringTextureTint);
         DirectionalInscatteringLuminance = GetOrDefault(nameof(DirectionalInscatteringLuminance), DirectionalInscatteringLuminance);
         DirectionalInscatteringExponent = GetOrDefault(nameof(DirectionalInscatteringExponent), DirectionalInscatteringExponent);
         DirectionalInscatteringStartDistance = GetOrDefault(nameof(DirectionalInscatteringStartDistance), DirectionalInscatteringStartDistance);
