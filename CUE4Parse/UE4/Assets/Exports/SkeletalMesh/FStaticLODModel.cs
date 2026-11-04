@@ -704,6 +704,7 @@ public class FStaticLODModel
         Ar.Position += bytesToSkip + Ar.Game switch
         {
             GAME_NeedForSpeedMobile => 32,
+            GAME_MonsterHunterOutlanders => 28,
             GAME_StarWarsJediSurvivor => 4,
             GAME_Splitgate2 or GAME_Empulse => 1,
             _ => 0

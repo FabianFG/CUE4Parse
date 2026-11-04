@@ -287,6 +287,7 @@ public partial class USkeletalMesh : USkinnedAsset
                 Ar.Position += 8;
                 break;
             case >= GAME_UE4_0:
+                if (Ar.Game is GAME_MonsterHunterOutlanders) Ar.Position += 8;
                 _ = Ar.ReadArray(() => new FPackageIndex(Ar)); // dummyObjs
                 break;
         }

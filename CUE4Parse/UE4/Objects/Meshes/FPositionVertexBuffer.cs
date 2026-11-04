@@ -104,6 +104,33 @@ public class FPositionVertexBuffer
 
         if (Ar.Game is GAME_TamasShadowveil) Ar.Position += 4;
 
+        if (Ar.Game is GAME_MonsterHunterOutlanders)
+        {
+            Ar.Position += 4;
+            var origin = Ar.Read<FVector>();
+            var extent = Ar.Read<FVector>();
+            switch (Stride)
+            {
+                case 8:
+                {
+                    var vertsHalf = Ar.ReadBulkArray<FVector3SignedShortScale>();
+                    Verts = new FVector[vertsHalf.Length];
+                    for (var i = 0; i < vertsHalf.Length; i++)
+                    {
+                        Verts[i] = vertsHalf[i] * extent + origin;
+                    }
+                    break;
+                }
+                case 12:
+                    Verts = Ar.ReadBulkArray<FVector>();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"Unknown stride {Stride} for FPositionVertexBuffer");
+            }
+
+            return;
+        }
+
         if (Ar.Game is GAME_Valorant_PRE_11_2 or GAME_NeedForSpeedMobile || (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile && Stride == 8))
         {
             bool bUseFullPrecisionPositions = Ar.Game is not GAME_ArenaBreakoutInfinite and not GAME_ArenaBreakoutMobile && Ar.ReadBoolean();

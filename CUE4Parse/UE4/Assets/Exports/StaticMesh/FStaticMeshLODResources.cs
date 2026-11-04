@@ -68,7 +68,7 @@ public class FStaticMeshLODResources
             MaxDeviation = Ar.Read<float>();
         }
 
-        if (Ar.Game is GAME_ThePathless or GAME_ARKSurvivalAscended) Ar.Position += 4;
+        if (Ar.Game is GAME_ThePathless or GAME_ARKSurvivalAscended or GAME_MonsterHunterOutlanders) Ar.Position += 4;
         if (Ar.Game == GAME_NeedForSpeedMobile)
         {
             Ar.SkipFixedArray(36);

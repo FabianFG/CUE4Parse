@@ -120,6 +120,8 @@ public class FTexturePlatformData
             }
         }
 
+        if (Ar.Game is GAME_MonsterHunterOutlanders) Ar.Position += 8; // TextureContentHash
+
         if (HasOptData())
         {
             if (Ar.Game == GAME_MidnightSuns) Ar.Position += 4;
