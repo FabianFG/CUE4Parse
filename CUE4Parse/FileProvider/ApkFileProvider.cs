@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using CUE4Parse.FileProvider.Objects;
+using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
@@ -84,18 +85,17 @@ public class ApkFileProvider : DefaultFileProvider
             {
                 case "PAK":
                 case "UPAK" when provider.Versions.Game is GAME_LordOfMysteries:
-                    provider.RegisterVfs(filePath, [CopyEntry(fileEntry)]);
+                    provider.RegisterVfs(ReadArchive(fileEntry, filePath, provider.Versions), null);
                     continue;
                 case "UTOC":
                 {
-                    var streams = new Stream[2];
-                    streams[0] = CopyEntry(fileEntry);
                     var ucasPath = $"{filePath.SubstringBeforeLast('.')}.ucas";
                     if (archive.Entries.FirstOrDefault(x => x.FullName.NormalizePath().Equals(ucasPath, provider.StringComparison)) is { } ucasEntry)
                     {
-                        streams[1] = CopyEntry(ucasEntry);
+                        var toc = ReadArchive(fileEntry, filePath, provider.Versions);
+                        var ucas = ReadArchive(ucasEntry, ucasPath, provider.Versions);
+                        provider.RegisterRandomAccessVfs(toc, ucas);
                     }
-                    provider.RegisterVfs(filePath, streams);
                     continue;
                 }
             }
@@ -111,6 +111,12 @@ public class ApkFileProvider : DefaultFileProvider
         }
 
         return packageCount;
+    }
+
+    private static FByteArchive ReadArchive(ZipArchiveEntry entry, string path, VersionContainer versions)
+    {
+        using var stream = CopyEntry(entry);
+        return new FByteArchive(path, stream.GetBuffer(), stream.Length, versions);
     }
 
     private static MemoryStream CopyEntry(ZipArchiveEntry entry)
