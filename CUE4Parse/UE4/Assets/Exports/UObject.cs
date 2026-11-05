@@ -85,7 +85,6 @@ public abstract class AbstractPropertyHolder : IPropertyHolder
 [SkipObjectRegistration]
 public class UObject : AbstractPropertyHolder
 {
-    
     public string Name { get; set; } = null!;
     public ResolvedObject? Class;
     public ResolvedObject? Outer;
