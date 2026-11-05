@@ -39,7 +39,7 @@ public static class FConfigurableCrypto
     private static readonly IConfigurableCryptoAlgorithm[] _algorithms =
     [
         new FConfigurableCryptoAlgorithmAES(),
-        new FConfigurableCryptoAlgorithmNotImplemented("SM4"),
+        new FConfigurableCryptoAlgorithmSM4(),
         new FConfigurableCryptoAlgorithmMLE(),
         new FConfigurableCryptoAlgorithmNotImplemented("RC5"),
         new FConfigurableCryptoAlgorithmNotImplemented("XTEA"),
