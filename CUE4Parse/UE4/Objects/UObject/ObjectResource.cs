@@ -200,6 +200,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         public FPackageIndex SuperIndex;
         public FPackageIndex TemplateIndex;
         public uint ObjectFlags;
+        public ulong ObjectFlagsLegacy;
         public long SerialSize;
         public long SerialOffset;
         public bool ForcedExport;
@@ -229,10 +230,22 @@ namespace CUE4Parse.UE4.Objects.UObject
 
         public FObjectExport(FAssetArchive Ar)
         {
-            ClassIndex = new FPackageIndex(Ar);
-            SuperIndex = new FPackageIndex(Ar);
-            TemplateIndex = Ar.Ver >= EUnrealEngineObjectUE4Version.TemplateIndex_IN_COOKED_EXPORTS ? new FPackageIndex(Ar) : new FPackageIndex();
-            OuterIndex = Ar.Ver >= EUnrealEngineObjectUE3Version.Release50 ? new FPackageIndex(Ar) : new FPackageIndex();
+            var AA3Obfuscator = 0;
+            if (Ar.Game == GAME_AmericanArmy3)
+            {
+                AA3Obfuscator = Ar.Read<int>();
+                ClassIndex = new FPackageIndex(Ar.Owner, Ar.Read<int>() ^ AA3Obfuscator);
+                SuperIndex = new FPackageIndex(Ar.Owner, Ar.Read<int>() ^ AA3Obfuscator);
+                OuterIndex = new FPackageIndex(Ar.Owner, Ar.Read<int>() ^ AA3Obfuscator);
+            }
+            else
+            {
+                ClassIndex = new FPackageIndex(Ar);
+                SuperIndex = new FPackageIndex(Ar);
+                TemplateIndex = Ar.Ver >= EUnrealEngineObjectUE4Version.TemplateIndex_IN_COOKED_EXPORTS ? new FPackageIndex(Ar) : new FPackageIndex();
+                OuterIndex = Ar.Ver >= EUnrealEngineObjectUE3Version.Release50 ? new FPackageIndex(Ar) : new FPackageIndex();
+            }
+
             ObjectName = Ar.ReadFName();
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedArcheType && Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_ARCHETYPE_INDEX_FROM_LINKER_TABLES)
             {
@@ -241,7 +254,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag && Ar.Game < GAME_UE4_0)
             {
-                Ar.Position += sizeof(ulong); // ulong - ObjectFlagsLegacy
+                ObjectFlagsLegacy = Ar.Read<ulong>();
             }
             else
             {
@@ -267,6 +280,12 @@ namespace CUE4Parse.UE4.Objects.UObject
                 SerialOffset = Ar.Read<long>();
             }
 
+            if (Ar.Game == GAME_AmericanArmy3)
+            {
+                SerialSize   ^= AA3Obfuscator;
+                SerialOffset ^= AA3Obfuscator;
+            }
+
             if (Ar.Game >= GAME_UE4_0)
             {
                 ForcedExport = Ar.ReadBoolean();
@@ -274,7 +293,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 NotForServer = Ar.ReadBoolean();
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentMapToExports && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_MAP)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentMapToExports && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_MAP && !(Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 37))
             {
                 Ar.ReadMap(Ar.ReadFName, () => new FPackageIndex(Ar)); // LegacyComponentMap
             }
@@ -284,7 +303,19 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Ar.Read<int>(); // ExportFlags
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP)
+            var bStrippedTail = false;
+
+            if (Ar.Game == GAME_BioshockInfinite)
+            {
+                bStrippedTail = Ar.Read<int>() == 0;
+            }
+
+            if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 116)
+            {
+                bStrippedTail = Ar.Read<byte>() == 0;
+            }
+
+            if (!bStrippedTail && Ar.Ver >= EUnrealEngineObjectUE3Version.LINKERFREE_PACKAGEMAP)
             {
                 if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVE_NET_INDEX)
                 {

@@ -11,7 +11,7 @@ public class UPhysicsAsset : Assets.Exports.UObject
     public FPackageIndex[] SkeletalBodySetups; // USkeletalBodySetup
     public FPackageIndex[] ConstraintSetup; // UPhysicsConstraintTemplate
 
-    public Dictionary<FRigidBodyIndexPair, bool>? CollisionDisableTable;
+    public Dictionary<FRigidBodyIndexPair, bool> CollisionDisableTable = [];
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -21,12 +21,15 @@ public class UPhysicsAsset : Assets.Exports.UObject
         SkeletalBodySetups = GetOrDefault(nameof(SkeletalBodySetups), Array.Empty<FPackageIndex>());
         ConstraintSetup = GetOrDefault(nameof(ConstraintSetup), Array.Empty<FPackageIndex>());
 
-        var numRows = Ar.Read<int>();
-        CollisionDisableTable = new Dictionary<FRigidBodyIndexPair, bool>(numRows);
-        for (var i = 0; i < numRows; i++)
+        if (Ar.Game >= GAME_UE4_0)
         {
-            var rowKey = new FRigidBodyIndexPair(Ar);
-            CollisionDisableTable[rowKey] = Ar.ReadBoolean();
+            var numRows = Ar.Read<int>();
+            CollisionDisableTable = new Dictionary<FRigidBodyIndexPair, bool>(numRows);
+            for (var i = 0; i < numRows; i++)
+            {
+                var rowKey = new FRigidBodyIndexPair(Ar);
+                CollisionDisableTable[rowKey] = Ar.ReadBoolean();
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse_Conversion.Textures;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Exporters;
 
@@ -63,7 +64,7 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
             CTexture?[]? decoded = texture switch
             {
                 UTexture2DArray array => array.DecodeTextureArray(index, Session.Options, ct),
-                UTextureCube => texture.DecodeMip(index, Session.Options, cancellationToken: ct)?.ToPanorama() is { } panorama ? [panorama] : null,
+                UTextureCube cube => DecodeCube(cube, index, ct),
                 _ => texture.DecodeMip(index, Session.Options, cancellationToken: ct) is { } single ? [single] : null
             };
 
@@ -94,6 +95,37 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
                     (_, _texturePath) = ResolveOutputPath(file);
                 }
             }
+        }
+
+        CTexture?[]? DecodeCube(UTextureCube cube, int index, CancellationToken ct)
+        {
+            CTexture? LoadFace(FPackageIndex face) =>
+                face?.Load() is UTexture tex
+                    ? tex.DecodeMip(0, Session.Options, cancellationToken: ct)
+                    : null;
+
+            var faces = new[]
+            {
+                LoadFace(cube.FacePosX),
+                LoadFace(cube.FaceNegX),
+                LoadFace(cube.FacePosY),
+                LoadFace(cube.FaceNegY),
+                LoadFace(cube.FacePosZ),
+                LoadFace(cube.FaceNegZ)
+            };
+
+            if (faces.All(f => f != null))
+            {
+                return new[]
+                {
+                    CubemapConverter.ToPanoramaFromFaces(
+                        faces[0], faces[1], faces[2],
+                        faces[3], faces[4], faces[5])
+                };
+            }
+
+            var fallback = texture.DecodeMip(index, Session.Options, cancellationToken: ct)?.ToPanorama();
+            return fallback is not null ? new[] { fallback } : null;
         }
     }
 }

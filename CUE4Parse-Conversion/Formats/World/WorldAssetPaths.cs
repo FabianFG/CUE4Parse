@@ -15,7 +15,12 @@ public sealed class WorldAssetPaths
 
     public bool TryGet(FPackageIndex index, out string path)
     {
+        if (!index.IsNull && Assets.TryGetValue(index, out var p) && !string.IsNullOrEmpty(p))
+        {
+            path = p;
+            return true;
+        }
         path = string.Empty;
-        return !index.IsNull && Assets.TryGetValue(index, out path!);
+        return false;
     }
 }
