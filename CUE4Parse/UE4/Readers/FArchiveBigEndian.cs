@@ -83,6 +83,16 @@ public class FArchiveBigEndian : FArchive
         return result1;
     }
 
+    // Every element takes at least one byte. A larger count comes from a misread and would allocate up to tens of
+    // gigabytes before the first element fails to read
+    public override T[] ReadArray<T>(Func<T> getter)
+    {
+        var length = Read<int>();
+        if (length < 0 || length > Length - Position)
+            throw new ParserException(this, $"Array length {length} doesn't fit in the remaining {Length - Position} bytes");
+        return ReadArray(length, getter);
+    }
+
     static void ReverseEndian(Span<byte> span, int size)
     {
         switch (size)
