@@ -11,12 +11,12 @@ namespace CUE4Parse.UE4.Assets.Objects
 
         public FCompressedChunk(FArchive Ar)
         {
-            UncompressedOffset = Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22 ? (int)Ar.Read<long>() : Ar.Read<int>();
+            UncompressedOffset = Ar.Game == GAME_RocketLeague && Ar.LicenseeVer > 22 ? (int)Ar.Read<long>() : Ar.Read<int>();
             UncompressedSize = Ar.Read<int>();
-            CompressedOffset = Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22 ? (int)Ar.Read<long>() : Ar.Read<int>();
+            CompressedOffset = Ar.Game == GAME_RocketLeague && Ar.LicenseeVer > 22 ? (int)Ar.Read<long>() : Ar.Read<int>();
             CompressedSize = Ar.Read<int>();
 
-            if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer >= 33)
+            if (Ar.Game == GAME_RocketLeague && Ar.LicenseeVer >= 33)
             {
                 Ar.Position += 12;
             }

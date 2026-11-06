@@ -17,7 +17,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             base.Deserialize(Ar, validPos);
             ArrayDim = Ar.Read<int>();
             PropertyFlags = Ar.Ver >= EUnrealEngineObjectUE3Version.PropertyFlagsSizeExpandedTo64Bits ? Ar.Read<EPropertyFlags>() : (EPropertyFlags)Ar.Read<uint>();
-            if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 10) Ar.SkipFString(); // ObjectName
+            if (Ar.Game == GAME_RocketLeague && Ar.LicenseeVer > 10) Ar.SkipFString(); // ObjectName
             if (Ar.Game >= GAME_UE4_0)
             {
                 RepNotifyFunc = Ar.ReadFName();

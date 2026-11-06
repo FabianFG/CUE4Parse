@@ -245,7 +245,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 legacyFileVersion &= 0xFFFF;
                 FileVersionUE.FileVersionUE3 = legacyFileVersion;
                 Ar.Ver = FileVersionUE;
-                Ar.LicenseeVer = FileVersionLicenseeUE;
+                Ar.LicenseeVer = (int) FileVersionLicenseeUE;
             }
 
             if (FileVersionUE >= EUnrealEngineObjectUE3Version.MOVED_EXPORTIMPORTMAPS_ADDED_TOTALHEADERSIZE && FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
