@@ -79,7 +79,7 @@ public sealed class FLuaWriter53
                     break;
                 case 4:  // LUA_TSHRSTR; Short string
                 case 20: // LUA_TLNGSTR; Long string
-                    Ar.WriteLuaString(constant.StrData);
+                    Ar.WriteLuaStringBytes(constant.Data);
                     break;
             }
         }

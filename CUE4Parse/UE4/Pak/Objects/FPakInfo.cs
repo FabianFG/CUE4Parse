@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Numerics;
 using CUE4Parse.Compression;
 using CUE4Parse.GameTypes.ABI.Encryption.SM4;
 using CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.RSA;
@@ -54,6 +55,7 @@ public partial class FPakInfo
     public const uint PAK_FILE_MAGIC_Back4Blood = 0x18772;
     public const uint PAK_FILE_MAGIC_SilverPalace = 0x12E15A6F;
     public const uint PAK_FILE_MAGIC_ValorantSource = 0x167C2AB4;
+    public const uint PAK_FILE_MAGIC_ArcheAgeChronicles = 0x5835F00D;
 
     public const int COMPRESSION_METHOD_NAME_LEN = 32;
 
@@ -204,16 +206,16 @@ public partial class FPakInfo
             }
         }
 
-        if (Ar.Game == GAME_ArenaBreakoutInfinite)
+        if (Ar.Game is GAME_ArenaBreakoutInfinite)
         {
             EncryptionKeyGuid = Ar.Read<FGuid>();
+            Version = Ar.Read<EPakFileVersion>();
             Magic = Ar.Read<uint>();
             if (Magic != PAK_FILE_MAGIC_ArenaBreakoutInfinite) return;
             EncryptedIndex = Ar.Read<byte>() != 0;
-            IndexSize = Ar.Read<long>();
-            IndexOffset = Ar.Read<long>();
-            IndexHash = new FSHAHash(Ar);
-            Version = Ar.Read<EPakFileVersion>();
+            IndexHash = ABIDecryption.DecodeIndexHash(Ar.ReadBytes(FSHAHash.SIZE));
+            IndexOffset = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xD3A512UL);
+            IndexSize = ABIDecryption.DecodeIndexInfo(Ar.Read<ulong>(), 0xB640093CUL);
             goto beforeCompression;
         }
 
@@ -378,13 +380,15 @@ public partial class FPakInfo
                 Ar.Game == GAME_DreamStar && Magic == PAK_FILE_MAGIC_DreamStar ||
                 Ar.Game == GAME_AssaultFireFuture && Magic == PAK_FILE_MAGIC_AssaultFireFuture ||
                 Ar.Game == GAME_KartRiderDrift && Magic == PAK_FILE_MAGIC_KartRiderDrift ||
-                Ar.Game == GAME_SilverPalace && Magic == PAK_FILE_MAGIC_SilverPalace)
+                Ar.Game == GAME_SilverPalace && Magic == PAK_FILE_MAGIC_SilverPalace ||
+                Ar.Game == GAME_ArcheAgeChronicles && Magic == PAK_FILE_MAGIC_ArcheAgeChronicles)
                 goto afterMagic;
             // Stop immediately when magic is wrong
             return;
         }
 
         afterMagic:
+        if (Ar.Game is GAME_ArcheAgeChronicles) Ar.Position += 8;
         Version = hottaVersion >= 2 ? (EPakFileVersion) (Ar.Read<int>() ^ 2) : Ar.Read<EPakFileVersion>();
         if (Ar.Game == GAME_LordOfMysteries && ((uint) Version & 0x80000000) != 0)
         {
@@ -428,7 +432,7 @@ public partial class FPakInfo
         if (Ar.Game == GAME_Farlight84) Ar.Position += 8; // unknown long
         if (Ar.Game == GAME_Snowbreak) IndexOffset ^= 0x1C1D1E1F;
         if (Ar.Game == GAME_KartRiderDrift) IndexOffset ^= 0x3009EB;
-        if (Ar.Game is GAME_NevernessToEverness or GAME_NevernessToEverness_CBT2) IndexOffset -= 1;
+        if (Ar.Game is GAME_NevernessToEverness) IndexOffset -= 1;
         IndexSize = Ar.Read<long>();
         IndexHash = new FSHAHash(Ar);
 
@@ -498,6 +502,7 @@ public partial class FPakInfo
                 OffsetsToTry.SizeBack4Blood => 5,
                 OffsetsToTry.SizeArenaBreakoutMobile => 5,
                 OffsetsToTry.SizeValorantSource => 5,
+                OffsetsToTry.SizeARKSurvivalAscended => 5,
                 OffsetsToTry.Size8 => 4,
                 OffsetsToTry.Size8_1 => 1,
                 OffsetsToTry.Size8_2 => 2,
@@ -596,6 +601,7 @@ public partial class FPakInfo
         SizeQQ = Size8a + 26,
         SizeDbD = Size8a + 32, // additional 28 bytes for encryption key and 4 bytes for unknown uint
         SizeBack4Blood = Size9,
+        SizeRocoKingdomWorld = Size9, // extra strategy id byte
         SizeHotta = Size9a, // additional int for custom pak version
 
         SizePUBG = 45, // Game For Peace (Chinese PUBG Mobile), PUBG Mobile, PUBG Lite, PUBG India
@@ -604,7 +610,6 @@ public partial class FPakInfo
         SizeDuneAwakening = 261,
         SizeValorantSource = 286, // For older versions it was 282
         SizeKartRiderDrift = 397, // don't let this be SizeMax, it's way above average and cause issues
-        SizeRocoKingdomWorld = Size8a + 1 // extra strategy id byte
     }
 
     private static readonly OffsetsToTry[] _offsetsToTry =
@@ -666,7 +671,7 @@ public partial class FPakInfo
                 GAME_BlackMythWukong => [OffsetsToTry.SizeB1],
                 GAME_Rennsport => [OffsetsToTry.SizeRennsport],
                 GAME_RacingMaster => [OffsetsToTry.SizeRacingMaster],
-                GAME_ARKSurvivalAscended or GAME_PromiseMascotAgency => [OffsetsToTry.SizeARKSurvivalAscended],
+                GAME_ARKSurvivalAscended or GAME_PromiseMascotAgency or GAME_ArcheAgeChronicles => [OffsetsToTry.SizeARKSurvivalAscended],
                 GAME_KartRiderDrift => [.._offsetsToTry, OffsetsToTry.SizeKartRiderDrift],
                 GAME_DuneAwakening => [OffsetsToTry.SizeDuneAwakening],
                 GAME_Back4Blood => [OffsetsToTry.SizeBack4Blood],
@@ -715,6 +720,7 @@ public partial class FPakInfo
                     GAME_Back4Blood when info.Magic == PAK_FILE_MAGIC_Back4Blood => true,
                     GAME_SilverPalace when info.Magic == PAK_FILE_MAGIC_SilverPalace => true,
                     GAME_ValorantSource when info.Magic == PAK_FILE_MAGIC_ValorantSource => true,
+                    GAME_ArcheAgeChronicles when info.Magic == PAK_FILE_MAGIC_ArcheAgeChronicles => true,
                     _ => info.Magic == PAK_FILE_MAGIC
                 };
 

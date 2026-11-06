@@ -10,12 +10,17 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
 {
     public FInstancedStaticMeshInstanceData[]? PerInstanceSMData;
     public float[]? PerInstanceSMCustomData;
+    public int InstanceStartCullDistance { get; private set; }
+    public int InstanceEndCullDistance { get; private set; }
 
     public FVector4[][]? MotoGP24Data; // PackedData
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        InstanceStartCullDistance = GetOrDefault(nameof(InstanceStartCullDistance), InstanceStartCullDistance);
+        InstanceEndCullDistance = GetOrDefault(nameof(InstanceEndCullDistance), InstanceEndCullDistance);
 
         var bCooked = false;
         if (FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.SerializeInstancedStaticMeshRenderData ||
@@ -92,6 +97,9 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                     else
                         PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
                     break;
+                case GAME_DeadIsland2:
+                    PerInstanceSMData = Ar.ReadArray(() => new FInstancedStaticMeshInstanceData(Ar));
+                    break;
                 default:
                     PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
                     break;
@@ -128,7 +136,7 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
                 Ar.Position += 4;
                 Ar.Position += Ar.Read<int>() * 4;
                 Ar.Position += 4;
-            }    
+            }
             return;
         }
 

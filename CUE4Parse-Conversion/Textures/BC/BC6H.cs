@@ -7,29 +7,43 @@ namespace CUE4Parse_Conversion.Textures.BC;
 
 public static partial class BCDecoder
 {
+    public const int BC6HBlockSize = 16;
+
     // only unsigned variant
     public static byte[] BC6H(byte[] input, int sizeX, int sizeY, int sizeZ)
     {
-        var expectedSize = sizeX * sizeY * sizeZ;
-        if (input.Length < expectedSize)
-            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {expectedSize}");
-        var output = new byte[expectedSize * 4];
-        BC6H(input, sizeX, sizeY, sizeZ, output);
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, out byte[] output, BC6HBlockSize);
+
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
+        {
+            BC6H(input.AsSpan(inputOffset, inputLayerSize), sizeX, sizeY, output.AsSpan(outputOffset, outputLayerSize));
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
+        }
+
         return output;
     }
 
     // only unsigned variant
     public static void BC6H(ReadOnlySpan<byte> input, int sizeX, int sizeY, int sizeZ, Span<byte> output)
     {
-        var expectedSize = sizeX * sizeY * sizeZ;
-        var outputSize = expectedSize * 4;
-        if (input.Length < expectedSize)
-            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {expectedSize}");
-        if (output.Length < outputSize)
-            throw new ArgumentException($"Output length {output.Length} is smaller than expected size {outputSize}");
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, output, BC6HBlockSize);
 
-        var inputSpan = input[..expectedSize].Cast<byte, ulong>();
-        var outputSpan = output[..outputSize].Cast<byte, uint>();
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
+        {
+            BC6H(input.Slice(inputOffset, inputLayerSize), sizeX, sizeY, output.Slice(outputOffset, outputLayerSize));
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
+        }
+    }
+
+    // only unsigned variant
+    public static void BC6H(ReadOnlySpan<byte> input, int sizeX, int sizeY, Span<byte> output)
+    {
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, 1, output, BC6HBlockSize);
+
+        var inputSpan = input[..inputLayerSize].Cast<byte, ulong>();
+        var outputSpan = output[..outputLayerSize].Cast<byte, uint>();
 
         Span<Half> halfs = stackalloc Half[16 * 4];
         var resultSpan = halfs.Cast<Half, ulong>();
@@ -40,36 +54,47 @@ public static partial class BCDecoder
         var row1 = uints[4..8];
         var row2 = uints[8..12];
         var row3 = uints[12..];
+        var incompleteBlocks = (sizeX & 3) != 0 || (sizeY & 3) != 0;
 
         var index = 0;
-        var zPixelLoc = 0;
-
-        for (int z = 0; z < sizeZ; z++)
+        var yPixelOffset = 0;
+        for (int y = 0; y < sizeY; y += 4)
         {
-            var yPixelLoc = zPixelLoc;
-            for (int y = 0; y < sizeY / 4; y++)
+            var xPixelOffset = yPixelOffset;
+            for (int x = 0; x < sizeX; x += 4)
             {
-                var xPixelLoc = yPixelLoc;
-                for (int x = 0; x < sizeX / 4; x++)
+                DecodeBC6HBlock(inputSpan[index++], inputSpan[index++], resultSpan);
+                TensorPrimitives.ConvertToSingle(halfs, floats);
+                TensorPrimitives.Multiply(floats, 255.0f, floats);
+                TensorPrimitives.ConvertSaturating(floats, bytes);
+
+                if (incompleteBlocks && (x + 4 > sizeX || y + 4 > sizeY))
                 {
-                    DecodeBC6HBlock(inputSpan[index++], inputSpan[index++], resultSpan);
-                    TensorPrimitives.ConvertToSingle(halfs, floats);
-                    TensorPrimitives.Multiply(floats, 255.0f, floats);
-                    TensorPrimitives.ConvertSaturating(floats, bytes);
+                    int width = Math.Min(4, sizeX - x);
+                    int height = Math.Min(4, sizeY - y);
 
-                    row0.CopyTo(outputSpan.Slice(xPixelLoc, 4));
-                    row1.CopyTo(outputSpan.Slice(xPixelLoc + sizeX, 4));
-                    row2.CopyTo(outputSpan.Slice(xPixelLoc + 2 * sizeX, 4));
-                    row3.CopyTo(outputSpan.Slice(xPixelLoc + 3 * sizeX, 4));
+                    var offset = xPixelOffset;
+                    for (int row = 0; row < height; row++)
+                    {
+                        int srcOffset = row * 4;
+                        for (int col = 0; col < width; col++)
+                            outputSpan[offset + col] = uints[srcOffset + col];
 
-                    xPixelLoc += 4;
+                        offset += sizeX;
+                    }
                 }
-                yPixelLoc += 4 * sizeX;
+                else
+                {
+                    row0.CopyTo(outputSpan.Slice(xPixelOffset, 4));
+                    row1.CopyTo(outputSpan.Slice(xPixelOffset + sizeX, 4));
+                    row2.CopyTo(outputSpan.Slice(xPixelOffset + 2 * sizeX, 4));
+                    row3.CopyTo(outputSpan.Slice(xPixelOffset + 3 * sizeX, 4));
+                }
+                xPixelOffset += 4;
             }
-            zPixelLoc += sizeX * sizeY;
+            yPixelOffset += 4 * sizeX;
         }
     }
-
 
     // http://graphics.stanford.edu/~seander/bithacks.html#VariableSignExtend
     public static uint ExtendSign(uint val, int bits)
@@ -112,17 +137,12 @@ public static partial class BCDecoder
 
     public static uint Interpolate(uint a, uint b, int weight)
     {
-        return (uint)(((int)a * (64 - weight) + (int)b * weight + 32) >> 6);
-    }
-
-    public static uint InterpolateNew(uint a, uint b, int weight)
-    {
-        return (uint)((((int)a << 6)+ ((int)b-(int)a) * weight + 32) >> 6);
+        return (uint) ((((int) a << 6) + ((int) b - (int) a) * weight + 32) >> 6);
     }
 
     public static ushort FinishUnquantize(uint val)
     {
-        return (ushort)((((int)val << 5) - (int)val) >> 6); // scale the magnitude by 31 / 64
+        return (ushort) ((((int) val << 5) - (int) val) >> 6); // scale the magnitude by 31 / 64
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -135,7 +155,7 @@ public static partial class BCDecoder
         return BinaryPrimitives.ReverseEndianness(value);
     }
 
-    public static void DecodeBC6HBlock(ulong data1, ulong data2, Span<ulong> decompressedBlock)//, out int mode)
+    public static void DecodeBC6HBlock(ulong data1, ulong data2, Span<ulong> decompressedBlock)
     {
         Span<uint> r = stackalloc uint[4]; // wxyz
         Span<uint> g = stackalloc uint[4];
@@ -407,68 +427,56 @@ public static partial class BCDecoder
             b[i] = Unquantize(b[i], actualBits0Mode);
         }
 
-        int decompressedOffset = 0;
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        uint FastInterpolate(uint a, int b, int weight)
+        {
+            return (uint) (a + b * weight) >> 6;
+        }
+
         var output = decompressedBlock[..16];
         if (mode >= 10)
         {
             var indexBits = data2 >> 1;
-            ReadOnlySpan<int> weights = BC6HTables.AWeight4;
-            for (int i = 0; i < 4; ++i)
+            uint indexMask = 0x0F;
+            // precalculate for fast interpolate
+            var (r00, r1) = ((r[0] << 6) + 32, (int)r[1] - (int)r[0]);
+            var (g00, g1) = ((g[0] << 6) + 32, (int)g[1] - (int)g[0]);
+            var (b00, b1) = ((b[0] << 6) + 32, (int)b[1] - (int)b[0]);
+            for (int i = 0; i < 16; ++i)
             {
-                for (int j = 0; j < 4; ++j)
-                {
-                    int bitsCount = 4;
-                    uint indexMask = 0x0F;
-                    if ((i | j) == 0)
-                    {
-                        bitsCount = 3;
-                        indexMask = 0x07;
-                    }
+                var anchor = (i - 1) >>> 31;
+                int bitsCount = 4 - anchor;
+                int index = (int)(indexBits & (indexMask >> anchor));
+                indexBits >>= bitsCount;
 
-                    int index = (int)(indexBits & indexMask);
-                    indexBits >>= bitsCount;
+                var weight = BC6HTables.AWeight4[index];
+                ushort rFinal = FinishUnquantize(FastInterpolate(r00, r1, weight));
+                ushort gFinal = FinishUnquantize(FastInterpolate(g00, g1, weight));
+                ushort bFinal = FinishUnquantize(FastInterpolate(b00, b1, weight));
 
-                    var weight = weights[index];
-                    ushort rFinal = FinishUnquantize(InterpolateNew(r[0], r[1], weight));
-                    ushort gFinal = FinishUnquantize(InterpolateNew(g[0], g[1], weight));
-                    ushort bFinal = FinishUnquantize(InterpolateNew(b[0], b[1], weight));
-
-                    output[decompressedOffset++] = rFinal | (ulong)gFinal << 16 | (ulong)bFinal << 32 | (ulong)0x3C << 56;
-                }
+                output[i] = rFinal | (ulong)gFinal << 16 | (ulong)bFinal << 32 | (ulong)0x3C << 56;
             }
         }
         else
         {
             uint partition = (z >> 12) & 0x1F;
             var indexBits = data2 >> 18;
-            ReadOnlySpan<int> weights = BC6HTables.AWeight3;
-            for (int i = 0; i < 4; ++i)
+            uint indexMask = 0x07;
+            var partitionTable = BC6HTables.PartitionSets[partition];
+            for (int i = 0; i < 16; ++i)
             {
-                for (int j = 0; j < 4; ++j)
-                {
-                    int partitionSet = BC6HTables.PartitionSets[partition][i][j];
-                    uint indexMask = 0x07;
-                    int bitsCount = 3;
-                    // fix-up index is specified with one less bit
-                    // The fix-up index for subset 0 is always index 0
-                    if ((partitionSet & 0x80) != 0)
-                    {
-                        bitsCount--;
-                        indexMask = (1U << bitsCount) - 1;
-                    }
+                int partitionSet = partitionTable[i];
+                var anchor = partitionSet >> 7;
+                int bitsCount = 3 - anchor;
+                var weight = BC6HTables.AWeight3[(int)(indexBits & (indexMask >> anchor))];
+                indexBits >>= bitsCount;
 
-                    partitionSet &= 0x01;
-                    int index = (int)(indexBits & indexMask);
-                    indexBits >>= bitsCount;
+                int p = (partitionSet & 0x01) * 2;
+                ushort rFinal = FinishUnquantize(Interpolate(r[p], r[p + 1], weight));
+                ushort gFinal = FinishUnquantize(Interpolate(g[p], g[p + 1], weight));
+                ushort bFinal = FinishUnquantize(Interpolate(b[p], b[p + 1], weight));
 
-                    int ep_i = partitionSet * 2;
-                    var weight = weights[index];
-                    ushort rFinal = FinishUnquantize(InterpolateNew(r[ep_i], r[ep_i + 1], weight));
-                    ushort gFinal = FinishUnquantize(InterpolateNew(g[ep_i], g[ep_i + 1], weight));
-                    ushort bFinal = FinishUnquantize(InterpolateNew(b[ep_i], b[ep_i + 1], weight));
-
-                    output[decompressedOffset++] = rFinal | (ulong)gFinal << 16 | (ulong)bFinal << 32 | (ulong)0x3C << 56;
-                }
+                output[i] = rFinal | (ulong)gFinal << 16 | (ulong)bFinal << 32 | (ulong)0x3C << 56;
             }
         }
     }

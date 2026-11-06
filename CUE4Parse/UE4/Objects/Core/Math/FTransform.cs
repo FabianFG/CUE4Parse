@@ -68,14 +68,19 @@ namespace CUE4Parse.UE4.Objects.Core.Math
 
         public FTransform(FStructFallback data)
         {
-            Rotation = data.GetOrDefault<FQuat>(nameof(Rotation));
+            Rotation = data.GetOrDefault(nameof(Rotation), FQuat.Identity);
             Translation = data.GetOrDefault<FVector>(nameof(Translation));
-            Scale3D = data.GetOrDefault<FVector>(nameof(Scale3D));
+            Scale3D = data.GetOrDefault(nameof(Scale3D), FVector.OneVector);
         }
 
         public FTransform(FVector inX, FVector inY, FVector inZ, FVector inW)
         {
             SetFromMatrix(new FMatrix(inX, inY, inZ, inW));
+        }
+
+        public FTransform(FMatrix matrix)
+        {
+            SetFromMatrix(matrix);
         }
 
         public void SetFromMatrix(FMatrix inMatrix)

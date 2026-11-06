@@ -270,8 +270,7 @@ public class FPakEntry : VfsEntry
 
         StructSize += reader.Ar.Game switch
         {
-            GAME_TorchlightInfinite or GAME_EtheriaRestart => 1,
-            GAME_BlackMythWukong => 1,
+            GAME_TorchlightInfinite or GAME_EtheriaRestart or GAME_BlackMythWukong or GAME_ArcheAgeWar => 1,
             GAME_InfinityNikki => 20,
             GAME_VisionsofMana => -3,
             _ => 0

@@ -7,7 +7,6 @@ namespace CUE4Parse.UE4.Assets.Exports.Rig;
 
 public class UDNAAsset : UObject
 {
-    
     public DNAVersion Version;
     public DNAVersion LayerVersion;
     public Dictionary<string, IRawBase> Sections;
@@ -43,7 +42,7 @@ public class UDNAAsset : UObject
 
             Version = new DNAVersion(endianAr);
 #if DEBUG
-            Log.Warning("DNAAsset Version {0}", Version.FileVersion.ToString());
+            Log.Debug("DNAAsset Version {0}", Version.FileVersion.ToString());
 #endif
             if (Version.FileVersion < FileVersion.v23)
             {

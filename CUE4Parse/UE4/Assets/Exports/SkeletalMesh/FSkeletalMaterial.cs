@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 public class FSkeletalMaterial
 {
     public FPackageIndex? MaterialInterface; // UMaterialInterface
-    public FName MaterialSlotName;
+    public FName? MaterialSlotName;
     public FName? ImportedMaterialSlotName;
     public FMeshUVChannelInfo? UVChannelData;
     public FPackageIndex? OverlayMaterialInterface;
@@ -63,7 +63,7 @@ public class FSkeletalMaterial
             case GAME_MarvelRivals:
                 _ = new FGameplayTagContainer(Ar);
                 break;
-            case GAME_FragPunk or GAME_DaysGone or GAME_WorldofJadeDynasty or GAME_AssaultFireFuture:
+            case GAME_FragPunk or GAME_DaysGone or GAME_WorldofJadeDynasty or GAME_AssaultFireFuture or GAME_SleeplessWilds:
                 Ar.Position += 4;
                 break;
             case GAME_Strinova:
@@ -74,8 +74,8 @@ public class FSkeletalMaterial
 
     public FSkeletalMaterial(FStructFallback fallback)
     {
-        MaterialInterface = fallback.GetOrDefault(nameof(MaterialInterface), new FPackageIndex());
-        MaterialSlotName = fallback.GetOrDefault<FName>(nameof(MaterialSlotName), "None");
-        UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo>(nameof(UVChannelData), null);
+        MaterialInterface = fallback.GetOrDefault<FPackageIndex?>(nameof(MaterialInterface));
+        MaterialSlotName = fallback.GetOrDefault<FName?>(nameof(MaterialSlotName));
+        UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo?>(nameof(UVChannelData));
     }
 }

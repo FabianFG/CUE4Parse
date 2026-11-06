@@ -7,7 +7,7 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports.Animation;
 
 public class UAnimNotifyState_TimedNiagaraEffect : UAnimNotifyState
 {
-    public FPackageIndex? Template;
+    public ILoadableObject? Template;
     public FName? SocketName;
     public FVector LocationOffset;
     public FRotator RotationOffset;
@@ -19,7 +19,7 @@ public class UAnimNotifyState_TimedNiagaraEffect : UAnimNotifyState
     {
         base.Deserialize(Ar, validPos);
 
-        Template = GetOrDefault<FPackageIndex?>(nameof(Template));
+        Template = GetOrDefault<ILoadableObject?>(nameof(Template));
         SocketName = GetOrDefault<FName?>(nameof(SocketName));
         LocationOffset = GetOrDefault<FVector>(nameof(LocationOffset));
         RotationOffset = GetOrDefault<FRotator>(nameof(RotationOffset));

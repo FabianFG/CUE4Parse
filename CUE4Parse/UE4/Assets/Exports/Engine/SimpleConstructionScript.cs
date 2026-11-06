@@ -66,6 +66,8 @@ public class USCS_Node : UObject
 
 public class USimpleConstructionScript : UObject
 {
+    public const string ComponentTemplateNameSuffix = "_GEN_VARIABLE";
+
     public FPackageIndex? DefaultSceneRootNode;
     public FPackageIndex?[] RootNodes = [];
     public FPackageIndex?[] AllNodes = [];

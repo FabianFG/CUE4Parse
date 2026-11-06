@@ -1,4 +1,3 @@
-using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
@@ -20,17 +19,17 @@ public class ValorantSourceLua
         ];
 
         // Strings are encrypted
-        public override string ReadLuaString()
+        public override byte[] ReadLuaStringBytes()
         {
             var size = ReadLuaInt();
             if (size <= 1)
-                return string.Empty;
+                return [];
 
             var length = (int) size - 1;
             var b = ReadBytes(length);
             TensorUtils.Xor(b, _xorKey);
 
-            return Encoding.UTF8.GetString(b);
+            return b;
         }
     }
 

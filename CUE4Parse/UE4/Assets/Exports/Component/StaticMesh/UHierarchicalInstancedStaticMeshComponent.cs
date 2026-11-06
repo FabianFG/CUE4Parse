@@ -11,10 +11,20 @@ public class UFoliageInstancedStaticMeshComponent : UHierarchicalInstancedStatic
 public class UHierarchicalInstancedStaticMeshComponent : UInstancedStaticMeshComponent
 {
     public FClusterNode_DEPRECATED[]? ClusterTree;
+    public int[] SortedInstances { get; private set; } = [];
+    public int NumBuiltInstances { get; private set; }
+    public FBox? BuiltInstanceBounds { get; private set; }
+    public FBox? UnbuiltInstanceBounds { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        SortedInstances = GetOrDefault(nameof(SortedInstances), SortedInstances);
+        NumBuiltInstances = GetOrDefault(nameof(NumBuiltInstances), NumBuiltInstances);
+        BuiltInstanceBounds = GetOrDefault(nameof(BuiltInstanceBounds), BuiltInstanceBounds);
+        UnbuiltInstanceBounds = GetOrDefault(nameof(UnbuiltInstanceBounds), UnbuiltInstanceBounds);
+
         if (Ar.Position >= validPos) return;
         if (Ar.Game == GAME_DuneAwakening && !Ar.ReadBoolean()) return;
         ClusterTree = FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.HISMCClusterTreeMigration ? Ar.ReadBulkArray(() => new FClusterNode_DEPRECATED(Ar)) : Ar.ReadBulkArray(() => new FClusterNode(Ar));

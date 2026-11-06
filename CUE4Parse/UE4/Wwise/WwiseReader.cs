@@ -17,6 +17,7 @@ public abstract record WwiseDataSource;
 public sealed record WwiseArchiveSource : WwiseDataSource;
 public sealed record WwiseGameFileSource(GameFile File) : WwiseDataSource;
 public sealed record WwiseBulkDataSource(FAssetArchive AssetAr, FByteBulkData bulkData) : WwiseDataSource;
+public sealed record WwiseDeferredSource(FDeferredByteData Data) : WwiseDataSource;
 
 [JsonConverter(typeof(WwiseConverter))]
 public class WwiseReader
@@ -41,11 +42,30 @@ public class WwiseReader
     public long LoadedSize { get; }
     public long TotalSize { get; }
 
+    private readonly long _sourceOffset;
+    public bool CanGetBuffer => _source is WwiseBulkDataSource or WwiseGameFileSource or WwiseDeferredSource;
+    public string? FileExtension => WemFile is not null ? "wem" : Header.Version > 0 ? "bnk" : null;
+
+    public byte[] GetBuffer()
+    {
+        var size = checked((int) TotalSize);
+        return _source switch
+        {
+            WwiseBulkDataSource source => SliceBuffer(source.bulkData.ReadDataOnce() ?? []),
+            WwiseGameFileSource source => new FGameFileDeferredByteData(source.File, _sourceOffset, size).GetData(),
+            WwiseDeferredSource source => new FRangeDeferredByteData(source.Data, checked((int) _sourceOffset), size).GetData(),
+            _ => throw new InvalidOperationException("This reader has no reloadable data source.")
+        };
+
+        byte[] SliceBuffer(byte[] data) => _sourceOffset == 0 && data.Length == size ? data : data.AsSpan(checked((int) _sourceOffset), size).ToArray();
+    }
+
     public WwiseReader(FWwiseArchive Ar, WwiseDataSource source, long size = -1)
     {
         Path = Ar.Name;
         _source = source;
-        TotalSize = size == -1 ? Ar.Length : size;
+        _sourceOffset = Ar.Position;
+        TotalSize = size == -1 ? Ar.Length - Ar.Position : size;
         var end = size == -1 ? Ar.Length : Ar.Position + size;
 
         while (Ar.Position < end)
@@ -207,6 +227,9 @@ public class WwiseReader
     {
         switch (source)
         {
+            case WwiseDeferredSource deferred:
+                Ar.Position = offset + size;
+                return new FRangeDeferredByteData(deferred.Data, checked((int) offset), size);
             case WwiseBulkDataSource bulkDataSource when Ar.SupportPartialReads && bulkDataSource.AssetAr is { } assetAr && bulkDataSource.bulkData is { } bulkData:
                 var newBulkData = new FBulkDataDeferredByteData(assetAr, bulkData, offset, size);
                 Ar.Position = offset + size;

@@ -24,10 +24,10 @@ public class UGeometryCollection : UObject
         base.Deserialize(Ar, validPos);
         RootProxyData = GetOrDefault<FGeometryCollectionProxyMeshData?>(nameof(RootProxyData));
         AutoInstanceMeshes = GetOrDefault<FGeometryCollectionAutoInstanceMesh[]?>(nameof(AutoInstanceMeshes));
-        Materials = GetOrDefault<FPackageIndex[]>(nameof(Materials), []);
+        Materials = GetOrDefault<FPackageIndex[]>(nameof(Materials), [], StringComparison.OrdinalIgnoreCase);
 
 #if DEBUG
-        Log.Warning(nameof(UGeometryCollection));
+        Log.Debug(nameof(UGeometryCollection));
 #endif
         var bIsCookedOrCooking = FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDC && Ar.ReadBoolean();
         if (FDestructionObjectVersion.Get(Ar) >= FDestructionObjectVersion.Type.GeometryCollectionInDDCAndAsset)
@@ -69,7 +69,6 @@ public class UGeometryCollection : UObject
             }
         }
     }
-
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
     {

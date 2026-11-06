@@ -6,15 +6,16 @@ namespace CUE4Parse_Conversion.Dto;
 
 public readonly struct MeshMaterialDto(string? slotName, FPackageIndex? material = null)
 {
-    public readonly string SlotName = material?.Name ?? slotName ?? "None";
+    public readonly string SlotName = slotName ?? "DefaultSlot";
     public readonly FPackageIndex? Material = material;
+    public string Name => Material is { IsNull: false } ? Material.Name : SlotName;
 
-    public MeshMaterialDto(FStaticMaterial material) : this(material.ImportedMaterialSlotName?.Text ?? material.MaterialSlotName.Text, material.MaterialInterface)
+    public MeshMaterialDto(FStaticMaterial material) : this(material.ImportedMaterialSlotName?.Text ?? material.MaterialSlotName?.Text, material.MaterialInterface)
     {
 
     }
 
-    public MeshMaterialDto(FSkeletalMaterial material) : this(material.ImportedMaterialSlotName?.Text ?? material.MaterialSlotName.Text, material.MaterialInterface)
+    public MeshMaterialDto(FSkeletalMaterial material) : this(material.ImportedMaterialSlotName?.Text ?? material.MaterialSlotName?.Text, material.MaterialInterface)
     {
 
     }

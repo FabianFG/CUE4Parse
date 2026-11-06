@@ -9,6 +9,7 @@ public class FFastGeoComponentCluster
     public FFastGeoSkinnedMeshComponent[] SkinnedMeshComponents = [];
     public FFastGeoInstancedSkinnedMeshComponent[] InstancedSkinnedMeshComponents = [];
     public FFastGeoProceduralISMComponent[] ProceduralISMComponents = [];
+    public FFastGeoDecalComponent[] DecalComponents = [];
 
     public FFastGeoComponentCluster(FFastGeoArchive Ar)
     {
@@ -19,8 +20,15 @@ public class FFastGeoComponentCluster
         if (Ar.Game is GAME_WutheringWaves) return;
         InstancedStaticMeshComponents = Ar.ReadArray(() => new FFastGeoInstancedStaticMeshComponent(Ar));
         if (Ar.Game is GAME_SilverPalace) return;
+        if (Ar.Game is GAME_Splitgate2)
+        {
+            DecalComponents = Ar.ReadArray(() => new FFastGeoDecalComponent(Ar));
+            return;
+        }
         SkinnedMeshComponents = Ar.ReadArray(() => new FFastGeoSkinnedMeshComponent(Ar));
         InstancedSkinnedMeshComponents = Ar.ReadArray(() => new FFastGeoInstancedSkinnedMeshComponent(Ar));
         ProceduralISMComponents = Ar.Game >= GAME_UE5_7 ? Ar.ReadArray(() => new FFastGeoProceduralISMComponent(Ar)) : [];
+
+        if (Ar.Game is GAME_PhantomBladeZero) DecalComponents = Ar.ReadArray(() => new FFastGeoDecalComponent(Ar));
     }
 }

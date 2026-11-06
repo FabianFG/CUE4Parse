@@ -14,14 +14,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
         public string Name => (!ParameterName.IsNone ? ParameterName : ParameterInfo.Name).Text;
         public readonly FName ParameterName;
         public readonly FMaterialParameterInfo ParameterInfo;
-        public readonly FPackageIndex ParameterValue; // UTexture
+        public readonly FPackageIndex? ParameterValue; // UTexture
         public readonly FGuid ExpressionGUID;
 
         public FTextureParameterValue(FStructFallback fallback)
         {
             ParameterName = fallback.GetOrDefault<FName>(nameof(ParameterName));
             ParameterInfo = fallback.GetOrDefault<FMaterialParameterInfo>(nameof(ParameterInfo));
-            ParameterValue = fallback.GetOrDefault<FPackageIndex>(nameof(ParameterValue));
+            ParameterValue = fallback.GetOrDefault<FPackageIndex?>(nameof(ParameterValue));
             ExpressionGUID = fallback.GetOrDefault<FGuid>(nameof(ExpressionGUID));
         }
 

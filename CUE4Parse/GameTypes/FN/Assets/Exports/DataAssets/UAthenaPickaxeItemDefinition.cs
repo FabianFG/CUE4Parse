@@ -5,12 +5,12 @@ namespace CUE4Parse.GameTypes.FN.Assets.Exports.DataAssets;
 
 public class UAthenaPickaxeItemDefinition : UAthenaCosmeticItemDefinition
 {
-    public FPackageIndex WeaponDefinition;
+    public FSoftObjectPath WeaponDefinition;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
-        WeaponDefinition = GetOrDefault(nameof(WeaponDefinition), new FPackageIndex());
+        WeaponDefinition = GetOrDefault<FSoftObjectPath>(nameof(WeaponDefinition));
     }
 }

@@ -61,7 +61,7 @@ public class UStruct : UField
 
         if (Ar.Owner!.Provider?.ReadScriptData == true && Ar.Game >= GAME_UE4_0 && serializedScriptSize > 0)
         {
-            using var kismetAr = new FKismetArchive(Name, Ar.ReadBytes(serializedScriptSize), Ar.Owner, Ar.Versions);
+            using var kismetAr = new FKismetArchive(Name, Ar.ReadBytes(serializedScriptSize), Ar.Owner, Ar.Versions, Ar.NameMap, Ar.RealmIndex);
             var tempCode = new List<KismetExpression>();
             try
             {

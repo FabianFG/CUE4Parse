@@ -58,6 +58,23 @@ public readonly struct FZenPackageSummary
 
     public FZenPackageSummary(FArchive Ar)
     {
+        if (Ar.Game is GAME_UE5_EA_Legacy or GAME_TheMatrixAwakens)
+        {
+            // Pre-CL-17014898 / cf116088 Zen summary: no versioning info and no imported public export hashes.
+            HeaderSize = Ar.Read<uint>();
+            Name = Ar.Read<FMappedName>();
+            PackageFlags = Ar.Read<EPackageFlags>();
+            CookedHeaderSize = Ar.Read<uint>();
+            ImportMapOffset = Ar.Read<int>();
+            ExportMapOffset = Ar.Read<int>();
+            ExportBundleEntriesOffset = Ar.Read<int>();
+            GraphDataOffset = Ar.Read<int>();
+            Ar.Position += sizeof(int); // reserved
+            bHasVersioningInfo = 0;
+            ImportedPublicExportHashesOffset = ImportMapOffset;
+            return;
+        }
+
         bHasVersioningInfo = Ar.Read<uint>();
         HeaderSize = Ar.Read<uint>();
         Name = Ar.Read<FMappedName>();

@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Berrysoft.XXTea" />
     <PackageReference Include="Blake3" />
     <PackageReference Include="BouncyCastle.Cryptography" />
     <PackageReference Include="FixedMathSharp" />
@@ -39,6 +40,8 @@
     <EmbeddedResource Include="Resources\ProSpiDecryptor.dll.gz" />
     <None Remove="Resources\ShaderHashedNames.json" />
     <EmbeddedResource Include="Resources\ShaderHashedNames.json" />
+    <None Remove="Resources\MogKeyPool.bin" />
+    <EmbeddedResource Include="Resources\MogKeyPool.bin" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -47,7 +50,7 @@
     <CMakeBuildDir>$(CMakeProject)builddir</CMakeBuildDir>
   </PropertyGroup>
 
-  <Target Name="Build-Natives" BeforeTargets="BeforeBuild" AfterTargets="AfterBuild" Condition="'$(CUE4PARSE_SKIP_NATIVE)' != 'true' and '$(CUE4PARSE_SKIP_NATIVE)' != '1'">
+  <Target Name="Build-Natives" BeforeTargets="BeforeBuild" Condition="'$(CUE4PARSE_SKIP_NATIVE)' != 'true' and '$(CUE4PARSE_SKIP_NATIVE)' != '1'">
     <MakeDir Directories="$(CMakeBuildDir)" Condition="!Exists('$(CMakeBuildDir)')" />
     <Exec Command="cmake .." ConsoleToMSBuild="true" WorkingDirectory="$(CMakeBuildDir)" IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
@@ -58,23 +61,33 @@
       <Output TaskParameter="ExitCode" PropertyName="CMakeExitCode" />
     </Exec>
     <Message Condition=" '$(CMakeExitCode)' != '0' " Importance="high" Text="CUE4Parse-Natives build failed. Continuing without it. ERROR: '$(OutputOfExec)'" />
-    <ItemGroup Condition=" '$(CMakeExitCode)' == '0' ">
-      <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.dll" Condition=" '$(OS)' == 'Windows_NT' ">
+  </Target>
+
+  <Target Name="CollectNativeBinaries" BeforeTargets="AssignTargetPaths;GetCopyToOutputDirectoryItems" DependsOnTargets="Build-Natives">
+    <ItemGroup>
+      <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.dll" Condition=" '$(OS)' == 'Windows_NT' And Exists('..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.dll') ">
+        <Link>CUE4Parse-Natives.dll</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <PackagePath>lib/$(TargetFramework)</PackagePath>
         <PackageCopyToOutput>true</PackageCopyToOutput>
       </Content>
-      <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.pdb" Condition=" '$(Configuration)' == 'Debug' And  '$(OS)' == 'Windows_NT' ">
+      <Content Include="..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.pdb" Condition=" '$(Configuration)' == 'Debug' And  '$(OS)' == 'Windows_NT' And Exists('..\CUE4Parse-Natives\bin\$(Configuration)\CUE4Parse-Natives.pdb') ">
+        <Link>CUE4Parse-Natives.pdb</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <Pack>false</Pack>
       </Content>
-      <Content Include="$(CMakeBuildDir)/CUE4Parse-Natives.so" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
+      <Content Include="$(CMakeBuildDir)/CUE4Parse-Natives.so" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' And Exists('$(CMakeBuildDir)/CUE4Parse-Natives.so') ">
+        <Link>CUE4Parse-Natives.so</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <PackagePath>lib/$(TargetFramework)</PackagePath>
         <PackageCopyToOutput>true</PackageCopyToOutput>
       </Content>
-      <Content Include="$(CMakeBuildDir)/CUE4Parse-Natives.dylib" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
+      <Content Include="$(CMakeBuildDir)/CUE4Parse-Natives.dylib" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' And Exists('$(CMakeBuildDir)/CUE4Parse-Natives.dylib') ">
+        <Link>CUE4Parse-Natives.dylib</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <PackagePath>lib/$(TargetFramework)</PackagePath>
         <PackageCopyToOutput>true</PackageCopyToOutput>
       </Content>

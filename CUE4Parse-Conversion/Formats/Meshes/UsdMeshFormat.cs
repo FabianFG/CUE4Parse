@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers.USD;
@@ -21,8 +18,8 @@ public class UsdMeshFormat : IMeshExportFormat
         var results = new List<ExportFile>();
         var root = dto.ToSkelRoot();
 
-        var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
-        if (sockets is not null) root.Add(sockets);
+        if (dto.Sockets is { Length: > 0 } sockets)
+            root.Add(CreateSockets(sockets));
 
         var materials = CreateMaterials(dto.Materials, materialPaths);
         if (materials is not null) root.Add(materials);
@@ -31,7 +28,7 @@ public class UsdMeshFormat : IMeshExportFormat
         {
             var lodPrim = CreateLod(lod, lod._suffix, materials);
             lodPrim.Add(new UsdRelationship("skel:skeleton", root.Children[0]));
-            if (options.ExportMorphTargets && dto.MorphTargets is { Length: > 0 } morphTargets)
+            if (dto.MorphTargets is { Length: > 0 } morphTargets)
             {
                 AddBlendShapes(lodPrim, morphTargets, lod.SourceLodIndex);
             }
@@ -50,7 +47,7 @@ public class UsdMeshFormat : IMeshExportFormat
     {
         var results = new List<ExportFile>();
 
-        var sockets = CreateSockets(dto.Sockets, options.SocketFormat);
+        var sockets = dto.Sockets is { Length: > 0 } ? CreateSockets(dto.Sockets) : null;
         var materials = CreateMaterials(dto.Materials, materialPaths);
 
         foreach (var lod in dto.LODs)
@@ -72,17 +69,15 @@ public class UsdMeshFormat : IMeshExportFormat
     {
         var root = dto.ToSkelRoot();
 
-        var sockets = options.SocketFormat != ESocketFormat.None ? CreateSockets(dto.Sockets) : null;
-        if (sockets is not null) root.Add(sockets);
+        if (dto.Sockets is { Length: > 0 } sockets)
+            root.Add(CreateSockets(sockets));
 
         var stage = new UsdStage(root);
         return [new ExportFile("usda", stage.SerializeToBinary())];
     }
 
-    private UsdPrim? CreateSockets(FPackageIndex[]? sockets, ESocketFormat format = ESocketFormat.None)
+    private UsdPrim CreateSockets(FPackageIndex[] sockets)
     {
-        if (sockets is not { Length: > 0 } || format == ESocketFormat.None) return null;
-
         var scope = UsdPrim.Def("Scope", "Sockets");
         foreach (var ptr in sockets)
         {
@@ -116,7 +111,7 @@ public class UsdMeshFormat : IMeshExportFormat
         var scope = UsdPrim.Def("Scope", "Materials");
         foreach (var material in materials)
         {
-            var name = material.SlotName;
+            var name = material.Name;
             if (!seen.Add(name)) continue;
 
             var materialPrim = UsdPrim.Def("Material", name);
@@ -239,10 +234,14 @@ public class UsdMeshFormat : IMeshExportFormat
             uv[i] = UsdValue.Tuple(meshLod.Vertices[i].Uv.U, -meshLod.Vertices[i].Uv.V); // MIRROR_MESH
         }
 
-        var indices = new UsdValue[meshLod.Indices.Length];
-        for (var i = 0; i < indices.Length; i++)
+        var indexOffset = 0;
+        var indices = new UsdValue[meshLod.Sections.Sum(section => section.NumFaces) * 3];
+        foreach (var section in meshLod.Sections)
         {
-            indices[i] = UsdValue.Int((int) meshLod.Indices[i]);
+            foreach (var index in meshLod.Indices.AsSpan(section.FirstIndex, section.NumFaces * 3))
+            {
+                indices[indexOffset++] = UsdValue.Int((int) index);
+            }
         }
 
         lodPrim.Add(new UsdAttribute("point3f[]", "points", UsdValue.Array(points)));
@@ -278,6 +277,7 @@ public class UsdMeshFormat : IMeshExportFormat
             lodPrim.AddPrimvar("float[]", "primvars:displayOpacity", UsdValue.Array(opacities), "vertex");
         }
 
+        var faceOffset = 0;
         for (var i = 0; i < meshLod.Sections.Length; i++)
         {
             var subset = UsdPrim.Def("GeomSubset", $"Section_{i}");
@@ -285,7 +285,8 @@ public class UsdMeshFormat : IMeshExportFormat
             subset.Add(UsdAttribute.Uniform("token", "familyName", "materialBind"));
 
             var section = meshLod.Sections[i];
-            subset.Add(new UsdAttribute("int[]", "indices", UsdValue.Array(Enumerable.Range(section.FirstIndex / 3, section.NumFaces))));
+            subset.Add(new UsdAttribute("int[]", "indices", UsdValue.Array(Enumerable.Range(faceOffset, section.NumFaces))));
+            faceOffset += section.NumFaces;
             subset.Add(UsdAttribute.CustomUniform("int", "unrealMaterialIndex", section.MaterialIndex));
             subset.Add(UsdAttribute.CustomUniform("bool", "unrealCastShadow", section.CastShadow));
 
