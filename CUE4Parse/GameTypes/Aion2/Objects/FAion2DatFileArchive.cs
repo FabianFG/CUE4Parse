@@ -26,6 +26,9 @@ public sealed class FAion2DatFileArchive(byte[] data, VersionContainer versions)
         if (length == 0)
             return string.Empty;
 
+        if (length < -int.MaxValue / sizeof(ushort))
+            throw new ParserException($"Invalid string length '{length}'");
+
         var strLength = length > 0 ? length : -length * sizeof(ushort);
         if (strLength > Length - Position)
             throw new ParserException($"Invalid string length '{strLength}'");

@@ -18,7 +18,6 @@ namespace CUE4Parse.UE4.Readers
 {
     public abstract class FArchive : RandomAccessStream, ICloneable
     {
-
         public VersionContainer Versions;
         public EGame Game
         {

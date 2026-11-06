@@ -3,9 +3,15 @@ using CUE4Parse.UE4.Exceptions;
 
 namespace CUE4Parse.UE4.Objects.Chaos;
 
-public class FChaosArchive(FAssetArchive ar) : FAssetArchive(ar, ar.Owner)
+public class FChaosArchive : FAssetArchive
 {
     private readonly List<object?> _tagToObject = [];
+
+    public FChaosArchive(FAssetArchive ar) : base(ar, ar.Owner)
+    {
+        // Chaos data can live in an IoStore optional segment, so keep its realm context (name map, ...)
+        CopyRealmContextFrom(ar);
+    }
 
     public T?[] ReadPtrArray<T>() where T : IChaosClass
     {

@@ -3,13 +3,8 @@ using CUE4Parse.UE4.Objects.Engine;
 
 namespace CUE4Parse_Conversion.Dto;
 
-public class WorldDto : ObjectDto
+public sealed class WorldDto : SceneDto
 {
-    public readonly List<ActorDto> Actors = [];
-    public readonly List<StreamingLevel> StreamingLevels = [];
-
-    public bool IsEmpty => Actors.Count == 0 && StreamingLevels.Count == 0;
-
     public WorldDto(UWorld world, CancellationToken ct = default) : this(world, new WorldParseContext(), ct)
     {
 
@@ -45,18 +40,6 @@ public class WorldDto : ObjectDto
                 }
             }
         }
-    }
-
-    public override string ToString() => $"{base.ToString()} (Actors: {Actors.Count}, StreamingLevels: {StreamingLevels.Count})";
-
-    public override void Dispose()
-    {
-        foreach (var actor in Actors)
-        {
-            actor.Dispose();
-        }
-        Actors.Clear();
-        StreamingLevels.Clear();
     }
 }
 

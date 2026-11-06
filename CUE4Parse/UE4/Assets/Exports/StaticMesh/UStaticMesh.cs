@@ -1,3 +1,5 @@
+using CUE4Parse.GameTypes.DeadIsland2.Assets.Objects;
+using CUE4Parse.GameTypes.DFHO.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Core.Misc;
@@ -31,14 +33,16 @@ public class UStaticMesh : UObject
         bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR && Ar.ReadBoolean();
         HasTangents = Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE;
 
-        var Bounds = new FBoxSphereBounds();
+        var bounds = new FBoxSphereBounds();
         if (!stripDataFlags.IsEditorDataStripped() && Ar.Ver < EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR)
         {
-            Bounds = new FBoxSphereBounds(Ar);
+            bounds = new FBoxSphereBounds(Ar);
         }
 
         if (Ar.Game == GAME_WutheringWaves && GetOrDefault<bool>("bUseStandaloneBodySetup"))
             BodySetup = GetOrDefault<FPackageIndex>("StandaloneBodySetup");
+        else if (Ar.Game is GAME_GhostwireTokyo && TryGetValue(out bool bTngUseBodySetup, "bTngUseBodySetup"))
+            BodySetup = new FPackageIndex();
         else
             BodySetup = new FPackageIndex(Ar);
 
@@ -106,8 +110,10 @@ public class UStaticMesh : UObject
                 Ar.Position += sizeof(int); // bool - bIsMeshProxy
             }
 
-            RenderData = new FStaticMeshRenderData(Ar);
-            RenderData.Bounds = Bounds;
+            RenderData = new FStaticMeshRenderData(Ar)
+            {
+                Bounds = bounds
+            };
 
             Materials = new FPackageIndex[RenderData.LODs[0].Sections.Length];
             for (var i = 0; i < RenderData.LODs[0].Sections.Length; i++)
@@ -188,9 +194,11 @@ public class UStaticMesh : UObject
         {
             RenderData = Ar.Game switch
             {
+                GAME_DeadIsland2 => new FDeadIsland2StaticMeshRenderData(Ar),
+                GAME_DeltaForce => new FDeltaForceStaticMeshRenderData(Ar),
                 GAME_GameForPeace => new GFPStaticMeshRenderData(Ar, GetOrDefault<bool>("bIsStreamable")),
                 GAME_WeHappyFew => new GFPStaticMeshRenderData(Ar, true),
-                _ => RenderData = new FStaticMeshRenderData(Ar)
+                _ => new FStaticMeshRenderData(Ar)
             };
         }
 
@@ -253,7 +261,7 @@ public class UStaticMesh : UObject
             case GAME_FateTrigger or GAME_GhostsofTabor or GAME_Aion2 or GAME_Bringer:
                 Ar.Position += 4;
                 break;
-            case GAME_TheFinals or GAME_ArcRaiders when Ar.ReadBoolean():
+            case GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders when Ar.ReadBoolean():
                 Ar.SkipMultipleBulkArrayData(5);
                 break;
             case GAME_ValorantSource when Ar.ReadBoolean():
@@ -282,6 +290,7 @@ public class UStaticMesh : UObject
 
             if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
             {
+                if (Ar.Game is GAME_MonsterHunterOutlanders && !bHasSpeedTreeWind) Ar.Position += 4;
                 // UE4.14+ - "Materials" are deprecated, added StaticMaterials
                 StaticMaterials = bHasSpeedTreeWind ? GetOrDefault("StaticMaterials", Array.Empty<FStaticMaterial>()) : Ar.ReadArray(() => new FStaticMaterial(Ar));
             }

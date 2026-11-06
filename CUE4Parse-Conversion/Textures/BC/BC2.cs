@@ -4,45 +4,75 @@ namespace CUE4Parse_Conversion.Textures.BC;
 
 public static partial class BCDecoder
 {
+    public const int BC2BlockSize = 16;
+
     public static byte[] BC2(byte[] input, int sizeX, int sizeY, int sizeZ)
     {
-        var expectedSize = sizeX * sizeY * sizeZ;
-        if (input.Length < expectedSize)
-            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {expectedSize}");
-        var output = new byte[expectedSize * 4];
-        BC2(input, sizeX, sizeY, sizeZ, output);
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, out byte[] output, BC2BlockSize);
+
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
+        {
+            BC2(input.AsSpan(inputOffset, inputLayerSize), sizeX, sizeY, output.AsSpan(outputOffset, outputLayerSize));
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
+        }
+
         return output;
     }
 
     public static void BC2(ReadOnlySpan<byte> input, int sizeX, int sizeY, int sizeZ, Span<byte> output)
     {
-        var expectedSize = sizeX * sizeY * sizeZ;
-        var outputSize = expectedSize * 4;
-        if (input.Length < expectedSize)
-            throw new ArgumentException($"Input length {input.Length} is smaller than expected size {expectedSize}");
-        if (output.Length < outputSize)
-            throw new ArgumentException($"Output length {output.Length} is smaller than expected size {outputSize}");
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, output, BC2BlockSize);
 
-        var inputSpan = input[..expectedSize].Cast<byte, ulong>();
-        var outputSpan = output[..outputSize].Cast<byte, uint>();
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
+        {
+            BC2(input.Slice(inputOffset, inputLayerSize), sizeX, sizeY, output.Slice(outputOffset, outputLayerSize));
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
+        }
+    }
+
+    public static void BC2(ReadOnlySpan<byte> input, int sizeX, int sizeY, Span<byte> output)
+    {
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, 1, output, BC2BlockSize);
+
+        var inputSpan = input[..inputLayerSize].Cast<byte, ulong>();
+        var outputSpan = output[..outputLayerSize].Cast<byte, uint>();
+
         Span<uint> colors = stackalloc uint[4];
+        var incompleteBlocks = (sizeX & 3) != 0 || (sizeY & 3) != 0;
 
         var index = 0;
-        var zPixelOffset = 0;
-        for (int z = 0; z < sizeZ; z++)
+        var yPixelOffset = 0;
+        for (int y = 0; y < sizeY; y += 4)
         {
-            var yPixelOffset = zPixelOffset;
-            for (int y = 0; y < sizeY; y += 4)
+            var xPixelOffset = yPixelOffset;
+            for (int x = 0; x < sizeX; x += 4)
             {
-                var xPixelOffset = yPixelOffset;
-                for (int x = 0; x < sizeX; x += 4)
-                {
-                    ulong alphaBits = inputSpan[index++];
-                    var data = inputSpan[index++];
-                    ReadColorsBC3((uint)data, colors);
-                    uint bitmask = (uint)(data >> 32);
+                ulong alphaBits = inputSpan[index++];
+                var data = inputSpan[index++];
+                ReadColorsBC3((uint)data, colors);
+                uint bitmask = (uint)(data >> 32);
 
-                    var offset = xPixelOffset;
+                var offset = xPixelOffset;
+                if (incompleteBlocks && (x + 4 > sizeX || y + 4 > sizeY))
+                {
+
+                    int width = Math.Min(4, sizeX - x);
+                    int height = Math.Min(4, sizeY - y);
+
+                    for (int row = 0; row < height; row++)
+                    {
+                        for (int col = 0; col < width; col++)
+                        {
+                            var shift = row * 8 + col * 2;
+                            outputSpan[offset + col] = colors[(int)((bitmask >> shift) & 3)] | (((uint)(alphaBits >> (shift * 2) & 0xF) * 17) << 24);
+                        }
+                        offset += sizeX;
+                    }
+                }
+                else
+                {
                     var bits = (uint)alphaBits;
                     outputSpan[offset    ] = colors[(int)((bitmask >>  0) & 3)] | ((((bits >>  0) & 0xF) * 17) << 24);
                     outputSpan[offset + 1] = colors[(int)((bitmask >>  2) & 3)] | ((((bits >>  4) & 0xF) * 17) << 24);
@@ -64,12 +94,10 @@ public static partial class BCDecoder
                     outputSpan[offset + 1] = colors[(int)((bitmask >> 26) & 3)] | ((((bits >> 20) & 0xF) * 17) << 24);
                     outputSpan[offset + 2] = colors[(int)((bitmask >> 28) & 3)] | ((((bits >> 24) & 0xF) * 17) << 24);
                     outputSpan[offset + 3] = colors[(int)((bitmask >> 30) & 3)] | ((((bits >> 28) & 0xF) * 17) << 24);
-
-                    xPixelOffset += 4;
                 }
-                yPixelOffset += sizeX * 4;
+                xPixelOffset += 4;
             }
-            zPixelOffset += sizeX * sizeY;
+            yPixelOffset += sizeX * 4;
         }
     }
 }

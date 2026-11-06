@@ -1,9 +1,9 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using static CUE4Parse.ACL.ACLNative;
 
 namespace CUE4Parse.ACL
 {
-    public class CompressedTracks
+    public class CompressedTracks : IDisposable
     {
         public IntPtr Handle { get; private set; }
         private readonly int _bufferLength;
@@ -28,7 +28,15 @@ namespace CUE4Parse.ACL
             Handle = existing;
         }
 
-        ~CompressedTracks()
+        ~CompressedTracks() => ReleaseHandle();
+
+        public void Dispose()
+        {
+            ReleaseHandle();
+            GC.SuppressFinalize(this);
+        }
+
+        private void ReleaseHandle()
         {
             if (_bufferLength >= 0 && Handle != IntPtr.Zero)
             {

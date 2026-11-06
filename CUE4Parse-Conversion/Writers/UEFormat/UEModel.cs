@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
@@ -30,7 +30,7 @@ public sealed class UEModel : UEFormatExport
     public UEModel(string name, string objectPath, SkeletonDto skeleton, ExportOptions options)
         : base(name, objectPath, options)
     {
-        WriteRoot(root => WriteSkeleton(root, skeleton, options.SocketFormat != ESocketFormat.None));
+        WriteRoot(root => WriteSkeleton(root, skeleton));
     }
 
     public UEModel(string name, string objectPath, SkeletalMeshDto mesh, ExportOptions options, Func<MeshLodDto<SkinnedMeshVertex>, bool>? predicate = null)
@@ -42,10 +42,10 @@ public sealed class UEModel : UEFormatExport
             WriteLods(root, lods, (attrs, lod) =>
             {
                 WriteCommonMesh(attrs, lod);
-                WriteSkinning(attrs, lod, options.ExportMorphTargets ? mesh.MorphTargets : []);
+                WriteSkinning(attrs, lod, mesh.MorphTargets ?? []);
             });
 
-            WriteSkeleton(root, mesh, options.SocketFormat != ESocketFormat.None);
+            WriteSkeleton(root, mesh);
         });
     }
 
@@ -73,7 +73,7 @@ public sealed class UEModel : UEFormatExport
             new FConvexMeshCollision(elem).Serialize(writer)));
     }
 
-    private static void WriteSkeleton(FDataAttributeSet root, SkeletonDto skeleton, bool exportSockets)
+    private static void WriteSkeleton(FDataAttributeSet root, SkeletonDto skeleton)
     {
         root.AddAttribute("SKELETON", attr => attr.WriteAttributes(attrs =>
         {
@@ -89,7 +89,7 @@ public sealed class UEModel : UEFormatExport
                 bone.Transform.Scale3D.Serialize(writer);
             }));
 
-            if (exportSockets && skeleton.Sockets is { Length: > 0 })
+            if (skeleton.Sockets is { Length: > 0 })
             {
                 var sockets = new List<USkeletalMeshSocket>();
                 foreach (var socketObject in skeleton.Sockets)
@@ -158,7 +158,17 @@ public sealed class UEModel : UEFormatExport
             });
         });
 
-        attrs.AddAttribute("INDICES", attr => attr.WriteArray(lod.Indices, (writer, index) => writer.Write(index)));
+        attrs.AddAttribute("INDICES", attr =>
+        {
+            attr.Write(lod.Sections.Sum(section => section.NumFaces) * 3);
+            foreach (var section in lod.Sections)
+            {
+                foreach (var index in lod.Indices.AsSpan(section.FirstIndex, section.NumFaces * 3))
+                {
+                    attr.Write(index);
+                }
+            }
+        });
 
         if (lod.VertexColors is { Length: > 0 })
         {
@@ -169,13 +179,15 @@ public sealed class UEModel : UEFormatExport
             }));
         }
 
+        var faceOffset = 0;
         attrs.AddAttribute("MATERIALS", attr => attr.WriteArray(lod.Sections, (writer, section, i) =>
         {
             var material = lod.Owner.GetMaterial(section);
-            writer.WriteFString(material?.SlotName ?? $"MaterialSlot_{i}");
+            writer.WriteFString(material?.Name ?? $"MaterialSlot_{i}");
             writer.WriteFString(material?.Material?.ResolvedObject?.GetPathName() ?? string.Empty);
-            writer.Write(section.FirstIndex);
+            writer.Write(faceOffset);
             writer.Write(section.NumFaces);
+            faceOffset += section.NumFaces * 3;
         }));
     }
 

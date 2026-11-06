@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using CUE4Parse.Encryption.Aes;
@@ -6,6 +7,7 @@ namespace CUE4Parse.Utils
 {
     public static class StringUtils
     {
+        private static readonly SearchValues<char> _invalidFileNameChars = SearchValues.Create(Path.GetInvalidFileNameChars());
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FAesKey ParseAesKey(this string s)
@@ -110,6 +112,43 @@ namespace CUE4Parse.Utils
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string NormalizePath(this string path) => path.TrimStart('/').Replace('\\', '/');
+
+        public static string SanitizePath(this string path)
+        {
+            Span<char> buffer = path.Length <= 512 ? stackalloc char[path.Length] : new char[path.Length];
+            var written = 0;
+            var segmentStart = 0;
+            for (var i = 0; i <= path.Length; i++)
+            {
+                if (i < path.Length && path[i] is not ('/' or '\\'))
+                {
+                    var c = path[i];
+                    buffer[written++] = _invalidFileNameChars.Contains(c) ? '_' : c;
+                    continue;
+                }
+
+                if (written == segmentStart)
+                    continue;
+
+                var segment = buffer[segmentStart..written];
+                if (segment.SequenceEqual(".") || segment.SequenceEqual(".."))
+                {
+                    buffer[segmentStart] = '_';
+                    written = segmentStart + 1;
+                }
+
+                if (i < path.Length)
+                    buffer[written++] = '/';
+
+                segmentStart = written;
+            }
+
+            if (written > 0 && buffer[written - 1] == '/')
+                written--;
+
+            var result = buffer[..written];
+            return result.SequenceEqual(path) ? path : new string(result);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetReadableSize<T>(this T size) where T : INumber<T>

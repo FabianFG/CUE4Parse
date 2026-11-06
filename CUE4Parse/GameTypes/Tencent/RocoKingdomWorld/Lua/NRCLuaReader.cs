@@ -1,4 +1,3 @@
-using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Versions;
@@ -8,11 +7,11 @@ namespace CUE4Parse.GameTypes.Tencent.RocoKingdomWorld.Lua;
 public class FNRCLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLua54Archive(name, data, versions)
 {
     // Strings are encrypted
-    public override string ReadLuaString()
+    public override byte[] ReadLuaStringBytes()
     {
         ulong size = ReadLuaInt();
         if (size <= 1)
-            return string.Empty;
+            return [];
 
         int length = (int) size - 1;
         byte[] b = ReadBytes(length);
@@ -23,7 +22,7 @@ public class FNRCLuaArchive(string name, byte[] data, VersionContainer? versions
             b[i] = (byte) (b[i] ^ (seed + i));
         }
 
-        return Encoding.UTF8.GetString(b);
+        return b;
     }
 }
 

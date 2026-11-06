@@ -1,6 +1,6 @@
-using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Assets.Exports.Material;
 
@@ -23,8 +23,8 @@ public class UMaterialInstanceConstant : UMaterialInstance
     public override void GetParams(CMaterialParams parameters)
     {
         // get params from linked UMaterial3
-        if (Parent != null && Parent != this)
-            Parent.GetParams(parameters);
+        if (Parent?.TryLoad<UUnrealMaterial>(out var parent) == true && parent != this)
+            parent.GetParams(parameters);
 
         base.GetParams(parameters);
 
@@ -44,7 +44,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
         var roughWeight = 0;
         var specuWeight = 0;
 
-        void Diffuse(bool check, int weight, UTexture tex)
+        void Diffuse(bool check, int weight, FPackageIndex tex)
         {
             if (check && weight >= diffWeight)
             {
@@ -54,7 +54,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
             }
         }
 
-        void Normal(bool check, int weight, UTexture tex)
+        void Normal(bool check, int weight, FPackageIndex tex)
         {
             if (check && weight > normWeight)
             {
@@ -63,7 +63,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
             }
         }
 
-        void Specular(bool check, int weight, UTexture tex)
+        void Specular(bool check, int weight, FPackageIndex tex)
         {
             if (check && weight > specWeight)
             {
@@ -72,7 +72,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
             }
         }
 
-        void SpecPower(bool check, int weight, UTexture tex)
+        void SpecPower(bool check, int weight, FPackageIndex tex)
         {
             if (check && weight > specPowWeight)
             {
@@ -81,7 +81,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
             }
         }
 
-        void Opacity(bool check, int weight, UTexture tex)
+        void Opacity(bool check, int weight, FPackageIndex tex)
         {
             if (check && weight > opWeight)
             {
@@ -90,7 +90,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
             }
         }
 
-        void Emissive(bool check, int weight, UTexture tex)
+        void Emissive(bool check, int weight, FPackageIndex tex)
         {
             if (check && weight > emWeight)
             {
@@ -100,7 +100,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
             }
         }
 
-        void CubeMap(bool check, int weight, UTexture tex)
+        void CubeMap(bool check, int weight, FPackageIndex tex)
         {
             if (check && weight > cubeWeight)
             {
@@ -109,7 +109,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
             }
         }
 
-        void BakedMask(bool check, int weight, UTexture tex)
+        void BakedMask(bool check, int weight, FPackageIndex tex)
         {
             if (check && weight > maskWeight)
             {
@@ -118,7 +118,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
             }
         }
 
-        void Misc(bool check, int weight, UTexture tex)
+        void Misc(bool check, int weight, FPackageIndex tex)
         {
             if (check && weight > miscWeight)
             {
@@ -178,7 +178,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
         foreach (var p in TextureParameterValues)
         {
             var name = p.Name;
-            var tex = p.ParameterValue.Load<UTexture>();
+            var tex = p.ParameterValue;
             if (tex == null) continue;
 
             if (name.Contains("detail", StringComparison.CurrentCultureIgnoreCase) ||
@@ -239,21 +239,21 @@ public class UMaterialInstanceConstant : UMaterialInstance
         }
 
         // try to get diffuse texture when nothing found
-        if (parameters.Diffuse == null && TextureParameterValues.Length == 1)
-            parameters.Diffuse = TextureParameterValues[0].ParameterValue.Load<UTexture>();
+        if (parameters.Diffuse == null && TextureParameterValues is [{ ParameterValue: not null }])
+            parameters.Diffuse = TextureParameterValues[0].ParameterValue;
     }
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialDepth depth)
     {
-        if (depth != EMaterialDepth.TopLayerOnly && Parent != null && Parent != this)
-            Parent.GetParams(parameters, depth);
+        if (depth != EMaterialDepth.TopLayerOnly && Parent?.TryLoad<UUnrealMaterial>(out var parent) == true && parent != this)
+            parent.GetParams(parameters, depth);
 
         parameters.AppendAllProperties(Properties);
         base.GetParams(parameters, depth);
 
         foreach (var textureParameter in TextureParameterValues)
         {
-            if (!textureParameter.ParameterValue.TryLoad(out UTexture texture))
+            if (textureParameter.ParameterValue is not { } texture)
                 continue;
 
             if (!parameters.VerifyTexture(textureParameter.Name, texture))
@@ -271,7 +271,7 @@ public class UMaterialInstanceConstant : UMaterialInstance
             parameters.Scalars[scalarParameter.Name] = scalarParameter.ParameterValue;
     }
 
-    public override void AppendReferencedTextures(IList<UUnrealMaterial> outTextures, bool onlyRendered)
+    public override void AppendReferencedTextures(IList<FPackageIndex> outTextures, bool onlyRendered)
     {
         if (onlyRendered)
         {
@@ -282,13 +282,12 @@ public class UMaterialInstanceConstant : UMaterialInstance
         {
             foreach (var value in TextureParameterValues)
             {
-                var parameterValue = value.ParameterValue.Load<UTexture>();
-                if (parameterValue != null && !outTextures.Contains(parameterValue))
-                    outTextures.Add(parameterValue);
+                if (value.ParameterValue != null && !outTextures.Contains(value.ParameterValue))
+                    outTextures.Add(value.ParameterValue);
             }
 
-            if (Parent != null && Parent != this)
-                Parent.AppendReferencedTextures(outTextures, onlyRendered);
+            if (Parent?.TryLoad<UUnrealMaterial>(out var parent) == true && parent != this)
+                parent.AppendReferencedTextures(outTextures, onlyRendered);
         }
     }
 }

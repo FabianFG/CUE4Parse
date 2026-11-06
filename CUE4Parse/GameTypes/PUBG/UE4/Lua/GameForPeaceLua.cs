@@ -17,22 +17,22 @@ public class FGFPLuaArchive(string name, byte[] data) : FLua53Archive(name, data
     ];
 
     // Strings are encrypted
-    public override string ReadLuaString()
+    public override byte[] ReadLuaStringBytes()
     {
         var sizeByte = Read<byte>();
         if (sizeByte == 0)
-            return string.Empty;
+            return [];
 
         var size = sizeByte == 0xFF ? Read<int>() : sizeByte;
         var length = size - 1;
 
         if (length <= 0)
-            return string.Empty;
+            return [];
 
         var buffer = ReadBytes(length);
         TensorUtils.Xor(buffer, _stringKey);
 
-        return Encoding.UTF8.GetString(buffer);
+        return buffer;
     }
 }
 
@@ -210,7 +210,8 @@ public class GameForPeaceLua
                 break;
             case 4:  // LUA_TSHRSTR
             case 20: // LUA_TLNGSTR
-                constant.StrData = Ar.ReadLuaString();
+                constant.Data = Ar.ReadLuaStringBytes();
+                constant.StrData = Encoding.UTF8.GetString(constant.Data);
                 break;
         }
 

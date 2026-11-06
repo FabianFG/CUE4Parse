@@ -1,9 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Collections.Concurrent;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse_Conversion.Writers;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
@@ -15,7 +11,7 @@ namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<MeshVertex> FromLandscapeMesh(StaticMeshDto owner, ULandscapeComponent[] components, int sizeQuads, ELandscapeFlags flags, out ConcurrentDictionary<string, SKBitmap>? bitmaps, out Image<L16>? heightmap)
+    internal static MeshLodDto<MeshVertex> FromLandscapeMesh(StaticMeshDto owner, ExportOptions options, ULandscapeComponent[] components, int sizeQuads, ELandscapeFlags flags, out ConcurrentDictionary<string, SKBitmap>? bitmaps, out Image<L16>? heightmap)
     {
         var componentSizeQuads = ((sizeQuads + 1) >> 0 /*Landscape->ExportLOD*/) - 1;
         var scale = (float)componentSizeQuads / sizeQuads;
@@ -170,8 +166,9 @@ public partial class MeshLodDto<TVertex>
         heightmap = heightmapTexture;
         return new MeshLodDto<MeshVertex>(
             owner,
+            options,
             0,
-            indices.ToArray(),
+            [.. indices],
             vertices,
             sections,
             extraUvs,

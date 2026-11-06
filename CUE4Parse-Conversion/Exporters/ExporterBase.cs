@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using CUE4Parse.FileProvider.Objects;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.Utils;
@@ -27,8 +27,8 @@ public abstract class ExporterBase : IExporter
     public string ObjectPath { get; }
     public string ClassName { get; }
 
-    internal ExportSession? _session = null;
-    protected ExportSession Session => _session ?? throw new InvalidOperationException("Exporter must be added to an ExportSession before use");
+    internal IExportSession? _session = null;
+    protected IExportSession Session => _session ?? throw new InvalidOperationException("Exporter must be added to an ExportSession before use");
 
     protected internal ILogger Log { get; }
 
@@ -64,7 +64,9 @@ public abstract class ExporterBase : IExporter
 
     protected abstract IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default);
 
-    public async Task<ExportResult> ExportAsync(CancellationToken ct = default)
+    internal virtual IEnumerable<UObject> GetDependencies(CancellationToken ct) => [];
+
+    public virtual async Task<ExportResult> ExportAsync(CancellationToken ct = default)
     {
         try
         {
@@ -85,7 +87,7 @@ public abstract class ExporterBase : IExporter
         }
     }
 
-    private async Task<string> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
+    protected async Task<string> WriteExportFileAsync(ExportFile file, CancellationToken ct = default)
     {
         var (fileName, path) = ResolveOutputPath(file); // fileName may not be the real file name, it's just for logging
         Log.ForContext("FilePath", path).Information("Writing {FileName} ({ReadableFileSize:l})", fileName, file.Data.Length.GetReadableSize());
@@ -158,6 +160,8 @@ public abstract class ExporterBase : IExporter
 
         return (rel.StartsWith("./") || rel.StartsWith("../") ? rel : "./" + rel) + "." + extension;
     }
+
+    public void Attach(IExportSession session) => _session = session;
 
     public override bool Equals(object? obj) => obj is ExporterBase other && string.Equals(ObjectPath, other.ObjectPath, StringComparison.OrdinalIgnoreCase);
     public override int GetHashCode() => ObjectPath.GetHashCode();

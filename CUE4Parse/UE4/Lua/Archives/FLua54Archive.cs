@@ -24,16 +24,16 @@ public class FLua54Archive(string name, byte[] data, VersionContainer? versions 
         return v;
     }
 
-    public virtual string ReadLuaString()
+    public virtual string ReadLuaString() => Encoding.UTF8.GetString(ReadLuaStringBytes());
+
+    public virtual byte[] ReadLuaStringBytes()
     {
         ulong size = ReadLuaInt();
         if (size <= 1)
-            return string.Empty;
+            return [];
 
         int length = (int) size - 1;
-        byte[] buffer = ReadBytes(length);
-
-        return Encoding.UTF8.GetString(buffer);
+        return ReadBytes(length);
     }
 
     public virtual T[] ReadLuaArray<T>(Func<T> readElement)
@@ -92,8 +92,11 @@ public class FLua54ArchiveWriter : FArchiveWriter
             return;
         }
 
-        byte[] buffer = Encoding.UTF8.GetBytes(value);
+        WriteLuaStringBytes(Encoding.UTF8.GetBytes(value));
+    }
 
+    public void WriteLuaStringBytes(ReadOnlySpan<byte> buffer)
+    {
         WriteLuaInt((ulong) buffer.Length + 1);
         Write(buffer);
     }

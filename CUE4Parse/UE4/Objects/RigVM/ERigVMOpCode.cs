@@ -106,7 +106,8 @@ public enum ERigVMOpCode : byte
     JumpToBranch, // jumps to a branch based on a name operand
     Execute, // single execute op (formerly Execute_0_Operands to Execute_64_Operands)
     RunInstructions, // runs a set of instructions lazily
-    SetupTraits, // sets up a list of traits on executecontext
+    SetupTraits, // sets up a list of traits on
+    InvokeCallable, // invoke a section of the bytecode as a callable
     Invalid,
     FirstArrayOpCode = ArrayReset,
     LastArrayOpCode = ArrayReverse,

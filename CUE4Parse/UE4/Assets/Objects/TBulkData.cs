@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CUE4Parse.GameTypes.DFHO.Assets.Objects;
 using CUE4Parse.FileProvider.Vfs;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Assets.Utils;
@@ -140,6 +141,10 @@ public abstract class TBulkData<T> where T: struct
         if (BulkDataFlags.HasFlag(BULKDATA_ForceInlinePayload))
         {
             if (_savedAr.Game < GAME_UE4_0) position = Header.OffsetInFile;
+        }
+        else if (archive.Game is GAME_DeltaForce && FDeltaForceBulkData.IsUHD(Header))
+        {
+            return FDeltaForceBulkData.TryGetArchive(archive, Header, out archive, out position);
         }
         else if (BulkDataFlags.HasFlag(BULKDATA_OptionalPayload))
         {

@@ -224,14 +224,14 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             }
         }
 
-        public FQuat GetNormalized(float tolerance = UnrealMath.SmallNumber)
+        public readonly FQuat GetNormalized(float tolerance = UnrealMath.SmallNumber)
         {
             var result = this;
             result.Normalize(tolerance);
             return result;
         }
 
-        public bool IsNormalized => Abs(1f - SizeSquared) < THRESH_QUAT_NORMALIZED;
+        public readonly bool IsNormalized => Abs(1f - SizeSquared) < THRESH_QUAT_NORMALIZED;
 
         public float Size => Sqrt(SizeSquared);
 
@@ -258,7 +258,7 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             return v + (W * t) + FVector.CrossProduct(q, t);
         }
 
-        public FQuat Inverse() => IsNormalized ? new FQuat(-X, -Y, -Z, W) : GetNormalized().Inverse();
+        public readonly FQuat Inverse() => IsNormalized ? new FQuat(-X, -Y, -Z, W) : GetNormalized().Inverse();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Conjugate() // public FQuat Inverse()

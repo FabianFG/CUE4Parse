@@ -19,7 +19,6 @@ namespace CUE4Parse.UE4.Assets
     [SkipObjectRegistration]
     public sealed class Package : AbstractUePackage
     {
-
         public override FPackageFileSummary Summary { get; }
         public override FNameEntrySerialized[] NameMap { get; }
         public override int ImportMapLength => ImportMap.Length;
@@ -62,8 +61,9 @@ namespace CUE4Parse.UE4.Assets
             Func<FByteBulkDataHeader?, FArchive?>? ubulk = null,
             Func<FByteBulkDataHeader?, FArchive?>? uptnl = null,
             IFileProvider? provider = null,
-            bool useLazySerialization = true)
-            : base(uasset.Name.SubstringBeforeLast('.'), provider)
+            bool useLazySerialization = true,
+            string? archiveName = null)
+            : base(uasset.Name.SubstringBeforeLast('.'), provider, archiveName)
         {
             // We clone the version container because it can be modified with package specific versions when reading the summary
             uasset.Versions = (VersionContainer) uasset.Versions.Clone();
@@ -343,6 +343,9 @@ namespace CUE4Parse.UE4.Assets
         private ResolvedObject? ResolveImport(FPackageIndex importIndex)
         {
             var import = ImportMap[-importIndex.Index - 1];
+            if (Provider?.Versions.Game is GAME_MarchofGiants && import.OuterIndex is null or { IsNull: true })
+                return new ResolvedImportObject(import, this);
+
             var outerMostIndex = importIndex;
             FObjectImport outerMostImport;
             while (true)
@@ -352,7 +355,7 @@ namespace CUE4Parse.UE4.Assets
                     return new ResolvedImportObject(import, this);
 
                 outerMostImport = ImportMap[-outerMostIndex.Index - 1];
-                if (outerMostImport.OuterIndex.IsNull)
+                if (outerMostImport.OuterIndex is null or { IsNull: true })
                     break;
                 outerMostIndex = outerMostImport.OuterIndex;
             }
@@ -372,13 +375,11 @@ namespace CUE4Parse.UE4.Assets
             {
                 if (package is IoPackage ioPackage)
                 {
-                    for (int i = 0; i < ioPackage.ExportMap.Length; i++)
+                    // GetExportIndex also covers the exports of a merged optional segment
+                    var exportIndex = ioPackage.GetExportIndex(import.ObjectName.Text);
+                    if (exportIndex != -1)
                     {
-                        FExportMapEntry export = ioPackage.ExportMap[i];
-                        if (ioPackage.CreateFNameFromMappedName(export.ObjectName).Text == import.ObjectName.Text)
-                        {
-                            return ioPackage.ResolvePackageIndex(new FPackageIndex(ioPackage, i + 1));
-                        }
+                        return ioPackage.ResolvePackageIndex(new FPackageIndex(ioPackage, exportIndex + 1));
                     }
 #if DEBUG
                     Log.Fatal("Missing import of ({0}): {1} in {2} was not found, but the package exists.", Name, import.ObjectName, ioPackage.GetFullName());

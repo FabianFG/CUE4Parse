@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using CUE4Parse.Encryption.Aes;
@@ -147,10 +146,6 @@ internal static class FixtureTestUtilities
         .Append(GetWorldPartitionRuntimeCellPackageName())
         .Order(StringComparer.Ordinal)
         .ToArray();
-
-    [ModuleInitializer]
-    internal static void ConfigureTextureDecoder() =>
-        TextureDecoder.UseAssetRipperTextureDecoder = true;
 
     public static string FixturePath(params ReadOnlySpan<string> components)
     {

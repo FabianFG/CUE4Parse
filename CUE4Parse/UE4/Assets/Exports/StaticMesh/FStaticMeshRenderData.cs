@@ -111,7 +111,7 @@ public class FStaticMeshRenderData
             {
                 for (var i = 0; i < LODs.Length; i++)
                 {
-                    var bValid = Ar.Game is GAME_DeltaForce ? Ar.ReadFlag() : Ar.ReadBoolean();
+                    var bValid = Ar.ReadBoolean();
                     if (bValid)
                     {
                         if (Ar.Game is >= GAME_UE5_0 or GAME_TerminullBrigade or GAME_WutheringWaves)
@@ -123,7 +123,8 @@ public class FStaticMeshRenderData
                             _ = new FDistanceFieldVolumeData(Ar);
                         }
                     }
-                    if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
+
+                    if (Ar.Game is GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders)
                         _ = Ar.ReadArray(() => new FDistanceFieldVolumeData5(Ar));
                 }
             }
@@ -201,27 +202,6 @@ public class FStaticMeshRenderData
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 
-        if (Ar.Game is GAME_DeltaForce)
-        {
-            Ar.Position += 72;
-            var stripDataFlags = new FStripDataFlags(Ar);
-            Ar.ReadBoolean();
-
-            var hasExtendedHeader = !stripDataFlags.IsEditorDataStripped();
-            if (hasExtendedHeader)
-            {
-                Ar.Position += 62 - LODs.Length;
-                _ = new FStripDataFlags(Ar);
-                Ar.ReadBoolean();
-            }
-
-            Bounds = new FBoxSphereBounds(new FBox(Ar));
-
-            Ar.Position += 4;
-            var customDataCount = Ar.Read<int>();
-            Ar.Position += hasExtendedHeader ? 26 + 8 * LODs.Length : 74;
-            Ar.Position += 61 * customDataCount;
-        }
         if (Ar.Game is GAME_DeadzoneRogue) Ar.Position += 4;
         if (Ar.Game is GAME_InfinityNikki or GAME_RogueCompany) Ar.Position += 8;
 
@@ -245,8 +225,12 @@ public class FStaticMeshRenderData
                 ScreenSize[i] = Ar.Read<float>();
             }
 
-            if (Ar.Game == GAME_HogwartsLegacy) Ar.Position += 8;
-            if (Ar.Game is GAME_VisionsofMana or GAME_ValorantSource) Ar.Position += 4;
+            Ar.Position += Ar.Game switch
+            {
+                GAME_HogwartsLegacy => 8,
+                GAME_VisionsofMana or GAME_ValorantSource => 4,
+                _ => 0
+            };
         }
 
         if (Ar.Game == GAME_Borderlands3)

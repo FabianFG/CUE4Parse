@@ -113,8 +113,12 @@ public sealed class FByteBulkData : TBulkData<byte>
     }
 
     public bool TryCombineBulkData(FAssetArchive Ar, out byte[] combinedData, out FByteBulkData? fullBulkData)
+        => TryCombineBulkData(Ar, out combinedData, out fullBulkData, out _);
+
+    public bool TryCombineBulkData(FAssetArchive Ar, out byte[] combinedData, out FByteBulkData? fullBulkData, out FByteBulkData? remainingBulkData)
     {
         fullBulkData = null;
+        remainingBulkData = null;
         combinedData = [];
         var saved = Ar.Position;
         try
@@ -134,6 +138,7 @@ public sealed class FByteBulkData : TBulkData<byte>
             combinedData = new byte[data.Length + secondChunkData.Length];
             data.CopyTo(combinedData.AsSpan());
             secondChunkData.CopyTo(combinedData.AsSpan(data.Length));
+            remainingBulkData = secondChunk;
             return true;
         }
         catch

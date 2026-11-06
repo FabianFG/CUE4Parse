@@ -34,17 +34,34 @@ namespace CUE4Parse.UE4.IO.Objects
             get => IsOptionalPackagePath(Path);
         }
 
+        public bool IsOptionalSegmentPackage
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => IsPackageData && ChunkId._chunkIndex != 0;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool IsOptionalPackagePath(string path)
+        private static bool IsOptionalPackagePath(string path)
         {
             var extensionSeparator = path.LastIndexOf('.');
-            return extensionSeparator > 1 &&
-                   path.AsSpan(..extensionSeparator).EndsWith(".o", StringComparison.Ordinal);
+            if (extensionSeparator <= 1 || !path.AsSpan(..extensionSeparator).EndsWith(".o", StringComparison.Ordinal))
+                return false;
+
+            var extension = path[(extensionSeparator + 1)..];
+            return UePackageExtensionsSet.Contains(extension) || UePackagePayloadExtensionsSet.Contains(extension);
+        }
+
+        /// <inheritdoc />
+        public override bool IsHidden
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get;
         }
 
         public FIoStoreEntry(IoStoreReader reader, string path, uint tocEntryIndex) : base(reader, path)
         {
             _tocEntryIndex = tocEntryIndex;
+            IsHidden = IsOptionalPackagePath(path);
             ref var offsetLength = ref reader.TocResource.ChunkOffsetLengths[tocEntryIndex];
             Offset = (long) offsetLength.Offset;
             Size = (long) offsetLength.Length;
@@ -54,6 +71,8 @@ namespace CUE4Parse.UE4.IO.Objects
         {
             _tocEntryIndex = tocEntryIndex;
             Path += $"0x{ChunkId.ChunkId:X8}.{ChunkId.GetExtension(reader)}";
+
+            IsHidden = IsOptionalPackagePath(Path);
 
             ref var offsetLength = ref reader.TocResource.ChunkOffsetLengths[tocEntryIndex];
             Offset = (long) offsetLength.Offset;

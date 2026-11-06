@@ -98,7 +98,7 @@ public class ActorXMesh
         }
         ExportExtraUV(lod.ExtraUvs);
 
-        if (Options.ExportMorphTargets && lod.Owner is SkeletalMeshDto { MorphTargets: { Length: > 0 } morphTargets })
+        if (lod.Owner is SkeletalMeshDto { MorphTargets: { Length: > 0 } morphTargets })
         {
             ExportMorphTargets(morphTargets, lod);
         }
@@ -196,7 +196,7 @@ public class ActorXMesh
         Ar.SerializeChunkHeader(matrHdr, "MATT0000");
         for (var i = 0; i < numSections; i++)
         {
-            var materialName = lod.Owner.GetMaterial(lod.Sections[i])?.SlotName ?? $"MaterialSlot_{i}";
+            var materialName = lod.Owner.GetMaterial(lod.Sections[i])?.Name ?? $"MaterialSlot_{i}";
             new VMaterial(materialName, i, 0u, 0, 0u, 0, 0).Serialize(Ar);
         }
 

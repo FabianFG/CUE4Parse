@@ -108,10 +108,8 @@ public class FTextLocalizationResource
 
     private static FTextLocalizationResourceString[] ReadLocResStringArray(FArchive Ar, ELocResVersion versionNumber)
     {
-        if (Ar.Game is GAME_NevernessToEverness or GAME_NevernessToEverness_CBT2 && Ar.Name.StartsWith("HT/Content/Localization/"))
-        {
+        if (Ar.Game is GAME_NevernessToEverness && Ar.Name.StartsWith("HT/Content/Localization/"))
             return FNTEFTextLocalizationResource.ReadLocResStringArray(Ar);
-        }
 
         var localizedStringArrayOffset = Ar.Read<long>();
         if (localizedStringArrayOffset != -1) // INDEX_NONE

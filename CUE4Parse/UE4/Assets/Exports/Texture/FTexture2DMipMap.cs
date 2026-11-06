@@ -34,7 +34,10 @@ public class FTexture2DMipMap
 
     public FTexture2DMipMap(FAssetArchive Ar, bool bSerializeMipData = true)
     {
-        var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < GAME_UE5_0 ? Ar.ReadBoolean() : Ar.IsFilterEditorOnly;
+        var cooked = Ar.Ver >= EUnrealEngineObjectUE4Version.TEXTURE_SOURCE_ART_REFACTOR && Ar.Game < GAME_UE5_0 ||
+                     Ar.Game is GAME_UE5_EA_Legacy or GAME_UE5_EA or GAME_TheMatrixAwakens
+            ? Ar.ReadBoolean()
+            : Ar.IsFilterEditorOnly;
 
         if (bSerializeMipData) BulkData = new FByteBulkData(Ar);
 
