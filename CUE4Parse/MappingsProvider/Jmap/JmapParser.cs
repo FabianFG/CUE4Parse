@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.IO.Compression;
 using System.Text.Json;
 using CUE4Parse.MappingsProvider.Usmap;
+using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.MappingsProvider.Jmap;
@@ -134,7 +136,7 @@ public class JmapParser
             case "ScriptStruct":
                 properties ??= new Dictionary<int, PropertyInfo>();
                 var typeName = name.SubstringAfterLast('.');
-                mappings.Types[typeName] = new Struct(mappings, typeName, superType, properties, properties.Count);
+                mappings.Types[typeName] = new Struct(mappings, typeName, superType, properties, properties.Count, type == "Class");
                 break;
         }
     }
@@ -211,7 +213,7 @@ public class JmapParser
     private PropertyInfo ParsePropertyInfo(ref Utf8JsonReader reader)
     {
         var property = ReadProperty(ref reader);
-        return new PropertyInfo(0, property.Name ?? string.Empty, ToPropertyType(property), property.ArrayDim);
+        return new PropertyInfo(0, property.Name ?? string.Empty, ToPropertyType(property), property.ArrayDim, property.Flags);
     }
 
     private JmapProperty ReadProperty(ref Utf8JsonReader reader)
@@ -252,6 +254,12 @@ public class JmapParser
                 case "value_prop" when reader.TokenType == JsonTokenType.StartObject:
                     property.ValueType = ReadProperty(ref reader);
                     break;
+                case "flags" when reader.TokenType == JsonTokenType.String:
+                    property.Flags = ParseFlags(reader.GetString());
+                    break;
+                case "flags" when reader.TokenType == JsonTokenType.Number:
+                    property.Flags = (EPropertyFlags) reader.GetUInt64();
+                    break;
                 default:
                     reader.Skip();
                     break;
@@ -291,6 +299,29 @@ public class JmapParser
         return new PropertyType(type, property.StructType, innerType, valueType, property.EnumName);
     }
 
+    // jmap writes the flag names joined by " | ", and bits without a name as hex
+    private static EPropertyFlags ParseFlags(string? text)
+    {
+        var flags = EPropertyFlags.None;
+        if (string.IsNullOrEmpty(text))
+            return flags;
+
+        foreach (var part in text.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (part.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                if (ulong.TryParse(part.AsSpan(2), NumberStyles.HexNumber, null, out var bits))
+                    flags |= (EPropertyFlags) bits;
+            }
+            else if (Enum.TryParse<EPropertyFlags>(part.StartsWith("CPF_") ? part[4..] : part, out var flag))
+            {
+                flags |= flag;
+            }
+        }
+
+        return flags;
+    }
+
     private sealed class JmapProperty
     {
         public string? Name;
@@ -300,5 +331,6 @@ public class JmapParser
         public JmapProperty? InnerType;
         public JmapProperty? ValueType;
         public string? EnumName;
+        public EPropertyFlags Flags;
     }
 }
