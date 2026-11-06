@@ -8,6 +8,7 @@ using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.NNE;
 using CUE4Parse.UE4.Assets.Exports.PCG;
 using CUE4Parse.UE4.Objects.ControlRig;
+using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine.VectorField;
 using CUE4Parse.UE4.Objects.PCG;
 using CUE4Parse.UE4.Objects.UObject;
@@ -97,13 +98,42 @@ public class FixtureAdvancedAssetTests
     [Theory]
     [InlineData(FixtureSerialization.Tagged)]
     [InlineData(FixtureSerialization.Unversioned)]
-    public void PcgParamDataDeserializesMetadataDomainHeader(FixtureSerialization serialization)
+    public void PcgParamDataDeserializesTypedMetadata(FixtureSerialization serialization)
     {
         using var provider = CreateMountedIoStoreProvider(serialization);
         var exports = LoadPackageExports(provider,
             "CUE4ParseFixtures/Content/Fixtures/PCG/PCG_Parameters.uasset");
+        var paramData = Assert.Single(exports, export => export.Name == "PCG_Parameters");
         var metadata = Assert.Single(exports.OfType<UPCGMetadata>());
         Assert.Equal(EPCGMetadataDomainFlag.Elements, metadata.ArchiveDefaultDomain?.Flag);
+        var domain = Assert.Single(metadata.MetadataDomains,
+            pair => pair.Key.Flag == EPCGMetadataDomainFlag.Elements).Value;
+        Assert.Equal([-1L, -1L], domain.ParentKeys);
+        Assert.Equal(3, domain.Attributes.Count);
+        Assert.All(domain.Attributes.Values, attribute => Assert.Empty(attribute.Descriptor.ContainerTypes));
+
+        var nameMap = paramData.Get<Dictionary<FName, long>>("NameMap");
+        Assert.Equal(2, nameMap.Count);
+        var firstKey = Assert.Single(nameMap, pair => pair.Key.Text == "FixtureFirst").Value;
+        var secondKey = Assert.Single(nameMap, pair => pair.Key.Text == "FixtureSecond").Value;
+
+        var count = Assert.IsType<FPCGMetadataAttribute<int>>(domain.Attributes[new FName("FixtureCount")]);
+        Assert.Equal(EPCGMetadataTypes.Integer32, count.Descriptor.ValueType);
+        Assert.Equal(-1, count.DefaultValue);
+        Assert.Equal(101, GetPcgValue(count, firstKey));
+        Assert.Equal(202, GetPcgValue(count, secondKey));
+
+        var label = Assert.IsType<FPCGMetadataAttribute<string>>(domain.Attributes[new FName("FixtureLabel")]);
+        Assert.Equal(EPCGMetadataTypes.String, label.Descriptor.ValueType);
+        Assert.Equal("DefaultLabel", label.DefaultValue);
+        Assert.Equal("First parameter row", GetPcgValue(label, firstKey));
+        Assert.Equal("Second parameter row", GetPcgValue(label, secondKey));
+
+        var vector = Assert.IsType<FPCGMetadataAttribute<FVector>>(domain.Attributes[new FName("FixtureVector")]);
+        Assert.Equal(EPCGMetadataTypes.Vector, vector.Descriptor.ValueType);
+        AssertVector(vector.DefaultValue, 0.0f, 0.0f, 0.0f);
+        AssertVector(GetPcgValue(vector, firstKey), 1.25f, -2.5f, 3.75f);
+        AssertVector(GetPcgValue(vector, secondKey), -4.5f, 5.25f, -6.75f);
     }
 
     [Theory]
@@ -164,5 +194,12 @@ public class FixtureAdvancedAssetTests
             (float) BinaryPrimitives.ReadHalfLittleEndian(color[2..]),
             (float) BinaryPrimitives.ReadHalfLittleEndian(color[4..]),
             (float) BinaryPrimitives.ReadHalfLittleEndian(color[6..]));
+    }
+
+    private static T GetPcgValue<T>(FPCGMetadataAttribute<T> attribute, long entryKey)
+    {
+        var valueKey = attribute.EntryToValueKeyMap[entryKey];
+        Assert.InRange(valueKey, 0, attribute.Values.Length - 1);
+        return attribute.Values[valueKey];
     }
 }
