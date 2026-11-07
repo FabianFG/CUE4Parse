@@ -14,6 +14,8 @@
     <PackageReference Include="GenericReader" />
     <PackageReference Include="Infrablack.UE4Config" />
     <PackageReference Include="LZMA-SDK" />
+    <!-- IndexRange via Fmod5Sharp depends on vulnerable 9.0.0; expose the patched package downstream. -->
+    <PackageReference Include="Microsoft.Bcl.Memory" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="OffiUtils" />
     <PackageReference Include="OodleSharp" />
