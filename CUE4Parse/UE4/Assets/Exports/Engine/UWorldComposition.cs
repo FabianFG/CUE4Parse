@@ -75,7 +75,7 @@ public class FWorldTileInfo
     /** Whether to hide sub-level tile in tile view*/
     public bool bHideInTileView;
     /** Parent tile package name */
-    public string ParentTilePackageName;
+    public string? ParentTilePackageName;
     /** LOD information */
     public FWorldTileLODInfo[] LODList;
     /** Sorting order */

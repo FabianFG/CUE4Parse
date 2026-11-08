@@ -15,6 +15,7 @@ namespace CUE4Parse.UE4.Objects.Engine
 
     public class UWorld : Assets.Exports.UObject
     {
+        public FPackageIndex? WorldComposition { get; private set; }
         public FPackageIndex PersistentLevel { get; private set; }
         public FPackageIndex[] ExtraReferencedObjects { get; private set; }
         public FPackageIndex[]? StreamingLevels { get; private set; }
@@ -23,6 +24,9 @@ namespace CUE4Parse.UE4.Objects.Engine
         {
             if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 8;
             base.Deserialize(Ar, validPos);
+
+            WorldComposition = GetOrDefault<FPackageIndex?>(nameof(WorldComposition));
+
             PersistentLevel = new FPackageIndex(Ar);
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.WORLD_PERSISTENT_FACEFXANIMSET && Ar.Game < GAME_UE4_0)
             {
