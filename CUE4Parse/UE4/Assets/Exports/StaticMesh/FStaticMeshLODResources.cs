@@ -210,7 +210,7 @@ public class FStaticMeshLODResources
                 ColorVertexBuffer = new FColorVertexBuffer(Ar);
             }
 
-            if ((int) Ar.LicenseeVer >= 71)
+            if (Ar.LicenseeVer >= 71)
             {
                 new FTRMeshUnkStream(Ar);
             }
@@ -226,8 +226,8 @@ public class FStaticMeshLODResources
             IndexBuffer = new FRawStaticIndexBuffer(Ar);
             WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
-            if ((int) Ar.LicenseeVer >= 58) Ar.Position += sizeof(int);
-            if ((int) Ar.LicenseeVer >= 181) Ar.Position += sizeof(int);
+            if (Ar.LicenseeVer >= 58) Ar.Position += sizeof(int);
+            if (Ar.LicenseeVer >= 181) Ar.Position += sizeof(int);
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_PREFAB_SEQUENCES)
             {
@@ -336,7 +336,7 @@ public class FStaticMeshLODResources
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
-                Ar.SkipBulkArrayData(Ar.Game == GAME_BatmanArkhamAsylum && (int) Ar.LicenseeVer >= 5 ? 8 : 16); // LegacyEdges
+                Ar.SkipBulkArrayData(Ar.Game == GAME_BatmanArkhamAsylum && Ar.LicenseeVer >= 5 ? 8 : 16); // LegacyEdges
                 Ar.SkipArray<byte>(); // LegacyShadowTriangleDoubleSided
             }
 

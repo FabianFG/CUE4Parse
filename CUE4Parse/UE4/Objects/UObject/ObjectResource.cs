@@ -293,7 +293,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 NotForServer = Ar.ReadBoolean();
             }
 
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentMapToExports && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_MAP && !(Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 37))
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedComponentMapToExports && Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_COMPONENT_MAP && !(Ar.Game == GAME_TransformersFallofCybertron && Ar.LicenseeVer >= 37))
             {
                 Ar.ReadMap(Ar.ReadFName, () => new FPackageIndex(Ar)); // LegacyComponentMap
             }
@@ -310,7 +310,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 bStrippedTail = Ar.Read<int>() == 0;
             }
 
-            if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 116)
+            if (Ar.Game == GAME_TransformersFallofCybertron && Ar.LicenseeVer >= 116)
             {
                 bStrippedTail = Ar.Read<byte>() == 0;
             }

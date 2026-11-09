@@ -101,7 +101,7 @@ public readonly struct FByteBulkDataHeader
             OffsetInFile += Ar.Owner.Summary.BulkDataStartOffset;
         }
 
-        if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 128)
+        if (Ar.Game == GAME_TransformersFallofCybertron && Ar.LicenseeVer >= 128)
         {
             Ar.Position += sizeof(int); // BulkDataKey
         }

@@ -248,21 +248,21 @@ namespace CUE4Parse.UE4.Objects.UObject
                 Ar.LicenseeVer = (int) FileVersionLicenseeUE;
             }
 
-            if (Ar.Game == GAME_BioshockInfinite && (int) Ar.LicenseeVer >= 66)
+            if (Ar.Game == GAME_BioshockInfinite && Ar.LicenseeVer >= 66)
             {
                 Ar.Position += sizeof(int);
             }
 
             if (Ar.Game == GAME_TransformersFallofCybertron)
             {
-                if ((int) Ar.LicenseeVer >= 181)
+                if (Ar.LicenseeVer >= 181)
                 {
                     Ar.Position += sizeof(int) * 4;
                     Ar.Ver = FPackageFileVersion.CreateUE3Version(566); // override as it's an old engine
                     FileVersionUE = Ar.Ver;
                 }
 
-                if ((int) Ar.LicenseeVer >= 55) Ar.Read<int>(); // unk8
+                if (Ar.LicenseeVer >= 55) Ar.Read<int>(); // unk8
             }
 
             if (FileVersionUE >= EUnrealEngineObjectUE3Version.MOVED_EXPORTIMPORTMAPS_ADDED_TOTALHEADERSIZE && FileVersionUE < EUnrealEngineObjectUE5Version.PACKAGE_SAVED_HASH)
@@ -575,7 +575,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 assetAr.AbsoluteOffset = NameOffset - (int) Ar.Position;
             }
-            
+
             if (Ar.Game == GAME_SuddenAttack2)
             {
                 Ar.Position += sizeof(int) * 2; // int - count, offset

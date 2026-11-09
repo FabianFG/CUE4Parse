@@ -33,7 +33,7 @@ public class UStaticMesh : UObject
         bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR && Ar.ReadBoolean();
         HasTangents = Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE;
 
-        if (Ar.Game == GAME_TransformersFallofCybertron && (int)Ar.LicenseeVer >= 50)
+        if (Ar.Game == GAME_TransformersFallofCybertron && Ar.LicenseeVer >= 50)
         {
             var bShortCollisionData = Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedShortProperties || Ar.Ver > EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE;
             Ar.SkipBulkArrayData(bShortCollisionData ? 24 + 4 + 4 : 24 + 4 + 8);

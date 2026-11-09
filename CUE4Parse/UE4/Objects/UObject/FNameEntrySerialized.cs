@@ -23,7 +23,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             var bHasNameHashes = Ar.Ver >= EUnrealEngineObjectUE4Version.NAME_HASHES_SERIALIZED || Ar.Game is GAME_GearsOfWar4 or GAME_DaysGone;
 
-            if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 181)
+            if (Ar.Game == GAME_TransformersFallofCybertron && Ar.LicenseeVer >= 181)
             {
                 Name = Ar.ReadFAnsiString();
             }
@@ -52,7 +52,7 @@ namespace CUE4Parse.UE4.Objects.UObject
 
             if (Ar.Game < GAME_UE4_0)
             {
-                _ = (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 181 || Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag)
+                _ = (Ar.Game == GAME_TransformersFallofCybertron && Ar.LicenseeVer >= 181 || Ar.Ver >= EUnrealEngineObjectUE3Version.Use64BitFlag)
                     ? (EObjectFlags)Ar.Read<long>()
                     : Ar.Read<EObjectFlags>(); // flags
             }

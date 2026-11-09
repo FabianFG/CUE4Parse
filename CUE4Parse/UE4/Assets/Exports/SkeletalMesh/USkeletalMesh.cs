@@ -45,7 +45,7 @@ public partial class USkeletalMesh : USkinnedAsset
             Ar.Position += sizeof(float); // float - m_fRadius
         }
 
-        if (Ar.Game == GAME_MirrorEdge && (int) Ar.LicenseeVer >= 15)
+        if (Ar.Game == GAME_MirrorEdge && Ar.LicenseeVer >= 15)
         {
             Ar.Position += sizeof(int);
         }
@@ -60,7 +60,7 @@ public partial class USkeletalMesh : USkinnedAsset
 
         if (Ar.Game < GAME_UE4_0)
         {
-            if (Ar.Game == GAME_BatmanArkhamAsylum && (int) Ar.LicenseeVer >= 15)
+            if (Ar.Game == GAME_BatmanArkhamAsylum && Ar.LicenseeVer >= 15)
             {
                 Ar.Position += sizeof(float); // ConservativeBounds
                 Ar.SkipFixedArray(28); // BoneBounds
@@ -277,7 +277,7 @@ public partial class USkeletalMesh : USkinnedAsset
             }
         }
 
-        if (Ar.Game == GAME_FableAnniversary && (int) Ar.LicenseeVer >= 1007 || Ar.Game == GAME_DevilMayCry)
+        if (Ar.Game == GAME_FableAnniversary && Ar.LicenseeVer >= 1007 || Ar.Game == GAME_DevilMayCry)
         {
             return;
         }
@@ -336,7 +336,7 @@ public partial class USkeletalMesh : USkinnedAsset
 
         if (Ar.Game >= GAME_UE4_0 && bEnablePerPolyCollision)
         {
-            _ = new FPackageIndex(Ar); // BodySetup 
+            _ = new FPackageIndex(Ar); // BodySetup
         }
 
         if (Ar.Game == GAME_OutlastTrials) Ar.Position += 1;

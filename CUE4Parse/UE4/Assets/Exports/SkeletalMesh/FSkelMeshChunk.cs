@@ -54,7 +54,7 @@ public class FSkelMeshChunk
             MaxBoneInfluences = Ar.Read<int>();
         }
 
-        if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 55)
+        if (Ar.Game == GAME_TransformersFallofCybertron && Ar.LicenseeVer >= 55)
         {
             Ar.Position += sizeof(int); // NumTexCoords
         }

@@ -1,6 +1,7 @@
 using CUE4Parse.GameTypes.DeadIsland2.Assets.Objects;
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.GameTypes.MK1.Assets.Objects;
+using CUE4Parse.GameTypes.TransformersFallofCybertron.Objects;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -258,10 +259,10 @@ public class FStaticLODModel
 
         if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
         {
-            Ar.SkipFixedArray(Ar.Game == GAME_BatmanArkhamAsylum && (int) Ar.LicenseeVer >= 5 ? 8 : 16); // Edges
+            Ar.SkipFixedArray(Ar.Game == GAME_BatmanArkhamAsylum && Ar.LicenseeVer >= 5 ? 8 : 16); // Edges
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.BonesAsBytes && Ar.Game < GAME_UE4_0 && !(Ar.Game == GAME_DevilMayCry && (int) Ar.LicenseeVer >= 3))
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.BonesAsBytes && Ar.Game < GAME_UE4_0 && !(Ar.Game == GAME_DevilMayCry && Ar.LicenseeVer >= 3))
         {
             var byteBones = Ar.ReadArray<byte>();
             RequiredBones = new short[byteBones.Length];
@@ -306,7 +307,7 @@ public class FStaticLODModel
             }
         };
 
-        if (Ar.Game == GAME_LifeIsStrange && (int) Ar.LicenseeVer >= 19)
+        if (Ar.Game == GAME_LifeIsStrange && Ar.LicenseeVer >= 19)
         {
             Ar.Position += sizeof(int);
         }
@@ -359,13 +360,13 @@ public class FStaticLODModel
                     }
                 }
 
-                if (Ar.Game == GAME_TransformersFallofCybertron && (int) Ar.LicenseeVer >= 73)
+                if (Ar.Game == GAME_TransformersFallofCybertron && Ar.LicenseeVer >= 73)
                 {
                     AdditionalBuffer = new FTRMeshUnkStream(Ar);
                     return;
                 }
 
-                if (Ar.Game == GAME_MirrorEdge && (int) Ar.LicenseeVer >= 15) return;
+                if (Ar.Game == GAME_MirrorEdge && Ar.LicenseeVer >= 15) return;
 
                 if (bHasVertexColors)
                 {

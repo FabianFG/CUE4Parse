@@ -421,12 +421,12 @@ public class FPositionVertexBuffer
     {
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
-        if ((int) Ar.LicenseeVer >= 17) Ar.Position += sizeof(int);
+        if (Ar.LicenseeVer >= 17) Ar.Position += sizeof(int);
         Verts = Stride == 8
             ? Ar.ReadBulkArray<FVector>(() => Ar.Read<FHalfVector4>())
             : Ar.ReadBulkArray<FVector>();
     }
-    
+
     private void ReadBorderlandsPacked(FArchive Ar)
     {
         Stride = Ar.Read<int>();
@@ -436,7 +436,7 @@ public class FPositionVertexBuffer
         var mins       = Ar.Read<FVector>();
         var extents    = Ar.Read<FVector>();
         if (isPacked == 0) return;
-    
+
         if (vectorType != 0)
         {
             var v = Ar.ReadBulkArray<FVectorShort48>();
