@@ -1,6 +1,4 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
-using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
-using CUE4Parse.GameTypes.TransformersFallofCybertron.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -76,7 +74,7 @@ public class FStaticMeshLODResources
             MaxDeviation = Ar.Read<float>();
         }
 
-        if (Ar.Game is GAME_ThePathless or GAME_ARKSurvivalAscended) Ar.Position += 4;
+        if (Ar.Game is GAME_ThePathless or GAME_ARKSurvivalAscended or GAME_MonsterHunterOutlanders) Ar.Position += 4;
         if (Ar.Game == GAME_NeedForSpeedMobile)
         {
             Ar.SkipFixedArray(36);
@@ -363,7 +361,7 @@ public class FStaticMeshLODResources
     {
         var stripDataFlags = new FStripDataFlags(Ar);
 
-        PositionVertexBuffer = Ar.Game is GAME_GangstarMirageCity ? new FGangstarPositionVertexBuffer(Ar) : new FPositionVertexBuffer(Ar);
+        PositionVertexBuffer = new FPositionVertexBuffer(Ar);
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);
         ColorVertexBuffer = new FColorVertexBuffer(Ar);
 

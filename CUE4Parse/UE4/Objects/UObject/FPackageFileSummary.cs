@@ -245,7 +245,7 @@ namespace CUE4Parse.UE4.Objects.UObject
                 legacyFileVersion &= 0xFFFF;
                 FileVersionUE.FileVersionUE3 = legacyFileVersion;
                 Ar.Ver = FileVersionUE;
-                Ar.LicenseeVer = FileVersionLicenseeUE;
+                Ar.LicenseeVer = (int) FileVersionLicenseeUE;
             }
 
             if (Ar.Game == GAME_BioshockInfinite && (int) Ar.LicenseeVer >= 66)

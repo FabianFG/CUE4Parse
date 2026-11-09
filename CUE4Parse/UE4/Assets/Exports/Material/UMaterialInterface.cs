@@ -171,15 +171,15 @@ public class UMaterialInterface : UUnrealMaterial
         if (numLoadedResources > 0)
         {
             FMaterialResourceProxyReader resourceAr;
-            if (Ar.Game != GAME_Stalker2)
+            if (Ar.Game is GAME_Stalker2)
             {
-                resourceAr = new FMaterialResourceProxyReader(Ar);
+                var ShaderMaps = new FByteBulkData(Ar);
+                using var ShaderMapsAr = new FByteArchive("ShaderMaps", ShaderMaps.Data!, Ar.Versions);
+                resourceAr = new FMaterialResourceProxyReader(ShaderMapsAr);
             }
             else
             {
-                var ShaderMaps = new FByteBulkData(Ar);
-                using var ShaderMapsAr = new FByteArchive("ShaderMaps", ShaderMaps.Data, Ar.Versions);
-                resourceAr = new FMaterialResourceProxyReader(ShaderMapsAr);
+                resourceAr = new FMaterialResourceProxyReader(Ar);
             }
 
             LoadedMaterialResources = new List<FMaterialResource>(numLoadedResources);

@@ -4,7 +4,7 @@ using CUE4Parse_Conversion.Writers.Gltf;
 
 namespace CUE4Parse_Conversion.Formats.Meshes;
 
-public sealed class GltfMeshFormat(ExportSession? session = null) : IMeshExportFormat
+public sealed class GltfMeshFormat(IExportSession? session = null) : IMeshExportFormat
 {
     public string DisplayName => "glTF 2.0 (binary)";
 

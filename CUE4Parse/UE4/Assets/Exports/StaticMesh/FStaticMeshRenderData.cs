@@ -5,7 +5,6 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
-using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -147,36 +146,9 @@ public class FStaticMeshRenderData
         }
 
         Bounds = new FBoxSphereBounds(Ar);
-        switch (Ar.Game)
+        foreach (var lod in LODs)
         {
-            case GAME_GangstarMirageCity:
-            {
-                foreach (var lod in LODs)
-                {
-                    if (lod.PositionVertexBuffer is FGangstarPositionVertexBuffer positions)
-                    {
-                        positions.Decode(Bounds);
-                    }
-                }
-                break;
-            }
-            case GAME_RocoKingdomWorld:
-            {
-                foreach (var lod in LODs)
-                {
-                    if (lod.PositionVertexBuffer != null && lod.PositionVertexBuffer.Stride != 8)
-                        continue;
-                    if (lod.PositionVertexBuffer?.Verts == null)
-                        continue;
-
-                    var verts = lod.PositionVertexBuffer.Verts;
-                    for (var i = 0; i < verts.Length; i++)
-                    {
-                        verts[i] = verts[i] * Bounds.BoxExtent + Bounds.Origin;
-                    }
-                }
-                break;
-            }
+            lod.PositionVertexBuffer?.ApplyBounds(Bounds);
         }
 
         if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
@@ -240,29 +212,6 @@ public class FStaticMeshRenderData
             {
                 var count2 = Ar.Read<byte>();
                 Ar.Position += count2 * 12; // bool, bool, float
-            }
-        }
-
-        if (Ar.Game == GAME_DaysGone)
-        {
-            const float packed64scale = 2.0f / ushort.MaxValue;
-            const float packed32scale = 2.0f / 1024;
-            var offset = Bounds.Origin - Bounds.BoxExtent;
-            var scale = Bounds.BoxExtent;
-            foreach (var lod in LODs)
-            {
-                var perlodscale = lod.PositionVertexBuffer?.Stride switch
-                {
-                    4 => scale * packed32scale,
-                    8 => scale * packed64scale,
-                    12 => scale,
-                    _ => throw new ArgumentOutOfRangeException($"Unknown stride {lod.PositionVertexBuffer?.Stride} for FPositionVertexBuffer")
-                };
-
-                for (var i = 0; i < lod.PositionVertexBuffer.NumVertices; i++)
-                {
-                    lod.PositionVertexBuffer.Verts[i] = lod.PositionVertexBuffer.Verts[i] * perlodscale + offset;
-                }
             }
         }
 

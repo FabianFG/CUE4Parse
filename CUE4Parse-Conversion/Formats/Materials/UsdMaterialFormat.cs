@@ -9,7 +9,7 @@ namespace CUE4Parse_Conversion.Formats.Materials;
 /// <summary>
 /// TODO: support layers (st, st1, st2, etc)
 /// </summary>
-public sealed class UsdMaterialFormat(ExportSession session) : IExportFormat
+public sealed class UsdMaterialFormat(IExportSession session) : IExportFormat
 {
     public string DisplayName => "USD Material (.usda)";
 

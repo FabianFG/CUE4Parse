@@ -8,7 +8,7 @@ using SharpGLTF.Materials;
 namespace CUE4Parse_Conversion.Writers.Gltf;
 
 /// <summary>Builds glTF materials from cached PBR descriptions.</summary>
-internal sealed class GltfMaterialExporter(ExportOptions options, ExportSession session)
+internal sealed class GltfMaterialExporter(ExportOptions options, IExportSession session)
 {
     private readonly GltfMaterialFormat _format = new(options, session);
     private readonly Dictionary<UMaterialInterface, MaterialBuilder> _materials = [];

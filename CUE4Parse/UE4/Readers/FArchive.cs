@@ -29,10 +29,10 @@ namespace CUE4Parse.UE4.Readers
             get => Versions.Ver;
             set => Versions.Ver = value;
         }
-        public EUnrealEngineObjectLicenseeUEVersion LicenseeVer
+        public int LicenseeVer
         {
-            get => Versions.LicenseeVer;
-            set => Versions.LicenseeVer = value;
+            get => (int) Versions.LicenseeVer;
+            set => Versions.LicenseeVer = (EUnrealEngineObjectLicenseeUEVersion) value;
         }
         public ETexturePlatform Platform
         {

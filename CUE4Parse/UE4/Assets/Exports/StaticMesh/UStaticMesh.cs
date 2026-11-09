@@ -332,6 +332,7 @@ public class UStaticMesh : UObject
 
             if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
             {
+                if (Ar.Game is GAME_MonsterHunterOutlanders && !bHasSpeedTreeWind) Ar.Position += 4;
                 // UE4.14+ - "Materials" are deprecated, added StaticMaterials
                 StaticMaterials = bHasSpeedTreeWind ? GetOrDefault("StaticMaterials", Array.Empty<FStaticMaterial>()) : Ar.ReadArray(() => new FStaticMaterial(Ar));
             }
