@@ -240,7 +240,7 @@ public enum EGame : uint
         GAME_DeadzoneRogue = GAME_UE5_5 + 3,
         GAME_Directive8020 = GAME_UE5_5 + 4,
         GAME_Stalker2 = GAME_UE5_5 + 5,
-        GAME_ARKSurvivalAscended = GAME_UE5_5 + 6,
+        GAME_Placeholder7 = GAME_UE5_5 + 6,
         GAME_SleeplessWilds = GAME_UE5_5 + 7,
         GAME_FateTrigger = GAME_UE5_5 + 8,
         GAME_MARVELTokonFightingSouls = GAME_UE5_5 + 9,
@@ -286,6 +286,7 @@ public enum EGame : uint
         GAME_PhantomBladeZero = GAME_UE5_7 + 15,
     GAME_UE5_8 = GameUtils.GameUe5Base + (8 << 16),
         GAME_ConanExilesEnhanced = GAME_UE5_8 + 1,
+        GAME_ARKSurvivalAscended = GAME_UE5_8 + 2,
     GAME_UE5_9 = GameUtils.GameUe5Base + (9 << 16),
 
     GAME_UE5_LATEST = GAME_UE5_9,
