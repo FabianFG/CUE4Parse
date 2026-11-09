@@ -63,6 +63,20 @@ namespace CUE4Parse.UE4.Objects.Core.Math
             A = a;
         }
 
+        public FLinearColor(FColor color)
+        {
+            R = ToLinear(color.R);
+            G = ToLinear(color.G);
+            B = ToLinear(color.B);
+            A = color.A / 255.0f;
+
+            float ToLinear(byte channel)
+            {
+                var value = channel / 255.0f;
+                return value <= 0.04045f ? value / 12.92f : Pow((value + 0.055f) / 1.055f, 2.4f);
+            }
+        }
+
         public override string ToString() => Hex;
 
         public FLinearColor WithAlpha(float alpha) => new(R, G, B, alpha);

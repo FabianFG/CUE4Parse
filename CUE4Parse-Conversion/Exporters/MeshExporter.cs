@@ -1,4 +1,4 @@
-﻿using CUE4Parse_Conversion.Dto;
+using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Formats.Meshes;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports;
@@ -9,6 +9,8 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UObject
 {
+    protected T Mesh { get; } = mesh;
+
     protected abstract IReadOnlyList<ExportFile> BuildFiles(T original, IMeshExportFormat format);
 
     protected virtual IEnumerable<FPackageIndex?> MaterialReferences => [];
@@ -26,7 +28,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
     {
         Log.Debug("Converting mesh to {Format} at {Quality} quality ({NaniteFormat})", Session.Options.MeshFormat, Session.Options.MeshQuality, Session.Options.NaniteMeshFormat);
 
-        return BuildFiles(mesh, GetMeshFormat(Session.Options.MeshFormat));
+        return BuildFiles(Mesh, GetMeshFormat(Session.Options.MeshFormat));
     }
 
     protected Dictionary<string, string>? EnqueueMaterials(params MeshMaterialDto[] materials)
@@ -43,10 +45,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
             if (slot.Material?.TryLoad<UMaterialInterface>(out var material) == true)
             {
                 Session.Add(material);
-                if (paths != null)
-                {
-                    paths[slot.SlotName] = Resolve(material, "usda");
-                }
+                paths?[slot.Name] = Resolve(material, "usda");
             }
         }
 

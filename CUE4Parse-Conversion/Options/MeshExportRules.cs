@@ -10,8 +10,10 @@ public sealed class MeshExportRules(EGame? game, MeshMaterialDto[] materials)
 
     public bool UseDiffuseColor => game is not EGame.GAME_DeadByDaylight;
 
-    public bool ShouldExportSection(MeshSectionDto section)
+    public bool ShouldExportSection(MeshSectionDto section, ExportOptions options)
     {
+        if (options.IncludeDisabledMeshSections)
+            return true;
         if (section.bDisabled)
             return false;
 
@@ -20,6 +22,10 @@ public sealed class MeshExportRules(EGame? game, MeshMaterialDto[] materials)
             return true;
 
         var slot = materials[section.MaterialIndex];
-        return slot.Material is not { IsNull: true } || !slot.SlotName.StartsWith("lambert", StringComparison.OrdinalIgnoreCase);
+        if (slot.Material is not { IsNull: true } || !slot.Name.StartsWith("lambert", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // If there's only lambert sections and nothing else then don't skip
+        return materials.All(material => material.Material is { IsNull: true } && material.Name.StartsWith("lambert", StringComparison.OrdinalIgnoreCase));
     }
 }

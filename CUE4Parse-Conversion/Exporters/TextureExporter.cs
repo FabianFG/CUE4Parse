@@ -1,3 +1,4 @@
+using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse_Conversion.Textures;
 using CUE4Parse.UE4.Objects.UObject;
@@ -61,12 +62,11 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
         {
             ct.ThrowIfCancellationRequested();
 
-            var platform = Session.Options.TexturePlatform;
             CTexture?[]? decoded = texture switch
             {
-                UTexture2DArray array => array.DecodeTextureArray(index, platform),
-                UTextureCube cube => DecodeCube(cube, index, platform),
-                _ => texture.DecodeMip(index, platform) is { } single ? [single] : null
+                UTexture2DArray array => array.DecodeTextureArray(index, Session.Options, ct),
+                UTextureCube cube => DecodeCube(cube, index, Session.Options, ct),
+                _ => texture.DecodeMip(index, Session.Options, cancellationToken: ct) is { } single ? [single] : null
             };
 
             if (decoded is not { Length: > 0 })
@@ -87,7 +87,7 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
                 if (decoded[i] is not { } slice)
                     continue;
 
-                var data = slice.Encode(Session.Options, out var extension);
+                var data = slice.Encode(Session.Options, out var extension, ct);
                 var file = new ExportFile(extension, data, layered ? $"{mipSuffix}_LAYER{i}" : mipSuffix);
                 files.Add(file);
 
@@ -97,10 +97,10 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
                 }
             }
         }
-        CTexture?[]? DecodeCube(UTextureCube cube, int index, ETexturePlatform platform)
+        CTexture?[]? DecodeCube(UTextureCube cube, int mipIndex, ExportOptions options, CancellationToken cancellationToken = default)
         {
             CTexture? LoadFace(FPackageIndex face) =>
-                face?.Load() is UTexture tex ? tex.Decode(platform) : null;
+                face?.Load() is UTexture tex ? tex.Decode(options, cancellationToken) : null;
 
             var faces = new[]
             {
@@ -122,7 +122,7 @@ public sealed class TextureExporter(UTexture texture) : ExporterBase(texture)
                 };
             }
 
-            var fallback = texture.DecodeMip(index, platform)?.ToPanorama();
+            var fallback = texture.DecodeMip(mipIndex, options, cancellationToken: cancellationToken)?.ToPanorama();
             return fallback is not null ? new[] { fallback } : null;
         }
     }
