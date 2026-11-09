@@ -240,7 +240,7 @@ public enum EGame : uint
         GAME_DeadzoneRogue = GAME_UE5_5 + 3,
         GAME_Directive8020 = GAME_UE5_5 + 4,
         GAME_Stalker2 = GAME_UE5_5 + 5,
-        GAME_Placeholder10 = GAME_UE5_5 + 6,
+        GAME_Placeholder7 = GAME_UE5_5 + 6,
         GAME_SleeplessWilds = GAME_UE5_5 + 7,
         GAME_FateTrigger = GAME_UE5_5 + 8,
         GAME_MARVELTokonFightingSouls = GAME_UE5_5 + 9,
