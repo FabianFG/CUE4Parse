@@ -381,7 +381,7 @@ public static partial class ASTCDecoder
         }
 
         Span<int> v = ev;
-        for (int cem = 0; cem < block.PartNum; v = v.Slice((block.Cem[cem] / 4 + 1) * 2, 8), cem++)
+        for (int cem = 0; cem < block.PartNum; v = v[((block.Cem[cem] / 4 + 1) * 2)..], cem++)
         {
             var endpoint = block.Endpoints[cem][..8];
             switch (block.Cem[cem])
