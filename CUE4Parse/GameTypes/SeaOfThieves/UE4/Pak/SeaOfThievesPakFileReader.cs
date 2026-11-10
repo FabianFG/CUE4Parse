@@ -18,8 +18,9 @@ public partial class PakFileReader
         index.Position += 2; // Probably encryption flag and key size
 
         var mountPoint = ReadSeaOfThievesString(index, key);
+        var isRootMount = mountPoint == "../../../";
         ValidateMountPoint(ref mountPoint);
-        if (mountPoint.Length == 0)
+        if (mountPoint.Length == 0 && !isRootMount)
             throw new InvalidAesKeyException($"Given AES key '{AesKey?.KeyString}' did not decrypt '{Name}'");
 
         var fileCount = index.Read<int>();
