@@ -39,7 +39,9 @@ public partial class MeshLodDto<TVertex>
         if (lod.ColorVertexBuffer is { Data.Length: > 0 })
         {
             vertexColors = new FColor[vertices.Length]; // we don't need colors that don't belong to any vertex
-            Array.Copy(lod.ColorVertexBuffer.Data, vertexColors, vertexColors.Length);
+            var count = Math.Min(lod.ColorVertexBuffer.NumVertices, vertices.Length);
+            Array.Copy(lod.ColorVertexBuffer.Data, vertexColors, count);
+            Array.Fill(vertexColors, new FColor(255, 255, 255, 255), count, vertices.Length - count);
         }
 
         for (var i = 0; i < vertices.Length; i++)
