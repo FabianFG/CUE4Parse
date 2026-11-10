@@ -1,6 +1,7 @@
 using CUE4Parse.GameTypes.BorderlandsSequel.Objects;
 using CUE4Parse.GameTypes.SuicideSquad.Objects;
 using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
+using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 using Newtonsoft.Json;
@@ -20,13 +21,6 @@ public class FPositionVertexBuffer
     public FPositionVertexBuffer()
     {
         Verts = [];
-    }
-
-    public FPositionVertexBuffer(FVector[] verts)
-    {
-        Verts = verts;
-        Stride = 12;
-        NumVertices = verts.Length;
     }
 
     public FPositionVertexBuffer(FArchive Ar)
@@ -102,6 +96,22 @@ public class FPositionVertexBuffer
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
         Verts = Ar.ReadBulkArray<FVector>();
+    }
+
+    public static FPositionVertexBuffer FromLegacyVertices(FStaticMeshUVItem[] vertices)
+    {
+        var positions = new FVector[vertices.Length];
+        for (var i = 0; i < vertices.Length; i++)
+        {
+            positions[i] = vertices[i].Position;
+        }
+
+        return new FPositionVertexBuffer
+        {
+            Verts = positions,
+            Stride = 12,
+            NumVertices = positions.Length
+        };
     }
 
     #region Shared
@@ -431,23 +441,31 @@ public class FPositionVertexBuffer
     {
         Stride = Ar.Read<int>();
         NumVertices = Ar.Read<int>();
-        var isPacked   = Ar.Read<byte>();
+        var isPacked = Ar.Read<byte>();
         var vectorType = Ar.Read<byte>();
-        var mins       = Ar.Read<FVector>();
-        var extents    = Ar.Read<FVector>();
-        if (isPacked == 0) return;
+        var mins = Ar.Read<FVector>();
+        var extents = Ar.Read<FVector>();
+
+        if (isPacked == 0)
+            return;
 
         if (vectorType != 0)
         {
             var v = Ar.ReadBulkArray<FVectorShort48>();
             Verts = new FVector[v.Length];
-            for (int i = 0; i < v.Length; i++) Verts[i] = v[i].ToVector(mins, extents);
+            for (int i = 0; i < v.Length; i++)
+            {
+                Verts[i] = v[i].ToVector(mins, extents);
+            }
         }
         else
         {
             var v = Ar.ReadBulkArray<FVectorShort64>();
             Verts = new FVector[v.Length];
-            for (int i = 0; i < v.Length; i++) Verts[i] = v[i].ToVector(mins, extents);
+            for (int i = 0; i < v.Length; i++)
+            {
+                Verts[i] = v[i].ToVector(mins, extents);
+            }
         }
     }
     #endregion

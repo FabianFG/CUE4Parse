@@ -1,5 +1,4 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
-using CUE4Parse.GameTypes.TransformersFallofCybertron.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -12,7 +11,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 [JsonConverter(typeof(FStaticMeshLODResourcesConverter))]
-public class FStaticMeshLODResources
+public partial class FStaticMeshLODResources
 {
     public FStaticMeshSection[] Sections { get; protected set; } = [];
     public FBoxSphereBounds? SourceMeshBounds;
@@ -20,13 +19,13 @@ public class FStaticMeshLODResources
     public float MaxDeviation { get; protected set; }
     public int NumVertices { get; set; }
     public FPositionVertexBuffer? PositionVertexBuffer { get; set; }
-    public FStaticMeshVertexBuffer? VertexBuffer { get; internal set; }
+    public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
     public FColorVertexBuffer? ColorVertexBuffer { get; set; }
-    public FRawStaticIndexBuffer? IndexBuffer { get; internal set; }
+    public FRawStaticIndexBuffer? IndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? ReversedIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? DepthOnlyIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? ReversedDepthOnlyIndexBuffer { get; private set; }
-    public FRawStaticIndexBuffer? WireframeIndexBuffer { get; internal set; }
+    public FRawStaticIndexBuffer? WireframeIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? AdjacencyIndexBuffer { get; private set; }
 
     public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null;
@@ -86,7 +85,15 @@ public class FStaticMeshLODResources
         {
             if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
             {
-                SerializeBuffersLegacy(Ar, stripDataFlags);
+                switch (Ar.Game)
+                {
+                    case GAME_TransformersFallofCybertron:
+                        SerializeTransformersFallofCybertronBuffersLegacy(Ar);
+                        break;
+                    default:
+                        SerializeBuffersLegacy(Ar, stripDataFlags);
+                        break;
+                }
             }
 
             return;
@@ -200,12 +207,6 @@ public class FStaticMeshLODResources
     // Pre-UE4.23 code
     public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
     {
-        if (Ar.Game == GAME_TransformersFallofCybertron)
-        {
-            FTRStaticMeshLODResources.SerializeBuffersLegacy(Ar, this);
-            return;
-        }
-
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE)
         {
             if (Ar.Game is GAME_Abzu) Ar.Position += 4;
@@ -219,13 +220,7 @@ public class FStaticMeshLODResources
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS)
             {
-                var verticesCount = VertexBuffer.NumVertices;
-                var positions = new FVector[verticesCount];
-                for (var i = 0; i < verticesCount; i++)
-                {
-                    positions[i] = VertexBuffer.UV[i].Position;
-                }
-                PositionVertexBuffer = new FPositionVertexBuffer(positions);
+                PositionVertexBuffer = FPositionVertexBuffer.FromLegacyVertices(VertexBuffer.UV);
             }
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS || Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS && Ar.Ver < EUnrealEngineObjectUE3Version.MovedColorFromUVItem) goto skipStreams;

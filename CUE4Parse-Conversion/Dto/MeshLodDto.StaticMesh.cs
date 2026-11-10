@@ -17,7 +17,7 @@ public partial class MeshLodDto<TVertex>
         var positionBuffer = lod.PositionVertexBuffer;
 
         var extraUvs = new FMeshUVFloat[Math.Max(0, lod.VertexBuffer.NumTexCoords - 1)][];
-        var vertices = new MeshVertex[positionBuffer!.Verts.Length];
+        var vertices = new MeshVertex[positionBuffer.Verts.Length];
 
         for (var i = 0; i < extraUvs.Length; i++)
         {

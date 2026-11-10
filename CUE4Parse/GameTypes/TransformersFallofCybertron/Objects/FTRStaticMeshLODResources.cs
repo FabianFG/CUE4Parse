@@ -1,20 +1,20 @@
-using CUE4Parse.UE4.Assets.Exports.StaticMesh;
+using CUE4Parse.GameTypes.TransformersFallofCybertron.Objects;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
 
-namespace CUE4Parse.GameTypes.TransformersFallofCybertron.Objects;
+namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
-public static class FTRStaticMeshLODResources
+public partial class FStaticMeshLODResources
 {
-    public static void SerializeBuffersLegacy(FArchive Ar, FStaticMeshLODResources lod)
+    public void SerializeTransformersFallofCybertronBuffersLegacy(FArchive Ar)
     {
-        lod.PositionVertexBuffer = new FPositionVertexBuffer(Ar);
-        lod.VertexBuffer = new FStaticMeshVertexBuffer(Ar);
+        PositionVertexBuffer = new FPositionVertexBuffer(Ar);
+        VertexBuffer = new FStaticMeshVertexBuffer(Ar);
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDITIONAL_COOK_PACKAGE_SUMMARY)
         {
-            lod.ColorVertexBuffer = new FColorVertexBuffer(Ar);
+            ColorVertexBuffer = new FColorVertexBuffer(Ar);
         }
 
         if (Ar.LicenseeVer >= 71)
@@ -29,9 +29,9 @@ public static class FTRStaticMeshLODResources
             if (Ar.Read<int>() > 0) Ar.SkipBulkArrayData(sizeof(float)); // NumVertices, VertexData
         }
 
-        lod.NumVertices = Ar.Read<int>();
-        lod.IndexBuffer = new FRawStaticIndexBuffer(Ar);
-        lod.WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
+        NumVertices = Ar.Read<int>();
+        IndexBuffer = new FRawStaticIndexBuffer(Ar);
+        WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
         if (Ar.LicenseeVer >= 58) Ar.Position += sizeof(int);
         if (Ar.LicenseeVer >= 181) Ar.Position += sizeof(int);
