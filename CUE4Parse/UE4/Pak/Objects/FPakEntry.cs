@@ -80,9 +80,10 @@ public class FPakEntry : VfsEntry
             {
                 COMPRESS_None => 0,
                 (ECompressionFlags) 259 => 4, // SOD2
+                (ECompressionFlags) 0x408 when reader.Game is GAME_SeaOfThieves => 3, // Oodle
                 _ when legacyCompressionMethod.HasFlag(COMPRESS_ZLIB) => 1,
                 _ when legacyCompressionMethod.HasFlag(COMPRESS_GZIP) => 2,
-                _ when legacyCompressionMethod.HasFlag(COMPRESS_Custom) => reader.Game == GAME_SeaOfThieves ? 4 : 3, // LZ4 or Oodle, used by Fortnite Mobile until early 2019
+                _ when legacyCompressionMethod.HasFlag(COMPRESS_Custom) => reader.Game is GAME_SeaOfThieves ? 4 : 3, // LZ4 or Oodle, used by Fortnite Mobile until early 2019
                 _ => reader.Game switch
                 {
                     GAME_PlayerUnknownsBattlegrounds or GAME_Ashen or GAME_WhatRemainsofEdithFinch => 3, // TODO: Investigate what a proper detection is.
@@ -113,6 +114,11 @@ public class FPakEntry : VfsEntry
 
             switch (Ar.Game)
             {
+                case GAME_SeaOfThieves when reader.Info.Version is PakFile_Version_IndexEncryption:
+                    Flags = Ar.Read<byte>();
+                    Ar.Position++;
+                    CompressionBlockSize = Ar.Read<uint>();
+                    break;
                 case GAME_Back4Blood:
                     CompressionBlockSize = Ar.Read<uint>();
                     Flags = Ar.Read<byte>();
