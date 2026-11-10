@@ -174,7 +174,6 @@ public class ULODSyncComponent : UActorComponent;
 public class ULandscapeGizmoRenderComponent : UPrimitiveComponent;
 public class ULandscapeMeshCollisionComponent : ULandscapeHeightfieldCollisionComponent;
 public class ULandscapeMeshProxyComponent : UStaticMeshComponent;
-public class ULandscapeNaniteComponent : UStaticMeshComponent;
 public class ULevelInstanceComponent : USceneComponent;
 public class ULightmassPortalComponent : USceneComponent;
 public class ULineBatchComponent : UPrimitiveComponent;
