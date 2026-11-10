@@ -331,7 +331,7 @@ public class FStaticMeshLODResources
             {
                 Ar.Position += 8; // bulkdata
             }
-            else if (!stripDataFlags.IsEditorDataStripped() && Ar.Game != GAME_Borderlands2 && Ar.Game != GAME_BorderlandsSequel)
+            else if (!stripDataFlags.IsEditorDataStripped() && Ar.Game is not (GAME_Borderlands2 or GAME_BorderlandsSequel))
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
