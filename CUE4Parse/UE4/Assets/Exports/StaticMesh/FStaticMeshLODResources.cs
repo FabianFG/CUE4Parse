@@ -1,4 +1,5 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
+using CUE4Parse.GameTypes.TransformersFallofCybertron.Objects;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -19,17 +20,16 @@ public class FStaticMeshLODResources
     public float MaxDeviation { get; protected set; }
     public int NumVertices { get; set; }
     public FPositionVertexBuffer? PositionVertexBuffer { get; set; }
-    public FStaticMeshVertexBuffer? VertexBuffer { get; private set; }
+    public FStaticMeshVertexBuffer? VertexBuffer { get; internal set; }
     public FColorVertexBuffer? ColorVertexBuffer { get; set; }
-    public FRawStaticIndexBuffer? IndexBuffer { get; private set; }
+    public FRawStaticIndexBuffer? IndexBuffer { get; internal set; }
     public FRawStaticIndexBuffer? ReversedIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? DepthOnlyIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? ReversedDepthOnlyIndexBuffer { get; private set; }
-    public FRawStaticIndexBuffer? WireframeIndexBuffer { get; private set; }
+    public FRawStaticIndexBuffer? WireframeIndexBuffer { get; internal set; }
     public FRawStaticIndexBuffer? AdjacencyIndexBuffer { get; private set; }
 
-    public bool bisPositionBufferNormal = true;
-    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null || bisPositionBufferNormal && PositionVertexBuffer == null;
+    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null;
 
     public enum EClassDataStripFlag : byte
     {
@@ -202,38 +202,8 @@ public class FStaticMeshLODResources
     {
         if (Ar.Game == GAME_TransformersFallofCybertron)
         {
-            PositionVertexBuffer = new FPositionVertexBuffer(Ar);
-            VertexBuffer = new FStaticMeshVertexBuffer(Ar);
-
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDITIONAL_COOK_PACKAGE_SUMMARY)
-            {
-                ColorVertexBuffer = new FColorVertexBuffer(Ar);
-            }
-
-            if (Ar.LicenseeVer >= 71)
-            {
-                new FTRMeshUnkStream(Ar);
-            }
-
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_PREFAB_SEQUENCES) // 536
-            {
-                // FStaticMeshShadowVolumeStream - ShadowExtrusionVertexBuffer (FColorVertexBuffer but uses floats)
-                Ar.Position += sizeof(int); // int - Stride
-                if (Ar.Read<int>() > 0) Ar.SkipBulkArrayData(sizeof(float)); // NumVertices, VertexData
-            }
-
-            NumVertices = Ar.Read<int>();
-            IndexBuffer = new FRawStaticIndexBuffer(Ar);
-            WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
-
-            if (Ar.LicenseeVer >= 58) Ar.Position += sizeof(int);
-            if (Ar.LicenseeVer >= 181) Ar.Position += sizeof(int);
-
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_PREFAB_SEQUENCES)
-            {
-                Ar.SkipBulkArrayData(16); // Edges
-                Ar.SkipArray<byte>();
-            }
+            FTRStaticMeshLODResources.SerializeBuffersLegacy(Ar, this);
+            return;
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE)
@@ -244,11 +214,20 @@ public class FStaticMeshLODResources
             {
                 PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             }
-            else
-            {
-                bisPositionBufferNormal = false;
-            }
+
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS)
+            {
+                var verticesCount = VertexBuffer.NumVertices;
+                var positions = new FVector[verticesCount];
+                for (var i = 0; i < verticesCount; i++)
+                {
+                    positions[i] = VertexBuffer.UV[i].Position;
+                }
+                PositionVertexBuffer = new FPositionVertexBuffer(positions);
+            }
+
             if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS || Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS && Ar.Ver < EUnrealEngineObjectUE3Version.MovedColorFromUVItem) goto skipStreams;
 
             if (Ar.Game == GAME_Borderlands3)

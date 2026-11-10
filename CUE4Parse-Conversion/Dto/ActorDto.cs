@@ -40,7 +40,9 @@ public class ActorDto : ObjectDto
 
         if (actor.Game < EGame.GAME_UE4_0)
         {
-            var DrawScale = actor.GetOrDefault("DrawScale", 1.0f);
+            var drawScale = actor.GetOrDefault("DrawScale", 1.0f);
+
+            if (actor.TryGetValue(out FRotator rotation, "Rotation")) Rotation = rotation;
 
             var location = actor.GetOrDefault(
                 "Location",
@@ -49,23 +51,14 @@ public class ActorDto : ObjectDto
                     actor.GetOrDefault("Translation", FVector.ZeroVector)));
 
             var prePivot = actor.GetOrDefault("PrePivot", FVector.ZeroVector);
+            var scale = actor.GetOrDefault("DrawScale3D", FVector.OneVector) * drawScale;
 
-            Location = location - prePivot;
+            Scale = scale;
+            Location = location - rotation.RotateVector(prePivot * scale);
 
-            if (actor.TryGetValue(out FRotator rotation, "Rotation"))
+            if (RootComponent is { } root)
             {
-                Rotation = rotation;
-            }
-
-            Scale = actor.GetOrDefault("DrawScale3D", FVector.OneVector * DrawScale);
-
-            if (RootComponent is { } root && Location is { } loc)
-            {
-                var transform = root.Transform;
-                transform.Translation = loc;
-                if (Rotation is { } rot) transform.Rotation = rot.Quaternion();
-                if (Scale is { } scale) transform.Scale3D = scale;
-                root.Transform = transform;
+                root.Transform *= new FTransform(rotation.Quaternion(), Location.Value, scale);
             }
         }
 

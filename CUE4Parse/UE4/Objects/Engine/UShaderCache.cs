@@ -214,6 +214,7 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             if (Ar.Game == GAME_BorderlandsSequel)
             {
+                Log.Debug("Skipped ShaderCache due to unsupported custom changes");
                 ShaderCache = new FShaderCache { Shaders = [] }; // alot of changes so just ignore
                 return;
             }

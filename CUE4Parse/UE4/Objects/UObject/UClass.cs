@@ -51,7 +51,7 @@ public class UClass : UStruct
             Ar.Read<int>(); // classRecordSize
         }
 
-        if (Ar.Game < GAME_UE4_0) return; // needs stuff
+        if (Ar.Game < GAME_UE4_0) return; // unsupported UE3 changes
 
         if (Ar.Game == GAME_AWayOut) Ar.Position += 4;
 

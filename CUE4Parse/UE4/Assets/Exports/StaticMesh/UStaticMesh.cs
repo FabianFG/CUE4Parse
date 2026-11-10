@@ -38,20 +38,17 @@ public class UStaticMesh : UObject
             var bShortCollisionData = Ar.Ver < EUnrealEngineObjectUE3Version.DeprecatedShortProperties || Ar.Ver > EUnrealEngineObjectUE3Version.CLEANUP_SOUNDNODEWAVE;
             Ar.SkipBulkArrayData(bShortCollisionData ? 24 + 4 + 4 : 24 + 4 + 8);
             Ar.SkipBulkArrayData(bShortCollisionData ? 8 : 16);
+
             RenderData = new FStaticMeshRenderData(Ar); // needs bounds hm
 
-            StaticMaterials = new FStaticMaterial[RenderData.LODs[0].Sections.Length];
-            for (var i = 0; i < RenderData.LODs[0].Sections.Length; i++)
+            var sections = RenderData.LODs[0].Sections;
+            StaticMaterials = new FStaticMaterial[sections.Length];
+            Materials = new FPackageIndex?[sections.Length];
+            for (var i = 0; i < sections.Length; i++)
             {
-                StaticMaterials[i] = new FStaticMaterial(RenderData.LODs[0].Sections[i].Material!);
-            }
-
-            Materials = new FPackageIndex?[StaticMaterials.Length];
-            for (var i = 0; i < Materials.Length; i++)
-            {
+                StaticMaterials[i] = new FStaticMaterial(sections[i].Material!);
                 Materials[i] = StaticMaterials[i].MaterialInterface;
             }
-
             return;
         }
 
