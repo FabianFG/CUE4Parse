@@ -53,6 +53,8 @@ jobs:
         run: dotnet restore
 
       - name: Build
+        env:
+          SixLaborsLicenseKey: ${{ secrets.SIXLABORS_LICENSE_KEY }}
         run: dotnet build -c Release --no-restore
 
       - name: Pack NuGet Package(s)
