@@ -10,7 +10,15 @@ public class FPCGMetadataDomain
 
     public FPCGMetadataDomain(FAssetArchive Ar)
     {
-        Attributes = Ar.ReadMap(Ar.ReadFName, () => FPCGMetadataAttributeBase.ReadPCGMetadataAttribute(Ar));
+        var attributeCount = Ar.Read<int>();
+        Attributes = new Dictionary<FName, FPCGMetadataAttributeBase>(attributeCount);
+        for (var i = 0; i < attributeCount; i++)
+        {
+            var attributeName = Ar.ReadFName();
+            // UE keys attributes by name, so a repeated name replaces the earlier one
+            Attributes[attributeName] = FPCGMetadataAttributeBase.ReadPCGMetadataAttribute(Ar, attributeName);
+        }
+
         ParentKeys = Ar.ReadArray<long>();
     }
 }
