@@ -11,7 +11,9 @@ namespace CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 public sealed partial class Aion2DatFileEncryption
 {
     private const ulong HeaderXorConstant = 0xCD02190910CE83F6;
-    private static readonly ulong _headerKeyRoot = Blake3Hash(HeaderXorConstant);
+    private static ulong _headerKeyRoot = Blake3Hash(HeaderXorConstant);
+    private static ulong _headerPermutationRoot;
+    private static bool _useHeaderPermutation;
 
     public static Dictionary<ulong, FAesKey> AesKeys = [];
     private static readonly Lock _instanceLock = new();
@@ -29,12 +31,29 @@ public sealed partial class Aion2DatFileEncryption
             var manifestFile = new FAion2KeyManifestFile(keyManifest);
             lock (_instanceLock)
             {
+                if (manifestFile.VersionContext is { } context)
+                {
+                    Span<byte> input = stackalloc byte[40];
+                    BinaryPrimitives.WriteUInt64LittleEndian(input, HeaderXorConstant);
+                    context.CopyTo(input[8..]);
+                    _headerPermutationRoot = Blake3Hash(input);
+                    _headerKeyRoot = Blake3Hash(_headerPermutationRoot);
+                    _useHeaderPermutation = true;
+                }
+                else
+                {
+                    _headerPermutationRoot = 0;
+                    _headerKeyRoot = Blake3Hash(HeaderXorConstant);
+                    _useHeaderPermutation = false;
+                }
+
                 AesKeys = manifestFile.AesKeys;
             }
         }
-        catch
+        catch (Exception e)
         {
-            Log.Error("Failed to read key_manifest.dat");
+            Log.Error(e, "Failed to read key_manifest.dat");
+            throw;
         }
     }
 
@@ -64,6 +83,13 @@ public sealed partial class Aion2DatFileEncryption
         BinaryPrimitives.WriteUInt64LittleEndian(input, value);
         using var hasher = Hasher.New();
         hasher.Update(input);
+        return BinaryPrimitives.ReadUInt64LittleEndian(hasher.Finalize().AsSpan());
+    }
+
+    private static ulong Blake3Hash(ReadOnlySpan<byte> value)
+    {
+        using var hasher = Hasher.New();
+        hasher.Update(value);
         return BinaryPrimitives.ReadUInt64LittleEndian(hasher.Finalize().AsSpan());
     }
 

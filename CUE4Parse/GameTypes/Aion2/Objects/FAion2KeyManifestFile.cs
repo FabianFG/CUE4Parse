@@ -1,3 +1,4 @@
+using System.Text;
 using Blake3;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider.Objects;
@@ -10,6 +11,7 @@ namespace CUE4Parse.GameTypes.Aion2.Objects;
 [JsonConverter(typeof(FAion2KeyManifestFileConverter))]
 public class FAion2KeyManifestFile
 {
+    private const string VersionedAppVersion = "2.0.11";
     private static readonly byte[] _manifestHashKey =
     [
         0xeb, 0x0b, 0xc0, 0x97, 0x28, 0x47, 0x5a, 0xb5,
@@ -19,21 +21,46 @@ public class FAion2KeyManifestFile
     ];
 
     public Dictionary<ulong, FAesKey> AesKeys = [];
+    internal byte[]? VersionContext { get; private set; }
     private const int PayloadOffset = 8;
 
     public FAion2KeyManifestFile(GameFile file)
     {
         var data = file.SafeRead() ?? throw new ParserException("Unable to read key_manifest.dat");
 
-        if (data.Length < 8 || (data.Length - 8) % 0x30 != 0)
+        if (data.Length < PayloadOffset + 0x30 || (data.Length - PayloadOffset) % 0x30 != 0)
             throw new ParserException("Invalid AION2 key_manifest.dat header");
 
         var count = (data.Length - PayloadOffset) / 0x30;
 
-        using var hasher = Hasher.New();
-        hasher.Update(_manifestHashKey);
-        var manifestKey = new FAesKey(hasher.Finalize().AsSpan().ToArray());
-        var decrypted = data.Decrypt(PayloadOffset, count * 0x30, manifestKey);
+        byte[]? decrypted = null;
+        // The 2.0.11 client salts the manifest key with its AppVersion. Earlier
+        // manifests use the unsalted material; each record ends in eight zero bytes.
+        foreach (var version in new string?[] { VersionedAppVersion, null })
+        {
+            byte[]? context = null;
+            if (version is not null)
+            {
+                using var contextHasher = Hasher.New();
+                contextHasher.Update(Encoding.UTF8.GetBytes("AION2.TableKey.AppVersion" + version));
+                context = contextHasher.Finalize().AsSpan().ToArray();
+            }
+
+            using var hasher = Hasher.New();
+            hasher.Update(_manifestHashKey);
+            if (context is not null) hasher.Update(context);
+            var manifestKey = new FAesKey(hasher.Finalize().AsSpan().ToArray());
+            var candidate = data.Decrypt(PayloadOffset, count * 0x30, manifestKey);
+            if (!HasValidRecordTails(candidate)) continue;
+
+            VersionContext = context;
+            decrypted = candidate;
+            break;
+        }
+
+        if (decrypted is null)
+            throw new ParserException("Unsupported AION2 key_manifest.dat encryption version");
+
         using var decryptedAr = new GenericBufferReader(decrypted);
         AesKeys = new Dictionary<ulong, FAesKey>(count);
         for (var i = 0; i < count; i++)
@@ -43,6 +70,16 @@ public class FAion2KeyManifestFile
             decryptedAr.Position += 8;
             AesKeys[seed] = new FAesKey(key);
         }
+    }
+
+    private static bool HasValidRecordTails(byte[] records)
+    {
+        for (var offset = 40; offset < records.Length; offset += 0x30)
+        {
+            if (BitConverter.ToUInt64(records, offset) != 0) return false;
+        }
+
+        return true;
     }
 }
 
