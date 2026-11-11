@@ -11,7 +11,7 @@ namespace CUE4Parse.GameTypes.Aion2.Objects;
 [JsonConverter(typeof(FAion2KeyManifestFileConverter))]
 public class FAion2KeyManifestFile
 {
-    private const string VersionedAppVersion = "2.0.11";
+    private static readonly byte[] _versionContextPrefix = Encoding.ASCII.GetBytes("AION2.TableKey.AppVersion");
     private static readonly byte[] _manifestHashKey =
     [
         0xeb, 0x0b, 0xc0, 0x97, 0x28, 0x47, 0x5a, 0xb5,
@@ -33,33 +33,23 @@ public class FAion2KeyManifestFile
 
         var count = (data.Length - PayloadOffset) / 0x30;
 
-        byte[]? decrypted = null;
-        // The 2.0.11 client salts the manifest key with its AppVersion. Earlier
-        // manifests use the unsalted material; each record ends in eight zero bytes.
-        foreach (var version in new string?[] { VersionedAppVersion, null })
+        using var legacyHasher = Hasher.New();
+        legacyHasher.Update(_manifestHashKey);
+        var legacyKey = new FAesKey(legacyHasher.Finalize().AsSpan().ToArray());
+        var legacyRecords = data.Decrypt(PayloadOffset, count * 0x30, legacyKey);
+        byte[]? decrypted;
+        if (HasValidRecordTails(legacyRecords))
         {
-            byte[]? context = null;
-            if (version is not null)
-            {
-                using var contextHasher = Hasher.New();
-                contextHasher.Update(Encoding.UTF8.GetBytes("AION2.TableKey.AppVersion" + version));
-                context = contextHasher.Finalize().AsSpan().ToArray();
-            }
-
-            using var hasher = Hasher.New();
-            hasher.Update(_manifestHashKey);
-            if (context is not null) hasher.Update(context);
-            var manifestKey = new FAesKey(hasher.Finalize().AsSpan().ToArray());
-            var candidate = data.Decrypt(PayloadOffset, count * 0x30, manifestKey);
-            if (!HasValidRecordTails(candidate)) continue;
-
+            decrypted = legacyRecords;
+        }
+        else
+        {
+            (decrypted, var context) = FindVersionedRecords(data, count);
             VersionContext = context;
-            decrypted = candidate;
-            break;
         }
 
         if (decrypted is null)
-            throw new ParserException("Unsupported AION2 key_manifest.dat encryption version");
+            throw new ParserException("Unable to derive AION2 key_manifest.dat key from the supported AppVersion range");
 
         using var decryptedAr = new GenericBufferReader(decrypted);
         AesKeys = new Dictionary<ulong, FAesKey>(count);
@@ -70,6 +60,38 @@ public class FAion2KeyManifestFile
             decryptedAr.Position += 8;
             AesKeys[seed] = new FAesKey(key);
         }
+    }
+
+    private static (byte[]? Records, byte[]? Context) FindVersionedRecords(byte[] data, int count)
+    {
+        // AppVersion is absent from the manifest. Search numeric X.Y.Z versions;
+        // the reserved zero tail in every decrypted record identifies the key.
+        for (var major = 0; major < 10; major++)
+        {
+            for (var minor = 0; minor < 10; minor++)
+            {
+                for (var patch = 0; patch < 1000; patch++)
+                {
+                    var version = FormattableString.Invariant($"{major}.{minor}.{patch}");
+                    using var contextHasher = Hasher.New();
+                    contextHasher.Update(_versionContextPrefix);
+                    contextHasher.Update(Encoding.ASCII.GetBytes(version));
+                    var context = contextHasher.Finalize().AsSpan().ToArray();
+
+                    using var keyHasher = Hasher.New();
+                    keyHasher.Update(_manifestHashKey);
+                    keyHasher.Update(context);
+                    var key = new FAesKey(keyHasher.Finalize().AsSpan().ToArray());
+                    var firstRecord = data.Decrypt(PayloadOffset, 0x30, key);
+                    if (BitConverter.ToUInt64(firstRecord, 40) != 0) continue;
+
+                    var records = data.Decrypt(PayloadOffset, count * 0x30, key);
+                    if (HasValidRecordTails(records)) return (records, context);
+                }
+            }
+        }
+
+        return (null, null);
     }
 
     private static bool HasValidRecordTails(byte[] records)
