@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.GameTypes.Aion2.Objects;
@@ -21,6 +22,9 @@ public sealed partial class Aion2DatFileEncryption
         var header = new FL10NHeader(Ar, seed);
         if (header.EncryptionType != EEncryptionType.CompressedAES)
             throw new ParserException($"Unsupported AION2 L10N encryption type '{header.EncryptionType}'");
+        if (header.AlignedSize <= 0 || header.AlignedSize > Ar.Length - Ar.Position ||
+            header.PackedSize <= 0 || header.PackedSize > header.AlignedSize - 0x20 || header.RawSize <= 0)
+            throw new ParserException("Invalid AION2 L10N payload sizes");
         if (!AesKeys.TryGetValue(seed, out var key))
             throw new ParserException("AION2 L10N encryption key not found in manifest");
 
@@ -59,10 +63,37 @@ public sealed partial class Aion2DatFileEncryption
             FAion2DatFileArchive.DecryptData(data, DeriveHeaderKey(seed, EHeaderType.Localization));
 
             using var headerAr = new GenericBufferReader(data);
-            PackedSize = headerAr.Read<int>();
-            EncryptionType = headerAr.Read<EEncryptionType>();
-            AlignedSize = headerAr.Read<int>();
-            RawSize = headerAr.Read<int>();
+            if (!_useHeaderPermutation)
+            {
+                PackedSize = headerAr.Read<int>();
+                EncryptionType = headerAr.Read<EEncryptionType>();
+                AlignedSize = headerAr.Read<int>();
+                RawSize = headerAr.Read<int>();
+            }
+            else
+            {
+                // The versioned client shuffles the four serialized fields using
+                // BLAKE3(root || 0x51) before applying the header XOR stream.
+                Span<byte> permutation = stackalloc byte[] { 0, 1, 2, 3 };
+                Span<byte> input = stackalloc byte[12];
+                BinaryPrimitives.WriteUInt64LittleEndian(input, _headerPermutationRoot);
+                BinaryPrimitives.WriteInt32LittleEndian(input[8..], 0x51);
+                using var hasher = Blake3.Hasher.New();
+                hasher.Update(input);
+                var shuffle = hasher.Finalize().AsSpan();
+                for (var i = 3; i > 0; i--)
+                {
+                    var other = shuffle[3 - i] % (i + 1);
+                    (permutation[i], permutation[other]) = (permutation[other], permutation[i]);
+                }
+
+                Span<int> fields = stackalloc int[4];
+                for (var i = 0; i < 4; i++) fields[permutation[i]] = headerAr.Read<int>();
+                EncryptionType = (EEncryptionType) fields[0];
+                RawSize = fields[1];
+                PackedSize = fields[2];
+                AlignedSize = fields[3];
+            }
         }
     }
 }
