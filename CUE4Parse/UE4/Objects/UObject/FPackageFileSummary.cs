@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -346,6 +345,8 @@ namespace CUE4Parse.UE4.Objects.UObject
                 ExportGuidsCount = Ar.Read<int>();
             }
 
+            if (Ar.Game is GAME_DaysGone && PackageFlags.HasFlag(EPackageFlags.PKG_UncookedOnly)) Ar.Position += 4;
+
             if (FileVersionUE >= EUnrealEngineObjectUE3Version.ASSET_THUMBNAILS_IN_PACKAGES)
             {
                 ThumbnailTableOffset = Ar.Read<int>();
@@ -545,7 +546,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             {
                 assetAr.AbsoluteOffset = NameOffset - (int) Ar.Position;
             }
-            
+
             if (Ar.Game == GAME_SuddenAttack2)
             {
                 Ar.Position += sizeof(int) * 2; // int - count, offset
