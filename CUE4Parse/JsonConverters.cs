@@ -2078,8 +2078,16 @@ public class FStaticMeshSectionConverter : JsonConverter<FStaticMeshSection>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("MaterialIndex");
-        writer.WriteValue(value.MaterialIndex);
+        if (!value.Material?.IsNull ?? false)
+        {
+            writer.WritePropertyName("Material");
+            serializer.Serialize(writer, value.Material);
+        }
+        else
+        {
+            writer.WritePropertyName("MaterialIndex");
+            writer.WriteValue(value.MaterialIndex);
+        }
 
         writer.WritePropertyName("FirstIndex");
         writer.WriteValue(value.FirstIndex);
