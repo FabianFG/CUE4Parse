@@ -127,11 +127,11 @@ public static class PixelFormatUtils
         { EPixelFormat.PF_P010,               new(EPixelFormat.PF_P010,               "P010",                   1,          1,          1,          2,            1,                false) },
 
         // ASTC high precision NormalRG support
-        { EPixelFormat.PF_ASTC_4x4_NORM_RG,   new(EPixelFormat.PF_ASTC_4x4_NORM_RG,   "ASTC_4x4_NORM_RG",       4,          4,          1,          16,           2,                false) },
-        { EPixelFormat.PF_ASTC_6x6_NORM_RG,   new(EPixelFormat.PF_ASTC_6x6_NORM_RG,   "ASTC_6x6_NORM_RG",       6,          6,          1,          16,           2,                false) },
-        { EPixelFormat.PF_ASTC_8x8_NORM_RG,   new(EPixelFormat.PF_ASTC_8x8_NORM_RG,   "ASTC_8x8_NORM_RG",       8,          8,          1,          16,           2,                false) },
-        { EPixelFormat.PF_ASTC_10x10_NORM_RG, new(EPixelFormat.PF_ASTC_10x10_NORM_RG, "ASTC_10x10_NORM_RG",     10,         10,         1,          16,           2,                false) },
-        { EPixelFormat.PF_ASTC_12x12_NORM_RG, new(EPixelFormat.PF_ASTC_12x12_NORM_RG, "ASTC_12x12_NORM_RG",     12,         12,         1,          16,           2,                false) },
+        { EPixelFormat.PF_ASTC_4x4_NORM_RG,   new(EPixelFormat.PF_ASTC_4x4_NORM_RG,   "ASTC_4x4_NORM_RG",       4,          4,          1,          16,           2,                true) },
+        { EPixelFormat.PF_ASTC_6x6_NORM_RG,   new(EPixelFormat.PF_ASTC_6x6_NORM_RG,   "ASTC_6x6_NORM_RG",       6,          6,          1,          16,           2,                true) },
+        { EPixelFormat.PF_ASTC_8x8_NORM_RG,   new(EPixelFormat.PF_ASTC_8x8_NORM_RG,   "ASTC_8x8_NORM_RG",       8,          8,          1,          16,           2,                true) },
+        { EPixelFormat.PF_ASTC_10x10_NORM_RG, new(EPixelFormat.PF_ASTC_10x10_NORM_RG, "ASTC_10x10_NORM_RG",     10,         10,         1,          16,           2,                true) },
+        { EPixelFormat.PF_ASTC_12x12_NORM_RG, new(EPixelFormat.PF_ASTC_12x12_NORM_RG, "ASTC_12x12_NORM_RG",     12,         12,         1,          16,           2,                true) },
 
         { EPixelFormat.PF_R16G16_SINT,        new(EPixelFormat.PF_R16G16_SINT,        "PF_R16G16_SINT",         1,          1,          1,          4,            4,                false) },
         { EPixelFormat.PF_R8G8B8,             new(EPixelFormat.PF_R8G8B8,             "R8G8B8",                 1,          1,          1,          3,            3,                false) },

@@ -29,9 +29,9 @@ public class UMaterialInterface : UUnrealMaterial
     {
         if(Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
-        bUseMobileSpecular = GetOrDefault<bool>(nameof(bUseMobileSpecular));
-        MobileSpecularPower = GetOrDefault<float>(nameof(MobileSpecularPower));
-        MobileSpecularMask = GetOrDefault<EMobileSpecularMask>(nameof(MobileSpecularMask));
+        bUseMobileSpecular = GetOrDefault(nameof(bUseMobileSpecular), bUseMobileSpecular);
+        MobileSpecularPower = GetOrDefault(nameof(MobileSpecularPower), MobileSpecularPower);
+        MobileSpecularMask = GetOrDefault(nameof(MobileSpecularMask), MobileSpecularMask);
         FlattenedTexture = GetOrDefault<FPackageIndex?>(nameof(FlattenedTexture));
         MobileBaseTexture = GetOrDefault<FPackageIndex?>(nameof(MobileBaseTexture));
         MobileNormalTexture = GetOrDefault<FPackageIndex?>(nameof(MobileNormalTexture));

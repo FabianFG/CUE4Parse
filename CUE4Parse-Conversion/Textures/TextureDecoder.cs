@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.Runtime.InteropServices;
-using AssetRipper.TextureDecoder.Astc;
 using AssetRipper.TextureDecoder.Bc;
 using AssetRipper.TextureDecoder.Pvrtc;
 using AssetRipper.TextureDecoder.Rgb.Formats;
@@ -20,6 +19,7 @@ namespace CUE4Parse_Conversion.Textures;
 
 public static class TextureDecoder
 {
+    [Obsolete("Optional AssetRipper(AR) decoders have been replaced with faster local implementations. AR is still used as the default decoder for BC6HSigned and PVRTC4 formats.")]
     public static bool UseAssetRipperTextureDecoder { get; set; } = false;
     //internal static readonly bool IsWindows = OperatingSystem.IsWindows();
 
@@ -324,31 +324,16 @@ public static class TextureDecoder
             case EPixelFormat.PF_ASTC_8x5:
             case EPixelFormat.PF_ASTC_8x6:
             case EPixelFormat.PF_ASTC_10x8:
-                if (UseAssetRipperTextureDecoder)
-                {
-                    AstcDecoder.DecodeASTC<ColorRGBA<byte>, byte>(bytes, sizeX, sizeY, formatInfo.BlockSizeX, formatInfo.BlockSizeY, out data);
-                }
-                else
-                {
-                    data = ASTCDecoder.RGBA8888(bytes, formatInfo.BlockSizeX, formatInfo.BlockSizeY, formatInfo.BlockSizeZ, sizeX, sizeY, sizeZ);
-                }
+                data = ASTCDecoder.DecodeASTC(bytes, sizeX, sizeY, sizeZ, formatInfo.BlockSizeX, formatInfo.BlockSizeY, isNormalMap ? ASTCDecoder.AstcChannelMode.RG0A : ASTCDecoder.AstcChannelMode.RGBA);
                 colorType = EPixelFormat.PF_R8G8B8A8;
-                if (isNormalMap)
-                {
-                    // UE4 drops blue channel for normal maps before encoding, restore it
-                    unsafe
-                    {
-                        var offset = 0;
-                        fixed (byte* d = data)
-                        {
-                            for (var i = 0; i < sizeX * sizeY; i++)
-                            {
-                                d[offset + 2] = BCDecoder.GetZNormal(d[offset], d[offset + 1]);
-                                offset += 4;
-                            }
-                        }
-                    }
-                }
+                break;
+            case EPixelFormat.PF_ASTC_4x4_NORM_RG:
+            case EPixelFormat.PF_ASTC_6x6_NORM_RG:
+            case EPixelFormat.PF_ASTC_8x8_NORM_RG:
+            case EPixelFormat.PF_ASTC_10x10_NORM_RG:
+            case EPixelFormat.PF_ASTC_12x12_NORM_RG:
+                data = ASTCDecoder.DecodeASTC(bytes, sizeX, sizeY, sizeZ, formatInfo.BlockSizeX, formatInfo.BlockSizeY, ASTCDecoder.AstcChannelMode.RRRG);
+                colorType = EPixelFormat.PF_R8G8B8A8;
                 break;
             case EPixelFormat.PF_BC4:
                 data = BCDecoder.BC4(bytes, sizeX, sizeY, sizeZ);

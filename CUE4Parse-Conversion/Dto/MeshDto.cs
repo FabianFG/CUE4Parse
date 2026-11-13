@@ -431,7 +431,6 @@ public sealed class SkeletalMeshDto : SkeletonDto
     public SkeletalMeshDto(USkinnedAsset mesh, ExportOptions options) : base(mesh, options)
     {
         ArgumentNullException.ThrowIfNull(mesh.LODModels, "Mesh has no LOD data");
-        ArgumentNullException.ThrowIfNull(mesh.LODInfo, "Mesh has no LOD info");
 
         FBox? bounds = mesh.Bounds?.GetBox();
         PhysicsAsset = mesh.PhysicsAsset;
@@ -468,9 +467,11 @@ public sealed class SkeletalMeshDto : SkeletonDto
 
     private void ParseMeshRenderData(USkinnedAsset mesh, ExportOptions options)
     {
+        var lodInfo = mesh.LODInfo;
         foreach (var sourceLodIndex in options.MeshQuality.GetRange(mesh.LODModels!.Length, i => mesh.LODModels[i].SkipLod))
         {
-            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, options, sourceLodIndex, mesh.LODModels[sourceLodIndex], mesh.LODInfo![sourceLodIndex].ScreenSize.Value));
+            var screenSize = lodInfo is not null && sourceLodIndex < lodInfo.Length ? lodInfo[sourceLodIndex].ScreenSize.Value : 1.0f;
+            LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, options, sourceLodIndex, mesh.LODModels[sourceLodIndex], screenSize));
         }
     }
 

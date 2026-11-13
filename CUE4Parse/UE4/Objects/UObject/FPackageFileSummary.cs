@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
@@ -362,6 +361,8 @@ namespace CUE4Parse.UE4.Objects.UObject
                 ImportGuidsCount = Ar.Read<int>();
                 ExportGuidsCount = Ar.Read<int>();
             }
+
+            if (Ar.Game is GAME_DaysGone && PackageFlags.HasFlag(EPackageFlags.PKG_UncookedOnly)) Ar.Position += 4;
 
             if (FileVersionUE >= EUnrealEngineObjectUE3Version.ASSET_THUMBNAILS_IN_PACKAGES || Ar.Game == GAME_TransformersFallofCybertron && Ar.Ver >= EUnrealEngineObjectUE3Version.UNIFORM_DISTRIBUTION_BAKING_UPDATE)
             {
