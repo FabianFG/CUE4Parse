@@ -1224,7 +1224,7 @@ public class FPackedRGBA16NConverter : JsonConverter<FPackedRGBA16N>
         writer.WriteValue(value.Z);
 
         writer.WritePropertyName("W");
-        writer.WriteValue(value.X);
+        writer.WriteValue(value.W);
 
         writer.WriteEndObject();
     }
@@ -2078,8 +2078,16 @@ public class FStaticMeshSectionConverter : JsonConverter<FStaticMeshSection>
     {
         writer.WriteStartObject();
 
-        writer.WritePropertyName("MaterialIndex");
-        writer.WriteValue(value.MaterialIndex);
+        if (!value.Material?.IsNull ?? false)
+        {
+            writer.WritePropertyName("Material");
+            serializer.Serialize(writer, value.Material);
+        }
+        else
+        {
+            writer.WritePropertyName("MaterialIndex");
+            writer.WriteValue(value.MaterialIndex);
+        }
 
         writer.WritePropertyName("FirstIndex");
         writer.WriteValue(value.FirstIndex);

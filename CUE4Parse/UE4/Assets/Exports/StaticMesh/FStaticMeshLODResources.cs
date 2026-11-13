@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 
 [JsonConverter(typeof(FStaticMeshLODResourcesConverter))]
-public class FStaticMeshLODResources
+public partial class FStaticMeshLODResources
 {
     public FStaticMeshSection[] Sections { get; protected set; } = [];
     public FBoxSphereBounds? SourceMeshBounds;
@@ -27,7 +27,8 @@ public class FStaticMeshLODResources
     public FRawStaticIndexBuffer? ReversedDepthOnlyIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? WireframeIndexBuffer { get; private set; }
     public FRawStaticIndexBuffer? AdjacencyIndexBuffer { get; private set; }
-    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null || PositionVertexBuffer == null;
+
+    public bool SkipLod => VertexBuffer == null || IndexBuffer?.Buffer == null;
 
     public enum EClassDataStripFlag : byte
     {
@@ -54,6 +55,11 @@ public class FStaticMeshLODResources
             new FByteBulkData((FAssetArchive)Ar); // RawTriangles
         }
 
+        if (Ar.Game == GAME_TheLastRemnant)
+        {
+            new FByteBulkData((FAssetArchive)Ar); // unknown
+        }
+
         if (Ar.Game == GAME_TheDivisionResurgence) Ar.Position += 4;
 
         Sections = Ar.ReadArray(() => new FStaticMeshSection(Ar));
@@ -77,9 +83,17 @@ public class FStaticMeshLODResources
 
         if (!Ar.Versions["StaticMesh.UseNewCookedFormat"])
         {
-            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte)EClassDataStripFlag.CDSF_MinLodData))
+            if (!stripDataFlags.IsAudioVisualDataStripped() && !stripDataFlags.IsClassDataStripped((byte) EClassDataStripFlag.CDSF_MinLodData))
             {
-                SerializeBuffersLegacy(Ar, stripDataFlags);
+                switch (Ar.Game)
+                {
+                    case GAME_TransformersFallofCybertron:
+                        SerializeTransformersFallofCybertronBuffersLegacy(Ar);
+                        break;
+                    default:
+                        SerializeBuffersLegacy(Ar, stripDataFlags);
+                        break;
+                }
             }
 
             return;
@@ -193,15 +207,22 @@ public class FStaticMeshLODResources
     // Pre-UE4.23 code
     public void SerializeBuffersLegacy(FArchive Ar, FStripDataFlags stripDataFlags)
     {
-
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.STATICMESH_VERTEXBUFFER_MERGE)
         {
             if (Ar.Game is GAME_Abzu) Ar.Position += 4;
+
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS)
             {
                 PositionVertexBuffer = new FPositionVertexBuffer(Ar);
             }
+
             VertexBuffer = new FStaticMeshVertexBuffer(Ar);
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS)
+            {
+                PositionVertexBuffer = FPositionVertexBuffer.FromLegacyVertices(VertexBuffer.UV);
+            }
+
             if (Ar.Ver < EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS || Ar.Ver >= EUnrealEngineObjectUE3Version.SEPARATED_STATIC_MESH_POSITIONS && Ar.Ver < EUnrealEngineObjectUE3Version.MovedColorFromUVItem) goto skipStreams;
 
             if (Ar.Game == GAME_Borderlands3)
@@ -284,12 +305,12 @@ public class FStaticMeshLODResources
             {
                 Ar.Position += 8; // bulkdata
             }
-            else if (!stripDataFlags.IsEditorDataStripped())
+            else if (!stripDataFlags.IsEditorDataStripped() && Ar.Game is not (GAME_Borderlands2 or GAME_BorderlandsSequel))
                 WireframeIndexBuffer = new FRawStaticIndexBuffer(Ar);
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.REMOVED_SHADOW_VOLUMES)
             {
-                Ar.SkipBulkArrayData(16); // LegacyEdges
+                Ar.SkipBulkArrayData(Ar.Game == GAME_BatmanArkhamAsylum && Ar.LicenseeVer >= 5 ? 8 : 16); // LegacyEdges
                 Ar.SkipArray<byte>(); // LegacyShadowTriangleDoubleSided
             }
 
