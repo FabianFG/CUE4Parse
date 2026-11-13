@@ -264,8 +264,18 @@ public partial class USkeletalMesh : USkinnedAsset
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELMESH_BONE_KDOP && Ar.Game < GAME_UE4_0)
         {
-            // this is not an array of ints, it's a complex FPerPolyBoneCollisionData struct
-            Ar.SkipArray<int>(); // PerPolyBoneKDOPs
+            int numPerPolyBones = Ar.Read<int>();
+            for (int i = 0; i < numPerPolyBones; i++)
+            {
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.COMPACTKDOPSTATICMESH)
+                {
+                    Ar.Position += 24; // RootBound
+                }
+
+                Ar.SkipBulkArrayData(6); // Nodes
+                Ar.SkipBulkArrayData(8); // Triangles
+                Ar.SkipArray<FVector>(); // CollisionVerts
+            }
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_MAPPING && Ar.Game < GAME_UE4_0)
