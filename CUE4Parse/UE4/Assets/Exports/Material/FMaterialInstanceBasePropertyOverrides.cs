@@ -6,9 +6,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
     [StructFallback]
     public class FMaterialInstanceBasePropertyOverrides
     {
+        public readonly bool bOverride_BlendMode;
+        public readonly bool bOverride_OpacityMaskClipValue;
+        public readonly bool bOverride_TwoSided;
         public readonly EBlendMode BlendMode;
         public readonly EMaterialShadingModel ShadingModel;
         public readonly float OpacityMaskClipValue;
+        public readonly bool TwoSided;
         public readonly bool DitheredLODTransition;
 
         /*
@@ -43,9 +47,13 @@ namespace CUE4Parse.UE4.Assets.Exports.Material
 
         public FMaterialInstanceBasePropertyOverrides(FStructFallback fallback)
         {
+            bOverride_BlendMode = fallback.GetOrDefault<bool>(nameof(bOverride_BlendMode));
+            bOverride_OpacityMaskClipValue = fallback.GetOrDefault<bool>(nameof(bOverride_OpacityMaskClipValue));
+            bOverride_TwoSided = fallback.GetOrDefault<bool>(nameof(bOverride_TwoSided));
             BlendMode = fallback.GetOrDefault<EBlendMode>(nameof(BlendMode));
             ShadingModel = fallback.GetOrDefault<EMaterialShadingModel>(nameof(ShadingModel));
             OpacityMaskClipValue = fallback.GetOrDefault<float>(nameof(OpacityMaskClipValue));
+            TwoSided = fallback.GetOrDefault<bool>(nameof(TwoSided));
             DitheredLODTransition = fallback.GetOrDefault<bool>(nameof(DitheredLODTransition));
         }
     }

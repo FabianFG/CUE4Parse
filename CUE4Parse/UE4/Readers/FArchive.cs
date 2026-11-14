@@ -18,7 +18,6 @@ namespace CUE4Parse.UE4.Readers
 {
     public abstract class FArchive : RandomAccessStream, ICloneable
     {
-
         public VersionContainer Versions;
         public EGame Game
         {
@@ -30,10 +29,10 @@ namespace CUE4Parse.UE4.Readers
             get => Versions.Ver;
             set => Versions.Ver = value;
         }
-        public EUnrealEngineObjectLicenseeUEVersion LicenseeVer
+        public int LicenseeVer
         {
-            get => Versions.LicenseeVer;
-            set => Versions.LicenseeVer = value;
+            get => (int) Versions.LicenseeVer;
+            set => Versions.LicenseeVer = (EUnrealEngineObjectLicenseeUEVersion) value;
         }
         public ETexturePlatform Platform
         {
@@ -213,12 +212,17 @@ namespace CUE4Parse.UE4.Readers
             return array;
         }
 
+        private bool HasBulkArraySizeHeader =>
+            Ver >= EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING ||
+            (Game == GAME_AvaGlobal && Ver >= EUnrealEngineObjectUE3Version.SHARED_SHADER_PARAMS);
+
         public T[] ReadBulkArray<T>() where T : struct
         {
-            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            if (!HasBulkArraySizeHeader)
             {
                 return ReadArray<T>();
             }
+
             var elementSize = Read<int>();
             var elementCount = Read<int>();
             if (elementCount == 0)
@@ -234,7 +238,7 @@ namespace CUE4Parse.UE4.Readers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] ReadBulkArray<T>(Func<T> getter)
         {
-            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            if (!HasBulkArraySizeHeader)
             {
                 return ReadArray(getter);
             }
@@ -244,13 +248,17 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SkipBulkArrayData()
+        public void SkipBulkArrayData(int elementSize = -1)
         {
-            if (Ver < EUnrealEngineObjectUE3Version.ADDED_BULKSERIALIZE_SANITY_CHECKING)
+            if (HasBulkArraySizeHeader)
             {
-                throw new ParserException("Cannot skip bulk array data for UE3 versions before ADDED_BULKSERIALIZE_SANITY_CHECKING");
+                elementSize = Read<int>();
             }
-            var elementSize = Read<int>();
+            else if (elementSize < 0)
+            {
+                throw new ParserException($"element size must be provided for games without bulk array size header (Game={Game}, Ver={Ver})");
+            }
+
             var elementCount = Read<int>();
             Position += elementSize * elementCount;
         }
@@ -269,6 +277,16 @@ namespace CUE4Parse.UE4.Readers
         {
             var num = Read<int>();
             Position += num * size;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SkipArray(Action skip)
+        {
+            var length = Read<int>();
+            for (var i = 0; i < length; i++)
+            {
+                skip();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -611,7 +629,7 @@ namespace CUE4Parse.UE4.Readers
             // low 32 bits of ARCHIVE_V2_HEADER_TAG are == PACKAGE_FILE_TAG
             const ulong ARCHIVE_V2_HEADER_TAG = PACKAGE_FILE_TAG | ((ulong) 0x22222222 << 32);
 
-            if (packageFileTag.CompressedSize == PACKAGE_FILE_TAG)
+            if (packageFileTag.CompressedSize == PACKAGE_FILE_TAG || packageFileTag.CompressedSize == PACKAGE_FILE_TAG_LOS)
             {
                 // v1 header, not swapped
                 bHeaderWasValid = true;
@@ -783,13 +801,13 @@ namespace CUE4Parse.UE4.Readers
 #endif
         }
 
-        public void DumpBytesToFile(int size) {
+        public void DumpBytesToFile(long size) {
 #if DEBUG
             var savePos = Position;
-            var bytes = ReadBytes(int.Min(size, (int) (Length - Position)));
+            var bytes = ReadBytes(int.Min((int)size, (int) (Length - Position)));
             Position = savePos;
             var f = new FileInfo(Path.GetTempPath() + $"cue4parse_temp/{Name}_s{savePos}_size_{bytes.Length}.bin");
-            f.Directory.Create();
+            f.Directory?.Create();
 
             using var fs = f.OpenWrite();
             fs.Write(bytes, 0, bytes.Length);

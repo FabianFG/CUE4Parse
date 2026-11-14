@@ -15,6 +15,9 @@ public class UFastGeoContainer : UAssetUserData
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+#if DEBUG
+        Log.Debug(nameof(UFastGeoContainer));
+#endif
         Assets = GetOrDefault<FPackageIndex[]>(nameof(Assets), []);
         using var fgAr = new FFastGeoArchive(Ar, Assets);
         ComponentClusters = fgAr.ReadArray(() => new FFastGeoComponentCluster(fgAr));

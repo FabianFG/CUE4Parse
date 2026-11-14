@@ -1,5 +1,3 @@
-using System.Numerics.Tensors;
-using System.Text;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
@@ -21,17 +19,17 @@ public class ValorantSourceLua
         ];
 
         // Strings are encrypted
-        public override string ReadLuaString()
+        public override byte[] ReadLuaStringBytes()
         {
             var size = ReadLuaInt();
             if (size <= 1)
-                return string.Empty;
+                return [];
 
             var length = (int) size - 1;
             var b = ReadBytes(length);
             TensorUtils.Xor(b, _xorKey);
 
-            return Encoding.UTF8.GetString(b);
+            return b;
         }
     }
 
@@ -124,12 +122,7 @@ public class ValorantSourceLua
 
     public static byte[] DecryptLuaBytecode(string name, byte[] bytes)
     {
-        var Ar = new FValorantSourceLuaArchive(name, bytes);
-        using var msOut = new MemoryStream();
-        using var writer = new FLua54ArchiveWriter(msOut);
-        FLuaWriter54.Write(writer, FLua54Reader.ReadLuaBytecode(Ar, _opcodeMapping));
-        writer.Flush();
-
-        return msOut.ToArray();
+        using var Ar = new FValorantSourceLuaArchive(name, bytes);
+        return new FLuaWriter54(FLua54Reader.ReadLuaBytecode(Ar, _opcodeMapping)).GetBuffer();
     }
 }

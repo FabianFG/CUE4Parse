@@ -15,7 +15,7 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
     public readonly bool IsContinuousValidation;
     public readonly AkMusicSwitchAssoc[] MusicSwitchAssoc = [];
 
-    public readonly byte IsContinuePlayback;
+    public readonly bool IsContinuePlayback;
     public readonly AkGameSync[] Arguments = [];
     public readonly EAkDecisionTreeMode Mode;
     public readonly AkDecisionTree DecisionTree;
@@ -39,14 +39,13 @@ public class HierarchyMusicSwitchContainer : BaseHierarchyMusic
         }
         else
         {
-            IsContinuePlayback = Ar.Read<byte>();
+            IsContinuePlayback = Ar.ReadBool();
 
             var treeDepth = Ar.Read<uint>();
             Arguments = AkGameSync.ReadSequential(Ar, treeDepth);
 
             var treeDataSize = Ar.Read<uint>();
             Mode = Ar.Read<EAkDecisionTreeMode>();
-
             DecisionTree = new AkDecisionTree(Ar, treeDepth, treeDataSize);
         }
     }

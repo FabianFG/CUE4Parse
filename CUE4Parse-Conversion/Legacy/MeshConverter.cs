@@ -1,15 +1,13 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Animation;
-using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
+using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
+using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
-using CUE4Parse.UE4.Assets.Exports.Actor;
-using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
-using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using SixLabors.ImageSharp;
 using SkiaSharp;
 using Log = Serilog.Log;
@@ -24,7 +22,7 @@ public static class MeshConverter
     {
         try
         {
-            var converted = new SkeletonDto(originalSkeleton);
+            var converted = new SkeletonDto(originalSkeleton, new ExportOptions());
             bones = converted.Bones;
             box = converted.Bounds;
         }
@@ -42,7 +40,7 @@ public static class MeshConverter
     {
         try
         {
-            convertedMesh = new StaticMeshDto(spline, quality);
+            convertedMesh = new StaticMeshDto(spline, new ExportOptions(meshQuality: quality));
         }
         catch (Exception e)
         {
@@ -57,7 +55,7 @@ public static class MeshConverter
     {
         try
         {
-            convertedMesh = new StaticMeshDto(originalMesh, quality, naniteFormat, spline);
+            convertedMesh = new StaticMeshDto(originalMesh, new ExportOptions(meshQuality: quality, naniteMeshFormat: naniteFormat), spline);
         }
         catch (Exception e)
         {
@@ -68,11 +66,11 @@ public static class MeshConverter
     }
 
     [Obsolete("This method is deprecated. Please use SkeletalMeshDto constructor directly and handle exceptions as needed.")]
-    public static bool TryConvert(this USkeletalMesh originalMesh, [MaybeNullWhen(false)] out SkeletalMeshDto convertedMesh, EMeshQuality quality = EMeshQuality.All)
+    public static bool TryConvert(this USkinnedAsset originalMesh, [MaybeNullWhen(false)] out SkeletalMeshDto convertedMesh, EMeshQuality quality = EMeshQuality.All)
     {
         try
         {
-            convertedMesh = new SkeletalMeshDto(originalMesh, quality);
+            convertedMesh = new SkeletalMeshDto(originalMesh, new ExportOptions(meshQuality: quality));
         }
         catch (Exception e)
         {
@@ -90,7 +88,7 @@ public static class MeshConverter
 
         try
         {
-            convertedMesh = new LandscapeMeshDto(landscape, flags, landscapeComponents);
+            convertedMesh = new LandscapeMeshDto(landscape, new ExportOptions(), flags, landscapeComponents);
 
             if (convertedMesh.HeightmapTexture is { } heightmap)
             {

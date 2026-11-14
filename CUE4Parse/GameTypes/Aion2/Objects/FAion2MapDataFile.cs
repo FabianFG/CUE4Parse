@@ -7,7 +7,6 @@ namespace CUE4Parse.GameTypes.Aion2.Objects;
 
 public class FAion2MapDataFile : FAion2DataFile
 {
-    
     public FAion2MapDataFile(GameFile file, IFileProvider provider)
     {
         var data = file.SafeRead();

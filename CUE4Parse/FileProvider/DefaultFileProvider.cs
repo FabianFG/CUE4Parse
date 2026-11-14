@@ -94,6 +94,12 @@ namespace CUE4Parse.FileProvider
             {
                 var upperExt = file.Extension.SubstringAfter('.').ToUpper();
 
+                if (uproject is null && (upperExt is "APK" or "XAPK"))
+                {
+                    packageCount += ApkFileProvider.LoadInto(file, this, osFiles);
+                    continue;
+                }
+
                 // Only load containers if .uproject file is not found
                 if (uproject is null && (upperExt is "PAK" or "UTOC" || (upperExt == "UPAK" && Versions.Game is GAME_LordOfMysteries)))
                 {

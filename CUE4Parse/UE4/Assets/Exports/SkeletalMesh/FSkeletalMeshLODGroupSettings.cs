@@ -12,10 +12,6 @@ public struct FSkeletalMeshLODGroupSettings : IUStruct
 
     public FSkeletalMeshLODGroupSettings(FStructFallback fallback)
     {
-        ScreenSize = fallback.GetOrDefault<FPerPlatformFloat>(nameof(ScreenSize));
-        if (ScreenSize is null)
-        {
-            ScreenSize = new FPerPlatformFloat(fallback.GetOrDefault<float>(nameof(ScreenSize)));
-        }
+        ScreenSize = fallback.GetOrDefault<FPerPlatformFloat?>(nameof(ScreenSize)) ?? new FPerPlatformFloat(fallback.GetOrDefault<float>(nameof(ScreenSize)));
     }
 }

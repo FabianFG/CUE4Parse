@@ -1,3 +1,5 @@
+using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Readers;
@@ -20,11 +22,26 @@ public class FSceneProxyDesc
     }
 }
 
-public struct FLightingChannels(FArchive Ar)
+[StructFallback]
+public struct FLightingChannels
 {
-    public bool bChannel0 = Ar.ReadBoolean();
-    public bool bChannel1 = Ar.ReadBoolean();
-    public bool bChannel2 = Ar.ReadBoolean();
+    public bool bChannel0;
+    public bool bChannel1;
+    public bool bChannel2;
+
+    public FLightingChannels(FArchive Ar)
+    {
+        bChannel0 = Ar.ReadBoolean();
+        bChannel1 = Ar.ReadBoolean();
+        bChannel2 = Ar.ReadBoolean();
+    }
+
+    public FLightingChannels(FStructFallback fallback)
+    {
+        bChannel0 = fallback.GetOrDefault(nameof(bChannel0), false);
+        bChannel1 = fallback.GetOrDefault(nameof(bChannel1), false);
+        bChannel2 = fallback.GetOrDefault(nameof(bChannel2), false);
+    }
 }
 
 public class FPrimitiveSceneProxyDesc(FArchive Ar)
@@ -37,7 +54,7 @@ public class FPrimitiveSceneProxyDesc(FArchive Ar)
     public bool bVisibleInReflectionCaptures = Ar.ReadBoolean();
     public bool bVisibleInRealTimeSkyCaptures = Ar.ReadBoolean();
     public bool bVisibleInRayTracing = Ar.ReadBoolean();
-    public bool bVisibleInReflections = Ar.Game >= GAME_UE5_8 && Ar.ReadBoolean();
+    public bool bVisibleInReflections = Ar.Game >= GAME_UE5_8 || Ar.Game is GAME_PhantomBladeZero && Ar.ReadBoolean();
     public bool bRenderInDepthPass = Ar.ReadBoolean();
     public bool bRenderInMainPass = Ar.ReadBoolean();
     public bool bTreatAsBackgroundForOcclusion = Ar.ReadBoolean();
@@ -176,6 +193,18 @@ public class FStaticMeshSceneProxyDesc
             Ar.Position += 84;
             return;
         }
+        if (Ar.Game is GAME_PhantomBladeZero)
+        {
+            Ar.Position += 108;
+            return;
+        }
+        if (Ar.Game is GAME_Splitgate2)
+        {
+            Ar.Position += 72;
+            Ar.SkipFixedArray(34);
+            Ar.Position += 17;
+            return;
+        }
         OverlayMaterialMaxDrawDistance = Ar.Read<float>();
         ForcedLodModel = Ar.Read<int>();
         MinLOD = Ar.Read<int>();
@@ -201,7 +230,7 @@ public class FStaticMeshSceneProxyDesc
 public class FInstancedStaticMeshSceneProxyDesc(FFastGeoArchive Ar)// : FStaticMeshSceneProxyDesc
 {
     public float InstanceLODDistanceScale = Ar.Read<float>();
-    public int InstanceMinDrawDistance = Ar.Read<int>();
+    public int InstanceMinDrawDistance = Ar.Game != GAME_Splitgate2 ? Ar.Read<int>() : 0;
     public int InstanceStartCullDistance = Ar.Read<int>();
     public int InstanceEndCullDistance = Ar.Read<int>();
     public bool bUseGpuLodSelection = Ar.ReadBoolean();

@@ -1,7 +1,7 @@
 using CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
-using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
+using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
 
@@ -9,7 +9,7 @@ namespace CUE4Parse.GameTypes.FF7.Assets.Objects;
 
 public static class FF7FStaticLodModel
 {
-    public static void ReadFStaticLodModel(FAssetArchive Ar, bool bHasVertexColors, FByteBulkData bulk, out FMultisizeIndexContainer Indices,
+    public static void ReadFStaticLodModel(FAssetArchive Ar, bool bHasVertexColors, byte[] bulkData, out FMultisizeIndexContainer Indices,
         out FSkeletalMeshVertexBuffer VertexBufferGPUSkin, out FSkeletalMeshVertexColorBuffer ColorVertexBuffer, out int NumVertices, out int NumTexCoords)
     {
         var metaAr = new FByteArchive("MetaData", Ar.ReadBytes(161));
@@ -21,7 +21,7 @@ public static class FF7FStaticLodModel
         var tempNumTexCoords = metaAr.Read<int>();
         var tempNumVertices = metaAr.Read<int>();
         var tempbUseFullPrecisionUVs = metaAr.ReadBoolean();
-        var tempbUseHighPrecisionTangentBasis = metaAr.ReadBoolean();
+        _ = metaAr.ReadBoolean(); // bUseHighPrecisionTangentBasis; I assume it's always 4 packed
 
         var PosStride = metaAr.Read<int>();
         var PosNumVertices = metaAr.Read<int>();
@@ -60,7 +60,7 @@ public static class FF7FStaticLodModel
         var IndicesBufferOffset = metaAr.Read<int>();
         var IndicesBufferSize = metaAr.Read<int>();
 
-        using (var tempAr = new FByteArchive("FF7LodReader", bulk.Data, Ar.Versions))
+        using (var tempAr = new FByteArchive("FF7LodReader", bulkData, Ar.Versions))
         {
             VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer()
             {
@@ -84,7 +84,10 @@ public static class FF7FStaticLodModel
             var verts = tempAr.ReadArray<FVector>(tempNumVertices);
 
             tempAr.Position = TangentsBufferOffset;
-            var normals = tempAr.ReadArray(tempNumVertices, () => FStaticMeshUVItem.SerializeTangents(tempAr, tempbUseHighPrecisionTangentBasis));
+            if (TangentsBufferSize != tempNumVertices * sizeof(uint))
+                throw new ParserException($"Expected 4-byte FF7 tangent elements, got {TangentsBufferSize} bytes for {tempNumVertices} vertices");
+            var normals = tempAr.ReadArray(tempNumVertices, () => FStaticMeshUVItem.SerializeTangentsFF7R(tempAr));
+
             tempAr.Position = UVBufferOffset;
             var uvs = tempAr.ReadArray(tempNumVertices, () => FStaticMeshUVItem.SerializeTexcoords(tempAr, tempNumTexCoords, tempbUseFullPrecisionUVs));
 

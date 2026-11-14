@@ -63,16 +63,10 @@ public class RawMLOperation
     }
 }
 
-public class RawMachineLearnedBehaviorTypeData
+public class RawMachineLearnedBehaviorTypeData(FArchiveBigEndian Ar)
 {
-    public RawLODMapping[] LodMLOperationMappings;
-    public RawMLOperation[][] Operations;
-
-    public RawMachineLearnedBehaviorTypeData(FArchiveBigEndian Ar)
-    {
-        LodMLOperationMappings = Ar.ReadArray(() => new RawLODMapping(Ar));
-        Operations = Ar.ReadArray(() => Ar.ReadArray(() => new RawMLOperation(Ar)));
-    }
+    public RawLODMapping[] LodMLOperationMappings = Ar.ReadArray(() => new RawLODMapping(Ar));
+    public RawMLOperation[][] Operations = Ar.ReadArray(() => Ar.ReadArray(() => new RawMLOperation(Ar)));
 }
 
 [JsonConverter(typeof(EnumConverter<EMachineLearnedBehaviorOperationType>))]

@@ -135,6 +135,27 @@ public class FMemoryImageArchive : FArchive
         return data;
     }
 
+    public T[] ReadArrayDI2<T>(Func<T> getter, bool alignDataStart = false)
+    {
+        var initialPos = Position;
+        var dataPtr = new FFrozenMemoryImagePtr(this);
+
+        var continuePos = Position;
+        Position = initialPos + dataPtr.OffsetFromThis;
+        var length = Read<ushort>();
+        if (length == 0) return [];
+
+        var data = new T[length];
+        if (alignDataStart) Position = Position.Align(8);
+        for (int i = 0; i < data.Length; i++)
+        {
+            data[i] = getter();
+            Position = Position.Align(ArrayAlign);
+        }
+        Position = continuePos;
+        return data;
+    }
+
     public T[] ReadArray<T>(Func<T> getter, bool realignAfterElement)
     {
         var initialPos = Position;

@@ -122,7 +122,8 @@ public class FStaticMeshRenderData
                             _ = new FDistanceFieldVolumeData(Ar);
                         }
                     }
-                    if (Ar.Game is GAME_TheFinals or GAME_ArcRaiders)
+
+                    if (Ar.Game is GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders)
                         _ = Ar.ReadArray(() => new FDistanceFieldVolumeData5(Ar));
                 }
             }
@@ -145,25 +146,14 @@ public class FStaticMeshRenderData
         }
 
         Bounds = new FBoxSphereBounds(Ar);
-
-        if (Ar.Game == GAME_RocoKingdomWorld)
+        foreach (var lod in LODs)
         {
-            foreach (var lod in LODs)
-            {
-                if (lod.PositionVertexBuffer != null && lod.PositionVertexBuffer.Stride != 8) continue;
-                if (lod.PositionVertexBuffer?.Verts == null) continue;
-
-                var verts = lod.PositionVertexBuffer.Verts;
-                for (var i = 0; i < verts.Length; i++)
-                {
-                    verts[i] =  verts[i] * Bounds.BoxExtent + Bounds.Origin;
-                }
-            }
+            lod.PositionVertexBuffer?.ApplyBounds(Bounds);
         }
 
         if (Ar.Versions["StaticMesh.HasLODsShareStaticLighting"])
         {
-            if (Ar.Game is >= GAME_UE5_6 or GAME_GrayZoneWarfare or GAME_HighOnLife2 or GAME_Gothic1Remake)
+            if (Ar.Game is >= GAME_UE5_6 or GAME_GrayZoneWarfare or GAME_HighOnLife2 or GAME_Gothic1Remake or GAME_TheBloodofDawnwalker)
             {
                 var bRenderDataFlags = Ar.Read<byte>();
                 bLODsShareStaticLighting = (bRenderDataFlags & 1) != 0;
@@ -184,13 +174,14 @@ public class FStaticMeshRenderData
             Ar.Position += 4; // MaxStreamingTextureFactor
         }
 
-        if (Ar.Game is GAME_DeltaForce or GAME_DeadzoneRogue) Ar.Position += 4;
+        if (Ar.Game is GAME_DeadzoneRogue) Ar.Position += 4;
         if (Ar.Game is GAME_InfinityNikki or GAME_RogueCompany) Ar.Position += 8;
 
         var screenSizeLength = Ar.Game switch
         {
             GAME_FragPunk or GAME_RocoKingdomWorld => 16,
             GAME_Stalker2 => 14,
+            GAME_TheBloodofDawnwalker => 2,
             >= GAME_UE4_9 => MAX_STATIC_LODS_UE4,
             _ => 4
         };
@@ -206,8 +197,12 @@ public class FStaticMeshRenderData
                 ScreenSize[i] = Ar.Read<float>();
             }
 
-            if (Ar.Game == GAME_HogwartsLegacy) Ar.Position += 8;
-            if (Ar.Game is GAME_VisionsofMana or GAME_ValorantSource) Ar.Position += 4;
+            Ar.Position += Ar.Game switch
+            {
+                GAME_HogwartsLegacy => 8,
+                GAME_VisionsofMana or GAME_ValorantSource => 4,
+                _ => 0
+            };
         }
 
         if (Ar.Game == GAME_Borderlands3)
@@ -217,29 +212,6 @@ public class FStaticMeshRenderData
             {
                 var count2 = Ar.Read<byte>();
                 Ar.Position += count2 * 12; // bool, bool, float
-            }
-        }
-
-        if (Ar.Game == GAME_DaysGone)
-        {
-            const float packed64scale = 2.0f / ushort.MaxValue;
-            const float packed32scale = 2.0f / 1024;
-            var offset = Bounds.Origin - Bounds.BoxExtent;
-            var scale = Bounds.BoxExtent;
-            foreach (var lod in LODs)
-            {
-                var perlodscale = lod.PositionVertexBuffer?.Stride switch
-                {
-                    4 => scale * packed32scale,
-                    8 => scale * packed64scale,
-                    12 => scale,
-                    _ => throw new ArgumentOutOfRangeException($"Unknown stride {lod.PositionVertexBuffer?.Stride} for FPositionVertexBuffer")
-                };
-
-                for (var i = 0; i < lod.PositionVertexBuffer.NumVertices; i++)
-                {
-                    lod.PositionVertexBuffer.Verts[i] = lod.PositionVertexBuffer.Verts[i] * perlodscale + offset;
-                }
             }
         }
 

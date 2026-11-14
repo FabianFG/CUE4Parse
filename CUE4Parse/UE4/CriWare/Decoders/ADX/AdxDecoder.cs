@@ -3,7 +3,7 @@ using VGAudio.Containers.Adx;
 using VGAudio.Containers.Wave;
 using VGAudio.Formats;
 
-namespace CUE4Parse.UE4.CriWare.Decoders.ADX;
+namespace CUE4Parse.UE4.Criware.Decoders.ADX;
 
 public static class AdxDecoder
 {

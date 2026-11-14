@@ -1,8 +1,11 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 project(CUE4Parse-Natives CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/ACL/external/acl/includes")
     set(WITH_ACL 1)

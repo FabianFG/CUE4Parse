@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Animation;
 
 namespace CUE4Parse_Conversion.Dto;
@@ -15,10 +16,10 @@ public class AnimationDto : ObjectDto
 
     public AnimationDto(UAnimationAsset animation, float startTime = 0f, float playRate = 1f) : base(animation)
     {
-        if (!animation.Skeleton.TryLoad<USkeleton>(out var skeleton))
+        if (animation.Skeleton == null || !animation.Skeleton.TryLoad<USkeleton>(out var skeleton))
             throw new ArgumentNullException(nameof(animation), "Animation asset does not have a valid skeleton reference");
 
-        Skeleton = new SkeletonDto(skeleton);
+        Skeleton = new SkeletonDto(skeleton, new ExportOptions());
 
         switch (animation)
         {

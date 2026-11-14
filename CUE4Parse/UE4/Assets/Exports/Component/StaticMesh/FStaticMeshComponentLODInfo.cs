@@ -97,10 +97,15 @@ public class FStaticMeshComponentLODInfo
                     OverrideVertexColors = new FColorVertexBuffer(Ar);
                 }
             }
+            else
+            {
+                OverrideVertexColors = new FColorVertexBuffer(Ar.ReadArray<FColor>());
+            }
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.PRESERVE_SMC_VERT_COLORS && Ar.Ver < EUnrealEngineObjectUE3Version.STATIC_MESH_SOURCE_DATA_COPY)
         {
+            if (Ar.Game is GAME_Dishonored) return;
             Ar.ReadArray<FVector>(); // VertexColorPositions
         }
 

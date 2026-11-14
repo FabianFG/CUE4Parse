@@ -697,7 +697,7 @@ public static class UnchartedWatersOriginAes
         a4[14] = (byte)(v63 >> 8);
     }
 
-    public static byte[] UnchartedWatersOriginDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] UnchartedWatersOriginDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (bytes.Length < beginOffset + count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");

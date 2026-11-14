@@ -158,6 +158,11 @@ public static class FControlRigObjectVersion
         // (UControlRigRuntimeAsset::InjectDynamicImportsFor) - that path only runs for older assets.
         OverridesStoreOwnerStructAsHardImport,
 
+        // Controls store how a layered rig should combine their sequencer value with the value from the
+        // backwards solve. See ERigControlLayeredCombineMode. Assets saved before this version load with
+        // ERigControlLayeredCombineMode::Default, which keeps the previous behaviour.
+        ControlLayeredCombineMode,
+
         // -----<new versions can be added above this line>-------------------------------------------------
         VersionPlusOne,
         LatestVersion = VersionPlusOne - 1,
@@ -173,6 +178,8 @@ public static class FControlRigObjectVersion
 
         return Ar.Game switch
         {
+            GAME_Splitgate2 => Type.RigHierarchyStoresComponents,
+
             < GAME_UE4_23 => Type.BeforeCustomVersionWasAdded,
             < GAME_UE4_25 => Type.OperatorsStoringPropertyPaths,
             < GAME_UE4_26 => Type.SwitchedToRigVM,

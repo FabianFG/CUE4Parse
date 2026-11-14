@@ -1,7 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Objects.Unversioned;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Versions;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.Wwise;
@@ -19,7 +18,7 @@ public class UAkAudioBank : UAkAudioType
         {
             case GAME_HogwartsLegacy or GAME_Farlight84 or GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile or GAME_LittleNightmares3:
                 return;
-            case GAME_FateTrigger:
+            case GAME_FateTrigger or GAME_GhostwireTokyo:
             {
                 var idk = new FStructFallback(Ar, "AkAudioBank", new FRawHeader([(4, 1)], ERawHeaderFlags.RawProperties));
                 Properties.AddRange(idk.Properties);

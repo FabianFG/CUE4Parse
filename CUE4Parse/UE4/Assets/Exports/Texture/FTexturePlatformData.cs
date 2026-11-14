@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
-using CUE4Parse.UE4.Versions;
+using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -72,7 +72,7 @@ public class FTexturePlatformData
                 throw new NotImplementedException("FTexturePlatformData deserialization using derived data is not implemented.");
             Ar.Position += PlaceholderDerivedDataSize - 1;
         }
-        else if (Ar is { Game: >= GAME_UE5_0, IsFilterEditorOnly: true })
+        else if (Ar is { Game: >= GAME_UE5_0, IsFilterEditorOnly: true } && Ar.Game is not (GAME_UE5_EA_Legacy or GAME_UE5_EA or GAME_TheMatrixAwakens))
         {
             Ar.Position += PlaceholderDerivedDataSize;
         }
@@ -102,6 +102,25 @@ public class FTexturePlatformData
             var unk1 = Ar.Read<int>();
             var mapNum = Ar.Read<int>();
         }
+
+        if (Ar.Game is GAME_DeadIsland2)
+        {
+            if ((PackedData & (1u << 28)) != 0)
+            {
+                var scale = Ar.Read<FVector2D>();
+            }
+            else if (HasCpuCopy())
+            {
+                FirstMipToSerialize = Ar.Read<int>();
+                Mips = Ar.ReadArray(() => new FTexture2DMipMap(Ar, bSerializeMipData));
+                var bIsVirtual = Ar.ReadBoolean();
+                SizeX = Mips[0].SizeX;
+                SizeY = Mips[0].SizeY;
+                return;
+            }
+        }
+
+        if (Ar.Game is GAME_MonsterHunterOutlanders) Ar.Position += 8; // TextureContentHash
 
         if (HasOptData())
         {
@@ -144,8 +163,7 @@ public class FTexturePlatformData
             var bIsVirtual = Ar.ReadBoolean();
             if (bIsVirtual)
             {
-                var LODBias = Owner.GetOrDefault<int>("LODBias");
-                VTData = new FVirtualTextureBuiltData(Ar, FirstMipToSerialize - LODBias);
+                VTData = new FVirtualTextureBuiltData(Ar);
             }
         }
 

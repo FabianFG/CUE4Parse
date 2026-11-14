@@ -12,7 +12,16 @@ public class FFilePackageStoreEntry
 
     public FFilePackageStoreEntry(FArchive Ar, EIoContainerHeaderVersion version)
     {
-        if (version >= EIoContainerHeaderVersion.Initial)
+        if (version == EIoContainerHeaderVersion.EarlyAccess)
+        {
+            Ar.Position += 8; // ExportBundlesSize
+            ExportCount = Ar.Read<int>();
+            ExportBundleCount = Ar.Read<int>();
+            Ar.Position += 8; // LoadOrder + Pad
+            ImportedPackages = ReadCArrayView<FPackageId>(Ar);
+            Ar.Position += 8; // ShaderMapHashes CArrayView
+        }
+        else if (version >= EIoContainerHeaderVersion.Initial)
         {
             if (version < EIoContainerHeaderVersion.NoExportInfo)
             {

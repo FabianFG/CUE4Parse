@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using CUE4Parse.GameTypes.DaysGone.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Component;
@@ -134,7 +135,13 @@ public class ULevel : Assets.Exports.UObject, IAssetUserData
 
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 16;
         if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) || Ar.Position >= validPos) return;
-        if (FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.LevelTransArrayConvertedToTArray) Ar.Position += 4;
+        if (Ar.Game == GAME_DaysGone && Ar.Owner!.HasFlags(EPackageFlags.PKG_UncookedOnly))
+        {
+            Actors = Ar.ReadArray(() => new FPackageIndex(Ar));
+            CustomGameData = Ar.ReadArray(Actors.Length, () => new FBendActorInfo(Ar));
+            return;
+        }
+        if (FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.LevelTransArrayConvertedToTArray ) Ar.Position += 4;
         Actors = Ar.ReadArray(() => new FPackageIndex(Ar));
         URL = new FURL(Ar);
         Model = new FPackageIndex(Ar);

@@ -20,6 +20,7 @@ public class UStaticMeshComponent : UMeshComponent
         if (Ar.Game is GAME_Borderlands3) Ar.ReadBoolean();
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         LODData = Ar.ReadArray(() => new FStaticMeshComponentLODInfo(Ar));
+        if (Ar.Game is GAME_Dishonored) return;
         if (Ar.Game is GAME_SuicideSquad)
         {
             var count = Ar.Read<int>();
@@ -49,18 +50,9 @@ public class UStaticMeshComponent : UMeshComponent
     {
         if (StaticMesh != null)
             return StaticMesh;
-        var mesh = new FPackageIndex();
-        var current = this;
-        while (true)
-        {
-            if (current is null) break;
-            mesh = current.GetOrDefault("StaticMesh", new FPackageIndex());
-            if (!mesh.IsNull || current.Template == null)
-                break;
-            current = current.Template.Load<UStaticMeshComponent>();
-        }
-        StaticMesh = mesh;
-        return mesh;
+
+        TryGetValue(out FPackageIndex mesh, nameof(StaticMesh));
+        return StaticMesh = mesh ?? new FPackageIndex();
     }
 
     private WeakReference<UStaticMesh> StaticMeshRef;

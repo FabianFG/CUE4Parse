@@ -23,7 +23,7 @@ public class FMaterialResourceProxyReader : FArchive
 
         if (!bReadNameMap && Ar is FAssetArchive assetArchive)
         {
-            _nameMap = assetArchive.Owner?.NameMap;
+            _nameMap = assetArchive.NameMap;
             _readNameMap = true;
             return;
         }
@@ -33,7 +33,7 @@ public class FMaterialResourceProxyReader : FArchive
             _nameMap = InnerArchive.ReadArray(() => new FNameEntrySerialized(Ar));
             var num = Ar.Read<int>();
             Ar.Position += num * Unsafe.SizeOf<FMaterialResourceLocOnDisk>(); // Locs
-            if (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile) Ar.Position += num;
+            if (Ar.Game is GAME_ArenaBreakoutInfinite or GAME_ArenaBreakoutMobile or GAME_MonsterHunterOutlanders) Ar.Position += num;
             if (Ar.Game is GAME_RocoKingdomWorld) Ar.Position += num * 5;
             Ar.Position += 4; // NumBytes
         }
@@ -62,7 +62,7 @@ public class FMaterialResourceProxyReader : FArchive
         return new FName(_nameMap[nameIndex], nameIndex, number);
     }
 
-    public string ReadFString(bool bReadNameMap) => bReadNameMap ? ReadFName().PlainText : base.ReadFString();
+    public string ReadFString(bool bReadNameMap) => bReadNameMap ? ReadFName().Text : base.ReadFString();
     public override string ReadFString() => ReadFString(_readNameMap);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

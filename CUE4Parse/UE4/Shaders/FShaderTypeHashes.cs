@@ -5,12 +5,7 @@ namespace CUE4Parse.UE4.Shaders;
 
 // https://github.com/EpicGames/UnrealEngine/blob/803688920e030c9a86c3659ac986030fba963833/Engine/Source/Runtime/RenderCore/Public/ShaderCodeArchive.h#L134
 // this isn't actually FShaderTypeHashes class but rather TArray<FShaderTypeHashes> ShaderTypes;
-public class FShaderTypeHashes
+public class FShaderTypeHashes(FArchive Ar)
 {
-    public FHashedName[][] Data;
-
-    public FShaderTypeHashes(FArchive Ar)
-    {
-        Data = Ar.ReadArray(() => Ar.ReadArray(() => new FHashedName(Ar)));
-    }
+    public FHashedName[][] Data = Ar.ReadArray(() => Ar.ReadArray(() => new FHashedName(Ar)));
 }

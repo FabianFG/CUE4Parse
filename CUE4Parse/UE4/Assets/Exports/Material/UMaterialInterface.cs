@@ -23,15 +23,15 @@ public class UMaterialInterface : UUnrealMaterial
 
     public FStructFallback? CachedExpressionData;
     public FMaterialTextureInfo[] TextureStreamingData = Array.Empty<FMaterialTextureInfo>();
-    public List<FMaterialResource> LoadedMaterialResources = new();
+    public List<FMaterialResource>? LoadedMaterialResources { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if(Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 24;
         base.Deserialize(Ar, validPos);
-        bUseMobileSpecular = GetOrDefault<bool>(nameof(bUseMobileSpecular));
-        MobileSpecularPower = GetOrDefault<float>(nameof(MobileSpecularPower));
-        MobileSpecularMask = GetOrDefault<EMobileSpecularMask>(nameof(MobileSpecularMask));
+        bUseMobileSpecular = GetOrDefault(nameof(bUseMobileSpecular), bUseMobileSpecular);
+        MobileSpecularPower = GetOrDefault(nameof(MobileSpecularPower), MobileSpecularPower);
+        MobileSpecularMask = GetOrDefault(nameof(MobileSpecularMask), MobileSpecularMask);
         FlattenedTexture = GetOrDefault<FPackageIndex?>(nameof(FlattenedTexture));
         MobileBaseTexture = GetOrDefault<FPackageIndex?>(nameof(MobileBaseTexture));
         MobileNormalTexture = GetOrDefault<FPackageIndex?>(nameof(MobileNormalTexture));
@@ -67,10 +67,10 @@ public class UMaterialInterface : UUnrealMaterial
 
     public override void GetParams(CMaterialParams parameters)
     {
-        if (FlattenedTexture?.TryLoad<UTexture>(out var flattenedTexture) == true) parameters.Diffuse = flattenedTexture;
-        if (MobileBaseTexture?.TryLoad<UTexture>(out var mobileBaseTexture) == true) parameters.Diffuse = mobileBaseTexture;
-        if (MobileNormalTexture?.TryLoad<UTexture>(out var mobileNormalTexture) == true) parameters.Normal = mobileNormalTexture;
-        if (MobileMaskTexture?.TryLoad<UTexture>(out var mobileMaskTexture) == true) parameters.Opacity = mobileMaskTexture;
+        if (FlattenedTexture != null) parameters.Diffuse = FlattenedTexture;
+        if (MobileBaseTexture != null) parameters.Diffuse = MobileBaseTexture;
+        if (MobileNormalTexture != null) parameters.Normal = MobileNormalTexture;
+        if (MobileMaskTexture != null) parameters.Opacity = MobileMaskTexture;
         parameters.UseMobileSpecular = bUseMobileSpecular;
         parameters.MobileSpecularPower = MobileSpecularPower;
         parameters.MobileSpecularMask = MobileSpecularMask;
@@ -78,17 +78,17 @@ public class UMaterialInterface : UUnrealMaterial
 
     public override void GetParams(CMaterialParams2 parameters, EMaterialDepth depth)
     {
-        if (FlattenedTexture?.TryLoad<UTexture>(out var flattenedTexture) == true)
-            parameters.VerifyTexture("Diffuse", flattenedTexture, false);
-        if (MobileBaseTexture?.TryLoad<UTexture>(out var mobileBaseTexture) == true)
-            parameters.VerifyTexture("Diffuse", mobileBaseTexture, false);
-        if (MobileNormalTexture?.TryLoad<UTexture>(out var mobileNormalTexture) == true)
-            parameters.VerifyTexture("Normal", mobileNormalTexture, false);
+        if (FlattenedTexture != null)
+            parameters.VerifyTexture("Diffuse", FlattenedTexture, false);
+        if (MobileBaseTexture != null)
+            parameters.VerifyTexture("Diffuse", MobileBaseTexture, false);
+        if (MobileNormalTexture != null)
+            parameters.VerifyTexture("Normal", MobileNormalTexture, false);
 
         for (int i = 0; i < TextureStreamingData.Length; i++)
         {
             var name = TextureStreamingData[i].TextureName.Text;
-            if (!parameters.TryGetTexture2d(out var texture, name))
+            if (!parameters.Textures.TryGetValue(name, out var texture))
                 continue;
 
             parameters.VerifyTexture(name, texture, false);
@@ -132,10 +132,7 @@ public class UMaterialInterface : UUnrealMaterial
         {
             for (int i = 0; i < textureParameterInfos.Length; i++)
             {
-                var name = textureParameterInfos[i].Name.Text;
-                if (!textureValues[i].TryLoad(out UTexture texture)) continue;
-
-                parameters.VerifyTexture(name, texture);
+                parameters.VerifyTexture(textureParameterInfos[i].Name.Text, textureValues[i]);
             }
         }
     }
@@ -163,36 +160,34 @@ public class UMaterialInterface : UUnrealMaterial
         {
             for (int i = 0; i < textureParameterInfos.Length; i++)
             {
-                var name = textureParameterInfos[i].Name.Text;
-                if (!textureValues[i].TryLoad(out UTexture texture)) continue;
-
-                parameters.VerifyTexture(name, texture);
+                parameters.VerifyTexture(textureParameterInfos[i].Name.Text, textureValues[i]);
             }
         }
     }
 
-    public void DeserializeInlineShaderMaps(FAssetArchive Ar, ICollection<FMaterialResource> loadedResources)
+    protected void DeserializeInlineShaderMaps(FAssetArchive Ar)
     {
         var numLoadedResources = Ar.Read<int>();
         if (numLoadedResources > 0)
         {
             FMaterialResourceProxyReader resourceAr;
-            if (Ar.Game != GAME_Stalker2)
+            if (Ar.Game is GAME_Stalker2)
             {
-                resourceAr = new FMaterialResourceProxyReader(Ar);
+                var ShaderMaps = new FByteBulkData(Ar);
+                using var ShaderMapsAr = new FByteArchive("ShaderMaps", ShaderMaps.Data!, Ar.Versions);
+                resourceAr = new FMaterialResourceProxyReader(ShaderMapsAr);
             }
             else
             {
-                var ShaderMaps = new FByteBulkData(Ar);
-                using var ShaderMapsAr = new FByteArchive("ShaderMaps", ShaderMaps.Data, Ar.Versions);
-                resourceAr = new FMaterialResourceProxyReader(ShaderMapsAr);
+                resourceAr = new FMaterialResourceProxyReader(Ar);
             }
 
+            LoadedMaterialResources = new List<FMaterialResource>(numLoadedResources);
             for (var resourceIndex = 0; resourceIndex < numLoadedResources; ++resourceIndex)
             {
                 var loadedResource = new FMaterialResource();
                 loadedResource.DeserializeInlineShaderMap(resourceAr);
-                loadedResources.Add(loadedResource);
+                LoadedMaterialResources.Add(loadedResource);
             }
         }
     }

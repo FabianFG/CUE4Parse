@@ -86,6 +86,12 @@ public class FNaniteStreamableData
                 }
 
                 cluster.ClusterBoneInfluences = list;
+
+                // cluster.Bricks = new FBrick[cluster.BrickDataNum];
+                // for (uint brickIndex = 0; brickIndex < cluster.BrickDataNum; brickIndex++)
+                // {
+                //     cluster.Bricks[brickIndex] = new FBrick(Ar, GPUPageHeaderOffset, cluster.BrickDataOffset, brickIndex);
+                // }
             }
 
             Clusters[clusterIndex] = cluster;
@@ -93,6 +99,7 @@ public class FNaniteStreamableData
 
         for (uint clusterIndex = 0; clusterIndex < NumClusters; clusterIndex++)
         {
+            if (Clusters[clusterIndex].bVoxel) continue;
             Clusters[clusterIndex].Decode(Ar, this, clusterIndex);
         }
 

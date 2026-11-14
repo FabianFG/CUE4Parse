@@ -12,13 +12,13 @@ using CUE4Parse.UE4.Wwise.Plugins.Mindseye;
 using CUE4Parse.UE4.Wwise.Plugins.OculusSpatializer;
 using CUE4Parse.UE4.Wwise.Plugins.PolyspectralMBC;
 using CUE4Parse.UE4.Wwise.Plugins.ResonanceAudio;
+using CUE4Parse.UE4.Wwise.Plugins.Valve;
 using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Wwise;
 
 public class WwisePlugin
 {
-    
     public static IAkPluginParam? TryParsePluginParams(FWwiseArchive Ar, AkPlugin plugin, bool always = false)
     {
         var pluginId = plugin.PluginId;
@@ -146,6 +146,9 @@ public class WwisePlugin
                 EAkPluginId.TencentGMESendFX or EAkPluginId.TencentGMESource or
                     EAkPluginId.TencentGMEReceiveSource => new CAkDefaultSinkParams(),
                 // EAkPluginId.TencentGMESessionFX
+
+                EAkPluginId.SteamAudioSpatializer => new CSteamAudioSpatializerFXParams(Ar),
+                EAkPluginId.SteamAudioReverb or EAkPluginId.SteamAudioMixReturn => new CSteamAudioReverbFXParams(Ar),
 
                 _ => new CAkDefaultParams(Ar, (int)size),
             };

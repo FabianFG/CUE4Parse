@@ -2,11 +2,10 @@ using System.Buffers.Binary;
 using CUE4Parse.UE4.Lua.Archives;
 using CUE4Parse.UE4.Lua.Readers;
 using CUE4Parse.UE4.Lua.Writers;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.GameTypes.HonorOfKings.Lua;
 
-public class FNGRLuaArchive(string name, byte[] data, VersionContainer? versions = null) : FLua54Archive(name, data, versions)
+public class FNGRLuaArchive(string name, byte[] data) : FLua54Archive(name, data)
 {
     public T ReadBE<T>() where T : unmanaged
     {
@@ -43,7 +42,6 @@ public readonly struct Chunk(FNGRLuaArchive Ar, int chunkSize)
 
 public class NGRLuaReader
 {
-    
     private const uint NGR_LUA_MAGIC = 0xFADEFACE;
 
     public FadeFaceHeader Header;
@@ -73,7 +71,7 @@ public class NGRLuaReader
 
     public byte[] DecryptLuaInternal(string name, byte[] data)
     {
-        using var Ar = new FNGRLuaArchive(name, data, null);
+        using var Ar = new FNGRLuaArchive(name, data);
         if (Ar.Length < 0x14)
         {
             Log.Warning("Fade Face header is too small");
@@ -157,17 +155,7 @@ public class NGRLuaReader
 
     private static byte[] Restore(string name, byte[] decryptedLuaBytecode)
     {
-        using var Ar = new FNGRLuaArchive(name, decryptedLuaBytecode, null);
-
-        var lua = FLua54Reader.ReadLuaBytecode(Ar, _opcodeMapping);
-
-        using var msOut = new MemoryStream(decryptedLuaBytecode.Length);
-        using (var writer = new FLua54ArchiveWriter(msOut))
-        {
-            FLuaWriter54.Write(writer, lua);
-            writer.Flush();
-        }
-
-        return msOut.ToArray();
+        using var Ar = new FNGRLuaArchive(name, decryptedLuaBytecode);
+        return new FLuaWriter54(FLua54Reader.ReadLuaBytecode(Ar, _opcodeMapping)).GetBuffer();
     }
 }

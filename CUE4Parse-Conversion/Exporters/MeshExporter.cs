@@ -1,20 +1,34 @@
-﻿using CUE4Parse_Conversion.Dto;
+using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Formats.Meshes;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.Material;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse_Conversion.Exporters;
 
 public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UObject
 {
+    protected T Mesh { get; } = mesh;
+
     protected abstract IReadOnlyList<ExportFile> BuildFiles(T original, IMeshExportFormat format);
+
+    protected virtual IEnumerable<FPackageIndex?> MaterialReferences => [];
+
+    internal override IEnumerable<UObject> GetDependencies(CancellationToken ct)
+    {
+        foreach (var reference in MaterialReferences)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (reference?.TryLoad<UMaterialInterface>(out var material) == true) yield return material;
+        }
+    }
 
     protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
         Log.Debug("Converting mesh to {Format} at {Quality} quality ({NaniteFormat})", Session.Options.MeshFormat, Session.Options.MeshQuality, Session.Options.NaniteMeshFormat);
 
-        return BuildFiles(mesh, GetMeshFormat(Session.Options.MeshFormat));
+        return BuildFiles(Mesh, GetMeshFormat(Session.Options.MeshFormat));
     }
 
     protected Dictionary<string, string>? EnqueueMaterials(params MeshMaterialDto[] materials)
@@ -31,10 +45,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
             if (slot.Material?.TryLoad<UMaterialInterface>(out var material) == true)
             {
                 Session.Add(material);
-                if (paths != null)
-                {
-                    paths[slot.SlotName] = Resolve(material, "usda");
-                }
+                paths?[slot.Name] = Resolve(material, "usda");
             }
         }
 
@@ -44,7 +55,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
     private IMeshExportFormat GetMeshFormat(EMeshFormat format) => format switch
     {
         EMeshFormat.ActorX => new ActorXMeshFormat(),
-        EMeshFormat.Gltf2 => new GltfMeshFormat(),
+        EMeshFormat.Gltf2 => new GltfMeshFormat(Session),
         EMeshFormat.UEFormat => new UEFormatMeshFormat(),
         EMeshFormat.USD => new UsdMeshFormat(),
         _ => throw new NotSupportedException($"Mesh export does not support format {format}. Available formats: {string.Join(", ", Enum.GetNames<EMeshFormat>())}")

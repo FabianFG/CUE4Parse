@@ -9,6 +9,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh;
 [JsonConverter(typeof(FStaticMeshSectionConverter))]
 public class FStaticMeshSection
 {
+    public FPackageIndex? Material;
     public int MaterialIndex;
     public int FirstIndex;
     public int NumTriangles;
@@ -27,7 +28,7 @@ public class FStaticMeshSection
     {
         if (Ar.Game < GAME_UE4_0)
         {
-            new FPackageIndex((FAssetArchive)Ar); // Material
+            Material = new FPackageIndex((FAssetArchive)Ar); // Material
             bEnableCollision = Ar.ReadBoolean();
             Ar.ReadBoolean(); // OldEnableCollision
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.AddedCastShadow) bCastShadow = Ar.ReadBoolean();
@@ -63,7 +64,7 @@ public class FStaticMeshSection
         if (Ar.Game is GAME_AssaultFireFuture) return;
         if (Ar.Game is GAME_ArenaBreakoutMobile) Ar.Position += 4;
         bForceOpaque = FRenderingObjectVersion.Get(Ar) >= FRenderingObjectVersion.Type.StaticMeshSectionForceOpaqueField && Ar.ReadBoolean();
-        if (Ar.Game is GAME_MortalKombat1 or GAME_TheFinals or GAME_ArcRaiders) Ar.Position += 8;
+        if (Ar.Game is GAME_MortalKombat1 or GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders) Ar.Position += 8;
         if (Ar.Game == GAME_BlueProtocol) CustomData = Ar.Read<short>(); // Must be read before bVisibleInRayTracing
         if (Ar.Game is GAME_WutheringWaves) Ar.SkipFixedArray(sizeof(int));
         bVisibleInRayTracing = !Ar.Versions["StaticMesh.HasVisibleInRayTracing"] || Ar.ReadBoolean();

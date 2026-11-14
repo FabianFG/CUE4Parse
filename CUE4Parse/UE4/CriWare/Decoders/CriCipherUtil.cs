@@ -1,5 +1,5 @@
 
-namespace CUE4Parse.UE4.CriWare.Decoders;
+namespace CUE4Parse.UE4.Criware.Decoders;
 
 public class CriwareDecryptionException : Exception
 {

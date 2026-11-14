@@ -9,7 +9,7 @@ namespace CUE4Parse.GameTypes.Tencent.PUBGMobile.Encryption.Aes;
 public class PUBGMobileAes
 {
     // Used only for index decryption
-    public static byte[] PUBGMobileDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader)
+    public static byte[] PUBGMobileDecrypt(byte[] bytes, int beginOffset, int count, bool isIndex, IAesVfsReader reader, object? customData = null)
     {
         if (beginOffset > bytes.Length - count)
             throw new IndexOutOfRangeException("beginOffset + count is larger than the length of bytes");
