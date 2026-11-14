@@ -82,6 +82,8 @@ public static class PUBGMobileSM4
         [42] = "56eed0401753d9e5ee86",
         [43] = "5412cc837199fa08d229",
         [44] = "48750e47caff0540e2ee"
+        [45] = "ec7f2df1f109a7f1d681",
+        [54] = "5a9b2fe21235ba44ff89"
     };
 
     public static byte[] Decrypt(byte[] bytes, int beginOffset, int count, string path, EPUBGMobileEncryptionMethod encryptionMethod, uint encryptionKeyId)
