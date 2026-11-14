@@ -21,7 +21,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
     public TextureGroup LODGroup { get; private set; }
     public TextureFilter Filter { get; private set; }
     public bool SRGB { get; private set; }
-    public FPackageIndex[] AssetUserData { get; private set; } = [];
+    public FPackageIndex?[]? AssetUserData { get; private set; }
     public EPixelFormat Format { get; protected set; } = EPixelFormat.PF_Unknown;
     public FTexturePlatformData PlatformData { get; private set; } = new();
     public FEditorBulkData? EditorData { get; private set; }
@@ -41,23 +41,22 @@ public class UTexture : UUnrealMaterial, IAssetUserData
     public virtual TextureAddress GetTextureAddressY() => TextureAddress.TA_Wrap;
     public virtual TextureAddress GetTextureAddressZ() => TextureAddress.TA_Wrap;
 
-    private UTextureAllMipDataProviderFactory? _mipDataProvider;
     public UTextureAllMipDataProviderFactory? MipDataProvider
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if (_mipDataProvider is null)
+            if (field is null && AssetUserData is { Length: > 0 } aud)
             {
-                foreach (var aud in AssetUserData)
+                foreach (var data in aud)
                 {
-                    if (aud.TryLoad<UTextureAllMipDataProviderFactory>(out _mipDataProvider))
+                    if (data?.TryLoad<UTextureAllMipDataProviderFactory>(out field) == true)
                     {
                         break;
                     }
                 }
             }
-            return _mipDataProvider;
+            return field;
         }
     }
 
@@ -70,7 +69,7 @@ public class UTexture : UUnrealMaterial, IAssetUserData
         LODGroup = GetOrDefault(nameof(LODGroup), TextureGroup.TEXTUREGROUP_World);
         Filter = GetOrDefault(nameof(Filter), TextureFilter.TF_Default);
         SRGB = GetOrDefault(nameof(SRGB), true);
-        AssetUserData = GetOrDefault<FPackageIndex[]>(nameof(AssetUserData), []);
+        AssetUserData = GetOrDefault<FPackageIndex?[]?>(nameof(AssetUserData));
         CookPlatformTilingSettings = GetOrDefault<ETextureCookPlatformTilingSettings>(nameof(CookPlatformTilingSettings));
 
         if (Ar.Game < GAME_UE4_0)

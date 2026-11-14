@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Objects.PhysicsEngine;
 
-public class UBodySetup : Assets.Exports.UObject
+public class UBodySetup : UBodySetupCore
 {
     public FKAggregateGeom? AggGeom { get; private set; }
     public FBodyInstance? DefaultInstance { get; private set; } // DefaultInstance.SetObjectType(ECC_PhysicsBody);

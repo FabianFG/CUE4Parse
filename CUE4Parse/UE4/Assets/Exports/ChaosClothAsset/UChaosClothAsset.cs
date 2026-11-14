@@ -30,7 +30,6 @@ public class UChaosClothAsset : USkinnedAsset
         SkeletalMaterials = GetOrDefault<FSkeletalMaterial[]>(nameof(Materials), []);
         PhysicsAsset = GetOrDefault(nameof(PhysicsAsset), new FPackageIndex());
         Bounds = GetOrDefault<FBoxSphereBounds?>(nameof(Bounds), null);
-        AssetUserData = GetOrDefault(nameof(AssetUserData), Array.Empty<FPackageIndex>());
 
 #if DEBUG
         Log.Debug(nameof(UChaosClothAsset));
@@ -67,7 +66,7 @@ public class UChaosClothAsset : USkinnedAsset
             {
                 var minMobileLODIdx = Ar.Read<int>();
             }
-            
+
             LODModels = new FStaticLODModel[Ar.Read<int>()];
             for (var i = 0; i < LODModels.Length; i++)
             {
