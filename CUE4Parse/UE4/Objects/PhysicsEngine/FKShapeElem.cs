@@ -9,14 +9,14 @@ public class FKShapeElem
 {
     public readonly float RestOffset;
     public readonly FName Name;
-    public readonly bool bContributeToMass;
-    public readonly ECollisionEnabled CollisionEnabled;
+    public readonly bool bContributeToMass = true;
+    public readonly ECollisionEnabled CollisionEnabled = ECollisionEnabled.QueryAndPhysics;
 
     public FKShapeElem(FStructFallback fallback)
     {
         RestOffset = fallback.GetOrDefault<float>(nameof(RestOffset));
         Name = fallback.GetOrDefault<FName>(nameof(Name));
-        bContributeToMass = fallback.GetOrDefault<bool>(nameof(bContributeToMass));
-        CollisionEnabled = fallback.GetOrDefault<ECollisionEnabled>(nameof(CollisionEnabled));
+        bContributeToMass = fallback.GetOrDefault(nameof(bContributeToMass), bContributeToMass);
+        CollisionEnabled = fallback.GetOrDefault(nameof(CollisionEnabled), CollisionEnabled);
     }
 }

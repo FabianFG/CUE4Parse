@@ -1,5 +1,6 @@
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Utils;
+using CUE4Parse.UE4.Objects.UObject;
 
 namespace CUE4Parse.UE4.Objects.PhysicsEngine;
 
@@ -21,6 +22,7 @@ public readonly struct FBodyInstance : IUStruct
     public readonly byte ProjectionSolverIterationCount = 1;
     public readonly ECollisionChannel ObjectType = ECollisionChannel.ECC_WorldStatic;
     public readonly ECollisionEnabled CollisionEnabled = ECollisionEnabled.QueryAndPhysics;
+    public readonly FName? CollisionProfileName;
 
     public FBodyInstance(FStructFallback fallback)
     {
@@ -39,5 +41,6 @@ public readonly struct FBodyInstance : IUStruct
         ProjectionSolverIterationCount = fallback.GetOrDefault(nameof(ProjectionSolverIterationCount), ProjectionSolverIterationCount);
         ObjectType = fallback.GetOrDefault(nameof(ObjectType), ObjectType);
         CollisionEnabled = fallback.GetOrDefault(nameof(CollisionEnabled), CollisionEnabled);
+        CollisionProfileName = fallback.GetOrDefault(nameof(CollisionProfileName), CollisionProfileName);
     }
 }

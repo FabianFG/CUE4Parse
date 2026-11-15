@@ -21,13 +21,13 @@ public class UStaticMesh : UObject
     public FStaticMeshRenderData? RenderData { get; private set; }
     public FPackageIndex?[] Materials { get; private set; } = []; // UMaterialInterface[]
     public FStaticMaterial[] StaticMaterials { get; private set; } = [];
-    public int LODForCollision { get; private set; }
+    public int LODForCollision { get; private set; } = 0;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
-        LODForCollision = GetOrDefault(nameof(LODForCollision), 0);
+        LODForCollision = GetOrDefault(nameof(LODForCollision), LODForCollision);
 
         var stripDataFlags = new FStripDataFlags(Ar);
         bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR && Ar.ReadBoolean();
@@ -40,7 +40,7 @@ public class UStaticMesh : UObject
         }
 
         if (Ar.Game == GAME_WutheringWaves && GetOrDefault<bool>("bUseStandaloneBodySetup"))
-            BodySetup = GetOrDefault<FPackageIndex>("StandaloneBodySetup");
+            BodySetup = GetOrDefault("StandaloneBodySetup", new FPackageIndex());
         else if (Ar.Game is GAME_GhostwireTokyo && TryGetValue(out bool bTngUseBodySetup, "bTngUseBodySetup"))
             BodySetup = new FPackageIndex();
         else

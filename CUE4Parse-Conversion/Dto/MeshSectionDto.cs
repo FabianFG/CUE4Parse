@@ -8,7 +8,8 @@ public struct MeshSectionDto(int index, int firstIndex, int numFaces, bool castS
 {
     public readonly int MaterialIndex = index;
     public readonly bool CastShadow = castShadow;
-    public readonly bool bDisabled;
+    public readonly bool IsDisabled;
+    public readonly bool EnableCollision = true;
     public int FirstIndex = firstIndex;
     public int NumFaces = numFaces;
 
@@ -16,17 +17,18 @@ public struct MeshSectionDto(int index, int firstIndex, int numFaces, bool castS
 
     public MeshSectionDto(int index, MeshSectionDto section) : this(index, section.FirstIndex, section.NumFaces, section.CastShadow)
     {
-        bDisabled = section.bDisabled;
+        IsDisabled = section.IsDisabled;
+        EnableCollision = section.EnableCollision;
     }
 
     public MeshSectionDto(FStaticMeshSection section) : this(section.MaterialIndex, section.FirstIndex, section.NumTriangles, section.bCastShadow)
     {
-
+        EnableCollision = section.bEnableCollision;
     }
 
     public MeshSectionDto(FSkelMeshSection section) : this(section.MaterialIndex, section.BaseIndex, section.NumTriangles, section.bCastShadow)
     {
-        bDisabled = section.bDisabled;
+        IsDisabled = section.bDisabled;
     }
 
     public MeshSectionDto(FGeometryCollectionMeshElement section) : this(section.MaterialIndex, (int)section.TriangleStart * 3, (int)section.TriangleCount, true)

@@ -5,7 +5,7 @@ namespace CUE4Parse.UE4.Objects.PhysicsEngine;
 
 public class USkeletalBodySetup : UBodySetup
 {
-    public FName BoneName;
+    public FName? BoneName;
     public EPhysicsType PhysicsType;
     public ECollisionTraceFlag CollisionTraceFlag;
 
@@ -13,7 +13,7 @@ public class USkeletalBodySetup : UBodySetup
     {
         base.Deserialize(Ar, validPos);
 
-        BoneName = GetOrDefault<FName>(nameof(BoneName));
+        BoneName = GetOrDefault(nameof(BoneName), BoneName);
         PhysicsType = GetOrDefault<EPhysicsType>(nameof(PhysicsType));
         CollisionTraceFlag = GetOrDefault<ECollisionTraceFlag>(nameof(CollisionTraceFlag));
     }
