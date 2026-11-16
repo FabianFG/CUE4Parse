@@ -53,8 +53,11 @@ public class UFont : UObject
     {
         base.WriteJson(writer, serializer);
 
-        writer.WritePropertyName(nameof(CharactersPerPage));
-        serializer.Serialize(writer, CharactersPerPage);
+        if (CharactersPerPage is not null)
+        {
+            writer.WritePropertyName(nameof(CharactersPerPage));
+            serializer.Serialize(writer, CharactersPerPage);
+        }
 
         if (Pages is {Length: > 0})
         {
