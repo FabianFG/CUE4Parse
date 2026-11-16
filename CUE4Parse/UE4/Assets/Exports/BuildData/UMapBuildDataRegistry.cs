@@ -532,7 +532,7 @@ public class FLightMap2D : FLightMap
         }
         else
         {
-            if (Ar.Game is GAME_ArenaBreakoutMobile or GAME_ValorantSource) Ar.Position += 4;
+            if (Ar.Game is GAME_ArenaBreakoutMobile or GAME_ValorantSource or GAME_TheVanishingofEthanCarter) Ar.Position += 4;
             Textures[0] = new FPackageIndex(Ar);
             Textures[1] = new FPackageIndex(Ar);
 
@@ -592,7 +592,7 @@ public class FLightMap2D : FLightMap
         }
 
         if (Ar.Game is GAME_RacingMaster) Ar.Position += 20;
-        if (Ar.Game is GAME_MetroAwakening) Ar.Position += 4;
+        if (Ar.Game is GAME_MetroAwakening or GAME_TheVanishingofEthanCarter) Ar.Position += 4;
     }
 }
 

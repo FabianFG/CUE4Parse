@@ -322,7 +322,7 @@ public class UStaticMesh : UObject
         Ar.Position += Ar.Game switch
         {
             GAME_OutlastTrials => 1,
-            GAME_Farlight84 or GAME_DuneAwakening => 4,
+            GAME_Farlight84 or GAME_DuneAwakening or GAME_TheVanishingofEthanCarter => 4,
             GAME_DaysGone => Ar.Read<int>() * 4 + 4,
             GAME_GangstarMirageCity => 20,
             _ => 0
