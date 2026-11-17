@@ -34,7 +34,7 @@ namespace CUE4Parse.UE4.Objects.Engine
             pVertex = Ar.Read<int>();
             iSide = Ar.Read<int>();
             ShadowTexCoord = new FVector2D(Ar);
-            if (Ar.Ver >= EUnrealEngineObjectUE3Version.BACKFACESHADOWTEXCOORD)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.BACKFACESHADOWTEXCOORD || Ar.Game == GAME_TheVanishingofEthanCarter)
             {
                 BackfaceShadowTexCoord = new FVector2D(Ar); // why do some builds have this removed in UE3
             }

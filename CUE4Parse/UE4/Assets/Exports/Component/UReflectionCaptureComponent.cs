@@ -78,6 +78,7 @@ public class UReflectionCaptureComponent : USceneComponent
                                 {
                                     LegacyMapBuildData = new FReflectionCaptureMapBuildData();
                                     LegacyMapBuildData.CubemapSize = Ar.Read<int>();
+                                    if (Ar.Game == GAME_TheVanishingofEthanCarter) Ar.Position += 4;
                                     LegacyMapBuildData.FullHDRCapturedData = Ar.ReadArray<byte>();
                                 }
                             }
