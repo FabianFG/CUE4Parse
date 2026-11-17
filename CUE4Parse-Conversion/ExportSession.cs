@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.GeometryCollection;
+using CUE4Parse.UE4.Assets.Exports.HairStrands;
 using CUE4Parse.UE4.Assets.Exports.Houdini;
 using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Exports.Paper2D;
@@ -92,6 +93,8 @@ public sealed class ExportSession(Action<StreamingLevelFilterArgs, CancellationT
             UHoudiniStaticMesh houdiniMesh => Add(new HoudiniStaticMeshExporter(houdiniMesh)),
             UIRMesh irMesh => Add(new IRMeshExporter(irMesh)),
             UGeometryCollection geometryCollection => Add(new GeometryCollectionExporter(geometryCollection)),
+            UGroomAsset groom => Add(new GroomExporter(groom)),
+            // UGroomBindingAsset groomBinding => Add(new GroomBindingExporter(groomBinding)),
             USkeleton skeleton => Add(new SkeletonExporter(skeleton)),
             UPoseAsset poseAsset => Add(new PoseAssetExporter(poseAsset)),
             UAnimationAsset animation => Add(new AnimationExporter(animation)),

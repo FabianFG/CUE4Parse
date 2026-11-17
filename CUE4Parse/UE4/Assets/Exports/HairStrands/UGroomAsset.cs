@@ -6,6 +6,7 @@ using CUE4Parse.UE4.Objects.Engine;
 using CUE4Parse.UE4.Objects.RenderCore;
 using CUE4Parse.UE4.Readers;
 using CUE4Parse.UE4.Versions;
+using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Assets.Exports.HairStrands;
 
@@ -30,11 +31,15 @@ public class UGroomAsset : UObject
     };
 
     public FStripDataFlags ClassDataStripFlags;
-    public FHairGroupPlatformData[] HairGroupsPlatformData;
+    public FHairGroupPlatformData[] HairGroupsPlatformData = [];
+    public FHairGroupsRendering[] HairGroupsRendering = [];
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        HairGroupsRendering = GetOrDefault<FHairGroupsRendering[]>(nameof(HairGroupsRendering), []);
+
 #if DEBUG
         Log.Debug(nameof(UGroomAsset));
 #endif
@@ -67,17 +72,12 @@ public class UGroomAsset : UObject
         public FCards? Cards;
         public FMeshes? Meshes;
 
-        public void DummySerizalizationForLegacyPurpose(FAssetArchive Ar)
-        {
-            Strands = new FStrands();
-            Guides = new FGuides(Ar);
-        }
-
         public FHairGroupPlatformData(FAssetArchive Ar)
         {
             if (FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.GroomAssetRemoveInAssetSerialization)
             {
-                DummySerizalizationForLegacyPurpose(Ar);
+                Strands = new FStrands();
+                Guides = new FGuides(Ar);
                 return;
             }
 
@@ -108,8 +108,8 @@ public class UGroomAsset : UObject
 
         public class FStrands
         {
-            public FHairStrandsBulkData BulkData;
-            public FHairStrandsInterpolationBulkData InterpolationBulkData;
+            public FHairStrandsBulkData? BulkData;
+            public FHairStrandsInterpolationBulkData? InterpolationBulkData;
             public FHairStrandsClusterBulkData? ClusterBulkData;
             // Experimental (Optional)
             // public FRenderCurveResourceData CurveResourceData;
@@ -163,14 +163,9 @@ public class UGroomAsset : UObject
             }
         }
 
-        public class FMeshes(FAssetArchive ar)
+        public class FMeshes(FAssetArchive Ar)
         {
-            public FLOD[] LODs = ar.ReadArray(() => new FLOD(ar));
-
-            public class FLOD(FAssetArchive ar)
-            {
-                FHairMeshesBulkData BulkData = new FHairMeshesBulkData(ar);
-            }
+            public FHairMeshesBulkData[] LODs = Ar.ReadArray(() => new FHairMeshesBulkData(Ar));
         }
 
         public class FHairMeshesBulkData
@@ -192,10 +187,11 @@ public class UGroomAsset : UObject
             public FHairMeshesBulkData(FAssetArchive Ar)
             {
                 Positions = Ar.ReadArray<FVector4>();
-                Normals = Ar.ReadArray<FPackedNormal>();// maybe need to xor??
+                Normals = Ar.ReadArray<FPackedNormal>();
+                TensorUtils.Xor(MemoryMarshal.Cast<FPackedNormal, uint>(Normals.AsSpan()), 0x80808080u);
                 UVs = Ar.ReadArray<FVector4>();
                 VertexColors = Ar.Game >= GAME_UE5_6 ? Ar.ReadArray<uint>() : [];
-                Indices = Ar.ReadArray<uint>();;
+                Indices = Ar.ReadArray<uint>();
                 Header = new FHeader(Ar);
             }
         }
@@ -220,6 +216,8 @@ public class UGroomAsset : UObject
             public uint[] Indices;
             public FHeader Header;
 
+            public FVector2D GetAtlasUV(FVector4 uv) => Header.NumUVs > 1 ? new FVector2D(uv.Z, uv.W) : new FVector2D(uv.X, uv.Y);
+
             public struct FHeader(FArchive Ar)
             {
                 public FBox BoundingBox = new(Ar);
@@ -230,7 +228,8 @@ public class UGroomAsset : UObject
             public FHairCardsBulkData(FAssetArchive Ar)
             {
                 Positions = Ar.ReadArray<FVector4>();
-                Normals = Ar.ReadArray<FPackedNormal>();// maybe need to xor??
+                Normals = Ar.ReadArray<FPackedNormal>();
+                TensorUtils.Xor(MemoryMarshal.Cast<FPackedNormal, uint>(Normals.AsSpan()), 0x80808080u);
                 UVs = Ar.ReadArray<FVector4>();
                 Materials = Ar.ReadArray<uint>();
                 VertexColors = Ar.Game >= GAME_UE5_6 ? Ar.ReadArray<uint>() : [];
@@ -386,7 +385,7 @@ public class FHairStrandsBulkData : FHairStrandsBulkCommon
         public uint PointCount = Ar.Read<uint>();
         public float MaxLength = Ar.Read<float>();
         public float MaxRadius = Ar.Read<float>();
-        public FBox BoundingBox = new FBox(Ar);
+        public FBox BoundingBox = new(Ar);
         public uint MinPointPerCurve = Ar.Read<uint>();
         public uint MaxPointPerCurve = Ar.Read<uint>();
         public uint AvgPointPerCurve = Ar.Read<uint>();
@@ -400,7 +399,7 @@ public class FHairStrandsBulkData : FHairStrandsBulkCommon
         public uint SourcePointCount = Ar.Game >= GAME_UE5_6 ? Ar.Read<uint>() : 0;
         public uint[] CurveToPointCount = Ar.ReadArray<uint>();
         public float[] CoverageScales = Ar.ReadArray<float>();
-        public FStrides Strides = new FStrides(Ar);
+        public FStrides Strides = new(Ar);
         public FTranscoding Transcoding = Ar.Read<FTranscoding>();
 
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -451,16 +450,19 @@ public class FHairStrandsBulkData : FHairStrandsBulkCommon
         public FByteBulkData? Positions;
         public FByteBulkData? TranscodedPositions;
         public FByteBulkData CurveAttributes;
-        public FByteBulkData PointAttributes;
+        public FByteBulkData? PointAttributes;
         public FByteBulkData PointToCurve;
         public FByteBulkData Curves;
-        public FByteBulkData PointMapping;
-        public FByteBulkData CurveMapping;
+        public FByteBulkData? PointMapping;
+        public FByteBulkData? CurveMapping;
 
         public FData(FAssetArchive Ar, ref FHeader header)
         {
             if (header.Flags.HasFlag(EDataFlags.DataFlags_HasTranscodedPosition))
             {
+#if DEBUG
+                Log.Debug("Groom uses transcoded positions, add support please.");
+#endif
                 TranscodedPositions = new FByteBulkData(Ar);
             }
             else
@@ -492,8 +494,6 @@ public class FHairStrandsBulkData : FHairStrandsBulkCommon
 
     public override void SerializeData(FAssetArchive Ar)
     {
-        var CurveCount = Header?.CurveCount ?? 0;
-        var PointCount = CurveCount > 0 ? Header?.CurveToPointCount[CurveCount - 1] : 0;
         if (Header?.Flags.HasFlag(EDataFlags.DataFlags_HasData) == false)
             return;
 

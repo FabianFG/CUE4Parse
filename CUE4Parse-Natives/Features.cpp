@@ -14,5 +14,8 @@ DLLEXPORT bool IsFeatureAvailable(const char* feature) {
     #if WITH_Oodle
         COMP("Oodle")
     #endif
+    #if WITH_ALEMBIC
+        COMP("Alembic")
+    #endif
         return false;
 }

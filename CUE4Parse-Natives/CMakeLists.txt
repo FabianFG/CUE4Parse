@@ -7,6 +7,12 @@ if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
+if (EXISTS "${PROJECT_SOURCE_DIR}/Alembic/external/Alembic/CMakeLists.txt" AND EXISTS "${PROJECT_SOURCE_DIR}/Alembic/external/Imath/CMakeLists.txt")
+    set(WITH_ALEMBIC TRUE)
+    add_subdirectory(Alembic EXCLUDE_FROM_ALL)
+    list(APPEND SOURCES "${PROJECT_SOURCE_DIR}/Alembic/Groom.cpp")
+endif()
+
 if (EXISTS "${PROJECT_SOURCE_DIR}/ACL/external/acl/includes")
     set(WITH_ACL 1)
 endif()
@@ -34,7 +40,13 @@ set(SOURCES ${SOURCES} ${PROJECT_SOURCE_DIR}/Features.cpp)
 include_directories("${PROJECT_SOURCE_DIR}/common")
 
 add_library("${PROJECT_NAME}" SHARED ${SOURCES})
-set_target_properties("${PROJECT_NAME}" PROPERTIES PREFIX "")
+set_target_properties("${PROJECT_NAME}" PROPERTIES PREFIX "" DEBUG_POSTFIX "")
+
+if (WITH_ALEMBIC)
+    target_compile_definitions("${PROJECT_NAME}" PRIVATE WITH_ALEMBIC)
+    target_compile_features("${PROJECT_NAME}" PRIVATE cxx_std_20)
+    target_link_libraries("${PROJECT_NAME}" PRIVATE Alembic)
+endif()
 
 # Oodle
 if (WITH_Oodle)
