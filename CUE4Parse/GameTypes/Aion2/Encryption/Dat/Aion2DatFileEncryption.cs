@@ -70,6 +70,35 @@ public sealed partial class Aion2DatFileEncryption
         return hasher.Finalize().AsSpan().ToArray();
     }
 
+    private static (EEncryptionType EncryptionType, int RawSize, int PackedSize, int AlignedSize) ReadCompressedHeader(ReadOnlySpan<byte> data)
+    {
+        if (!_useHeaderPermutation)
+            return ((EEncryptionType) BinaryPrimitives.ReadInt32LittleEndian(data[4..]),
+                BinaryPrimitives.ReadInt32LittleEndian(data[12..]),
+                BinaryPrimitives.ReadInt32LittleEndian(data),
+                BinaryPrimitives.ReadInt32LittleEndian(data[8..]));
+
+        // Versioned L10N and compressed data tables share the same field permutation.
+        Span<byte> permutation = stackalloc byte[] { 0, 1, 2, 3 };
+        Span<byte> input = stackalloc byte[12];
+        BinaryPrimitives.WriteUInt64LittleEndian(input, _headerPermutationRoot);
+        BinaryPrimitives.WriteInt32LittleEndian(input[8..], 0x51);
+        using var hasher = Hasher.New();
+        hasher.Update(input);
+        var shuffle = hasher.Finalize().AsSpan();
+        for (var i = 3; i > 0; i--)
+        {
+            var other = shuffle[3 - i] % (i + 1);
+            (permutation[i], permutation[other]) = (permutation[other], permutation[i]);
+        }
+
+        Span<int> fields = stackalloc int[4];
+        for (var i = 0; i < fields.Length; i++)
+            fields[permutation[i]] = BinaryPrimitives.ReadInt32LittleEndian(data[(i * sizeof(int))..]);
+
+        return ((EEncryptionType) fields[0], fields[1], fields[2], fields[3]);
+    }
+
     private static ulong Blake3Hash(string value)
     {
         using var hasher = Hasher.New();

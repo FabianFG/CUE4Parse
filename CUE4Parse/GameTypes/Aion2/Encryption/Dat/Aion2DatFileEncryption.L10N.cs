@@ -1,4 +1,3 @@
-using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.GameTypes.Aion2.Objects;
@@ -19,7 +18,9 @@ public sealed partial class Aion2DatFileEncryption
         var locale = GetL10NLocale(filePath);
         var seed = Blake3Hash($"L10NString_{locale}");
 
-        var header = new FL10NHeader(Ar, seed);
+        var headerBytes = Ar.ReadArray<byte>(0x10);
+        FAion2DatFileArchive.DecryptData(headerBytes, DeriveHeaderKey(seed, EHeaderType.Localization));
+        var header = ReadCompressedHeader(headerBytes);
         if (header.EncryptionType != EEncryptionType.CompressedAES)
             throw new ParserException($"Unsupported AION2 L10N encryption type '{header.EncryptionType}'");
         if (header.AlignedSize <= 0 || header.AlignedSize > Ar.Length - Ar.Position ||
@@ -48,52 +49,5 @@ public sealed partial class Aion2DatFileEncryption
             return parts[^2];
 
         throw new ParserException($"Unable to derive AION2 L10N locale from '{filePath}'");
-    }
-
-    private readonly struct FL10NHeader
-    {
-        public readonly int PackedSize;
-        public readonly EEncryptionType EncryptionType;
-        public readonly int AlignedSize;
-        public readonly int RawSize;
-
-        public FL10NHeader(GenericBufferReader Ar, ulong seed)
-        {
-            var data = Ar.ReadArray<byte>(0x10);
-            FAion2DatFileArchive.DecryptData(data, DeriveHeaderKey(seed, EHeaderType.Localization));
-
-            using var headerAr = new GenericBufferReader(data);
-            if (!_useHeaderPermutation)
-            {
-                PackedSize = headerAr.Read<int>();
-                EncryptionType = headerAr.Read<EEncryptionType>();
-                AlignedSize = headerAr.Read<int>();
-                RawSize = headerAr.Read<int>();
-            }
-            else
-            {
-                // The versioned client shuffles the four serialized fields using
-                // BLAKE3(root || 0x51) before applying the header XOR stream.
-                Span<byte> permutation = stackalloc byte[] { 0, 1, 2, 3 };
-                Span<byte> input = stackalloc byte[12];
-                BinaryPrimitives.WriteUInt64LittleEndian(input, _headerPermutationRoot);
-                BinaryPrimitives.WriteInt32LittleEndian(input[8..], 0x51);
-                using var hasher = Blake3.Hasher.New();
-                hasher.Update(input);
-                var shuffle = hasher.Finalize().AsSpan();
-                for (var i = 3; i > 0; i--)
-                {
-                    var other = shuffle[3 - i] % (i + 1);
-                    (permutation[i], permutation[other]) = (permutation[other], permutation[i]);
-                }
-
-                Span<int> fields = stackalloc int[4];
-                for (var i = 0; i < 4; i++) fields[permutation[i]] = headerAr.Read<int>();
-                EncryptionType = (EEncryptionType) fields[0];
-                RawSize = fields[1];
-                PackedSize = fields[2];
-                AlignedSize = fields[3];
-            }
-        }
     }
 }
