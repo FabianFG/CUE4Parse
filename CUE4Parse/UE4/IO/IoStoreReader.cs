@@ -578,7 +578,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
                     // The multi output index is what UE uses to tell the save realms apart: a base realm
                     // chunk always has index 0 while a non-zero index is the optional segment UE loads
                     // on top of the package.
-                    if (chunkId._chunkIndex != 0)
+                    if (chunkId._chunkIndex != 0 || entry.IsOptionalPackage)
                     {
                         OptionalSegmentPackageIdIndex[chunkId.AsPackageId()] = entry;
                     }

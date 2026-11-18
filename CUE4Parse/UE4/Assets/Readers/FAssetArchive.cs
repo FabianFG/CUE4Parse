@@ -25,6 +25,9 @@ namespace CUE4Parse.UE4.Assets.Readers
         // Name map of the save realm this archive was created from. Only set for optional segments
         internal FNameEntrySerialized[]? RealmNameMap;
 
+        // Package flags of the save realm this archive was created from. Only set for optional segments.
+        internal EPackageFlags? RealmPackageFlags;
+
         // Ordinal of the save realm this archive was created from, base realm first. Raw package indices
         // carried by an export are local to the realm it was serialized from, so resolving them needs
         // this to pick the realm's own import and export tables.
@@ -37,7 +40,9 @@ namespace CUE4Parse.UE4.Assets.Readers
         public FNameEntrySerialized[]? NameMap => RealmNameMap ?? Owner?.NameMap;
 
         public bool HasUnversionedProperties => Owner?.HasFlags(EPackageFlags.PKG_UnversionedProperties) ?? false;
-        public bool IsFilterEditorOnly => Owner?.HasFlags(EPackageFlags.PKG_FilterEditorOnly) ?? false;
+        public bool IsFilterEditorOnly => RealmPackageFlags is { } realmFlags
+            ? realmFlags.HasFlag(EPackageFlags.PKG_FilterEditorOnly)
+            : Owner?.HasFlags(EPackageFlags.PKG_FilterEditorOnly) ?? false;
         public bool IsLoadingFromCookedPackage => Owner?.HasFlags(EPackageFlags.PKG_Cooked) ?? false;
 
         public FAssetArchive(FArchive baseArchive, IPackage? owner, int absoluteOffset = 0, Dictionary<PayloadType, Func<FByteBulkDataHeader?, FAssetArchive?>>? payloads = null) : base(baseArchive.Versions)
@@ -60,6 +65,7 @@ namespace CUE4Parse.UE4.Assets.Readers
         /// </summary>
         internal void CopyRealmContextFrom(FAssetArchive other)
         {
+            RealmPackageFlags = other.RealmPackageFlags;
             RealmNameMap = other.RealmNameMap;
             BulkDataMap = other.BulkDataMap;
             RealmIndex = other.RealmIndex;
@@ -239,6 +245,6 @@ namespace CUE4Parse.UE4.Assets.Readers
 
         // For performance reasons we carry over the payloads dict to the cloned instance
         // Shouldn't be a big deal since we add the payloads during package initialization phase, not during object serialization
-        public override object Clone() => new FAssetArchive((FArchive) _baseArchive.Clone(), Owner, AbsoluteOffset, _payloads) { BulkDataMap = BulkDataMap, RealmNameMap = RealmNameMap, RealmIndex = RealmIndex };
+        public override object Clone() => new FAssetArchive((FArchive) _baseArchive.Clone(), Owner, AbsoluteOffset, _payloads) { BulkDataMap = BulkDataMap, RealmNameMap = RealmNameMap, RealmIndex = RealmIndex, RealmPackageFlags = RealmPackageFlags };
     }
 }
