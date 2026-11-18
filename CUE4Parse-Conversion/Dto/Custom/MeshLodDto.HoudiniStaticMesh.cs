@@ -2,12 +2,13 @@ using CommunityToolkit.HighPerformance;
 using CUE4Parse.UE4.Assets.Exports.Houdini;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<MeshVertex> FromHoudiniStaticMesh(StaticMeshDto owner, UHoudiniStaticMesh mesh)
+    internal static MeshLodDto<MeshVertex> FromHoudiniStaticMesh(StaticMeshDto owner, ExportOptions options, UHoudiniStaticMesh mesh)
     {
         if (mesh.TriangleIndices.Length == 0)
             throw new InvalidOperationException("Houdini static mesh has no triangles");
@@ -87,6 +88,6 @@ public partial class MeshLodDto<TVertex>
             }
         }
 
-        return new MeshLodDto<MeshVertex>(owner, 0, indices, vertices, sections, extraUvs, vertexColors, 1.0f);
+        return new MeshLodDto<MeshVertex>(owner, options, 0, indices, vertices, sections, extraUvs, vertexColors, 1.0f);
     }
 }

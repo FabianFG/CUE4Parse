@@ -98,7 +98,7 @@ public class FSkelMeshSection
             var dummyTriangleSorting = Ar.Read<byte>(); // TEnumAsByte<ETriangleSortOption>
         }
 
-        if (Ar.Game == GAME_LifeIsStrange && (int)Ar.LicenseeVer >= 17)
+        if (Ar.Game == GAME_LifeIsStrange && Ar.LicenseeVer >= 17)
         {
             var bReadArray = Ar.ReadFlag();
 
@@ -261,6 +261,7 @@ public class FSkelMeshSection
         bCastShadow = FEditorObjectVersion.Get(Ar) < FEditorObjectVersion.Type.RefactorMeshEditorMaterials || Ar.ReadBoolean();
         if (Ar.Game is GAME_FinalFantasy7Rebirth or GAME_HogwartsLegacy or GAME_Snowbreak or GAME_ChasingKaleidoRIDER or GAME_NeedForSpeedMobile) Ar.Position += 4;
         bVisibleInRayTracing = FUE5MainStreamObjectVersion.Get(Ar) < FUE5MainStreamObjectVersion.Type.SkelMeshSectionVisibleInRayTracingFlagAdded || Ar.ReadBoolean();
+        if (Ar.Game is GAME_MonsterHunterOutlanders) Ar.Position += 4;
         BaseVertexIndex = Ar.Read<uint>();
         ClothMappingDataLODs = FUE5ReleaseStreamObjectVersion.Get(Ar) < FUE5ReleaseStreamObjectVersion.Type.AddClothMappingLODBias ? [Ar.ReadArray(() => new FMeshToMeshVertData(Ar))] : Ar.ReadArray(() => Ar.ReadArray(() => new FMeshToMeshVertData(Ar)));
         if (Ar.Game is GAME_GearsofWarEDay) SkipGearsofWarCustomData(Ar);

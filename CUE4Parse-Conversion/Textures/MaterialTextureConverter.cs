@@ -24,11 +24,11 @@ internal static class MaterialTextureConverter
 {
     public static unsafe byte[]? Encode(FMaterialTexture source, ExportOptions options, string? sourcePath = null, string? opacityPath = null)
     {
-        using var bitmap = ReadTexture(source.Texture, options.TexturePlatform, sourcePath);
+        using var bitmap = ReadTexture(source.Texture, options, sourcePath);
         if (bitmap == null)
             return null;
 
-        using var mask = source.Opacity != null ? ReadTexture(source.Opacity, options.TexturePlatform, opacityPath) : null;
+        using var mask = source.Opacity != null ? ReadTexture(source.Opacity, options, opacityPath) : null;
         var convert = source.InvertNormalY || mask != null || source.Layout is not EMaterialTextureLayout.ORM;
         var width = Math.Max(bitmap.Width, mask?.Width ?? 0);
         var height = Math.Max(bitmap.Height, mask?.Height ?? 0);
@@ -50,11 +50,11 @@ internal static class MaterialTextureConverter
             }
         }
 
-        using var encoded = pixels.Encode(TextureEncoder.GetPngOptions(options.PngCompressionLevel));
+        using var encoded = pixels.Encode(TextureEncoder.GetPngOptions(options));
         return encoded.ToArray();
     }
 
-    private static SKBitmap? ReadTexture(UTexture texture, ETexturePlatform platform, string? path)
+    private static SKBitmap? ReadTexture(UTexture texture, ExportOptions options, string? path)
     {
         if (path != null && File.Exists(path))
         {
@@ -64,7 +64,7 @@ internal static class MaterialTextureConverter
         }
 
         var index = texture.GetFirstMipIndex();
-        var decoded = texture is UTexture2DArray array ? array.DecodeTextureArray(index, platform)?.FirstOrDefault() : texture.DecodeMip(index, platform);
+        var decoded = texture is UTexture2DArray array ? array.DecodeTextureArray(index, options)?.FirstOrDefault() : texture.DecodeMip(index, options);
         return decoded?.ToSkBitmap();
     }
 

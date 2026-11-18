@@ -8,26 +8,21 @@ namespace CUE4Parse_Conversion.Exporters;
 
 public sealed class SkinnedAssetExporter(USkinnedAsset originalMesh) : MeshExporter<USkinnedAsset>(originalMesh)
 {
-    protected override IEnumerable<FPackageIndex?> MaterialReferences => originalMesh.SkeletalMaterials.Select(slot => slot.MaterialInterface);
+    protected override IEnumerable<FPackageIndex?> MaterialReferences => Mesh.SkeletalMaterials.Select(slot => slot.MaterialInterface);
 
     protected override IReadOnlyList<ExportFile> BuildFiles(USkinnedAsset originalMesh, IMeshExportFormat format)
     {
-        if (Session.Options.ExportMorphTargets)
-        {
-            originalMesh.PopulateMorphTargetVerticesData();
-        }
-
-        using var dto = new SkeletalMeshDto(originalMesh, Session.Options.MeshQuality, Session.Options.NaniteMeshFormat, Session.Options.ExportMorphTargets);
+        using var dto = new SkeletalMeshDto(originalMesh, Session.Options);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Skeletal mesh has no LODs");
         }
 
-        if (dto.AssetUserData != null)
+        if (dto.AssetUserData is { Length: > 0 } aud)
         {
-            foreach (var userData in dto.AssetUserData)
+            foreach (var data in aud)
             {
-                if (userData.TryLoad<UDNAAsset>(out var dna))
+                if (data?.TryLoad<UDNAAsset>(out var dna) == true)
                 {
                     Session.Add(new DnaExporter(dna));
                 }

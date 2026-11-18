@@ -1,5 +1,4 @@
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
-using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -68,7 +67,7 @@ public class FStaticMeshLODResources
             MaxDeviation = Ar.Read<float>();
         }
 
-        if (Ar.Game is GAME_ThePathless or GAME_ARKSurvivalAscended) Ar.Position += 4;
+        if (Ar.Game is GAME_ThePathless or GAME_ARKSurvivalAscended or GAME_MonsterHunterOutlanders) Ar.Position += 4;
         if (Ar.Game == GAME_NeedForSpeedMobile)
         {
             Ar.SkipFixedArray(36);
@@ -161,10 +160,9 @@ public class FStaticMeshLODResources
                 Ar.Position += rawDataHeaderSize + Ar.Game switch
                 {
                     GAME_TheFinals or GAME_TheFinalsTencent or GAME_ArcRaiders => 12,
-                    GAME_ArenaBreakoutMobile or GAME_GangstarMirageCity => 44,
+                    GAME_ArenaBreakoutMobile or GAME_GangstarMirageCity or GAME_ArenaBreakoutInfinite => 44,
                     GAME_NeedForSpeedMobile => 32,
                     GAME_SuicideSquad => 29,
-                    GAME_ArenaBreakoutInfinite => 16,
                     GAME_StarWarsJediSurvivor or GAME_DeltaForce => 4, // bDropNormals
                     GAME_FateTrigger => 5,
                     GAME_Splitgate2 or GAME_Empulse => 1,
@@ -315,7 +313,7 @@ public class FStaticMeshLODResources
     {
         var stripDataFlags = new FStripDataFlags(Ar);
 
-        PositionVertexBuffer = Ar.Game is GAME_GangstarMirageCity ? new FGangstarPositionVertexBuffer(Ar) : new FPositionVertexBuffer(Ar);
+        PositionVertexBuffer = new FPositionVertexBuffer(Ar);
         VertexBuffer = new FStaticMeshVertexBuffer(Ar);
         ColorVertexBuffer = new FColorVertexBuffer(Ar);
 

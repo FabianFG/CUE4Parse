@@ -73,7 +73,8 @@ public partial class PakFileReader : AbstractAesVfsReader
                 or GAME_TheDivisionResurgence or GAME_QQ or GAME_DreamStar
                 or GAME_EtheriaRestart or GAME_DeadByDaylight_Old or GAME_WorldofJadeDynasty
                 or GAME_EmbersofTheUncrowned or GAME_ValorantSource or GAME_PUBGMobile
-                or GAME_PUBGLite or GAME_DragonSwordAwakening or GAME_RocoKingdomWorld => true,
+                or GAME_PUBGLite or GAME_DragonSwordAwakening or GAME_RocoKingdomWorld
+                or GAME_SeaOfThieves => true,
             _ => false
         };
     }
@@ -259,9 +260,21 @@ public partial class PakFileReader : AbstractAesVfsReader
             }
         }
         else if (Info.IndexIsFrozen)
+        {
             ReadFrozenIndex(pathComparer);
+        }
         else
-            ReadIndexLegacy(pathComparer);
+        {
+            switch (Game)
+            {
+                case GAME_SeaOfThieves when Info.Version is PakFile_Version_IndexEncryption:
+                    SeaOfThievesReadIndexLegacy(pathComparer);
+                    break;
+                default:
+                    ReadIndexLegacy(pathComparer);
+                    break;
+            }
+        }
 
         if (!IsEncrypted && EncryptedFileCount > 0)
         {

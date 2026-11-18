@@ -1,7 +1,6 @@
 using CUE4Parse.GameTypes.DeadIsland2.Assets.Objects;
 using CUE4Parse.GameTypes.FF7.Assets.Objects;
 using CUE4Parse.GameTypes.MK1.Assets.Objects;
-using CUE4Parse.GameTypes.Tencent.GangstarMirageCity.Objects.Meshes;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
@@ -581,7 +580,7 @@ public class FStaticLODModel
         Indices = new FMultisizeIndexContainer(Ar);
         VertexBufferGPUSkin = new FSkeletalMeshVertexBuffer { bUseFullPrecisionUVs = true };
 
-        var positionVertexBuffer = Ar.Game is GAME_GangstarMirageCity ? new FGangstarPositionVertexBuffer(Ar) : new FPositionVertexBuffer(Ar);
+        var positionVertexBuffer = new FPositionVertexBuffer(Ar);
         var staticMeshVertexBuffer = new FStaticMeshVertexBuffer(Ar);
         var skinWeightVertexBuffer = new FSkinWeightVertexBuffer(Ar, VertexBufferGPUSkin.bExtraBoneInfluences);
 
@@ -704,6 +703,7 @@ public class FStaticLODModel
         Ar.Position += bytesToSkip + Ar.Game switch
         {
             GAME_NeedForSpeedMobile => 32,
+            GAME_MonsterHunterOutlanders => 28,
             GAME_StarWarsJediSurvivor => 4,
             GAME_Splitgate2 or GAME_Empulse => 1,
             _ => 0

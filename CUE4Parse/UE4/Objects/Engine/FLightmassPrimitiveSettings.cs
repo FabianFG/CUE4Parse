@@ -40,7 +40,7 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             EmissiveBoost = Ar.Read<float>();
             DiffuseBoost = Ar.Read<float>();
-            if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVED_SPECULAR_BOOST)
+            if (Ar.Ver < EUnrealEngineObjectUE4Version.REMOVED_SPECULAR_BOOST || Ar.Game is GAME_TheVanishingofEthanCarter)
             {
                 SpecularBoost = Ar.Read<float>();
             }

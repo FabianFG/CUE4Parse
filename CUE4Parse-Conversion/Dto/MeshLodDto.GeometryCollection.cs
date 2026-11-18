@@ -1,13 +1,14 @@
-﻿using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
+using CUE4Parse.UE4.Objects.Chaos.GeometryCollection;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
 using CUE4Parse.UE4.Objects.UObject;
+using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<MeshVertex> FromRenderData(StaticMeshDto owner, uint sourceLodIndex, FGeometryCollectionMeshResources resources, FGeometryCollectionMeshDescription description, FGeometryCollection? collection)
+    internal static MeshLodDto<MeshVertex> FromRenderData(StaticMeshDto owner, ExportOptions options, uint sourceLodIndex, FGeometryCollectionMeshResources resources, FGeometryCollectionMeshDescription description, FGeometryCollection? collection)
     {
         ArgumentNullException.ThrowIfNull(resources.IndexBuffer.Buffer, "LOD has no index buffer");
 
@@ -55,10 +56,10 @@ public partial class MeshLodDto<TVertex>
             sections[i] = new MeshSectionDto(description.Sections[i]);
         }
 
-        return new MeshLodDto<MeshVertex>(owner, sourceLodIndex, resources.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors);
+        return new MeshLodDto<MeshVertex>(owner, options, sourceLodIndex, resources.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors);
     }
 
-    internal static MeshLodDto<MeshVertex> FromArrayCollection(StaticMeshDto owner, uint sourceLodIndex, FManagedArrayCollection collection)
+    internal static MeshLodDto<MeshVertex> FromArrayCollection(StaticMeshDto owner, ExportOptions options, uint sourceLodIndex, FManagedArrayCollection collection)
     {
         var verticesGroup = new FName("Vertices");
         var vertexAttr = collection.GetAttributeValue<FVector>("Vertex", verticesGroup);
@@ -130,6 +131,6 @@ public partial class MeshLodDto<TVertex>
             sections[i] = new MeshSectionDto(sectionsAttr[i]);
         }
 
-        return new MeshLodDto<MeshVertex>(owner, sourceLodIndex, indices, vertices, sections, extraUvs, vertexColors);
+        return new MeshLodDto<MeshVertex>(owner, options, sourceLodIndex, indices, vertices, sections, extraUvs, vertexColors);
     }
 }

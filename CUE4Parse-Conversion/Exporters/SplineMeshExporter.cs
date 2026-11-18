@@ -11,11 +11,11 @@ namespace CUE4Parse_Conversion.Exporters;
 public sealed class SplineMeshExporter(USplineMeshComponent component) : MeshExporter<USplineMeshComponent>(component)
 {
     protected override IEnumerable<FPackageIndex?> MaterialReferences
-        => component.GetStaticMesh().Load<UStaticMesh>()?.StaticMaterials.Select(slot => slot.MaterialInterface) ?? [];
+        => Mesh.GetStaticMesh().Load<UStaticMesh>()?.StaticMaterials.Select(slot => slot.MaterialInterface) ?? [];
 
     protected override IReadOnlyList<ExportFile> BuildFiles(USplineMeshComponent component, IMeshExportFormat format)
     {
-        using var dto = new StaticMeshDto(component, Session.Options.MeshQuality);
+        using var dto = new StaticMeshDto(component, Session.Options);
         if (dto.LODs.Count == 0)
         {
             throw new Exception("Spline mesh has no LODs");

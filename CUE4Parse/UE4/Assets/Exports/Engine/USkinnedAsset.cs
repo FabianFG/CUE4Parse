@@ -21,7 +21,6 @@ public abstract class USkinnedAsset : UStreamableRenderAsset
     public FPackageIndex Skeleton { get; protected set; }
     public FPackageIndex?[] Materials { get; protected set; } = []; // UMaterialInterface[]
     public FPackageIndex PhysicsAsset { get; protected set; }
-    public FPackageIndex[]? AssetUserData { get; protected set; }
     public FNaniteResources? NaniteResources { get; protected set; }
 
     public virtual void PopulateMorphTargetVerticesData() { }

@@ -1,20 +1,18 @@
-﻿using System;
-using System.Linq;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Options;
 using CUE4Parse_Conversion.Writers.ActorX.Structs.Animations;
 using CUE4Parse_Conversion.Writers.USD;
-using CUE4Parse.UE4.Objects.Core.Math;
 
 namespace CUE4Parse_Conversion.Formats.Animations;
 
 public class UsdAnimFormat : IAnimExportFormat
 {
     public string DisplayName => "USD Animation (.usda)";
+    public string Extension => "usda";
 
     public IReadOnlyList<ExportFile> Build(string objectName, string objectPath, ExportOptions options, CAnimSet animSet)
     {
-        var dto = new SkeletonDto(animSet.Skeleton);
+        var dto = new SkeletonDto(animSet.Skeleton, options);
         var root = dto.ToSkelRoot();
 
         var numBones = dto.Bones.Length;
@@ -81,6 +79,6 @@ public class UsdAnimFormat : IAnimExportFormat
         stage.AddMetadata("timeCodesPerSecond", (double) fps);
         stage.AddMetadata("startTimeCode", 0.0);
         stage.AddMetadata("endTimeCode", (double) (totalFrames - 1));
-        return [new ExportFile("usda", stage.SerializeToBinary())];
+        return [new ExportFile(Extension, stage.SerializeToBinary())];
     }
 }

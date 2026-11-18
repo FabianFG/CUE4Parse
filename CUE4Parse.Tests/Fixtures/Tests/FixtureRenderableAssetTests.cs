@@ -29,7 +29,7 @@ public class FixtureRenderableAssetTests
 
         Assert.True(mesh.bCooked);
         Assert.Equal(["Primary", "Secondary"],
-            mesh.StaticMaterials.Select(material => material.MaterialSlotName.Text).ToArray());
+            mesh.StaticMaterials.Select(material => material.MaterialSlotName?.Text).ToArray());
 
         var lods = Assert.IsType<FStaticMeshLODResources[]>(mesh.RenderData?.LODs);
         Assert.Equal(2, lods.Length);
@@ -145,7 +145,7 @@ public class FixtureRenderableAssetTests
             "SM_Nanite");
 
         Assert.True(mesh.bCooked);
-        Assert.Equal("NaniteSurface", Assert.Single(mesh.StaticMaterials).MaterialSlotName.Text);
+        Assert.Equal("NaniteSurface", Assert.Single(mesh.StaticMaterials).MaterialSlotName?.Text);
         var resources = Assert.IsType<FNaniteResources>(mesh.RenderData?.NaniteResources);
         Assert.Equal(2_048u, resources.NumInputTriangles);
         Assert.Equal(1_089u, resources.NumInputVertices);
@@ -170,7 +170,7 @@ public class FixtureRenderableAssetTests
             resources.UnloadAllPages();
         }
 
-        using var converted = new StaticMeshDto(mesh, naniteFormat: ENaniteMeshFormat.NaniteOnly);
+        using var converted = new StaticMeshDto(mesh, new ExportOptions(meshQuality: EMeshQuality.All, naniteMeshFormat: ENaniteMeshFormat.NaniteOnly));
         var lod = Assert.Single(converted.LODs);
         Assert.True(lod.IsNanite);
         Assert.NotEmpty(lod.Vertices);
@@ -214,7 +214,7 @@ public class FixtureRenderableAssetTests
         // Win64 uses the cooked GPU morph buffers, so UE strips the raw CPU delta array.
         Assert.Empty(morphLod.Vertices);
 
-        using var converted = new SkeletalMeshDto(mesh);
+        using var converted = new SkeletalMeshDto(mesh, new ExportOptions(meshQuality: EMeshQuality.All));
         Assert.Equal(3, converted.Bones.Length);
         Assert.Equal(2, converted.LODs.Count);
         Assert.All(converted.LODs, lod =>

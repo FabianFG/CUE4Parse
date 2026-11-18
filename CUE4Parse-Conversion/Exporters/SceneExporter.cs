@@ -26,20 +26,20 @@ public abstract class SceneExporter(UObject export) : ExporterBase(export)
             throw new Exception($"{world.Name} is empty, nothing to export");
         }
 
-        if (Session._streamingLevelFilter is { } filter)
+        if (Session.StreamingLevelFilter is { } filter)
         {
             var filteredActors = world.Actors.Where(x => x.HasStreamingLevels()).ToList();
             if (filteredActors.Count > 0 || world.StreamingLevels.Count > 0)
             {
                 var args = new StreamingLevelFilterArgs(world.Name, filteredActors, world.StreamingLevels);
-                Session._streamingLevelFilterLock.Wait(ct);
+                Session.StreamingLevelFilterLock.Wait(ct);
                 try
                 {
                     filter(args, ct);
                 }
                 finally
                 {
-                    Session._streamingLevelFilterLock.Release();
+                    Session.StreamingLevelFilterLock.Release();
                 }
             }
         }

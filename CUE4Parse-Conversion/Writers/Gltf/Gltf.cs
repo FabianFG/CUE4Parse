@@ -22,7 +22,7 @@ public class Gltf
 
     public readonly ModelRoot Model;
 
-    public Gltf(string name, MeshLodDto<MeshVertex> lod, ExportOptions? options = null) : this(name, lod, options ?? new ExportOptions(), null) { }
+    public Gltf(string name, MeshLodDto<MeshVertex> lod, ExportOptions options) : this(name, lod, options, null) { }
 
     internal Gltf(string name, MeshLodDto<MeshVertex> lod, ExportOptions options, GltfMaterialExporter? materials)
     {
@@ -35,8 +35,8 @@ public class Gltf
         Model = sceneBuilder.ToGltf2();
     }
 
-    public Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, ExportOptions? options = null)
-        : this(name, lod, options ?? new ExportOptions(), null) { }
+    public Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, ExportOptions options)
+        : this(name, lod, options, null) { }
 
     internal Gltf(string name, MeshLodDto<SkinnedMeshVertex> lod, ExportOptions options, GltfMaterialExporter? materials)
     {
@@ -49,7 +49,7 @@ public class Gltf
 
         var meshBuilder = new MeshBuilder<VERTEX, VertexColorXTextureX, VertexJoints4>(name);
         List<(IPrimitiveBuilder Primitive, int Index)>?[]? vertexMap = null;
-        if (options.ExportMorphTargets && mesh.MorphTargets is { Length: > 0 })
+        if (mesh.MorphTargets is { Length: > 0 })
             vertexMap = new List<(IPrimitiveBuilder Primitive, int Index)>?[lod.Vertices.Length];
 
         ExportMeshSections(meshBuilder, lod, options, materials ?? CreateMaterials(options), vertexMap);

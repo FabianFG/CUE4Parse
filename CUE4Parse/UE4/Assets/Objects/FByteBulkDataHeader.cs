@@ -81,7 +81,7 @@ public readonly struct FByteBulkDataHeader
 
         ElementCount = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (int) Ar.Read<long>() : Ar.Read<int>();
         SizeOnDisk = BulkDataFlags.HasFlag(BULKDATA_Size64Bit) ? (uint) Ar.Read<long>() : Ar.Read<uint>();
-        if (Ar.Game == GAME_RocketLeague && (int)Ar.LicenseeVer > 22)
+        if (Ar.Game == GAME_RocketLeague && Ar.LicenseeVer > 22)
         {
             if (BulkDataFlags.HasFlag(BULKDATA_PayloadAtEndOfFile))
             {

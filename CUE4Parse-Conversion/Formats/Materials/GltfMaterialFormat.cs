@@ -9,7 +9,7 @@ using SharpGLTF.Materials;
 namespace CUE4Parse_Conversion.Formats.Materials;
 
 /// <summary>Applies PBR material properties and textures to a glTF material.</summary>
-internal sealed class GltfMaterialFormat(ExportOptions options, ExportSession session)
+internal sealed class GltfMaterialFormat(ExportOptions options, IExportSession session)
 {
     // These images belong to the current mesh, not the session cache
     private readonly Dictionary<FMaterialTexture, ImageBuilder?> _images = [];

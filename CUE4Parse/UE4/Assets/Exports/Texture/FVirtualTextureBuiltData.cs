@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Readers;
-using CUE4Parse.UE4.Versions;
 using CUE4Parse.Utils;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
@@ -87,9 +86,8 @@ public class FVirtualTextureBuiltData
     public readonly FVirtualTextureTileOffsetData[]? TileOffsetData;
     public readonly FLinearColor[] LayerFallbackColors;
 
-    public FVirtualTextureBuiltData(FAssetArchive Ar, int firstMip)
+    public FVirtualTextureBuiltData(FAssetArchive Ar)
     {
-        //var bStripMips = firstMip > 0;
         var bCooked = Ar.ReadBoolean();
 
         NumLayers = Ar.Read<uint>();
@@ -100,23 +98,20 @@ public class FVirtualTextureBuiltData
         TileBorderSize = Ar.Read<uint>();
         if (Ar.Game >= GAME_UE5_0) TileDataOffsetPerLayer = Ar.ReadArray<uint>();
 
-        //if (!bStripMips)
+        NumMips = Ar.Read<uint>();
+        Width = Ar.Read<uint>();
+        Height = Ar.Read<uint>();
+
+        if (Ar.Game >= GAME_UE5_0)
         {
-            NumMips = Ar.Read<uint>();
-            Width = Ar.Read<uint>();
-            Height = Ar.Read<uint>();
-
-            if (Ar.Game >= GAME_UE5_0)
-            {
-                ChunkIndexPerMip = Ar.ReadArray<uint>();
-                BaseOffsetPerMip = Ar.ReadArray<uint>();
-                TileOffsetData = Ar.ReadArray(() => new FVirtualTextureTileOffsetData(Ar));
-            }
-
-            TileIndexPerChunk = Ar.ReadArray<uint>();
-            TileIndexPerMip = Ar.ReadArray<uint>();
-            TileOffsetInChunk = Ar.ReadArray<uint>();
+            ChunkIndexPerMip = Ar.ReadArray<uint>();
+            BaseOffsetPerMip = Ar.ReadArray<uint>();
+            TileOffsetData = Ar.ReadArray(() => new FVirtualTextureTileOffsetData(Ar));
         }
+
+        TileIndexPerChunk = Ar.ReadArray<uint>();
+        TileIndexPerMip = Ar.ReadArray<uint>();
+        TileOffsetInChunk = Ar.ReadArray<uint>();
 
         LayerTypes = Ar.ReadArray((int) NumLayers, () => (EPixelFormat) Enum.Parse(typeof(EPixelFormat), Ar.ReadFString()));
 
@@ -210,7 +205,7 @@ public class FVirtualTextureBuiltData
     public (int, uint, uint) GetTileData(int vLevel, uint vAddress, uint layerIndex)
     {
         int chunkIndex = 0;
-        uint offset = 0u;
+        uint offset = ~0u;
         uint tileDataLength = 0;
 
         if (IsLegacyData())

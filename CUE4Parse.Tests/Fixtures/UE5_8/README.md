@@ -12,10 +12,11 @@ binary sizes, hashes, or byte-for-byte equality.
 `SourceTextures` contains the complete deterministic ImageMagick outputs used
 to generate the cooked textures. Decoder tests compare every pixel of their
 Skia bitmaps against these references with format-specific lossy tolerances.
-They explicitly use CUE4Parse Conversion's public
-`TextureDecoder.UseAssetRipperTextureDecoder` path. BC4 is validated as a
-single red scalar channel, BC5 against its reconstructed normal Z channel, and
-BC6H against the 8-bit clamped bitmap produced by the current Skia conversion.
+They use CUE4Parse Conversion's default decoders. BC4 is validated as grey with
+the scalar in red, green and blue, BC5 against its reconstructed normal Z
+channel, and BC6H against the 8-bit clamped bitmap produced by the current Skia
+conversion. A second test also decodes every BC fixture mip with the AssetRipper
+decoders: BC6H and BC7 must match exactly, BC1 to BC5 within one or two levels.
 Generated cube, array, and volume textures are checked against their procedural
 per-slice pixel pattern. The virtual-texture fixture validates parsed tile/chunk
 metadata and compares its fully decoded bitmap with the same deterministic

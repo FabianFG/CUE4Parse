@@ -1,1135 +1,947 @@
-﻿using System.Collections;
+using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
+using CommunityToolkit.HighPerformance;
+using CUE4Parse_Conversion.Textures.BC;
+using CUE4Parse.Utils;
 
-namespace CUE4Parse_Conversion.Textures.ASTC
+namespace CUE4Parse_Conversion.Textures.ASTC;
+
+public static partial class ASTCDecoder
 {
-    public static class ASTCDecoder
+    public const int AstcBlockSize = 16;
+
+    public enum AstcChannelMode
     {
-        public static byte[] RGBA8888(byte[] InputBuffer, int BlockX, int BlockY, int BlockZ, int X, int Y, int Z)
+        RGBA,
+        RG0A, // Normal textures, restore blue from RG
+        RRRG, // ASTC high precision NormalRG support, restore blue from RG and alpha 0xFF
+    }
+
+    public static byte[] DecodeASTC(byte[] input, int sizeX, int sizeY, int sizeZ, int blockSizeX, int blockSizeY, AstcChannelMode channelMode = AstcChannelMode.RGBA)
+    {
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, out byte[] output, blockSizeX, blockSizeY);
+
+        var inputSpan = input.AsSpan();
+        var outputSpan = output.AsSpan();
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
         {
-            using MemoryStream InputStream = new MemoryStream(InputBuffer);
-            BinaryReader BinReader = new BinaryReader(InputStream);
-
-            if (BlockX > 12 || BlockY > 12 || BlockZ > 12)
-            {
-                throw new Exception("Block size unsupported!");
-            }
-
-            using MemoryStream OutputStream = new MemoryStream();
-            int BlockIndex = 0;
-            for (int k = 0; k < Z; k += BlockZ)
-            {
-                for (int j = 0; j < Y; j += BlockY)
-                {
-                    for (int i = 0; i < X; i += BlockX)
-                    {
-                        int[] DecompressedData = new int[144];
-                        DecompressBlock(BinReader.ReadBytes(0x10), DecompressedData, BlockX, BlockY);
-
-                        int DecompressedWidth = Math.Min(BlockX, X - i);
-                        int DecompressedHeight = Math.Min(BlockY, Y - j);
-                        int BaseOffsets = (j * X + i) * 4;
-
-                        for (int jj = 0; jj < DecompressedHeight; jj++)
-                        {
-                            OutputStream.Seek(BaseOffsets + jj * X * 4, SeekOrigin.Begin);
-
-                            byte[] OutputBuffer = new byte[DecompressedData.Length * sizeof(int)];
-                            Buffer.BlockCopy(DecompressedData, 0, OutputBuffer, 0, OutputBuffer.Length);
-
-                            OutputStream.Write(OutputBuffer, jj * BlockX * 4, DecompressedWidth * 4);
-                        }
-
-                        BlockIndex++;
-                    }
-                }
-            }
-            return OutputStream.ToArray();
+            DecodeASTC(inputSpan.Slice(inputOffset, inputLayerSize), sizeX, sizeY, outputSpan.Slice(outputOffset, outputLayerSize), blockSizeX, blockSizeY, channelMode);
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
         }
 
-        private static bool DecompressBlock(byte[] InputBuffer, int[] OutputBuffer, int BlockWidth, int BlockHeight)
+        return output;
+    }
+
+    public static void DecodeASTC(ReadOnlySpan<byte> input, int sizeX, int sizeY, int sizeZ, Span<byte> output, int blockSizeX, int blockSizeY, AstcChannelMode channelMode = AstcChannelMode.RGBA)
+    {
+        var (inputLayerSize, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, sizeZ, output, blockSizeX, blockSizeY);
+
+        for (int i = 0, inputOffset = 0, outputOffset = 0; i < sizeZ; i++)
         {
-            BitArrayStream BitStream = new BitArrayStream(new BitArray(InputBuffer));
-            TexelWeightParams TexelParams = DecodeBlockInfo(BitStream);
+            DecodeASTC(input.Slice(inputOffset, inputLayerSize), sizeX, sizeY, output.Slice(outputOffset, outputLayerSize), blockSizeX, blockSizeY, channelMode);
+            inputOffset += inputLayerSize;
+            outputOffset += outputLayerSize;
+        }
+    }
 
-            if (TexelParams.Error)
+    public static void DecodeASTC(ReadOnlySpan<byte> input, int sizeX, int sizeY, Span<byte> output, int blockSizeX, int blockSizeY, AstcChannelMode channelMode = AstcChannelMode.RGBA)
+    {
+        var (_, outputLayerSize) = ValidateAndGetLayerSizes(input, sizeX, sizeY, 1, output, blockSizeX, blockSizeY);
+
+        Span<uint> result = stackalloc uint[blockSizeX * blockSizeY];
+        var outputSpan = output[..outputLayerSize].Cast<byte, uint>();
+        BlockData blockData = new() { BlockWidth = blockSizeX, BlockHeight = blockSizeY};
+
+        var offset = 0;
+        var yPixelOffset = 0;
+        for (int y = 0; y < sizeY; y += blockSizeY)
+        {
+            var xPixelOffset = yPixelOffset;
+            for (int x = 0; x < sizeX; x += blockSizeX, offset += AstcBlockSize)
             {
-                throw new Exception("Invalid block mode");
+                DecodeAstcBlock(input.Slice(offset, AstcBlockSize), result, ref blockData);
+
+                int width = Math.Min(blockSizeX, sizeX - x);
+                int height = Math.Min(blockSizeY, sizeY - y);
+
+                var dstOffset = xPixelOffset;
+                int srcOffset = 0;
+                for (int row = 0; row < height; row++)
+                {
+                    result.Slice(srcOffset, width).CopyTo(outputSpan.Slice(dstOffset, width));
+
+                    srcOffset += blockSizeX;
+                    dstOffset += sizeX;
+                }
+
+                xPixelOffset += blockSizeX;
             }
+            yPixelOffset += blockSizeY * sizeX;
+        }
 
-            if (TexelParams.VoidExtentLDR)
+        if (channelMode == AstcChannelMode.RG0A)
+        {
+            for (offset = 0; offset < outputLayerSize; offset += 4)
             {
-                FillVoidExtentLDR(BitStream, OutputBuffer, BlockWidth, BlockHeight);
-                return true;
+                output[offset + 2] = BCDecoder.GetZNormal(output[offset], output[offset + 1]);
             }
-
-            if (TexelParams.VoidExtentHDR)
+        }
+        else if (channelMode == AstcChannelMode.RRRG)
+        {
+            for (offset = 0; offset < outputLayerSize; offset += 4)
             {
-                throw new Exception("HDR void extent blocks are unsupported!");
+                output[offset + 2] = BCDecoder.GetZNormal(output[offset], output[offset + 3]);
+                output[offset + 3] = 0xFF;
             }
+        }
+    }
 
-            if (TexelParams.Width > BlockWidth)
+    private static void DecodeAstcBlock(ReadOnlySpan<byte> input, Span<uint> output, ref BlockData blockData)
+    {
+        if (input[0] == 0xfc && (input[1] & 1) == 1)
+        {
+            uint c = (uint)(input[15] << 24 | input[13] << 16 | input[11] << 8 | input[9]);
+            output.Fill(c);
+        }
+        else
+        {
+            var uint128 = BinaryPrimitives.ReadUInt128LittleEndian(input);
+            DecodeBlockParameters(uint128, ref blockData);
+            DecodeEndpoints(uint128, ref blockData);
+            DecodeWeights(input, ref blockData);
+            if (blockData.PartNum > 1)
             {
-                throw new Exception("Texel weight grid width should be smaller than block width");
+                SelectPartition((uint)uint128, ref blockData);
             }
+            ApplicateColor(blockData, output);
+        }
+    }
 
-            if (TexelParams.Height > BlockHeight)
+    private static void DecodeBlockParameters(UInt128 input, ref BlockData block)
+    {
+        var inp = (int)input;
+        block.DualPlane = (inp >> 10) & 1;
+        block.WeightRange = (inp >> 4 & 1) | (inp >> 6 & 8);
+
+        if ((inp & 3) != 0)
+        {
+            block.WeightRange |= inp << 1 & 6;
+            switch (inp & 0xc)
             {
-                throw new Exception("Texel weight grid height should be smaller than block height");
+                case 0:
+                    block.Width = (inp >> 7 & 3) + 4;
+                    block.Height = (inp >> 5 & 3) + 2;
+                    break;
+                case 4:
+                    block.Width = (inp >> 7 & 3) + 8;
+                    block.Height = (inp >> 5 & 3) + 2;
+                    break;
+                case 8:
+                    block.Width = (inp >> 5 & 3) + 2;
+                    block.Height = (inp >> 7 & 3) + 8;
+                    break;
+                case 12:
+                    if ((inp & 0x100) != 0)
+                    {
+                        block.Width = (inp >> 7 & 1) + 2;
+                        block.Height = (inp >> 5 & 3) + 2;
+                    }
+                    else
+                    {
+                        block.Width = (inp >> 5 & 3) + 2;
+                        block.Height = (inp >> 7 & 1) + 6;
+                    }
+                    break;
             }
-
-            // Read num partitions
-            int NumberPartitions = BitStream.ReadBits(2) + 1;
-            if (NumberPartitions == 4 && TexelParams.DualPlane)
+        }
+        else
+        {
+            block.WeightRange |= inp >> 1 & 6;
+            switch (inp & 0x180)
             {
-                throw new Exception("Dual plane mode is incompatible with four partition blocks");
+                case 0:
+                    block.Width = 12;
+                    block.Height = (inp >> 5 & 3) + 2;
+                    break;
+                case 0x80:
+                    block.Width = (inp >> 5 & 3) + 2;
+                    block.Height = 12;
+                    break;
+                case 0x100:
+                    block.Width = (inp >> 5 & 3) + 6;
+                    block.Height = (inp >> 9 & 3) + 6;
+                    block.DualPlane = 0;
+                    block.WeightRange &= 7;
+                    break;
+                case 0x180:
+                    block.Width = (inp & 0x20) != 0 ? 10 : 6;
+                    block.Height = (inp & 0x20) != 0 ? 6 : 10;
+                    break;
             }
+        }
 
-            // Based on the number of partitions, read the color endpoint mode for
-            // each partition.
+        block.PartNum = (inp >> 11 & 3) + 1;
 
-            // Determine partitions, partition index, and color endpoint modes
-            int PartitionIndex;
-            uint[] ColorEndpointMode = { 0, 0, 0, 0 };
+        block.WeightNum = block.Width * block.Height;
+        if (block.DualPlane != 0)
+        {
+            block.WeightNum *= 2;
+        }
 
-            BitArrayStream ColorEndpointStream = new BitArrayStream(new BitArray(16 * 8));
-
-            // Read extra config data...
-            uint BaseColorEndpointMode = 0;
-
-            if (NumberPartitions == 1)
+        int configBits, cemBase = 0;
+        var weightRange = block.WeightRange & 0xF;
+        int weightBits = block.WeightNum * WeightPrecTableB[weightRange];
+        weightBits += WeightPrecTableA[weightRange] switch
+        {
+            3 => (block.WeightNum * 8 + 4) / 5,
+            5 => (block.WeightNum * 7 + 2) / 3,
+            _ => 0,
+        };
+        block.WeightBits = weightBits;
+        if (block.PartNum == 1)
+        {
+            block.Cem[0] = inp >> 13 & 0xf;
+            configBits = 17;
+        }
+        else
+        {
+            cemBase = inp >> 23 & 3;
+            if (cemBase == 0)
             {
-                ColorEndpointMode[0] = (uint)BitStream.ReadBits(4);
-                PartitionIndex = 0;
+                int cem = inp >> 25 & 0xf;
+                for (int i = 0; i < block.PartNum; i++)
+                {
+                    block.Cem[i] = cem;
+                }
+                configBits = 29;
             }
             else
             {
-                PartitionIndex = BitStream.ReadBits(10);
-                BaseColorEndpointMode = (uint)BitStream.ReadBits(6);
-            }
-
-            uint BaseMode = (BaseColorEndpointMode & 3);
-
-            // Remaining bits are color endpoint data...
-            int NumberWeightBits = TexelParams.GetPackedBitSize();
-            int RemainingBits = 128 - NumberWeightBits - BitStream.Position;
-
-            // Consider extra bits prior to texel data...
-            uint ExtraColorEndpointModeBits = 0;
-
-            if (BaseMode != 0)
-            {
-                switch (NumberPartitions)
+                for (int i = 0; i < block.PartNum; i++)
                 {
-                    case 2: ExtraColorEndpointModeBits += 2; break;
-                    case 3: ExtraColorEndpointModeBits += 5; break;
-                    case 4: ExtraColorEndpointModeBits += 8; break;
-                    default: break;
-                }
-            }
-
-            RemainingBits -= (int)ExtraColorEndpointModeBits;
-
-            // Do we have a dual plane situation?
-            int PlaneSelectorBits = 0;
-
-            if (TexelParams.DualPlane)
-            {
-                PlaneSelectorBits = 2;
-            }
-
-            RemainingBits -= PlaneSelectorBits;
-
-            // Read color data...
-            int ColorDataBits = RemainingBits;
-
-            while (RemainingBits > 0)
-            {
-                int NumberBits = Math.Min(RemainingBits, 8);
-                int Bits = BitStream.ReadBits(NumberBits);
-                ColorEndpointStream.WriteBits(Bits, NumberBits);
-                RemainingBits -= 8;
-            }
-
-            // Read the plane selection bits
-            int PlaneIndices = BitStream.ReadBits(PlaneSelectorBits);
-
-            // Read the rest of the CEM
-            if (BaseMode != 0)
-            {
-                uint ExtraColorEndpointMode = (uint)BitStream.ReadBits((int)ExtraColorEndpointModeBits);
-                uint TempColorEndpointMode = (ExtraColorEndpointMode << 6) | BaseColorEndpointMode;
-                TempColorEndpointMode >>= 2;
-
-                bool[] C = new bool[4];
-
-                for (int i = 0; i < NumberPartitions; i++)
-                {
-                    C[i] = (TempColorEndpointMode & 1) != 0;
-                    TempColorEndpointMode >>= 1;
+                    block.Cem[i] = ((inp >> (i + 25) & 1) + cemBase - 1) << 2;
                 }
 
-                byte[] M = new byte[4];
-
-                for (int i = 0; i < NumberPartitions; i++)
+                var cemData = (byte) (input >> (120 - weightBits));
+                switch (block.PartNum)
                 {
-                    M[i] = (byte)(TempColorEndpointMode & 3);
-                    TempColorEndpointMode >>= 2;
+                    case 2:
+                        block.Cem[0] |= inp >> 27 & 3;
+                        block.Cem[1] |= (cemData >> 6 & 3);
+                        break;
+                    case 3:
+                        block.Cem[0] |= inp >> 28 & 1;
+                        block.Cem[0] |= (cemData >> 2 & 2);
+                        block.Cem[1] |= (cemData >> 4 & 3);
+                        block.Cem[2] |= (cemData >> 6 & 3);
+                        break;
+                    case 4:
+                        block.Cem[0] |= (cemData >> 0 & 3);
+                        block.Cem[1] |= (cemData >> 2 & 3);
+                        block.Cem[2] |= (cemData >> 4 & 3);
+                        block.Cem[3] |= (cemData >> 6 & 3);
+                        break;
                 }
-
-                for (int i = 0; i < NumberPartitions; i++)
-                {
-                    ColorEndpointMode[i] = BaseMode;
-                    if (!(C[i])) ColorEndpointMode[i] -= 1;
-                    ColorEndpointMode[i] <<= 2;
-                    ColorEndpointMode[i] |= M[i];
-                }
+                configBits = 25 + block.PartNum * 3;
             }
-            else if (NumberPartitions > 1)
+        }
+
+        if (block.DualPlane != 0)
+        {
+            configBits += 2;
+            block.PlaneSelector = (int)(input >> (cemBase != 0 ? 130 - weightBits - block.PartNum * 3 : 126 - weightBits)) & 3;
+        }
+
+        int remainBits = 128 - configBits - weightBits;
+
+        block.EndpointValueNum = 0;
+        for (int i = 0; i < block.PartNum; i++)
+        {
+            block.EndpointValueNum += (block.Cem[i] >> 1 & 6) + 2;
+        }
+
+        for (int i = 0; i < CemTableA.Length; i++)
+        {
+            int endpointBits = block.EndpointValueNum * CemTableB[i];
+            endpointBits += CemTableA[i] switch
             {
-                uint TempColorEndpointMode = BaseColorEndpointMode >> 2;
+                3 => (block.EndpointValueNum * 8 + 4) / 5,
+                5 => (block.EndpointValueNum * 7 + 2) / 3,
+                _ => 0,
+            };
+            if (endpointBits <= remainBits)
+            {
+                block.CemRange = i;
+                break;
+            }
+        }
+    }
 
-                for (uint i = 0; i < NumberPartitions; i++)
+    private static void DecodeEndpoints(UInt128 input, ref BlockData block)
+    {
+        Span<IntSeqData> epSeq = stackalloc IntSeqData[32];
+        var cemA = CemTableA[block.CemRange];
+        var cemB = CemTableB[block.CemRange];
+        DecodeIntseq(input, block.PartNum == 1 ? 17 : 29, cemA, cemB, block.EndpointValueNum, epSeq);
+
+        Span<int> ev = stackalloc int[32];
+        switch (cemA)
+        {
+            case 3:
+                for (int i = 0, b = 0, c = DETritsTable[cemB]; i < block.EndpointValueNum; i++)
                 {
-                    ColorEndpointMode[i] = TempColorEndpointMode;
+                    int a = (epSeq[i].Bits & 1) * 0x1ff;
+                    int x = epSeq[i].Bits >> 1;
+                    b = cemB switch
+                    {
+                        1 => 0,
+                        2 => 0b100010110 * x,
+                        3 => x << 7 | x << 2 | x,
+                        4 => x << 6 | x,
+                        5 => x << 5 | x >> 2,
+                        6 => x << 4 | x >> 4,
+                        _ => b
+                    };
+                    ev[i] = (a & 0x80) | ((epSeq[i].Nonbits * c + b) ^ a) >> 2;
+                }
+                break;
+
+            case 5:
+                for (int i = 0, b = 0, c = DEQuintsTable[cemB]; i < block.EndpointValueNum; i++)
+                {
+                    int a = (epSeq[i].Bits & 1) * 0x1ff;
+                    int x = epSeq[i].Bits >> 1;
+                    b = cemB switch
+                    {
+                        1 => 0,
+                        2 => 0b100001100 * x,
+                        3 => x << 7 | x << 1 | x >> 1,
+                        4 => x << 6 | x >> 1,
+                        5 => x << 5 | x >> 3,
+                        _ => b
+                    };
+                    ev[i] = (a & 0x80) | ((epSeq[i].Nonbits * c + b) ^ a) >> 2;
+                }
+                break;
+
+            default:
+                switch (cemB)
+                {
+                    case 1:
+                        for (int i = 0; i < block.EndpointValueNum; i++)
+                        {
+                            ev[i] = epSeq[i].Bits * 0xff;
+                        }
+                        break;
+                    case 2:
+                        for (int i = 0; i < block.EndpointValueNum; i++)
+                        {
+                            ev[i] = epSeq[i].Bits * 0x55;
+                        }
+                        break;
+                    case 3:
+                        for (int i = 0; i < block.EndpointValueNum; i++)
+                        {
+                            ev[i] = epSeq[i].Bits << 5 | epSeq[i].Bits << 2 | epSeq[i].Bits >> 1;
+                        }
+                        break;
+                    case 4:
+                        for (int i = 0; i < block.EndpointValueNum; i++)
+                        {
+                            ev[i] = epSeq[i].Bits << 4 | epSeq[i].Bits;
+                        }
+                        break;
+                    case 5:
+                        for (int i = 0; i < block.EndpointValueNum; i++)
+                        {
+                            ev[i] = epSeq[i].Bits << 3 | epSeq[i].Bits >> 2;
+                        }
+                        break;
+                    case 6:
+                        for (int i = 0; i < block.EndpointValueNum; i++)
+                        {
+                            ev[i] = epSeq[i].Bits << 2 | epSeq[i].Bits >> 4;
+                        }
+                        break;
+                    case 7:
+                        for (int i = 0; i < block.EndpointValueNum; i++)
+                        {
+                            ev[i] = epSeq[i].Bits << 1 | epSeq[i].Bits >> 6;
+                        }
+                        break;
+                    case 8:
+                        for (int i = 0; i < block.EndpointValueNum; i++)
+                        {
+                            ev[i] = epSeq[i].Bits;
+                        }
+                        break;
+                }
+                break;
+        }
+
+        Span<int> v = ev;
+        for (int cem = 0; cem < block.PartNum; v = v[((block.Cem[cem] / 4 + 1) * 2)..], cem++)
+        {
+            var endpoint = block.Endpoints[cem][..8];
+            switch (block.Cem[cem])
+            {
+                case 0:
+                    SetEndpoint(endpoint, v[0], v[0], v[0], 255, v[1], v[1], v[1], 255);
+                    break;
+                case 1:
+                    int l0 = (v[0] >> 2) | (v[1] & 0xc0);
+                    int l1 = Clamp(l0 + (v[1] & 0x3f));
+                    SetEndpoint(endpoint, l0, l0, l0, 255, l1, l1, l1, 255);
+                    break;
+                case 4:
+                    SetEndpoint(endpoint, v[0], v[0], v[0], v[2], v[1], v[1], v[1], v[3]);
+                    break;
+                case 5:
+                    BitTransferSigned(ref v[1], ref v[0]);
+                    BitTransferSigned(ref v[3], ref v[2]);
+                    v[1] += v[0];
+                    SetEndpointClamp(endpoint, v[0], v[0], v[0], v[2], v[1], v[1], v[1], v[2] + v[3]);
+                    break;
+                case 6:
+                    SetEndpoint(endpoint, v[0] * v[3] >> 8, v[1] * v[3] >> 8, v[2] * v[3] >> 8, 255, v[0], v[1], v[2], 255);
+                    break;
+                case 8:
+                    if (v[0] + v[2] + v[4] <= v[1] + v[3] + v[5])
+                    {
+                        SetEndpoint(endpoint, v[0], v[2], v[4], 255, v[1], v[3], v[5], 255);
+                    }
+                    else
+                    {
+                        SetEndpointBlue(endpoint, v[1], v[3], v[5], 255, v[0], v[2], v[4], 255);
+                    }
+                    break;
+                case 9:
+                    BitTransferSigned(ref v[1], ref v[0]);
+                    BitTransferSigned(ref v[3], ref v[2]);
+                    BitTransferSigned(ref v[5], ref v[4]);
+                    if (v[1] + v[3] + v[5] >= 0)
+                    {
+                        SetEndpointClamp(endpoint, v[0], v[2], v[4], 255, v[0] + v[1], v[2] + v[3], v[4] + v[5], 255);
+                    }
+                    else
+                    {
+                        SetEndpointBlueClamp(endpoint, v[0] + v[1], v[2] + v[3], v[4] + v[5], 255, v[0], v[2], v[4], 255);
+                    }
+                    break;
+                case 10:
+                    SetEndpoint(endpoint, v[0] * v[3] >> 8, v[1] * v[3] >> 8, v[2] * v[3] >> 8, v[4], v[0], v[1], v[2], v[5]);
+                    break;
+                case 12:
+                    if (v[0] + v[2] + v[4] <= v[1] + v[3] + v[5])
+                    {
+                        SetEndpoint(endpoint, v[0], v[2], v[4], v[6], v[1], v[3], v[5], v[7]);
+                    }
+                    else
+                    {
+                        SetEndpointBlue(endpoint, v[1], v[3], v[5], v[7], v[0], v[2], v[4], v[6]);
+                    }
+                    break;
+                case 13:
+                    BitTransferSigned(ref v[1], ref v[0]);
+                    BitTransferSigned(ref v[3], ref v[2]);
+                    BitTransferSigned(ref v[5], ref v[4]);
+                    BitTransferSigned(ref v[7], ref v[6]);
+                    if (v[1] + v[3] + v[5] >= 0)
+                    {
+                        SetEndpointClamp(endpoint, v[0], v[2], v[4], v[6], v[0] + v[1], v[2] + v[3], v[4] + v[5], v[6] + v[7]);
+                    }
+                    else
+                    {
+                        SetEndpointBlueClamp(endpoint, v[0] + v[1], v[2] + v[3], v[4] + v[5], v[6] + v[7], v[0], v[2], v[4], v[6]);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private static void DecodeWeights(ReadOnlySpan<byte> input, ref BlockData block)
+    {
+        Span<IntSeqData> wSeq = stackalloc IntSeqData[128];
+        Span<byte> texelWeightData = stackalloc byte[16];
+        var weightBytes = (block.WeightBits.Align(8) >> 3) & 0xF;
+        for (int i = 0; i < weightBytes; i++)
+        {
+            texelWeightData[i] = BitReverseTable[input[15 - i]];
+        }
+
+        var weightTableA = WeightPrecTableA[block.WeightRange];
+        var weightTableB = WeightPrecTableB[block.WeightRange];
+        DecodeIntseq(BinaryPrimitives.ReadUInt128LittleEndian(texelWeightData), 0, weightTableA, weightTableB, block.WeightNum, wSeq);
+
+        var weightNum = block.WeightNum & 127;
+        Span<int> wv = stackalloc int[128];
+        if (weightTableA == 0)
+        {
+            switch (weightTableB)
+            {
+                case 1:
+                    for (int i = 0; i < weightNum; i++)
+                    {
+                        wv[i] = wSeq[i].Bits != 0 ? 63 : 0;
+                    }
+                    break;
+                case 2:
+                    for (int i = 0; i < weightNum; i++)
+                    {
+                        wv[i] = wSeq[i].Bits << 4 | wSeq[i].Bits << 2 | wSeq[i].Bits;
+                    }
+                    break;
+                case 3:
+                    for (int i = 0; i < weightNum; i++)
+                    {
+                        wv[i] = wSeq[i].Bits << 3 | wSeq[i].Bits;
+                    }
+                    break;
+                case 4:
+                    for (int i = 0; i < weightNum; i++)
+                    {
+                        wv[i] = wSeq[i].Bits << 2 | wSeq[i].Bits >> 2;
+                    }
+                    break;
+                case 5:
+                    for (int i = 0; i < weightNum; i++)
+                    {
+                        wv[i] = wSeq[i].Bits << 1 | wSeq[i].Bits >> 4;
+                    }
+                    break;
+            }
+            for (int i = 0; i < weightNum; i++)
+            {
+                wv[i] += (wv[i] - 33) >>> 31 ^ 1;
+            }
+        }
+        else if (weightTableB == 0)
+        {
+            int s = weightTableA == 3 ? 5 : 4;
+            for (int i = 0; i < weightNum; i++)
+            {
+                wv[i] = wSeq[i].Nonbits << s;
+            }
+        }
+        else
+        {
+            if (weightTableA == 3)
+            {
+                switch (weightTableB)
+                {
+                    case 1:
+                        for (int i = 0; i < weightNum; i++)
+                        {
+                            wv[i] = wSeq[i].Nonbits * 50;
+                        }
+                        break;
+                    case 2:
+                        for (int i = 0; i < weightNum; i++)
+                        {
+                            wv[i] = wSeq[i].Nonbits * 23;
+                            wv[i] += -((wSeq[i].Bits >> 1) & 1) & 0b1000101;
+                        }
+                        break;
+                    case 3:
+                        for (int i = 0; i < weightNum; i++)
+                        {
+                            wv[i] = wSeq[i].Nonbits * 11 + ((wSeq[i].Bits << 4 | wSeq[i].Bits >> 1) & 0b1100011);
+                        }
+                        break;
                 }
             }
-
-            // Decode both color data and texel weight data
-            int[] ColorValues = new int[32]; // Four values * two endpoints * four maximum partitions
-            DecodeColorValues(ColorValues, ColorEndpointStream.ToByteArray(), ColorEndpointMode, NumberPartitions, ColorDataBits);
-
-            ASTCPixel[][] EndPoints = new ASTCPixel[4][];
-            EndPoints[0] = new ASTCPixel[2];
-            EndPoints[1] = new ASTCPixel[2];
-            EndPoints[2] = new ASTCPixel[2];
-            EndPoints[3] = new ASTCPixel[2];
-
-            int ColorValuesPosition = 0;
-
-            for (int i = 0; i < NumberPartitions; i++)
+            else if (weightTableA == 5)
             {
-                ComputeEndpoints(EndPoints[i], ColorValues, ColorEndpointMode[i], ref ColorValuesPosition);
+                switch (weightTableB)
+                {
+                    case 1:
+                        for (int i = 0; i < weightNum; i++)
+                        {
+                            wv[i] = wSeq[i].Nonbits * 28;
+                        }
+                        break;
+                    case 2:
+                        for (int i = 0; i < weightNum; i++)
+                        {
+                            wv[i] = wSeq[i].Nonbits * 13;
+                            wv[i] += -((wSeq[i].Bits >> 1) & 1) & 0b1000010;
+                        }
+                        break;
+                }
             }
+            for (int i = 0; i < weightNum; i++)
+            {
+                int a = -(wSeq[i].Bits & 1) & 0x7F;
+                wv[i] = (a & 0x20) | ((wv[i] ^ a) >> 2);
+                wv[i] += (wv[i] - 33) >>> 31 ^ 1;
+            }
+        }
 
-            // Read the texel weight data.
-            byte[] TexelWeightData = (byte[])InputBuffer.Clone();
+        int ds = (1024 + block.BlockWidth / 2) / (block.BlockWidth - 1);
+        int dt = (1024 + block.BlockHeight / 2) / (block.BlockHeight - 1);
+        var i0 = block.Width;
+        var sMult = ds * (block.Width - 1);
+        var tMult= dt * (block.Height - 1);
+        if (block.DualPlane == 0)
+        {
+            var gt0 = 32;
+            for (int t = 0, i = 0; t < block.BlockHeight; t++)
+            {
+                int gt = gt0 >> 6;
+                gt0 += tMult;
+                int ft = gt & 0xf;
+                var v0 = (gt >> 4) * block.Width;
+                int gs0 = 32;
+                for (int s = 0; s < block.BlockWidth; s++, i++)
+                {
+                    var gs = gs0 >> 6;
+                    gs0 += sMult;
+                    int fs = gs & 0xf;
+                    int v = (gs >> 4) + v0;
+                    int w11 = (fs * ft + 8) >> 4;
+                    int w10 = ft - w11;
+                    int w01 = fs - w11;
+                    int w00 = 16 - fs - ft + w11;
 
-            // Reverse everything
+                    block.Weights[i] = (wv[i0 + v + 1] * w11 + wv[i0 + v] * w10 + wv[v + 1] * w01 + wv[v] * w00 + 8) >> 4;
+                }
+            }
+        }
+        else
+        {
+            i0 *= 2;
+            for (int t = 0, i = 0; t < block.BlockHeight; t++)
+            {
+                int gt = (tMult * t + 32) >> 6;
+                int ft = gt & 0xf;
+                var v0 = (gt >> 4) * block.Width;
+                int gs0 = 32;
+                for (int s = 0; s < block.BlockWidth; s++, i++)
+                {
+                    var gs = gs0 >> 6;
+                    gs0 += sMult;
+                    int fs = gs & 0xf;
+                    int v = (gs >> 4) + v0;
+                    int w11 = (fs * ft + 8) >> 4;
+                    int w10 = ft - w11;
+                    int w01 = fs - w11;
+                    int w00 = 16 - fs - ft + w11;
+
+                    var i1 = v * 2;
+                    block.Weights[i] = (wv[i0 + i1 + 2] * w11 + wv[i0 + i1] * w10 + wv[i1 + 2] * w01 + wv[i1] * w00 + 8) >> 4;
+                    block.Weights[i + 144] = (wv[i0 + i1 + 3] * w11 + wv[i0 + i1 + 1] * w10 + wv[i1 + 3] * w01 + wv[i1 + 1] * w00 + 8) >> 4;
+                }
+            }
+        }
+    }
+
+    private static void SelectPartition(uint input, ref BlockData block)
+    {
+        bool smallBlock = block.BlockWidth * block.BlockHeight < 31;
+        int seed = (int)(input >> 13 & 0x3ff) | (block.PartNum - 1) << 10;
+
+        uint rnum;
+        unchecked
+        {
+            rnum = (uint)seed;
+            rnum ^= rnum >> 15;
+            rnum -= rnum << 17;
+            rnum += rnum << 7;
+            rnum += rnum << 4;
+            rnum ^= rnum >> 5;
+            rnum += rnum << 16;
+            rnum ^= rnum >> 7;
+            rnum ^= rnum >> 3;
+            rnum ^= rnum << 6;
+            rnum ^= rnum >> 17;
+        }
+
+        Span<int> seeds = stackalloc int[8];
+        for (int i = 0; i < 8; i++)
+        {
+            seeds[i] = (int)((rnum >> (i * 4)) & 0xF);
+            seeds[i] *= seeds[i];
+        }
+
+        ReadOnlySpan<int> sh =
+        [
+            (seed & 2) != 0 ? 4 : 5,
+            block.PartNum == 3 ? 6 : 5
+        ];
+
+        if ((seed & 1) != 0)
+        {
             for (int i = 0; i < 8; i++)
             {
-                byte a = ReverseByte(TexelWeightData[i]);
-                byte b = ReverseByte(TexelWeightData[15 - i]);
-
-                TexelWeightData[i] = b;
-                TexelWeightData[15 - i] = a;
+                seeds[i] >>= sh[i % 2];
             }
-
-            // Make sure that higher non-texel bits are set to zero
-            int ClearByteStart = (TexelParams.GetPackedBitSize() >> 3) + 1;
-            TexelWeightData[ClearByteStart - 1] &= (byte)((1 << (TexelParams.GetPackedBitSize() % 8)) - 1);
-
-            int cLen = 16 - ClearByteStart;
-            for (int i = ClearByteStart; i < ClearByteStart + cLen; i++) TexelWeightData[i] = 0;
-
-            List<IntegerEncoded> TexelWeightValues = new List<IntegerEncoded>();
-            BitArrayStream WeightBitStream = new BitArrayStream(new BitArray(TexelWeightData));
-
-            IntegerEncoded.DecodeIntegerSequence(TexelWeightValues, WeightBitStream, TexelParams.MaxWeight, TexelParams.GetNumWeightValues());
-
-            // Blocks can be at most 12x12, so we can have as many as 144 weights
-            int[][] Weights = new int[2][];
-            Weights[0] = new int[144];
-            Weights[1] = new int[144];
-
-            UnquantizeTexelWeights(Weights, TexelWeightValues, TexelParams, BlockWidth, BlockHeight);
-
-            // Now that we have endpoints and weights, we can interpolate and generate
-            // the proper decoding...
-            for (int j = 0; j < BlockHeight; j++)
-            {
-                for (int i = 0; i < BlockWidth; i++)
-                {
-                    int Partition = Select2DPartition(PartitionIndex, i, j, NumberPartitions, ((BlockHeight * BlockWidth) < 32));
-
-                    ASTCPixel Pixel = new ASTCPixel(0, 0, 0, 0);
-                    for (int Component = 0; Component < 4; Component++)
-                    {
-                        int Component0 = EndPoints[Partition][0].GetComponent(Component);
-                        Component0 = BitArrayStream.Replicate(Component0, 8, 16);
-                        int Component1 = EndPoints[Partition][1].GetComponent(Component);
-                        Component1 = BitArrayStream.Replicate(Component1, 8, 16);
-
-                        int Plane = 0;
-
-                        if (TexelParams.DualPlane && (((PlaneIndices + 1) & 3) == Component))
-                        {
-                            Plane = 1;
-                        }
-
-                        int Weight = Weights[Plane][j * BlockWidth + i];
-                        int FinalComponent = (Component0 * (64 - Weight) + Component1 * Weight + 32) / 64;
-
-                        if (FinalComponent == 65535)
-                        {
-                            Pixel.SetComponent(Component, 255);
-                        }
-                        else
-                        {
-                            double FinalComponentFloat = FinalComponent;
-                            Pixel.SetComponent(Component, (int)(255.0 * (FinalComponentFloat / 65536.0) + 0.5));
-                        }
-                    }
-
-                    OutputBuffer[j * BlockWidth + i] = Pixel.Pack();
-                }
-            }
-
-            return true;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Select2DPartition(int Seed, int X, int Y, int PartitionCount, bool IsSmallBlock) => SelectPartition(Seed, X, Y, 0, PartitionCount, IsSmallBlock);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int SelectPartition(int Seed, int X, int Y, int Z, int PartitionCount, bool IsSmallBlock)
+        else
         {
-            if (PartitionCount == 1)
+            for (int i = 0; i < 8; i++)
             {
-                return 0;
-            }
-
-            if (IsSmallBlock)
-            {
-                X <<= 1;
-                Y <<= 1;
-                Z <<= 1;
-            }
-
-            Seed += (PartitionCount - 1) * 1024;
-
-            int RightNum = Hash52((uint)Seed);
-            byte Seed01 = (byte)(RightNum & 0xF);
-            byte Seed02 = (byte)((RightNum >> 4) & 0xF);
-            byte Seed03 = (byte)((RightNum >> 8) & 0xF);
-            byte Seed04 = (byte)((RightNum >> 12) & 0xF);
-            byte Seed05 = (byte)((RightNum >> 16) & 0xF);
-            byte Seed06 = (byte)((RightNum >> 20) & 0xF);
-            byte Seed07 = (byte)((RightNum >> 24) & 0xF);
-            byte Seed08 = (byte)((RightNum >> 28) & 0xF);
-            byte Seed09 = (byte)((RightNum >> 18) & 0xF);
-            byte Seed10 = (byte)((RightNum >> 22) & 0xF);
-            byte Seed11 = (byte)((RightNum >> 26) & 0xF);
-            byte Seed12 = (byte)(((RightNum >> 30) | (RightNum << 2)) & 0xF);
-
-            Seed01 *= Seed01; Seed02 *= Seed02;
-            Seed03 *= Seed03; Seed04 *= Seed04;
-            Seed05 *= Seed05; Seed06 *= Seed06;
-            Seed07 *= Seed07; Seed08 *= Seed08;
-            Seed09 *= Seed09; Seed10 *= Seed10;
-            Seed11 *= Seed11; Seed12 *= Seed12;
-
-            int SeedHash1, SeedHash2, SeedHash3;
-
-            if ((Seed & 1) != 0)
-            {
-                SeedHash1 = (Seed & 2) != 0 ? 4 : 5;
-                SeedHash2 = (PartitionCount == 3) ? 6 : 5;
-            }
-            else
-            {
-                SeedHash1 = (PartitionCount == 3) ? 6 : 5;
-                SeedHash2 = (Seed & 2) != 0 ? 4 : 5;
-            }
-
-            SeedHash3 = (Seed & 0x10) != 0 ? SeedHash1 : SeedHash2;
-
-            Seed01 >>= SeedHash1; Seed02 >>= SeedHash2; Seed03 >>= SeedHash1; Seed04 >>= SeedHash2;
-            Seed05 >>= SeedHash1; Seed06 >>= SeedHash2; Seed07 >>= SeedHash1; Seed08 >>= SeedHash2;
-            Seed09 >>= SeedHash3; Seed10 >>= SeedHash3; Seed11 >>= SeedHash3; Seed12 >>= SeedHash3;
-
-            int a = Seed01 * X + Seed02 * Y + Seed11 * Z + (RightNum >> 14);
-            int b = Seed03 * X + Seed04 * Y + Seed12 * Z + (RightNum >> 10);
-            int c = Seed05 * X + Seed06 * Y + Seed09 * Z + (RightNum >> 6);
-            int d = Seed07 * X + Seed08 * Y + Seed10 * Z + (RightNum >> 2);
-
-            a &= 0x3F; b &= 0x3F; c &= 0x3F; d &= 0x3F;
-
-            if (PartitionCount < 4) d = 0;
-            if (PartitionCount < 3) c = 0;
-
-            if (a >= b && a >= c && a >= d) return 0;
-            else if (b >= c && b >= d) return 1;
-            else if (c >= d) return 2;
-            return 3;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Hash52(uint Val)
-        {
-            Val ^= Val >> 15; Val -= Val << 17; Val += Val << 7; Val += Val << 4;
-            Val ^= Val >> 5; Val += Val << 16; Val ^= Val >> 7; Val ^= Val >> 3;
-            Val ^= Val << 6; Val ^= Val >> 17;
-            return (int)Val;
-        }
-
-        private static void UnquantizeTexelWeights(int[][] OutputBuffer, List<IntegerEncoded> Weights, TexelWeightParams TexelParams, int BlockWidth, int BlockHeight)
-        {
-            int WeightIndices = 0;
-            int[][] Unquantized = new int[2][];
-            Unquantized[0] = new int[144];
-            Unquantized[1] = new int[144];
-
-            for (int i = 0; i < Weights.Count; i++)
-            {
-                Unquantized[0][WeightIndices] = UnquantizeTexelWeight(Weights[i]);
-
-                if (TexelParams.DualPlane)
-                {
-                    i++;
-                    Unquantized[1][WeightIndices] = UnquantizeTexelWeight(Weights[i]);
-
-                    if (i == Weights.Count)
-                    {
-                        break;
-                    }
-                }
-
-                if (++WeightIndices >= (TexelParams.Width * TexelParams.Height)) break;
-            }
-
-            // Do infill if necessary (Section C.2.18) ...
-            int Ds = (1024 + (BlockWidth / 2)) / (BlockWidth - 1);
-            int Dt = (1024 + (BlockHeight / 2)) / (BlockHeight - 1);
-
-            int PlaneScale = TexelParams.DualPlane ? 2 : 1;
-
-            for (int Plane = 0; Plane < PlaneScale; Plane++)
-            {
-                for (int t = 0; t < BlockHeight; t++)
-                {
-                    for (int s = 0; s < BlockWidth; s++)
-                    {
-                        int cs = Ds * s;
-                        int ct = Dt * t;
-
-                        int gs = (cs * (TexelParams.Width - 1) + 32) >> 6;
-                        int gt = (ct * (TexelParams.Height - 1) + 32) >> 6;
-
-                        int js = gs >> 4;
-                        int fs = gs & 0xF;
-
-                        int jt = gt >> 4;
-                        int ft = gt & 0x0F;
-
-                        int w11 = (fs * ft + 8) >> 4;
-                        int w10 = ft - w11;
-                        int w01 = fs - w11;
-                        int w00 = 16 - fs - ft + w11;
-
-                        int v0 = js + jt * TexelParams.Width;
-
-                        int p00 = 0;
-                        int p01 = 0;
-                        int p10 = 0;
-                        int p11 = 0;
-
-                        if (v0 < (TexelParams.Width * TexelParams.Height))
-                        {
-                            p00 = Unquantized[Plane][v0];
-                        }
-
-                        if (v0 + 1 < (TexelParams.Width * TexelParams.Height))
-                        {
-                            p01 = Unquantized[Plane][v0 + 1];
-                        }
-
-                        if (v0 + TexelParams.Width < (TexelParams.Width * TexelParams.Height))
-                        {
-                            p10 = Unquantized[Plane][v0 + TexelParams.Width];
-                        }
-
-                        if (v0 + TexelParams.Width + 1 < (TexelParams.Width * TexelParams.Height))
-                        {
-                            p11 = Unquantized[Plane][v0 + TexelParams.Width + 1];
-                        }
-
-                        OutputBuffer[Plane][t * BlockWidth + s] = (p00 * w00 + p01 * w01 + p10 * w10 + p11 * w11 + 8) >> 4;
-                    }
-                }
+                seeds[i] >>= sh[1 - i % 2];
             }
         }
 
-        private static int UnquantizeTexelWeight(IntegerEncoded IntEncoded)
+        if (smallBlock)
         {
-            int BitValue = IntEncoded.BitValue;
-            int BitLength = IntEncoded.NumberBits;
-
-            int A = BitArrayStream.Replicate(BitValue & 1, 1, 7);
-            int B = 0, C = 0, D = 0;
-
-            int Result = 0;
-
-            switch (IntEncoded.GetEncoding())
+            for (int t = 0, i = 0; t < block.BlockHeight; t++)
             {
-                case EIntegerEncoding.JustBits:
-                    Result = BitArrayStream.Replicate(BitValue, BitLength, 6);
-                    break;
-
-                case EIntegerEncoding.Trit:
-                    {
-                        D = IntEncoded.TritValue;
-                        switch (BitLength)
-                        {
-                            case 0:
-                                {
-                                    int[] Results = { 0, 32, 63 };
-                                    Result = Results[D];
-                                    break;
-                                }
-                            case 1:
-                                {
-                                    C = 50;
-                                    break;
-                                }
-                            case 2:
-                                {
-                                    C = 23;
-                                    int b = (BitValue >> 1) & 1;
-                                    B = (b << 6) | (b << 2) | b;
-                                    break;
-                                }
-                            case 3:
-                                {
-                                    C = 11;
-                                    int cb = (BitValue >> 1) & 3;
-                                    B = (cb << 5) | cb;
-                                    break;
-                                }
-                            default:
-                                throw new Exception("Invalid trit encoding for texel weight");
-                        }
-                        break;
-                    }
-                case EIntegerEncoding.Quint:
-                    {
-                        D = IntEncoded.QuintValue;
-                        switch (BitLength)
-                        {
-                            case 0:
-                                {
-                                    int[] Results = { 0, 16, 32, 47, 63 };
-                                    Result = Results[D];
-                                    break;
-                                }
-                            case 1:
-                                {
-                                    C = 28;
-                                    break;
-                                }
-                            case 2:
-                                {
-                                    C = 13;
-                                    int b = (BitValue >> 1) & 1;
-                                    B = (b << 6) | (b << 1);
-                                    break;
-                                }
-                            default:
-                                throw new Exception("Invalid quint encoding for texel weight");
-                        }
-                        break;
-                    }
-            }
-
-            if (IntEncoded.GetEncoding() != EIntegerEncoding.JustBits && BitLength > 0)
-            {
-                // Decode the value...
-                Result = D * C + B;
-                Result ^= A;
-                Result = (A & 0x20) | (Result >> 2);
-            }
-
-            // Change from [0,63] to [0,64]
-            if (Result > 32)
-            {
-                Result += 1;
-            }
-
-            return Result;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static byte ReverseByte(byte b)
-        {
-            // Taken from http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64Bits
-            return (byte)((((b) * 0x80200802L) & 0x0884422110L) * 0x0101010101L >> 32);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint[] ReadUintColorValues(int Number, int[] ColorValues, ref int ColorValuesPosition)
-        {
-            uint[] Ret = new uint[Number];
-            for (int i = 0; i < Number; i++)
-            {
-                Ret[i] = (uint)ColorValues[ColorValuesPosition++];
-            }
-            return Ret;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int[] ReadIntColorValues(int Number, int[] ColorValues, ref int ColorValuesPosition)
-        {
-            int[] Ret = new int[Number];
-            for (int i = 0; i < Number; i++)
-            {
-                Ret[i] = ColorValues[ColorValuesPosition++];
-            }
-            return Ret;
-        }
-
-        private static void ComputeEndpoints(ASTCPixel[] EndPoints, int[] ColorValues, uint ColorEndpointMode, ref int ColorValuesPosition)
-        {
-            switch (ColorEndpointMode)
-            {
-                case 0:
-                    {
-                        uint[] Val = ReadUintColorValues(2, ColorValues, ref ColorValuesPosition);
-                        EndPoints[0] = new ASTCPixel(0xFF, (short)Val[0], (short)Val[0], (short)Val[0]);
-                        EndPoints[1] = new ASTCPixel(0xFF, (short)Val[1], (short)Val[1], (short)Val[1]);
-                        break;
-                    }
-                case 1:
-                    {
-                        uint[] Val = ReadUintColorValues(2, ColorValues, ref ColorValuesPosition);
-                        int L0 = (int)((Val[0] >> 2) | (Val[1] & 0xC0));
-                        int L1 = (int)Math.Max(L0 + (Val[1] & 0x3F), 0xFFU);
-                        EndPoints[0] = new ASTCPixel(0xFF, (short)L0, (short)L0, (short)L0);
-                        EndPoints[1] = new ASTCPixel(0xFF, (short)L1, (short)L1, (short)L1);
-                        break;
-                    }
-                case 4:
-                    {
-                        uint[] Val = ReadUintColorValues(4, ColorValues, ref ColorValuesPosition);
-                        EndPoints[0] = new ASTCPixel((short)Val[2], (short)Val[0], (short)Val[0], (short)Val[0]);
-                        EndPoints[1] = new ASTCPixel((short)Val[3], (short)Val[1], (short)Val[1], (short)Val[1]);
-                        break;
-                    }
-                case 5:
-                    {
-                        int[] Val = ReadIntColorValues(4, ColorValues, ref ColorValuesPosition);
-                        BitArrayStream.BitTransferSigned(ref Val[1], ref Val[0]);
-                        BitArrayStream.BitTransferSigned(ref Val[3], ref Val[2]);
-                        EndPoints[0] = new ASTCPixel((short)Val[2], (short)Val[0], (short)Val[0], (short)Val[0]);
-                        EndPoints[1] = new ASTCPixel((short)(Val[2] + Val[3]), (short)(Val[0] + Val[1]), (short)(Val[0] + Val[1]), (short)(Val[0] + Val[1]));
-                        EndPoints[0].ClampByte();
-                        EndPoints[1].ClampByte();
-                        break;
-                    }
-                case 6:
-                    {
-                        uint[] Val = ReadUintColorValues(4, ColorValues, ref ColorValuesPosition);
-                        EndPoints[0] = new ASTCPixel(0xFF, (short)(Val[0] * Val[3] >> 8), (short)(Val[1] * Val[3] >> 8), (short)(Val[2] * Val[3] >> 8));
-                        EndPoints[1] = new ASTCPixel(0xFF, (short)Val[0], (short)Val[1], (short)Val[2]);
-                        break;
-                    }
-                case 8:
-                    {
-                        uint[] Val = ReadUintColorValues(6, ColorValues, ref ColorValuesPosition);
-                        if (Val[1] + Val[3] + Val[5] >= Val[0] + Val[2] + Val[4])
-                        {
-                            EndPoints[0] = new ASTCPixel(0xFF, (short)Val[0], (short)Val[2], (short)Val[4]);
-                            EndPoints[1] = new ASTCPixel(0xFF, (short)Val[1], (short)Val[3], (short)Val[5]);
-                        }
-                        else
-                        {
-                            EndPoints[0] = ASTCPixel.BlueContract(0xFF, (short)Val[1], (short)Val[3], (short)Val[5]);
-                            EndPoints[1] = ASTCPixel.BlueContract(0xFF, (short)Val[0], (short)Val[2], (short)Val[4]);
-                        }
-                        break;
-                    }
-                case 9:
-                    {
-                        int[] Val = ReadIntColorValues(6, ColorValues, ref ColorValuesPosition);
-                        BitArrayStream.BitTransferSigned(ref Val[1], ref Val[0]);
-                        BitArrayStream.BitTransferSigned(ref Val[3], ref Val[2]);
-                        BitArrayStream.BitTransferSigned(ref Val[5], ref Val[4]);
-                        if (Val[1] + Val[3] + Val[5] >= 0)
-                        {
-                            EndPoints[0] = new ASTCPixel(0xFF, (short)Val[0], (short)Val[2], (short)Val[4]);
-                            EndPoints[1] = new ASTCPixel(0xFF, (short)(Val[0] + Val[1]), (short)(Val[2] + Val[3]), (short)(Val[4] + Val[5]));
-                        }
-                        else
-                        {
-                            EndPoints[0] = ASTCPixel.BlueContract(0xFF, Val[0] + Val[1], Val[2] + Val[3], Val[4] + Val[5]);
-                            EndPoints[1] = ASTCPixel.BlueContract(0xFF, Val[0], Val[2], Val[4]);
-                        }
-                        EndPoints[0].ClampByte();
-                        EndPoints[1].ClampByte();
-                        break;
-                    }
-                case 10:
-                    {
-                        uint[] Val = ReadUintColorValues(6, ColorValues, ref ColorValuesPosition);
-                        EndPoints[0] = new ASTCPixel((short)Val[4], (short)(Val[0] * Val[3] >> 8), (short)(Val[1] * Val[3] >> 8), (short)(Val[2] * Val[3] >> 8));
-                        EndPoints[1] = new ASTCPixel((short)Val[5], (short)Val[0], (short)Val[1], (short)Val[2]);
-                        break;
-                    }
-                case 12:
-                    {
-                        uint[] Val = ReadUintColorValues(8, ColorValues, ref ColorValuesPosition);
-                        if (Val[1] + Val[3] + Val[5] >= Val[0] + Val[2] + Val[4])
-                        {
-                            EndPoints[0] = new ASTCPixel((short)Val[6], (short)Val[0], (short)Val[2], (short)Val[4]);
-                            EndPoints[1] = new ASTCPixel((short)Val[7], (short)Val[1], (short)Val[3], (short)Val[5]);
-                        }
-                        else
-                        {
-                            EndPoints[0] = ASTCPixel.BlueContract((short)Val[7], (short)Val[1], (short)Val[3], (short)Val[5]);
-                            EndPoints[1] = ASTCPixel.BlueContract((short)Val[6], (short)Val[0], (short)Val[2], (short)Val[4]);
-                        }
-                        break;
-                    }
-                case 13:
-                    {
-                        int[] Val = ReadIntColorValues(8, ColorValues, ref ColorValuesPosition);
-                        BitArrayStream.BitTransferSigned(ref Val[1], ref Val[0]);
-                        BitArrayStream.BitTransferSigned(ref Val[3], ref Val[2]);
-                        BitArrayStream.BitTransferSigned(ref Val[5], ref Val[4]);
-                        BitArrayStream.BitTransferSigned(ref Val[7], ref Val[6]);
-                        if (Val[1] + Val[3] + Val[5] >= 0)
-                        {
-                            EndPoints[0] = new ASTCPixel((short)Val[6], (short)Val[0], (short)Val[2], (short)Val[4]);
-                            EndPoints[1] = new ASTCPixel((short)(Val[7] + Val[6]), (short)(Val[0] + Val[1]), (short)(Val[2] + Val[3]), (short)(Val[4] + Val[5]));
-                        }
-                        else
-                        {
-                            EndPoints[0] = ASTCPixel.BlueContract(Val[6] + Val[7], Val[0] + Val[1], Val[2] + Val[3], Val[4] + Val[5]);
-                            EndPoints[1] = ASTCPixel.BlueContract(Val[6], Val[0], Val[2], Val[4]);
-                        }
-                        EndPoints[0].ClampByte();
-                        EndPoints[1].ClampByte();
-                        break;
-                    }
-                default:
-                    throw new Exception("Unsupported color endpoint mode (is it HDR?)");
-            }
-        }
-
-        private static void DecodeColorValues(int[] OutputValues, byte[] InputData, uint[] Modes, int NumberPartitions, int NumberBitsForColorData)
-        {
-            // First figure out how many color values we have
-            int NumberValues = 0;
-            for (int i = 0; i < NumberPartitions; i++)
-            {
-                NumberValues += (int)((Modes[i] >> 2) + 1) << 1;
-            }
-
-            // Then based on the number of values and the remaining number of bits,
-            // figure out the max value for each of them...
-            int Range = 256;
-            while (--Range > 0)
-            {
-                IntegerEncoded IntEncoded = IntegerEncoded.CreateEncoding(Range);
-                int BitLength = IntEncoded.GetBitLength(NumberValues);
-
-                if (BitLength <= NumberBitsForColorData)
+                for (int s = 0; s < block.BlockWidth; s++, i++)
                 {
-                    // Find the smallest possible range that matches the given encoding
-                    while (--Range > 0)
-                    {
-                        IntegerEncoded NewIntEncoded = IntegerEncoded.CreateEncoding(Range);
-                        if (!NewIntEncoded.MatchesEncoding(IntEncoded))
-                        {
-                            break;
-                        }
-                    }
-
-                    // Return to last matching range.
-                    Range++;
-                    break;
-                }
-            }
-
-            // We now have enough to decode our integer sequence.
-            List<IntegerEncoded> IntegerEncodedSequence = new List<IntegerEncoded>();
-            BitArrayStream ColorBitStream = new BitArrayStream(new BitArray(InputData));
-
-            IntegerEncoded.DecodeIntegerSequence(IntegerEncodedSequence, ColorBitStream, Range, NumberValues);
-
-            // Once we have the decoded values, we need to dequantize them to the 0-255 range
-            // This procedure is outlined in ASTC spec C.2.13
-            int OutputIndices = 0;
-            foreach (IntegerEncoded IntEncoded in IntegerEncodedSequence)
-            {
-                int BitLength = IntEncoded.NumberBits;
-                int BitValue = IntEncoded.BitValue;
-                int A = 0, B = 0, C = 0, D = 0;
-                // A is just the lsb replicated 9 times.
-                A = BitArrayStream.Replicate(BitValue & 1, 1, 9);
-
-                switch (IntEncoded.GetEncoding())
-                {
-                    case EIntegerEncoding.JustBits:
-                        {
-                            OutputValues[OutputIndices++] = BitArrayStream.Replicate(BitValue, BitLength, 8);
-                            break;
-                        }
-                    case EIntegerEncoding.Trit:
-                        {
-                            D = IntEncoded.TritValue;
-                            switch (BitLength)
-                            {
-                                case 1:
-                                    {
-                                        C = 204;
-                                        break;
-                                    }
-                                case 2:
-                                    {
-                                        C = 93;
-                                        int b = (BitValue >> 1) & 1;
-                                        B = (b << 8) | (b << 4) | (b << 2) | (b << 1);
-                                        break;
-                                    }
-                                case 3:
-                                    {
-                                        C = 44;
-                                        int cb = (BitValue >> 1) & 3;
-                                        B = (cb << 7) | (cb << 2) | cb;
-                                        break;
-                                    }
-                                case 4:
-                                    {
-                                        C = 22;
-                                        int dcb = (BitValue >> 1) & 7;
-                                        B = (dcb << 6) | dcb;
-                                        break;
-                                    }
-                                case 5:
-                                    {
-                                        C = 11;
-                                        int edcb = (BitValue >> 1) & 0xF;
-                                        B = (edcb << 5) | (edcb >> 2);
-                                        break;
-                                    }
-                                case 6:
-                                    {
-                                        C = 5;
-                                        int fedcb = (BitValue >> 1) & 0x1F;
-                                        B = (fedcb << 4) | (fedcb >> 4);
-                                        break;
-                                    }
-                                default:
-                                    throw new Exception("Unsupported trit encoding for color values!");
-                            }
-                            break;
-                        }
-                    case EIntegerEncoding.Quint:
-                        {
-                            D = IntEncoded.QuintValue;
-                            switch (BitLength)
-                            {
-                                case 1:
-                                    {
-                                        C = 113;
-                                        break;
-                                    }
-                                case 2:
-                                    {
-                                        C = 54;
-                                        int b = (BitValue >> 1) & 1;
-                                        B = (b << 8) | (b << 3) | (b << 2);
-                                        break;
-                                    }
-                                case 3:
-                                    {
-                                        C = 26;
-                                        int cb = (BitValue >> 1) & 3;
-                                        B = (cb << 7) | (cb << 1) | (cb >> 1);
-                                        break;
-                                    }
-                                case 4:
-                                    {
-                                        C = 13;
-                                        int dcb = (BitValue >> 1) & 7;
-                                        B = (dcb << 6) | (dcb >> 1);
-                                        break;
-                                    }
-                                case 5:
-                                    {
-                                        C = 6;
-                                        int edcb = (BitValue >> 1) & 0xF;
-                                        B = (edcb << 5) | (edcb >> 3);
-                                        break;
-                                    }
-                                default:
-                                    throw new Exception("Unsupported quint encoding for color values!");
-                            }
-                            break;
-                        }
-                }
-
-                if (IntEncoded.GetEncoding() != EIntegerEncoding.JustBits)
-                {
-                    int T = D * C + B;
-                    T ^= A;
-                    T = (A & 0x80) | (T >> 2);
-                    OutputValues[OutputIndices++] = T;
+                    int x = s << 1;
+                    int y = t << 1;
+                    int a = (int)((seeds[0] * x + seeds[1] * y + (rnum >> 14)) & 0x3f);
+                    int b = (int)((seeds[2] * x + seeds[3] * y + (rnum >> 10)) & 0x3f);
+                    int c = (int)(block.PartNum < 3 ? 0 : (seeds[4] * x + seeds[5] * y + (rnum >> 6)) & 0x3f);
+                    int d = (int)(block.PartNum < 4 ? 0 : (seeds[6] * x + seeds[7] * y + (rnum >> 2)) & 0x3f);
+                    block.Partition[i] = (a >= b && a >= c && a >= d) ? 0 : (b >= c && b >= d) ? 1 : (c >= d) ? 2 : 3;
                 }
             }
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void FillVoidExtentLDR(BitArrayStream BitStream, int[] OutputBuffer, int BlockWidth, int BlockHeight)
+        else
         {
-            // Don't actually care about the void extent, just read the bits...
-            for (int i = 0; i < 4; ++i)
+            for (int y = 0, i = 0; y < block.BlockHeight; y++)
             {
-                BitStream.ReadBits(13);
-            }
-
-            // Decode the RGBA components and renormalize them to the range [0, 255]
-            ushort R = (ushort)BitStream.ReadBits(16);
-            ushort G = (ushort)BitStream.ReadBits(16);
-            ushort B = (ushort)BitStream.ReadBits(16);
-            ushort A = (ushort)BitStream.ReadBits(16);
-
-            int RGBA = (R >> 8) | (G & 0xFF00) | ((B) & 0xFF00) << 8 | ((A) & 0xFF00) << 16;
-
-            for (int j = 0; j < BlockHeight; j++)
-            {
-                for (int i = 0; i < BlockWidth; i++)
+                for (int x = 0; x < block.BlockWidth; x++, i++)
                 {
-                    OutputBuffer[j * BlockWidth + i] = RGBA;
+                    int a = (int)((seeds[0] * x + seeds[1] * y + (rnum >> 14)) & 0x3f);
+                    int b = (int)((seeds[2] * x + seeds[3] * y + (rnum >> 10)) & 0x3f);
+                    int c = (int)(block.PartNum < 3 ? 0 : (seeds[4] * x + seeds[5] * y + (rnum >> 6)) & 0x3f);
+                    int d = (int)(block.PartNum < 4 ? 0 : (seeds[6] * x + seeds[7] * y + (rnum >> 2)) & 0x3f);
+                    block.Partition[i] = (a >= b && a >= c && a >= d) ? 0 : (b >= c && b >= d) ? 1 : (c >= d) ? 2 : 3;
                 }
             }
         }
+    }
 
-        private static TexelWeightParams DecodeBlockInfo(BitArrayStream BitStream)
+    private static void ApplicateColor(BlockData block, Span<uint> output)
+    {
+        var texelCount = block.BlockWidth * block.BlockHeight;
+
+        Span<EndpointBuffer.Endpoint> endpoints = block.Endpoints[..4];
+
+        // expand and prepare for fast interpolate
+        for (var j = 0; j < block.PartNum ; j++)
         {
-            TexelWeightParams TexelParams = new TexelWeightParams();
-            ushort ModeBits = (ushort)BitStream.ReadBits(11);
+            Span<int> e = endpoints[j][..8];
+            e[0] = (e[0] << 8 | e[0]);
+            e[1] = (e[1] << 8 | e[1]);
+            e[2] = (e[2] << 8 | e[2]);
+            e[3] = (e[3] << 8 | e[3]);
+            e[4] = (e[4] << 8 | e[4]) - e[0];
+            e[5] = (e[5] << 8 | e[5]) - e[1];
+            e[6] = (e[6] << 8 | e[6]) - e[2];
+            e[7] = (e[7] << 8 | e[7]) - e[3];
+            e[0] = (e[0] << 6) + 32;
+            e[1] = (e[1] << 6) + 32;
+            e[2] = (e[2] << 6) + 32;
+            e[3] = (e[3] << 6) + 32;
+        }
 
-            // Does this match the void extent block mode?
-            if ((ModeBits & 0x01FF) == 0x1FC)
+        output = output[..texelCount];
+        if (block.DualPlane != 0)
+        {
+            Span<int> ps = [0, 0, 0, 0];
+            ps[block.PlaneSelector] = 144;
+            ReadOnlySpan<int> weights = block.Weights[..288];
+            if (block.PartNum > 1)
             {
-                if ((ModeBits & 0x200) != 0)
+                ReadOnlySpan<int> partition = block.Partition[..texelCount];
+                for (int i = 0; i < texelCount; i++)
                 {
-                    TexelParams.VoidExtentHDR = true;
-                }
-                else
-                {
-                    TexelParams.VoidExtentLDR = true;
-                }
-
-                // Next two bits must be one.
-                if ((ModeBits & 0x400) == 0 || BitStream.ReadBits(1) == 0)
-                {
-                    TexelParams.Error = true;
-                }
-                return TexelParams;
-            }
-
-            // First check if the last four bits are zero
-            if ((ModeBits & 0xF) == 0)
-            {
-                TexelParams.Error = true;
-                return TexelParams;
-            }
-
-            // If the last two bits are zero, then if bits
-            // [6-8] are all ones, this is also reserved.
-            if ((ModeBits & 0x3) == 0 && (ModeBits & 0x1C0) == 0x1C0)
-            {
-                TexelParams.Error = true;
-                return TexelParams;
-            }
-
-            // Otherwise, there is no error... Figure out the layout
-            // of the block mode. Layout is determined by a number
-            // between 0 and 9 corresponding to table C.2.8 of the
-            // ASTC spec.
-            int Layout;
-            if ((ModeBits & 0x1) != 0 || (ModeBits & 0x2) != 0)
-            {
-                // layout is in [0-4]
-                if ((ModeBits & 0x8) != 0)
-                {
-                    // layout is in [2-4]
-                    if ((ModeBits & 0x4) != 0)
-                    {
-                        // layout is in [3-4]
-                        if ((ModeBits & 0x100) != 0)
-                        {
-                            Layout = 4;
-                        }
-                        else
-                        {
-                            Layout = 3;
-                        }
-                    }
-                    else
-                    {
-                        Layout = 2;
-                    }
-                }
-                else
-                {
-                    // layout is in [0-1]
-                    if ((ModeBits & 0x4) != 0)
-                    {
-                        Layout = 1;
-                    }
-                    else
-                    {
-                        Layout = 0;
-                    }
+                    ReadOnlySpan<int> endpoint = endpoints[partition[i] & 3][..8];
+                    uint r = FastInterpolate(endpoint[0], endpoint[4], weights[i + ps[0]]);
+                    uint g = FastInterpolate(endpoint[1], endpoint[5], weights[i + ps[1]]);
+                    uint b = FastInterpolate(endpoint[2], endpoint[6], weights[i + ps[2]]);
+                    uint a = FastInterpolate(endpoint[3], endpoint[7], weights[i + ps[3]]);
+                    output[i] = r | g << 8 | b << 16 | a << 24;
                 }
             }
             else
             {
-                // layout is in [5-9]
-                if ((ModeBits & 0x100) != 0)
+                ReadOnlySpan<int> endpoint = endpoints[0][..8];
+                for (int i = 0; i < texelCount; i++)
                 {
-                    // layout is in [7-9]
-                    if ((ModeBits & 0x80) != 0)
-                    {
-                        if ((ModeBits & 0x20) != 0)
-                        {
-                            Layout = 8;
-                        }
-                        else
-                        {
-                            Layout = 7;
-                        }
-                    }
-                    else
-                    {
-                        Layout = 9;
-                    }
-                }
-                else
-                {
-                    // layout is in [5-6]
-                    if ((ModeBits & 0x80) != 0)
-                    {
-                        Layout = 6;
-                    }
-                    else
-                    {
-                        Layout = 5;
-                    }
+                    uint r = FastInterpolate(endpoint[0], endpoint[4], weights[i + ps[0]]);
+                    uint g = FastInterpolate(endpoint[1], endpoint[5], weights[i + ps[1]]);
+                    uint b = FastInterpolate(endpoint[2], endpoint[6], weights[i + ps[2]]);
+                    uint a = FastInterpolate(endpoint[3], endpoint[7], weights[i + ps[3]]);
+                    output[i] = r | g << 8 | b << 16 | a << 24;
                 }
             }
-
-            // Determine R
-            int R = (ModeBits >> 4) & 1;
-            if (Layout < 5)
-            {
-                R |= (ModeBits & 0x3) << 1;
-            }
-            else
-            {
-                R |= (ModeBits & 0xC) >> 1;
-            }
-
-            // Determine width & height
-            switch (Layout)
-            {
-                case 0:
-                    {
-                        int A = (ModeBits >> 5) & 0x3;
-                        int B = (ModeBits >> 7) & 0x3;
-                        TexelParams.Width = B + 4;
-                        TexelParams.Height = A + 2;
-                        break;
-                    }
-                case 1:
-                    {
-                        int A = (ModeBits >> 5) & 0x3;
-                        int B = (ModeBits >> 7) & 0x3;
-                        TexelParams.Width = B + 8;
-                        TexelParams.Height = A + 2;
-                        break;
-                    }
-                case 2:
-                    {
-                        int A = (ModeBits >> 5) & 0x3;
-                        int B = (ModeBits >> 7) & 0x3;
-                        TexelParams.Width = A + 2;
-                        TexelParams.Height = B + 8;
-                        break;
-                    }
-                case 3:
-                    {
-                        int A = (ModeBits >> 5) & 0x3;
-                        int B = (ModeBits >> 7) & 0x1;
-                        TexelParams.Width = A + 2;
-                        TexelParams.Height = B + 6;
-                        break;
-                    }
-                case 4:
-                    {
-                        int A = (ModeBits >> 5) & 0x3;
-                        int B = (ModeBits >> 7) & 0x1;
-                        TexelParams.Width = B + 2;
-                        TexelParams.Height = A + 2;
-                        break;
-                    }
-                case 5:
-                    {
-                        int A = (ModeBits >> 5) & 0x3;
-                        TexelParams.Width = 12;
-                        TexelParams.Height = A + 2;
-                        break;
-                    }
-                case 6:
-                    {
-                        int A = (ModeBits >> 5) & 0x3;
-                        TexelParams.Width = A + 2;
-                        TexelParams.Height = 12;
-                        break;
-                    }
-                case 7:
-                    {
-                        TexelParams.Width = 6;
-                        TexelParams.Height = 10;
-                        break;
-                    }
-                case 8:
-                    {
-                        TexelParams.Width = 10;
-                        TexelParams.Height = 6;
-                        break;
-                    }
-                case 9:
-                    {
-                        int A = (ModeBits >> 5) & 0x3;
-                        int B = (ModeBits >> 9) & 0x3;
-                        TexelParams.Width = A + 6;
-                        TexelParams.Height = B + 6;
-                        break;
-                    }
-                default:
-                    TexelParams.Error = true;
-                    break;
-            }
-
-            bool D = ((Layout != 9) && ((ModeBits & 0x400) != 0));
-            bool H = (Layout != 9) && ((ModeBits & 0x200) != 0);
-
-            if (H)
-            {
-                int[] MaxWeights = { 9, 11, 15, 19, 23, 31 };
-                TexelParams.MaxWeight = MaxWeights[R - 2];
-            }
-            else
-            {
-                int[] MaxWeights = { 1, 2, 3, 4, 5, 7 };
-                TexelParams.MaxWeight = MaxWeights[R - 2];
-            }
-
-            TexelParams.DualPlane = D;
-            return TexelParams;
         }
+        else if (block.PartNum > 1)
+        {
+            ReadOnlySpan<int> partition = block.Partition[..texelCount];
+            ReadOnlySpan<int> weights = block.Weights[..texelCount];
+            for (int i = 0; i < texelCount; i++)
+            {
+                ReadOnlySpan<int> endpoint = endpoints[partition[i] & 3][..8];
+                uint r = FastInterpolate(endpoint[0], endpoint[4], weights[i]);
+                uint g = FastInterpolate(endpoint[1], endpoint[5], weights[i]);
+                uint b = FastInterpolate(endpoint[2], endpoint[6], weights[i]);
+                uint a = FastInterpolate(endpoint[3], endpoint[7], weights[i]);
+                output[i] = r | g << 8 | b << 16 | a << 24;
+            }
+        }
+        else
+        {
+            ReadOnlySpan<int> endpoint = endpoints[0][..8];
+            ReadOnlySpan<int> weights = block.Weights[..texelCount];
+            for (int i = 0; i < texelCount; i++)
+            {
+                uint r = FastInterpolate(endpoint[0], endpoint[4], weights[i]);
+                uint g = FastInterpolate(endpoint[1], endpoint[5], weights[i]);
+                uint b = FastInterpolate(endpoint[2], endpoint[6], weights[i]);
+                uint a = FastInterpolate(endpoint[3], endpoint[7], weights[i]);
+                output[i] = r | g << 8 | b << 16 | a << 24;
+            }
+        }
+    }
+
+    private static void DecodeIntseq(UInt128 input, int offset, int a, int b, int count, Span<IntSeqData> output)
+    {
+        if (count <= 0)
+        {
+            return;
+        }
+
+        int n = 0;
+        output = output[..count];
+        int mask = (1 << b) - 1;
+        if (a == 3)
+        {
+            int blockCount = (count + 4) / 5;
+            int lastBlockCount = (count + 4) % 5 + 1;
+            int blockSize = 8 + 5 * b;
+            int lastBlockSize = (blockSize * lastBlockCount + 4) / 5;
+
+            for (int i = 0, p = offset; i < blockCount; i++, p += blockSize)
+            {
+                ulong d = GetBits64(input, p, (i < blockCount - 1) ? blockSize : lastBlockSize);
+                int x = (int)((d >> b & 3) | (d >> b * 2 & 0xc) | (d >> b * 3 & 0x10) | (d >> b * 4 & 0x60) | (d >> b * 5 & 0x80));
+                for (int j = 0; j < 5 && n < count; j++, n++)
+                {
+                    output[n] = new IntSeqData()
+                    {
+                        Bits = unchecked((int)(d >> (DImt[j] + b * j))) & mask,
+                        Nonbits = DITritsTable[j * 256 + x],
+                    };
+                }
+            }
+        }
+        else if (a == 5)
+        {
+            int blockCount = (count + 2) / 3;
+            int lastBlockCount = (count + 2) % 3 + 1;
+            int blockSize = 7 + 3 * b;
+            int lastBlockSize = (blockSize * lastBlockCount + 2) / 3;
+
+            for (int i = 0, p = offset; i < blockCount; i++, p += blockSize)
+            {
+                ulong d = GetBits64(input, p, (i < blockCount - 1) ? blockSize : lastBlockSize);
+                int x = (int)((d >> b & 7) | (d >> b * 2 & 0x18) | (d >> b * 3 & 0x60));
+                for (int j = 0; j < 3 && n < count; j++, n++)
+                {
+                    output[n] = new IntSeqData()
+                    {
+                        Bits = (int)d >> (DImq[j] + b * j) & mask,
+                        Nonbits = DIQuintsTable[j * 128 + x],
+                    };
+                }
+            }
+        }
+        else
+        {
+            for (int p = offset; n < count; n++, p += b)
+            {
+                output[n] = new IntSeqData()
+                {
+                    Bits = (int)(input >> p) & mask,
+                    Nonbits = 0,
+                };
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static ulong GetBits64(UInt128 input, int bit, int len) => (ulong) (input >> bit) & ((1UL << len) - 1);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static int Clamp(int n)
+    {
+        return n < 0 ? byte.MinValue : n > 255 ? byte.MaxValue : n;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static void BitTransferSigned(ref int a, ref int b)
+    {
+        b = (b >> 1) | (a & 0x80);
+        a = (a >> 1) & 0x3f;
+        if ((a & 0x20) != 0)
+        {
+            a -= 0x40;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static void SetEndpoint(Span<int> endpoint, int r1, int g1, int b1, int a1, int r2, int g2, int b2, int a2)
+    {
+        endpoint[7] = a2;
+        endpoint[6] = b2;
+        endpoint[5] = g2;
+        endpoint[4] = r2;
+        endpoint[3] = a1;
+        endpoint[2] = b1;
+        endpoint[1] = g1;
+        endpoint[0] = r1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static void SetEndpointClamp(Span<int> endpoint, int r1, int g1, int b1, int a1, int r2, int g2, int b2, int a2)
+    {
+        endpoint[7] = Clamp(a2);
+        endpoint[6] = Clamp(b2);
+        endpoint[5] = Clamp(g2);
+        endpoint[4] = Clamp(r2);
+        endpoint[3] = Clamp(a1);
+        endpoint[2] = Clamp(b1);
+        endpoint[1] = Clamp(g1);
+        endpoint[0] = Clamp(r1);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static void SetEndpointBlue(Span<int> endpoint, int r1, int g1, int b1, int a1, int r2, int g2, int b2, int a2)
+    {
+        endpoint[7] = a2;
+        endpoint[6] = b2;
+        endpoint[5] = (g2 + b2) >> 1;
+        endpoint[4] = (r2 + b2) >> 1;
+        endpoint[3] = a1;
+        endpoint[2] = b1;
+        endpoint[1] = (g1 + b1) >> 1;
+        endpoint[0] = (r1 + b1) >> 1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static void SetEndpointBlueClamp(Span<int> endpoint, int r1, int g1, int b1, int a1, int r2, int g2, int b2, int a2)
+    {
+        endpoint[7] = Clamp(a2);
+        endpoint[6] = Clamp(b2);
+        endpoint[5] = Clamp((g2 + b2) >> 1);
+        endpoint[4] = Clamp((r2 + b2) >> 1);
+        endpoint[3] = Clamp(a1);
+        endpoint[2] = Clamp(b1);
+        endpoint[1] = Clamp((g1 + b1) >> 1);
+        endpoint[0] = Clamp((r1 + b1) >> 1);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static uint FastInterpolate(int v0, int v1, int weight)
+    {
+        return (uint)((v0 + v1 * weight) >> 14);
     }
 }

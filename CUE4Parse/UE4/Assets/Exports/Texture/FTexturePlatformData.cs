@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using CUE4Parse.UE4.Assets.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
-using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Texture;
 
@@ -121,6 +120,8 @@ public class FTexturePlatformData
             }
         }
 
+        if (Ar.Game is GAME_MonsterHunterOutlanders) Ar.Position += 8; // TextureContentHash
+
         if (HasOptData())
         {
             if (Ar.Game == GAME_MidnightSuns) Ar.Position += 4;
@@ -162,8 +163,7 @@ public class FTexturePlatformData
             var bIsVirtual = Ar.ReadBoolean();
             if (bIsVirtual)
             {
-                var LODBias = Owner.GetOrDefault<int>("LODBias");
-                VTData = new FVirtualTextureBuiltData(Ar, FirstMipToSerialize - LODBias);
+                VTData = new FVirtualTextureBuiltData(Ar);
             }
         }
 

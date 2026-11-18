@@ -8,14 +8,14 @@ using SharpGLTF.Materials;
 namespace CUE4Parse_Conversion.Writers.Gltf;
 
 /// <summary>Builds glTF materials from cached PBR descriptions.</summary>
-internal sealed class GltfMaterialExporter(ExportOptions options, ExportSession session)
+internal sealed class GltfMaterialExporter(ExportOptions options, IExportSession session)
 {
     private readonly GltfMaterialFormat _format = new(options, session);
     private readonly Dictionary<UMaterialInterface, MaterialBuilder> _materials = [];
 
     public MaterialBuilder Build(MeshMaterialDto? slot, string fallbackName)
     {
-        var name = slot?.SlotName ?? fallbackName;
+        var name = slot?.Name ?? fallbackName;
         try
         {
             if (options.ExportMaterials && slot?.Material is { } reference && reference.TryLoad<UMaterialInterface>(out var material))

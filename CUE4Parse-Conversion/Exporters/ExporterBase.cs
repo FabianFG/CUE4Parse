@@ -27,8 +27,8 @@ public abstract class ExporterBase : IExporter
     public string ObjectPath { get; }
     public string ClassName { get; }
 
-    internal ExportSession? _session = null;
-    protected ExportSession Session => _session ?? throw new InvalidOperationException("Exporter must be added to an ExportSession before use");
+    internal IExportSession? _session = null;
+    protected IExportSession Session => _session ?? throw new InvalidOperationException("Exporter must be added to an ExportSession before use");
 
     protected internal ILogger Log { get; }
 
@@ -160,6 +160,8 @@ public abstract class ExporterBase : IExporter
 
         return (rel.StartsWith("./") || rel.StartsWith("../") ? rel : "./" + rel) + "." + extension;
     }
+
+    public void Attach(IExportSession session) => _session = session;
 
     public override bool Equals(object? obj) => obj is ExporterBase other && string.Equals(ObjectPath, other.ObjectPath, StringComparison.OrdinalIgnoreCase);
     public override int GetHashCode() => ObjectPath.GetHashCode();

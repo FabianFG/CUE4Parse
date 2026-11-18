@@ -29,10 +29,10 @@ namespace CUE4Parse.UE4.Readers
             get => Versions.Ver;
             set => Versions.Ver = value;
         }
-        public EUnrealEngineObjectLicenseeUEVersion LicenseeVer
+        public int LicenseeVer
         {
-            get => Versions.LicenseeVer;
-            set => Versions.LicenseeVer = value;
+            get => (int) Versions.LicenseeVer;
+            set => Versions.LicenseeVer = (EUnrealEngineObjectLicenseeUEVersion) value;
         }
         public ETexturePlatform Platform
         {
@@ -801,13 +801,13 @@ namespace CUE4Parse.UE4.Readers
 #endif
         }
 
-        public void DumpBytesToFile(int size) {
+        public void DumpBytesToFile(long size) {
 #if DEBUG
             var savePos = Position;
-            var bytes = ReadBytes(int.Min(size, (int) (Length - Position)));
+            var bytes = ReadBytes(int.Min((int)size, (int) (Length - Position)));
             Position = savePos;
             var f = new FileInfo(Path.GetTempPath() + $"cue4parse_temp/{Name}_s{savePos}_size_{bytes.Length}.bin");
-            f.Directory.Create();
+            f.Directory?.Create();
 
             using var fs = f.OpenWrite();
             fs.Write(bytes, 0, bytes.Length);

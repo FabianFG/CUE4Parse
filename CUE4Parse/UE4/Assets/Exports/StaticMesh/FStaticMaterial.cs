@@ -11,7 +11,7 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
     public class FStaticMaterial
     {
         public FPackageIndex? MaterialInterface; // UMaterialInterface
-        public FName MaterialSlotName;
+        public FName? MaterialSlotName;
         public FName? ImportedMaterialSlotName;
         public FMeshUVChannelInfo? UVChannelData;
         public FPackageIndex? OverlayMaterialInterface;
@@ -40,11 +40,11 @@ namespace CUE4Parse.UE4.Assets.Exports.StaticMesh
 
         public FStaticMaterial(FStructFallback fallback)
         {
-            MaterialInterface = fallback.GetOrDefault(nameof(MaterialInterface), new FPackageIndex());
-            MaterialSlotName = fallback.GetOrDefault<FName>(nameof(MaterialSlotName), "None");
-            ImportedMaterialSlotName = fallback.GetOrDefault<FName>(nameof(ImportedMaterialSlotName), "None");
-            UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo>(nameof(UVChannelData), null);
-            OverlayMaterialInterface = fallback.GetOrDefault<FPackageIndex>(nameof(OverlayMaterialInterface), new FPackageIndex());
+            MaterialInterface = fallback.GetOrDefault<FPackageIndex?>(nameof(MaterialInterface));
+            MaterialSlotName = fallback.GetOrDefault<FName?>(nameof(MaterialSlotName));
+            ImportedMaterialSlotName = fallback.GetOrDefault<FName?>(nameof(ImportedMaterialSlotName));
+            UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo?>(nameof(UVChannelData));
+            OverlayMaterialInterface = fallback.GetOrDefault<FPackageIndex?>(nameof(OverlayMaterialInterface));
         }
     }
 }

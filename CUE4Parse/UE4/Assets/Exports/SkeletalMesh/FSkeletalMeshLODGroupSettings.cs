@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Objects;
+using CUE4Parse.UE4.Assets.Objects.Properties;
 using CUE4Parse.UE4.Assets.Utils;
 using CUE4Parse.UE4.Objects.Engine;
 
@@ -12,6 +13,7 @@ public struct FSkeletalMeshLODGroupSettings : IUStruct
 
     public FSkeletalMeshLODGroupSettings(FStructFallback fallback)
     {
-        ScreenSize = fallback.GetOrDefault<FPerPlatformFloat?>(nameof(ScreenSize)) ?? new FPerPlatformFloat(fallback.GetOrDefault<float>(nameof(ScreenSize)));
+        var tag = fallback.Properties.Find(property => property.Name.Text == nameof(ScreenSize))?.Tag;
+        ScreenSize = tag is FloatProperty legacyScreenSize ? new FPerPlatformFloat(legacyScreenSize.Value) : fallback.GetOrDefault<FPerPlatformFloat?>(nameof(ScreenSize)) ?? new FPerPlatformFloat(fallback.GetOrDefault<float>(nameof(ScreenSize)));
     }
 }

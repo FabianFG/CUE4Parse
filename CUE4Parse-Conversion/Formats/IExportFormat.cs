@@ -1,6 +1,8 @@
-﻿namespace CUE4Parse_Conversion.Formats;
+namespace CUE4Parse_Conversion.Formats;
 
 public interface IExportFormat
 {
-    public string DisplayName { get; }
+    string DisplayName { get; }
+    string Extension { get; }
+    IReadOnlyList<string> Extensions => [Extension];
 }

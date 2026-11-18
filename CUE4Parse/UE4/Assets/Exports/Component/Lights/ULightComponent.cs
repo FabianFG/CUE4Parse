@@ -32,7 +32,7 @@ public class ULightComponentBase : USceneComponent
 
     public FLinearColor GetLightColor()
     {
-        return new FLinearColor(LightColor.R / 255.0f, LightColor.G / 255.0f, LightColor.B / 255.0f, LightColor.A / 255.0f);
+        return new FLinearColor(LightColor);
     }
 
     public virtual float GetNitIntensity() => Intensity;

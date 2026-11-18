@@ -9,9 +9,10 @@ namespace CUE4Parse_Conversion.Formats.Materials;
 /// <summary>
 /// TODO: support layers (st, st1, st2, etc)
 /// </summary>
-public sealed class UsdMaterialFormat(ExportSession session) : IExportFormat
+public sealed class UsdMaterialFormat(IExportSession session) : IExportFormat
 {
     public string DisplayName => "USD Material (.usda)";
+    public string Extension => "usda";
 
     public ExportFile Build(string objectName, PbrMaterialDto source, string packageDirectory = "")
     {
@@ -101,7 +102,7 @@ public sealed class UsdMaterialFormat(ExportSession session) : IExportFormat
 
         matPrim.Add(shader);
         matPrim.Add(primvar);
-        return new ExportFile("usda", new UsdStage(matPrim).SerializeToBinary());
+        return new ExportFile(Extension, new UsdStage(matPrim).SerializeToBinary());
 
         UsdPrim? AttachTexture(string name, UTexture? texture, string colorSpace)
         {

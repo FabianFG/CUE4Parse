@@ -14,7 +14,7 @@ namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 public class FSkeletalMaterial
 {
     public FPackageIndex? MaterialInterface; // UMaterialInterface
-    public FName MaterialSlotName;
+    public FName? MaterialSlotName;
     public FName? ImportedMaterialSlotName;
     public FMeshUVChannelInfo? UVChannelData;
     public FPackageIndex? OverlayMaterialInterface;
@@ -74,8 +74,8 @@ public class FSkeletalMaterial
 
     public FSkeletalMaterial(FStructFallback fallback)
     {
-        MaterialInterface = fallback.GetOrDefault(nameof(MaterialInterface), new FPackageIndex());
-        MaterialSlotName = fallback.GetOrDefault<FName>(nameof(MaterialSlotName), "None");
-        UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo>(nameof(UVChannelData), null);
+        MaterialInterface = fallback.GetOrDefault<FPackageIndex?>(nameof(MaterialInterface));
+        MaterialSlotName = fallback.GetOrDefault<FName?>(nameof(MaterialSlotName));
+        UVChannelData = fallback.GetOrDefault<FMeshUVChannelInfo?>(nameof(UVChannelData));
     }
 }

@@ -1,13 +1,14 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
+using CUE4Parse.UE4.Assets.Exports.Component.SplineMesh;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Meshes;
+using CUE4Parse_Conversion.Options;
 
 namespace CUE4Parse_Conversion.Dto;
 
 public partial class MeshLodDto<TVertex>
 {
-    internal static MeshLodDto<MeshVertex> FromStaticMesh(StaticMeshDto owner, uint sourceLodIndex, FStaticMeshLODResources lod, float screenSize, USplineMeshComponent? spline = null)
+    internal static MeshLodDto<MeshVertex> FromStaticMesh(StaticMeshDto owner, ExportOptions options, uint sourceLodIndex, FStaticMeshLODResources lod, float screenSize, USplineMeshComponent? spline = null)
     {
         ArgumentNullException.ThrowIfNull(lod.IndexBuffer?.Buffer, "LOD has no index buffer");
         ArgumentNullException.ThrowIfNull(lod.VertexBuffer, "LOD has no vertex buffer");
@@ -55,6 +56,6 @@ public partial class MeshLodDto<TVertex>
             sections[i] = new MeshSectionDto(lod.Sections[i]);
         }
 
-        return new MeshLodDto<MeshVertex>(owner, sourceLodIndex, lod.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors, screenSize, lod.CardRepresentationData?.bMostlyTwoSided ?? false);
+        return new MeshLodDto<MeshVertex>(owner, options, sourceLodIndex, lod.IndexBuffer.Buffer, vertices, sections, extraUvs, vertexColors, screenSize, lod.CardRepresentationData?.bMostlyTwoSided ?? false);
     }
 }

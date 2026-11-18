@@ -21,13 +21,13 @@ public class UStaticMesh : UObject
     public FStaticMeshRenderData? RenderData { get; private set; }
     public FPackageIndex?[] Materials { get; private set; } = []; // UMaterialInterface[]
     public FStaticMaterial[] StaticMaterials { get; private set; } = [];
-    public int LODForCollision { get; private set; }
+    public int LODForCollision { get; private set; } = 0;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;
         base.Deserialize(Ar, validPos);
-        LODForCollision = GetOrDefault(nameof(LODForCollision), 0);
+        LODForCollision = GetOrDefault(nameof(LODForCollision), LODForCollision);
 
         var stripDataFlags = new FStripDataFlags(Ar);
         bCooked = Ar.Ver >= EUnrealEngineObjectUE4Version.STATIC_MESH_REFACTOR && Ar.ReadBoolean();
@@ -40,7 +40,9 @@ public class UStaticMesh : UObject
         }
 
         if (Ar.Game == GAME_WutheringWaves && GetOrDefault<bool>("bUseStandaloneBodySetup"))
-            BodySetup = GetOrDefault<FPackageIndex>("StandaloneBodySetup");
+            BodySetup = GetOrDefault("StandaloneBodySetup", new FPackageIndex());
+        else if (Ar.Game is GAME_GhostwireTokyo && TryGetValue(out bool bTngUseBodySetup, "bTngUseBodySetup"))
+            BodySetup = new FPackageIndex();
         else
             BodySetup = new FPackageIndex(Ar);
 
@@ -288,6 +290,7 @@ public class UStaticMesh : UObject
 
             if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RefactorMeshEditorMaterials)
             {
+                if (Ar.Game is GAME_MonsterHunterOutlanders && !bHasSpeedTreeWind) Ar.Position += 4;
                 // UE4.14+ - "Materials" are deprecated, added StaticMaterials
                 StaticMaterials = bHasSpeedTreeWind ? GetOrDefault("StaticMaterials", Array.Empty<FStaticMaterial>()) : Ar.ReadArray(() => new FStaticMaterial(Ar));
             }
@@ -319,7 +322,7 @@ public class UStaticMesh : UObject
         Ar.Position += Ar.Game switch
         {
             GAME_OutlastTrials => 1,
-            GAME_Farlight84 or GAME_DuneAwakening => 4,
+            GAME_Farlight84 or GAME_DuneAwakening or GAME_TheVanishingofEthanCarter => 4,
             GAME_DaysGone => Ar.Read<int>() * 4 + 4,
             GAME_GangstarMirageCity => 20,
             _ => 0

@@ -7,6 +7,7 @@ using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 using CUE4Parse.UE4.Assets.Exports.ComputerFramework;
 using CUE4Parse.UE4.Assets.Exports.GeometryCache;
 using CUE4Parse.UE4.Assets.Exports.Harmonix;
+using CUE4Parse.UE4.Assets.Exports.Paper2D;
 using CUE4Parse.UE4.Assets.Exports.Texture;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.Engine;
@@ -92,7 +93,7 @@ public class FixtureExtendedAssetTests
         var bodies = physicsAsset.SkeletalBodySetups
             .Select(static index => Assert.IsType<USkeletalBodySetup>(index.Load()))
             .ToArray();
-        Assert.Equal(["Root", "Joint_1"], bodies.Select(static body => body.BoneName.Text));
+        Assert.Equal(["Root", "Joint_1"], bodies.Select(static body => body.BoneName?.Text));
 
         var rootAggGeom = bodies[0].AggGeom;
         Assert.NotNull(rootAggGeom);

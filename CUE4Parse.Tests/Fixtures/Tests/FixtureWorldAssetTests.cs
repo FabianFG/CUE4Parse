@@ -1,3 +1,4 @@
+using CUE4Parse_Conversion.Options;
 using CUE4Parse.UE4.Assets.Exports.Actor;
 using CUE4Parse.UE4.Assets.Exports.Component.Landscape;
 using CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
@@ -54,7 +55,7 @@ public class FixtureWorldAssetTests
 
         var heightmap = Assert.IsAssignableFrom<UTexture2D>(component.GetHeightmap());
         Assert.Equal((64, 64), (heightmap.PlatformData.SizeX, heightmap.PlatformData.SizeY));
-        using var converted = new LandscapeMeshDto(landscape);
+        using var converted = new LandscapeMeshDto(landscape, new ExportOptions());
         var lod = Assert.Single(converted.LODs);
         Assert.NotEmpty(lod.Vertices);
         Assert.NotEmpty(lod.Indices);

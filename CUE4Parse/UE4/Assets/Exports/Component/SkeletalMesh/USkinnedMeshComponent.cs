@@ -6,12 +6,14 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.SkeletalMesh;
 public class USkinnedMeshComponent : UMeshComponent
 {
     public FPackageIndex? LeaderPoseComponent { get; private set; }
+    public FPackageIndex? PhysicsAssetOverride { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
 
         LeaderPoseComponent = GetOrDefault(nameof(LeaderPoseComponent), GetOrDefault<FPackageIndex?>("MasterPoseComponent"));
+        PhysicsAssetOverride = GetOrDefault<FPackageIndex?>(nameof(PhysicsAssetOverride));
     }
 
     public FPackageIndex GetSkeletalMesh()

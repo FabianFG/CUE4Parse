@@ -20,7 +20,7 @@ public class FixtureActorXExportTests
             provider,
             "CUE4ParseFixtures/Content/Fixtures/Meshes/SM_Fixture.uasset",
             "SM_Fixture");
-        using var converted = new StaticMeshDto(mesh);
+        using var converted = new StaticMeshDto(mesh, new ExportOptions(meshQuality: EMeshQuality.All));
         var lod = converted.LODs[0];
         var uniquePositionCount = lod.Vertices
             .Select(vertex => (vertex.Position.X, vertex.Position.Y, vertex.Position.Z))
@@ -48,7 +48,7 @@ public class FixtureActorXExportTests
             provider,
             "CUE4ParseFixtures/Content/Fixtures/Meshes/SK_Fixture.uasset",
             "SK_Fixture");
-        using var converted = new SkeletalMeshDto(mesh);
+        using var converted = new SkeletalMeshDto(mesh, new ExportOptions(meshQuality: EMeshQuality.All));
         var lod = converted.LODs[0];
         var exports = new ActorXMeshFormat().BuildSkeletalMesh(
             mesh.Name,

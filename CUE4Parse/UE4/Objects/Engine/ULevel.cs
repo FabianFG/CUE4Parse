@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using CUE4Parse.GameTypes.DaysGone.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports;
 using CUE4Parse.UE4.Assets.Exports.BuildData;
 using CUE4Parse.UE4.Assets.Exports.Component;
@@ -112,7 +113,7 @@ public class ULevel : Assets.Exports.UObject, IAssetUserData
     public FPackageIndex WorldSettings;
     public FPackageIndex WorldDataLayers;
     public FSoftObjectPath WorldPartitionRuntimeCell;
-    public FPackageIndex[]? AssetUserData { get; private set; }
+    public FPackageIndex?[]? AssetUserData { get; private set; }
 
     public FPackageIndex?[] Actors;
     public FURL URL;
@@ -130,11 +131,17 @@ public class ULevel : Assets.Exports.UObject, IAssetUserData
         WorldSettings = GetOrDefault(nameof(WorldSettings), new FPackageIndex());
         WorldDataLayers = GetOrDefault(nameof(WorldDataLayers), new FPackageIndex());
         WorldPartitionRuntimeCell = GetOrDefault<FSoftObjectPath>(nameof(WorldPartitionRuntimeCell));
-        AssetUserData = GetOrDefault<FPackageIndex[]?>(nameof(AssetUserData));
+        AssetUserData = GetOrDefault<FPackageIndex?[]?>(nameof(AssetUserData));
 
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 16;
         if (Flags.HasFlag(EObjectFlags.RF_ClassDefaultObject) || Ar.Position >= validPos) return;
-        if (FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.LevelTransArrayConvertedToTArray) Ar.Position += 4;
+        if (Ar.Game == GAME_DaysGone && Ar.Owner!.HasFlags(EPackageFlags.PKG_UncookedOnly))
+        {
+            Actors = Ar.ReadArray(() => new FPackageIndex(Ar));
+            CustomGameData = Ar.ReadArray(Actors.Length, () => new FBendActorInfo(Ar));
+            return;
+        }
+        if (FReleaseObjectVersion.Get(Ar) < FReleaseObjectVersion.Type.LevelTransArrayConvertedToTArray ) Ar.Position += 4;
         Actors = Ar.ReadArray(() => new FPackageIndex(Ar));
         URL = new FURL(Ar);
         Model = new FPackageIndex(Ar);
@@ -159,6 +166,7 @@ public class ULevel : Assets.Exports.UObject, IAssetUserData
         PrecomputedVisibilityHandler = new FPrecomputedVisibilityHandler(Ar);
         if (Ar.Game is GAME_AssaultFireFuture && Ar.Read<int>() != 0) return;
         PrecomputedVolumeDistanceField = new FPrecomputedVolumeDistanceField(Ar);
+        if (Ar.Game is GAME_ArenaBreakoutInfinite) Ar.Position += 57;
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)

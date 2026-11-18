@@ -10,9 +10,11 @@ namespace CUE4Parse_Conversion.Exporters;
 /// </summary>
 public sealed class RawDataExporter(GameFile gameFile, IFileProvider provider) : ExporterBase(gameFile, "RawData")
 {
+    private readonly GameFile _gameFile = gameFile;
+
     protected override IReadOnlyList<ExportFile> BuildExportFiles(CancellationToken ct = default)
     {
-        var assets = provider.SavePackage(gameFile);
+        var assets = provider.SavePackage(_gameFile);
 
         var result = new List<ExportFile>();
         foreach (var kvp in assets)

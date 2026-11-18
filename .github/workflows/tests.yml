@@ -2,12 +2,15 @@ name: Tests
 
 on:
   pull_request:
+  push:
+    branches: [master]
 
 permissions:
   contents: read
 
 concurrency:
-  group: tests-${{ github.event.pull_request.number || github.ref }}
+  # Pushes get one group per commit, so a later push doesn't cancel the run that shows which commit broke the tests
+  group: tests-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
 jobs:
