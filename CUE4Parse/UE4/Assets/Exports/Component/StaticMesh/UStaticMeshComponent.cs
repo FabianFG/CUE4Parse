@@ -9,6 +9,7 @@ namespace CUE4Parse.UE4.Assets.Exports.Component.StaticMesh;
 
 public class UStaticMeshComponent : UMeshComponent
 {
+    public bool bUseDefaultCollision { get; private set; } = false;
     public FStaticMeshComponentLODInfo[] LODData;
     public FPackageIndex? MeshPaintTextureCooked;
     protected FPackageIndex? StaticMesh;
@@ -16,6 +17,9 @@ public class UStaticMeshComponent : UMeshComponent
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
         base.Deserialize(Ar, validPos);
+
+        bUseDefaultCollision = GetOrDefault(nameof(bUseDefaultCollision), bUseDefaultCollision);
+
         if (Ar.Position == validPos) return;
         if (Ar.Game is GAME_Borderlands3) Ar.ReadBoolean();
         if (Ar.Game == GAME_WorldofJadeDynasty) Ar.Position += 12;

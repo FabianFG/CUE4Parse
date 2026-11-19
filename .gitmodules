@@ -1,3 +1,9 @@
 [submodule "CUE4Parse-Natives/ACL/external/acl"]
 	path = CUE4Parse-Natives/ACL/external/acl
 	url = https://github.com/nfrechette/acl.git
+[submodule "CUE4Parse-Natives/Alembic/external/Imath"]
+	path = CUE4Parse-Natives/Alembic/external/Imath
+	url = https://github.com/AcademySoftwareFoundation/Imath.git
+[submodule "CUE4Parse-Natives/Alembic/external/Alembic"]
+	path = CUE4Parse-Natives/Alembic/external/Alembic
+	url = https://github.com/alembic/alembic.git

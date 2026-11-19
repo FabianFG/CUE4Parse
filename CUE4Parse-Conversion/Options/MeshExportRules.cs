@@ -14,7 +14,7 @@ public sealed class MeshExportRules(EGame? game, MeshMaterialDto[] materials)
     {
         if (options.IncludeDisabledMeshSections)
             return true;
-        if (section.bDisabled)
+        if (section.IsDisabled)
             return false;
 
         // Lambert sections in DBD are for cloth physics

@@ -18,11 +18,11 @@ public sealed class SkinnedAssetExporter(USkinnedAsset originalMesh) : MeshExpor
             throw new Exception("Skeletal mesh has no LODs");
         }
 
-        if (dto.AssetUserData != null)
+        if (dto.AssetUserData is { Length: > 0 } aud)
         {
-            foreach (var userData in dto.AssetUserData)
+            foreach (var data in aud)
             {
-                if (userData.TryLoad<UDNAAsset>(out var dna))
+                if (data?.TryLoad<UDNAAsset>(out var dna) == true)
                 {
                     Session.Add(new DnaExporter(dna));
                 }

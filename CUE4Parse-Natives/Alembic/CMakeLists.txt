@@ -1,0 +1,11 @@
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(BUILD_SHARED_LIBS OFF)
+set(BUILD_TESTING OFF)
+set(ALEMBIC_SHARED_LIBS OFF)
+set(USE_BINARIES OFF)
+set(USE_TESTS OFF)
+
+add_subdirectory(external/Imath)
+add_subdirectory(external/Alembic)
+target_include_directories(Alembic PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/Imath/src>")

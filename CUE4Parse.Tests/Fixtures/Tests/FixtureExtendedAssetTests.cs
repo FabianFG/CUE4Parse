@@ -93,7 +93,7 @@ public class FixtureExtendedAssetTests
         var bodies = physicsAsset.SkeletalBodySetups
             .Select(static index => Assert.IsType<USkeletalBodySetup>(index.Load()))
             .ToArray();
-        Assert.Equal(["Root", "Joint_1"], bodies.Select(static body => body.BoneName.Text));
+        Assert.Equal(["Root", "Joint_1"], bodies.Select(static body => body.BoneName?.Text));
 
         var rootAggGeom = bodies[0].AggGeom;
         Assert.NotNull(rootAggGeom);

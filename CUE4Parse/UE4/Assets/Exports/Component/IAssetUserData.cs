@@ -4,5 +4,5 @@ namespace CUE4Parse.UE4.Assets.Exports.Component;
 
 public interface IAssetUserData
 {
-    public FPackageIndex[] AssetUserData { get; }
+    public FPackageIndex?[]? AssetUserData { get; }
 }

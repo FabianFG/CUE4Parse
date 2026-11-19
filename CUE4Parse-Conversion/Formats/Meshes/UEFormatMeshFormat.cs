@@ -9,6 +9,7 @@ namespace CUE4Parse_Conversion.Formats.Meshes;
 public sealed class UEFormatMeshFormat(bool bNaniteSeparate = false) : IMeshExportFormat
 {
     public string DisplayName => "UEFormat (uemodel)";
+    public string Extension => "uemodel";
 
     public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, string objectPath, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
         => Build(dto.LODs, predicate => new UEModel(objectName, objectPath, dto, options, predicate));
@@ -18,9 +19,9 @@ public sealed class UEFormatMeshFormat(bool bNaniteSeparate = false) : IMeshExpo
 
     public IReadOnlyList<ExportFile> BuildSkeleton(string objectName, string objectPath, ExportOptions options, SkeletonDto dto)
     {
-        using var ar = new FArchiveWriter();
-        new UEModel(objectName, objectPath, dto, options).Save(ar);
-        return [new ExportFile("uemodel", ar.GetBuffer())];
+        using var Ar = new FArchiveWriter();
+        new UEModel(objectName, objectPath, dto, options).Save(Ar);
+        return [new ExportFile(Extension, Ar.GetBuffer())];
     }
 
     private IReadOnlyList<ExportFile> Build<TVertex>(IList<MeshLodDto<TVertex>> lods, Func<Func<MeshLodDto<TVertex>, bool>?, UEModel> factory) where TVertex : struct, IMeshVertex
@@ -51,9 +52,9 @@ public sealed class UEFormatMeshFormat(bool bNaniteSeparate = false) : IMeshExpo
 
         ExportFile Save(UEModel model, string? nameSuffix = null)
         {
-            using var ar = new FArchiveWriter();
-            model.Save(ar);
-            return new ExportFile("uemodel", ar.GetBuffer(), nameSuffix);
+            using var Ar = new FArchiveWriter();
+            model.Save(Ar);
+            return new ExportFile(Extension, Ar.GetBuffer(), nameSuffix);
         }
     }
 }

@@ -1,5 +1,3 @@
-﻿using System;
-using System.Linq;
 using CUE4Parse_Conversion.Dto;
 using CUE4Parse_Conversion.Writers.USD;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -10,6 +8,7 @@ namespace CUE4Parse_Conversion.Formats.World;
 public class UsdWorldFormat : IWorldExportFormat
 {
     public string DisplayName => "USD World (.usda)";
+    public string Extension => "usda";
 
     public ExportFile Build(SceneDto dto, WorldAssetPaths paths)
     {
@@ -25,7 +24,7 @@ public class UsdWorldFormat : IWorldExportFormat
             stage.AddMetadata("subLayers", UsdValue.Array(paths.SubLayers.Select(UsdValue.AssetPath)));
         }
 
-        return new ExportFile("usda", stage.SerializeToBinary());
+        return new ExportFile(Extension, stage.SerializeToBinary());
     }
 
     private UsdPrim BuildActorPrim(ActorDto actor, WorldAssetPaths paths)

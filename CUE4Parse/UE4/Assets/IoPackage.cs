@@ -305,6 +305,7 @@ public sealed class IoPackage : AbstractUePackage
         {
             realm.Archive.RealmNameMap = realm.NameMap;
             realm.Archive.BulkDataMap = realm.BulkDataMap;
+            realm.Archive.RealmPackageFlags = realm.Summary.PackageFlags;
         }
 
         // Preload dependencies

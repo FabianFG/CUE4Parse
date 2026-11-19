@@ -31,7 +31,8 @@ public static class PUBGMobileSM4
         "dB6lB3vE0eZ8wM8rI0aC", "tP7sP7nI9rA2vQ4cV5yQ", "aT0cL1yN4pT3sZ7eM2vY",
         "uV6fU8fC9zN3mP5dH8mN", "rT6aQ6oZ1yM0gO5tO1aN", "jU5bH7lQ0fM9hK2kI0oF",
         "iQ0eM0mJ7uT0kV6kL5zY", "wD2rP3lP9xF4mE1eC5jS", "rG0lR2rZ5vM6mW5lM1rR",
-        "fO3kW1fE6eD0pU1kY7xK"
+        "fO3kW1fE6eD0pU1kY7xK", "nE1jQ6qK5tW7rM8iD5vV", "cR0hW3gJ7cA1fJ9uR0kV", 
+        "iK3bV6wA7jP8aN8iI9nP"
     ];
 
     // Dynamic encryption keys come from the TCP
@@ -81,7 +82,9 @@ public static class PUBGMobileSM4
         [41] = "c9ee4765f8e9ec35b0e7",
         [42] = "56eed0401753d9e5ee86",
         [43] = "5412cc837199fa08d229",
-        [44] = "48750e47caff0540e2ee"
+        [44] = "48750e47caff0540e2ee",
+        [45] = "ec7f2df1f109a7f1d681",
+        [54] = "5a9b2fe21235ba44ff89"
     };
 
     public static byte[] Decrypt(byte[] bytes, int beginOffset, int count, string path, EPUBGMobileEncryptionMethod encryptionMethod, uint encryptionKeyId)

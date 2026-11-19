@@ -7,8 +7,8 @@ namespace CUE4Parse.UE4.Assets.Exports.Interchange;
 
 public class UAssetImportData : UObject
 {
-    public FSourceFile[]? SourceData => _sourceData.Value;
-    private Lazy<FSourceFile[]?> _sourceData;
+    public FSourceFile[]? SourceData => _sourceData?.Value;
+    private Lazy<FSourceFile[]?>? _sourceData;
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {

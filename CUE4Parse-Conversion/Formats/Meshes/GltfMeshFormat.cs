@@ -7,6 +7,7 @@ namespace CUE4Parse_Conversion.Formats.Meshes;
 public sealed class GltfMeshFormat(IExportSession? session = null) : IMeshExportFormat
 {
     public string DisplayName => "glTF 2.0 (binary)";
+    public string Extension => "glb";
 
     public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, string objectPath, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
@@ -16,7 +17,7 @@ public sealed class GltfMeshFormat(IExportSession? session = null) : IMeshExport
         foreach (var lod in dto.LODs)
         {
             var data = new Gltf(objectName, lod, options, materials).Model.WriteGLB().ToArray();
-            results.Add(new ExportFile("glb", data, lod._suffix));
+            results.Add(new ExportFile(Extension, data, lod._suffix));
         }
 
         return results;
@@ -30,7 +31,7 @@ public sealed class GltfMeshFormat(IExportSession? session = null) : IMeshExport
         foreach (var lod in dto.LODs)
         {
             var data = new Gltf(objectName, lod, options, materials).Model.WriteGLB().ToArray();
-            results.Add(new ExportFile("glb", data, lod._suffix));
+            results.Add(new ExportFile(Extension, data, lod._suffix));
         }
 
         return results;

@@ -58,6 +58,7 @@ public abstract class MeshExporter<T>(T mesh) : ExporterBase(mesh) where T : UOb
         EMeshFormat.Gltf2 => new GltfMeshFormat(Session),
         EMeshFormat.UEFormat => new UEFormatMeshFormat(),
         EMeshFormat.USD => new UsdMeshFormat(),
-        _ => throw new NotSupportedException($"Mesh export does not support format {format}. Available formats: {string.Join(", ", Enum.GetNames<EMeshFormat>())}")
+        EMeshFormat.Alembic => throw new NotSupportedException("Alembic format is only supported for Groom curves. Select another format for meshes."),
+        _ => throw new NotSupportedException($"Mesh export does not support format {format}. Available formats: {string.Join(", ", EMeshFormat.ActorX, EMeshFormat.Gltf2, EMeshFormat.UEFormat, EMeshFormat.USD)}")
     };
 }

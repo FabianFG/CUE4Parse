@@ -31,7 +31,7 @@ public class UVerseFunction : UFunction
         writer.WritePropertyName(nameof(VerseFunctionFlags));
         writer.WriteValue(VerseFunctionFlags);
         writer.WritePropertyName(nameof(AlternateName));
-        writer.WriteValue(AlternateName);
+        serializer.Serialize(writer, AlternateName);
     }
 
     public enum EVerseFunctionFlags : uint

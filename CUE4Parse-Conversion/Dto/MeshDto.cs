@@ -15,6 +15,7 @@ using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse_Conversion.Options;
+using CUE4Parse.UE4.Assets.Exports.Component;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SkiaSharp;
@@ -426,7 +427,7 @@ public sealed class SkeletalMeshDto : SkeletonDto
 {
     public FPackageIndex? PhysicsAsset { get; private set; }
     public FPackageIndex[]? MorphTargets { get; private set; }
-    public FPackageIndex[]? AssetUserData { get; private set; }
+    public FPackageIndex?[]? AssetUserData { get; private set; }
 
     public SkeletalMeshDto(USkinnedAsset mesh, ExportOptions options) : base(mesh, options)
     {
@@ -439,7 +440,11 @@ public sealed class SkeletalMeshDto : SkeletonDto
             mesh.PopulateMorphTargetVerticesData();
             MorphTargets = mesh.MorphTargets;
         }
-        AssetUserData = mesh.AssetUserData;
+
+        if (mesh is IAssetUserData aud)
+        {
+            AssetUserData = aud.AssetUserData;
+        }
 
         var hasMorphs = MorphTargets is { Length: > 0 };
         if (options.NaniteMeshFormat != ENaniteMeshFormat.NaniteOnly || hasMorphs) // just so we don't waste time

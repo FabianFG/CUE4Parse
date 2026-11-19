@@ -7,10 +7,10 @@ namespace CUE4Parse.UE4.Objects.PhysicsEngine;
 [StructFallback]
 public class FKConvexElem : FKShapeElem
 {
-    public FVector[] VertexData;
-    public int[] IndexData;
-    public FBox ElemBox;
-    public FTransform Transform;
+    public readonly FVector[] VertexData;
+    public readonly int[] IndexData;
+    public readonly FBox ElemBox;
+    public readonly FTransform Transform;
 
     public FKConvexElem(FStructFallback fallback) : base(fallback)
     {

@@ -12,6 +12,7 @@ namespace CUE4Parse_Conversion.Formats.Meshes;
 public class UsdMeshFormat : IMeshExportFormat
 {
     public string DisplayName => "USD Mesh (.usda)";
+    public string Extension => "usda";
 
     public IReadOnlyList<ExportFile> BuildSkeletalMesh(string objectName, string objectPath, ExportOptions options, SkeletalMeshDto dto, IReadOnlyDictionary<string, string>? materialPaths = null)
     {
@@ -35,7 +36,7 @@ public class UsdMeshFormat : IMeshExportFormat
             root.Add(lodPrim);
 
             var stage = new UsdStage(root);
-            results.Add(new ExportFile("usda", stage.SerializeToBinary(), lod._suffix));
+            results.Add(new ExportFile(Extension, stage.SerializeToBinary(), lod._suffix));
 
             root.Children.RemoveAt(root.Children.Count - 1);
         }
@@ -57,7 +58,7 @@ public class UsdMeshFormat : IMeshExportFormat
             if (materials is not null) root.Add(materials);
 
             var stage = new UsdStage(root);
-            results.Add(new ExportFile("usda", stage.SerializeToBinary(), lod._suffix));
+            results.Add(new ExportFile(Extension, stage.SerializeToBinary(), lod._suffix));
 
             root.Children.RemoveAt(root.Children.Count - 1);
         }
@@ -73,7 +74,7 @@ public class UsdMeshFormat : IMeshExportFormat
             root.Add(CreateSockets(sockets));
 
         var stage = new UsdStage(root);
-        return [new ExportFile("usda", stage.SerializeToBinary())];
+        return [new ExportFile(Extension, stage.SerializeToBinary())];
     }
 
     private UsdPrim CreateSockets(FPackageIndex[] sockets)

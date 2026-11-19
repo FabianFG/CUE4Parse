@@ -1,4 +1,5 @@
 using CUE4Parse.UE4.Assets.Exports.Animation;
+using CUE4Parse.UE4.Assets.Exports.Component;
 using CUE4Parse.UE4.Assets.Exports.Engine;
 using CUE4Parse.UE4.Assets.Exports.Nanite;
 using CUE4Parse.UE4.Assets.Exports.StaticMesh;
@@ -15,11 +16,12 @@ using Newtonsoft.Json;
 
 namespace CUE4Parse.UE4.Assets.Exports.SkeletalMesh;
 
-public partial class USkeletalMesh : USkinnedAsset
+public partial class USkeletalMesh : USkinnedAsset, IAssetUserData
 {
     public FBoxSphereBounds ImportedBounds { get; private set; }
     public byte NumVertexColorChannels { get; private set; }
     public bool bEnablePerPolyCollision { get; private set; }
+    public FPackageIndex?[]? AssetUserData { get; private set; }
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -34,7 +36,7 @@ public partial class USkeletalMesh : USkinnedAsset
         Skeleton = GetOrDefault(nameof(Skeleton), new FPackageIndex());
         bEnablePerPolyCollision = GetOrDefault<bool>(nameof(bEnablePerPolyCollision));
         PhysicsAsset = GetOrDefault(nameof(PhysicsAsset), new FPackageIndex());
-        AssetUserData = GetOrDefault(nameof(AssetUserData), Array.Empty<FPackageIndex>());
+        AssetUserData = GetOrDefault<FPackageIndex?[]?>(nameof(AssetUserData));
 
         var stripDataFlags = new FStripDataFlags(Ar);
 
