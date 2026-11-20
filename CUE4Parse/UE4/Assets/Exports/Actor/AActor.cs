@@ -227,7 +227,17 @@ public class ALevelInstancePivot : AActor;
 public class ALevelScriptActor : AActor;
 public class ALevelSequenceActor : AActor;
 public class ALevelSequenceMediaController : AActor;
-public class ALevelStreamingVolume : AVolume;
+public class ALevelStreamingVolume : AVolume
+{
+    public FPackageIndex[]? StreamingLevels { get; private set; }
+
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
+        base.Deserialize(Ar, validPos);
+
+        StreamingLevels = GetOrDefault<FPackageIndex[]?>(nameof(StreamingLevels));
+    }
+}
 public class ALevelVariantSetsActor : AActor;
 public class ALight : AActor;
 public class ALightWeightInstanceManager : AActor;

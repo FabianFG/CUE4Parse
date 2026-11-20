@@ -1,3 +1,4 @@
+using CUE4Parse.Compression;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Readers;
 using static CUE4Parse.UE4.Readers.FArchive;
@@ -26,7 +27,7 @@ public class FDeltaStringTable
             Ar.Position = initialPos;
 
             var uncompressedChunk = new byte[summary.UncompressedSize];
-            Ar.SerializeCompressedNew(uncompressedChunk, uncompressedChunk.Length, "Zlib", ECompressionFlags.COMPRESS_NoFlags, false, out _);
+            Ar.SerializeCompressedNew(uncompressedChunk, uncompressedChunk.Length, nameof(CompressionMethod.Zlib), ECompressionFlags.COMPRESS_NoFlags, false, out _);
 
             resultStream.Write(uncompressedChunk, 0, uncompressedChunk.Length);
         }

@@ -16,7 +16,14 @@ public class UMetaData : Assets.Exports.UObject
     {
         base.Deserialize(Ar, validPos);
 
-        ObjectMetaDataMap = Ar.ReadMap(() => (new FPackageIndex(Ar), Ar.ReadMap(() => (Ar.ReadFName(), Ar.ReadFString()))));
+        if (Ar.Ver <= EUnrealEngineObjectUE3Version.UTVEHICLEFACTORY_USE_STRING_CLASS) // unknown remove date
+        {
+            Ar.ReadMap(() => (Ar.ReadFString(), Ar.ReadMap(() => (Ar.ReadFName(), Ar.ReadFString()))));
+        }
+        else
+        {
+            ObjectMetaDataMap = Ar.ReadMap(() => (new FPackageIndex(Ar), Ar.ReadMap(() => (Ar.ReadFName(), Ar.ReadFString()))));
+        }
 
         if (FEditorObjectVersion.Get(Ar) >= FEditorObjectVersion.Type.RootMetaDataSupport)
         {
@@ -28,7 +35,7 @@ public class UMetaData : Assets.Exports.UObject
     {
         base.WriteJson(writer, serializer);
 
-        if (ObjectMetaDataMap.Count > 0)
+        if (ObjectMetaDataMap is { Count: > 0 })
         {
             writer.WritePropertyName("ObjectMetaDataMap");
             serializer.Serialize(writer, ObjectMetaDataMap);

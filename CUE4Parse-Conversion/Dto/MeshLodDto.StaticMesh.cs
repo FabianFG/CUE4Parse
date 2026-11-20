@@ -14,8 +14,10 @@ public partial class MeshLodDto<TVertex>
         ArgumentNullException.ThrowIfNull(lod.VertexBuffer, "LOD has no vertex buffer");
         ArgumentNullException.ThrowIfNull(lod.PositionVertexBuffer, "LOD has no position vertex buffer");
 
+        var positionBuffer = lod.PositionVertexBuffer;
+
         var extraUvs = new FMeshUVFloat[Math.Max(0, lod.VertexBuffer.NumTexCoords - 1)][];
-        var vertices = new MeshVertex[lod.PositionVertexBuffer.Verts.Length];
+        var vertices = new MeshVertex[positionBuffer.Verts.Length];
 
         for (var i = 0; i < extraUvs.Length; i++)
         {
@@ -26,12 +28,14 @@ public partial class MeshLodDto<TVertex>
         if (lod.ColorVertexBuffer is { Data.Length: > 0 })
         {
             vertexColors = new FColor[vertices.Length]; // we don't need colors that don't belong to any vertex
-            Array.Copy(lod.ColorVertexBuffer.Data, vertexColors, vertexColors.Length);
+            var count = Math.Min(lod.ColorVertexBuffer.NumVertices, vertices.Length);
+            Array.Copy(lod.ColorVertexBuffer.Data, vertexColors, count);
+            Array.Fill(vertexColors, new FColor(255, 255, 255, 255), count, vertices.Length - count);
         }
 
         for (var i = 0; i < vertices.Length; i++)
         {
-            var pos = lod.PositionVertexBuffer.Verts[i];
+            var pos = positionBuffer.Verts[i];
             if (spline != null) // TODO normals
             {
                 var distanceAlong = USplineMeshComponent.GetAxisValueRef(ref pos, spline.ForwardAxis);

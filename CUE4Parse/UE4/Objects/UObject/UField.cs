@@ -15,7 +15,7 @@ namespace CUE4Parse.UE4.Objects.UObject
         {
             base.Deserialize(Ar, validPos);
 
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.MOVED_SUPERFIELD_TO_USTRUCT)
+            if (Ar.Game != GAME_BioshockInfinite && Ar.Ver < EUnrealEngineObjectUE3Version.MOVED_SUPERFIELD_TO_USTRUCT)
             {
                 SuperField = new FPackageIndex(Ar);
             }
