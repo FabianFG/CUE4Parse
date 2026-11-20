@@ -108,6 +108,14 @@ namespace CUE4Parse.UE4.Readers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void Serialize(Span<byte> buffer)
+        {
+            CheckReadSize(buffer.Length);
+            _data.AsSpan((int) Position, buffer.Length).CopyTo(buffer);
+            Position += buffer.Length;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override T[] ReadArray<T>(int length)
         {
             var size = length * Unsafe.SizeOf<T>();

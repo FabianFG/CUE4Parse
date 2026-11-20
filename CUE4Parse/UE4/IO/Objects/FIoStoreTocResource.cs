@@ -1,3 +1,4 @@
+using System.Text;
 using CUE4Parse.Compression;
 using CUE4Parse.Encryption.Aes;
 using CUE4Parse.UE4.Exceptions;
@@ -142,26 +143,27 @@ namespace CUE4Parse.UE4.IO.Objects
             EncryptionIVs = Header.EncryptionIVCount > 0 ? archive.ReadArray((int)Header.EncryptionIVCount, () => new FIoStoreEncryptionIV(archive)) : [];
 
             // Compression methods
-            unsafe
-            {
-                var bufferSize = (int) (Header.CompressionMethodNameLength * Header.CompressionMethodNameCount);
-                var buffer = stackalloc byte[bufferSize];
-                archive.Serialize(buffer, bufferSize);
-                CompressionMethods = new CompressionMethod[Header.CompressionMethodNameCount + 1];
-                CompressionMethods[0] = CompressionMethod.None;
-                for (var i = 0; i < Header.CompressionMethodNameCount; i++)
-                {
-                    var name = new string((sbyte*) buffer + i * Header.CompressionMethodNameLength, 0, (int) Header.CompressionMethodNameLength).TrimEnd('\0');
-                    if (string.IsNullOrEmpty(name))
-                        continue;
-                    if (!Enum.TryParse(name, true, out CompressionMethod method))
-                    {
-                        Log.Warning("Unknown compression method '{CompressionMethod}' in {ArchiveName}", name, Ar.Name);
-                        method = CompressionMethod.Unknown;
-                    }
+            var nameLength = (int) Header.CompressionMethodNameLength;
+            var methodCount = (int) Header.CompressionMethodNameCount;
+            var bufferSize = checked(nameLength * methodCount);
 
-                    CompressionMethods[i + 1] = method;
+            var buffer = archive.ReadSpan(bufferSize);
+
+            CompressionMethods = new CompressionMethod[methodCount + 1];
+            CompressionMethods[0] = CompressionMethod.None;
+            for (var i = 0; i < methodCount; i++)
+            {
+                var name = Encoding.ASCII.GetString(buffer.Slice(i * nameLength, nameLength)).TrimEnd('\0');
+                if (string.IsNullOrEmpty(name))
+                    continue;
+
+                if (!Enum.TryParse(name, true, out CompressionMethod method))
+                {
+                    Log.Warning("Unknown compression method '{CompressionMethod}' in {ArchiveName}", name, Ar.Name);
+                    method = CompressionMethod.Unknown;
                 }
+
+                CompressionMethods[i + 1] = method;
             }
 
             // Chunk block signatures
