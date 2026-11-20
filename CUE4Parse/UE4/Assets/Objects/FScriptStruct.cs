@@ -220,6 +220,7 @@ public class FScriptStruct
             "ChaosClothSimulationLodModel" => type == ReadType.ZERO ? new FStructFallback() : new FChaosClothSimulationLodModel(Ar),
             "ManagedArrayCollection" when FFortniteMainBranchObjectVersion.Get(Ar) >= FFortniteMainBranchObjectVersion.Type.AddManagedArrayCollectionPropertySerialization=> type == ReadType.ZERO ? new FManagedArrayCollection() : new FManagedArrayCollection(new(Ar)),
             "GroomDataflowSettings" => new FGroomDataflowSettings(Ar),
+            "PCGSourceDataContainer" => new FPCGSourceDataContainer(Ar),
 
             // Custom struct types for simple structs in tagged TMap
             "UInt32Property" => type == ReadType.ZERO ? new FRawUIntStruct() : Ar.Read<FRawUIntStruct>(),
