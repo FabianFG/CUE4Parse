@@ -16,9 +16,6 @@ public class FPartialAssetRegistryState
         var header = new FAssetRegistryHeader(Ar);
         switch (header.Version)
         {
-            case < FAssetRegistryVersionType.AddAssetRegistryState:
-                Log.Warning("Cannot read registry state before {Version}", header.Version);
-                break;
             case < FAssetRegistryVersionType.FixedTags:
                 {
                     var nameTableReader = new FNameTableArchiveReader(Ar, header);
