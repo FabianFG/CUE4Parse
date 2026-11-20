@@ -155,32 +155,32 @@ public static partial class BCDecoder
         if (c0 > c1)
         {
             // (x * 9365) >> 16 = x/7 in [0,1788]
-            var diff = c0 - c1;
-            var temp0 = 6 * c0 + c1 + 3;
-            cl |= (ulong) ((temp0 * 9365) >> 16) << 16;
-            temp0 -= diff;
-            cl |= (ulong) ((temp0 * 9365) >> 16) << 24;
-            temp0 -= diff;
-            cl |= (ulong) ((temp0 * 9365) >> 16) << 32;
-            temp0 -= diff;
-            cl |= (ulong) ((temp0 * 9365) >> 16) << 40;
-            temp0 -= diff;
-            cl |= (ulong) ((temp0 * 9365) >> 16) << 48;
-            temp0 -= diff;
-            cl |= (ulong) ((temp0 * 9365) >> 16) << 56;
+            var diff = (c0 - c1) * 9365;
+            var temp = (6 * c0 + c1 + 3) * 9365;
+            cl |= (ulong) (temp & 0xFF0000);
+            temp -= diff;
+            cl |= (ulong) (temp >> 16) << 24;
+            temp -= diff;
+            cl |= (ulong) (temp >> 16) << 32;
+            temp -= diff;
+            cl |= (ulong) (temp >> 16) << 40;
+            temp -= diff;
+            cl |= (ulong) (temp >> 16) << 48;
+            temp -= diff;
+            cl |= (ulong) (temp >> 16) << 56;
         }
         else
         {
             // (x * 1639) >> 13 = x/5 in [0,1277]
-            var diff = c1 - c0;
-            var temp0 = 4 * c0 + c1 + 2;
-            cl |= (ulong) ((temp0 * 1639) >> 13) << 16;
-            temp0 += diff;
-            cl |= (ulong) ((temp0 * 1639) >> 13) << 24;
-            temp0 += diff;
-            cl |= (ulong) ((temp0 * 1639) >> 13) << 32;
-            temp0 += diff;
-            cl |= (ulong) ((temp0 * 1639) >> 13) << 40;
+            var diff = (c1 - c0) * 1639;
+            var temp = (4 * c0 + c1 + 2) * 1639;
+            cl |= (ulong) (temp >> 13) << 16;
+            temp += diff;
+            cl |= (ulong) (temp >> 13) << 24;
+            temp += diff;
+            cl |= (ulong) (temp >> 13) << 32;
+            temp += diff;
+            cl |= (ulong) (temp >> 13) << 40;
             cl |= 0xFF00000000000000;
         }
         return cl;
