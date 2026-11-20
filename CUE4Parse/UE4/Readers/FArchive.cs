@@ -94,8 +94,6 @@ namespace CUE4Parse.UE4.Readers
             Unsafe.CopyBlockUnaligned(ref ptr[0], ref bytes[0], (uint) length);
         }
 
-        public virtual void Serialize(Span<byte> buffer) => ReadExactly(buffer);
-
         public virtual T Peek<T>()
         {
             var size = Unsafe.SizeOf<T>();
