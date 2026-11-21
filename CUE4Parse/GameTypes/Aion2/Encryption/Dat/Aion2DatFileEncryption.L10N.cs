@@ -18,9 +18,14 @@ public sealed partial class Aion2DatFileEncryption
         var locale = GetL10NLocale(filePath);
         var seed = Blake3Hash($"L10NString_{locale}");
 
-        var header = new FL10NHeader(Ar, seed);
+        var headerBytes = Ar.ReadArray<byte>(0x10);
+        FAion2DatFileArchive.DecryptData(headerBytes, DeriveHeaderKey(seed, EHeaderType.Localization));
+        var header = ReadCompressedHeader(headerBytes);
         if (header.EncryptionType != EEncryptionType.CompressedAES)
             throw new ParserException($"Unsupported AION2 L10N encryption type '{header.EncryptionType}'");
+        if (header.AlignedSize <= 0 || header.AlignedSize > Ar.Length - Ar.Position ||
+            header.PackedSize <= 0 || header.PackedSize > header.AlignedSize - 0x20 || header.RawSize <= 0)
+            throw new ParserException("Invalid AION2 L10N payload sizes");
         if (!AesKeys.TryGetValue(seed, out var key))
             throw new ParserException("AION2 L10N encryption key not found in manifest");
 
@@ -44,25 +49,5 @@ public sealed partial class Aion2DatFileEncryption
             return parts[^2];
 
         throw new ParserException($"Unable to derive AION2 L10N locale from '{filePath}'");
-    }
-
-    private readonly struct FL10NHeader
-    {
-        public readonly int PackedSize;
-        public readonly EEncryptionType EncryptionType;
-        public readonly int AlignedSize;
-        public readonly int RawSize;
-
-        public FL10NHeader(GenericBufferReader Ar, ulong seed)
-        {
-            var data = Ar.ReadArray<byte>(0x10);
-            FAion2DatFileArchive.DecryptData(data, DeriveHeaderKey(seed, EHeaderType.Localization));
-
-            using var headerAr = new GenericBufferReader(data);
-            PackedSize = headerAr.Read<int>();
-            EncryptionType = headerAr.Read<EEncryptionType>();
-            AlignedSize = headerAr.Read<int>();
-            RawSize = headerAr.Read<int>();
-        }
     }
 }

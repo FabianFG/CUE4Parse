@@ -9,6 +9,7 @@ using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.Utils;
 using GenericReader;
 using K4os.Compression.LZ4;
+using AesHelper = CUE4Parse.Encryption.Aes.Aes;
 
 namespace CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 
@@ -67,6 +68,11 @@ public sealed partial class Aion2DatFileEncryption
 
     private static byte[] DecryptCompressedDataTable(GenericBufferReader Ar, FDataTableHeader header, FAesKey key)
     {
+        if (header.AlignedSize < 0x20 || header.AlignedSize > Ar.Length - Ar.Position ||
+            header.AlignedSize % AesHelper.ALIGN != 0 || header.PackedSize <= 0 ||
+            header.PackedSize > header.AlignedSize - 0x20 || header.RawSize <= 0)
+            throw new ParserException("Invalid AION2 compressed data table payload sizes");
+
         var encryptedMemory = Ar.ReadMemory(header.AlignedSize);
         if (!MemoryMarshal.TryGetArray(encryptedMemory, out ArraySegment<byte> encrypted))
             throw new ParserException("AION2 data table payload is not backed by an array");
@@ -90,41 +96,25 @@ public sealed partial class Aion2DatFileEncryption
 
         public FDataTableHeader(GenericBufferReader Ar, ulong seed)
         {
-            var encodedPrefix = Ar.ReadArray<byte>(8);
-            var compressedPrefix = encodedPrefix.AsSpan().ToArray();
-            var compressedKey = DeriveHeaderKey(seed, EHeaderType.CompressedDataTable);
-            FAion2DatFileArchive.DecryptData(compressedPrefix, compressedKey);
-
-            using var prefixAr = new GenericBufferReader(compressedPrefix);
-            PackedSize = prefixAr.Read<int>();
-            var encryptionType = prefixAr.Read<EEncryptionType>();
-            switch (encryptionType)
+            var headerStart = Ar.Position;
+            if (Ar.Length - headerStart >= 0x10)
             {
-                case EEncryptionType.CompressedAES:
+                var compressedBytes = Ar.ReadArray<byte>(0x10);
+                FAion2DatFileArchive.DecryptData(compressedBytes, DeriveHeaderKey(seed, EHeaderType.CompressedDataTable));
+                var compressed = ReadCompressedHeader(compressedBytes);
+                if (compressed.EncryptionType == EEncryptionType.CompressedAES)
                 {
-                    var encodedSuffix = Ar.ReadArray<byte>(8);
-                    FAion2DatFileArchive.DecryptData(encodedSuffix, compressedKey[8..16]);
-
-                    using var suffixAr = new GenericBufferReader(encodedSuffix);
-                    EncryptionType = encryptionType;
-                    AlignedSize = suffixAr.Read<int>();
-                    RawSize = suffixAr.Read<int>();
-                    OutputSize = 0;
-                    break;
+                    (EncryptionType, RawSize, PackedSize, AlignedSize) = compressed;
+                    return;
                 }
-                default:
-                {
-                    FAion2DatFileArchive.DecryptData(encodedPrefix, DeriveHeaderKey(seed, EHeaderType.StreamDataTable));
 
-                    using var streamAr = new GenericBufferReader(encodedPrefix);
-                    OutputSize = streamAr.Read<int>();
-                    EncryptionType = streamAr.Read<EEncryptionType>();
-                    PackedSize = 0;
-                    AlignedSize = 0;
-                    RawSize = 0;
-                    break;
-                }
+                Ar.Position = headerStart;
             }
+
+            var streamBytes = Ar.ReadArray<byte>(8);
+            FAion2DatFileArchive.DecryptData(streamBytes, DeriveHeaderKey(seed, EHeaderType.StreamDataTable));
+            OutputSize = BinaryPrimitives.ReadInt32LittleEndian(streamBytes);
+            EncryptionType = (EEncryptionType) BinaryPrimitives.ReadInt32LittleEndian(streamBytes.AsSpan(4));
         }
     }
 }

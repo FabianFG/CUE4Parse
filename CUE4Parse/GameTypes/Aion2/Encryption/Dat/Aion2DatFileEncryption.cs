@@ -11,7 +11,9 @@ namespace CUE4Parse.GameTypes.Aion2.Encryption.Aes;
 public sealed partial class Aion2DatFileEncryption
 {
     private const ulong HeaderXorConstant = 0xCD02190910CE83F6;
-    private static readonly ulong _headerKeyRoot = Blake3Hash(HeaderXorConstant);
+    private static ulong _headerKeyRoot = Blake3Hash(HeaderXorConstant);
+    private static ulong _headerPermutationRoot;
+    private static bool _useHeaderPermutation;
 
     public static Dictionary<ulong, FAesKey> AesKeys = [];
     private static readonly Lock _instanceLock = new();
@@ -29,12 +31,29 @@ public sealed partial class Aion2DatFileEncryption
             var manifestFile = new FAion2KeyManifestFile(keyManifest);
             lock (_instanceLock)
             {
+                if (manifestFile.VersionContext is { } context)
+                {
+                    Span<byte> input = stackalloc byte[40];
+                    BinaryPrimitives.WriteUInt64LittleEndian(input, HeaderXorConstant);
+                    context.CopyTo(input[8..]);
+                    _headerPermutationRoot = Blake3Hash(input);
+                    _headerKeyRoot = Blake3Hash(_headerPermutationRoot);
+                    _useHeaderPermutation = true;
+                }
+                else
+                {
+                    _headerPermutationRoot = 0;
+                    _headerKeyRoot = Blake3Hash(HeaderXorConstant);
+                    _useHeaderPermutation = false;
+                }
+
                 AesKeys = manifestFile.AesKeys;
             }
         }
-        catch
+        catch (Exception e)
         {
-            Log.Error("Failed to read key_manifest.dat");
+            Log.Error(e, "Failed to read key_manifest.dat");
+            throw;
         }
     }
 
@@ -51,6 +70,35 @@ public sealed partial class Aion2DatFileEncryption
         return hasher.Finalize().AsSpan().ToArray();
     }
 
+    private static (EEncryptionType EncryptionType, int RawSize, int PackedSize, int AlignedSize) ReadCompressedHeader(ReadOnlySpan<byte> data)
+    {
+        if (!_useHeaderPermutation)
+            return ((EEncryptionType) BinaryPrimitives.ReadInt32LittleEndian(data[4..]),
+                BinaryPrimitives.ReadInt32LittleEndian(data[12..]),
+                BinaryPrimitives.ReadInt32LittleEndian(data),
+                BinaryPrimitives.ReadInt32LittleEndian(data[8..]));
+
+        // Versioned L10N and compressed data tables share the same field permutation.
+        Span<byte> permutation = stackalloc byte[] { 0, 1, 2, 3 };
+        Span<byte> input = stackalloc byte[12];
+        BinaryPrimitives.WriteUInt64LittleEndian(input, _headerPermutationRoot);
+        BinaryPrimitives.WriteInt32LittleEndian(input[8..], 0x51);
+        using var hasher = Hasher.New();
+        hasher.Update(input);
+        var shuffle = hasher.Finalize().AsSpan();
+        for (var i = 3; i > 0; i--)
+        {
+            var other = shuffle[3 - i] % (i + 1);
+            (permutation[i], permutation[other]) = (permutation[other], permutation[i]);
+        }
+
+        Span<int> fields = stackalloc int[4];
+        for (var i = 0; i < fields.Length; i++)
+            fields[permutation[i]] = BinaryPrimitives.ReadInt32LittleEndian(data[(i * sizeof(int))..]);
+
+        return ((EEncryptionType) fields[0], fields[1], fields[2], fields[3]);
+    }
+
     private static ulong Blake3Hash(string value)
     {
         using var hasher = Hasher.New();
@@ -64,6 +112,13 @@ public sealed partial class Aion2DatFileEncryption
         BinaryPrimitives.WriteUInt64LittleEndian(input, value);
         using var hasher = Hasher.New();
         hasher.Update(input);
+        return BinaryPrimitives.ReadUInt64LittleEndian(hasher.Finalize().AsSpan());
+    }
+
+    private static ulong Blake3Hash(ReadOnlySpan<byte> value)
+    {
+        using var hasher = Hasher.New();
+        hasher.Update(value);
         return BinaryPrimitives.ReadUInt64LittleEndian(hasher.Finalize().AsSpan());
     }
 
