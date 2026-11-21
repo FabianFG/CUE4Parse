@@ -1,3 +1,4 @@
+using CUE4Parse.GameTypes.WuWa.Objects;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Exceptions;
 using CUE4Parse.UE4.Objects.Core.Math;
@@ -31,18 +32,14 @@ public class UInstancedStaticMeshComponent : UStaticMeshComponent
 
         if (Ar.Game is GAME_WutheringWaves && Ar.ReadFlag())
         {
-            Ar.Position += 12;
-            var len = Ar.Read<int>();
-            for (int i = 0; i < len; i++)
-            {
-                Ar.Position += 12;
-                Ar.Position += Ar.ReadFlag() ? 3 : 7;
-            }
-
+            PerInstanceSMData = FCompressedInstanceData.Read(Ar, validPos);
             Ar.SkipFixedArray(4);
             PerInstanceSMCustomData = Ar.ReadBulkArray(Ar.Read<float>);
-            Ar.Position += Ar.Read<long>()+8;
-            PerInstanceSMData = Ar.ReadBulkArray(() => new FInstancedStaticMeshInstanceData(Ar));
+            var renderDataSize = Ar.Read<long>();
+            if (renderDataSize < 0 || renderDataSize > validPos - Ar.Position)
+                throw new ParserException(Ar, $"Invalid instance render data size {renderDataSize}");
+            Ar.Position += renderDataSize;
+            // Leave the following HISM cluster tree for the derived component to deserialize.
             return;
         }
 
