@@ -8,7 +8,7 @@ public class UVerseFunction : UFunction
 {
     public EVerseFunctionFlags VerseFunctionFlags;
     public FName AlternateName;
-    //public FName CoercedOriginalName; // Added in https://github.com/EpicGames/UnrealEngine/commit/976d055b7c0f7bc19576d6896bfa6513a32efb7d#diff-a277a38206a06c667a114c7e039a4c3ce5a4ac91dbf0c7a82448d38925556533
+    public FName CoercedOriginalName; // Added in https://github.com/EpicGames/UnrealEngine/commit/976d055b7c0f7bc19576d6896bfa6513a32efb7d#diff-a277a38206a06c667a114c7e039a4c3ce5a4ac91dbf0c7a82448d38925556533
 
     public override void Deserialize(FAssetArchive Ar, long validPos)
     {
@@ -21,7 +21,7 @@ public class UVerseFunction : UFunction
         VerseFunctionFlags = Ar.Read<EVerseFunctionFlags>();
         base.Deserialize(Ar, validPos);
         AlternateName = Ar.ReadFName();
-        //CoercedOriginalName = Ar.ReadFName();
+        CoercedOriginalName = Ar.ReadFName();
     }
 
     protected internal override void WriteJson(JsonWriter writer, JsonSerializer serializer)
@@ -29,17 +29,23 @@ public class UVerseFunction : UFunction
         base.WriteJson(writer, serializer);
 
         writer.WritePropertyName(nameof(VerseFunctionFlags));
-        writer.WriteValue(VerseFunctionFlags);
+        serializer.Serialize(writer, VerseFunctionFlags);
         writer.WritePropertyName(nameof(AlternateName));
         serializer.Serialize(writer, AlternateName);
+        writer.WritePropertyName(nameof(CoercedOriginalName));
+        serializer.Serialize(writer, CoercedOriginalName);
     }
 
+    [JsonConverter(typeof(EnumConverter<EVerseFunctionFlags>))]
+    [Flags]
     public enum EVerseFunctionFlags : uint
     {
         None                             = 0x00000000u,
         UHTNative                        = 0x00000001u,
         UHTTaskUpdate                    = 0x00000002u,
         AccessibleFromEngineGameplay     = 0x00000004u,
-        CanAccessEpicInternal            = 0x00000008u
+        CanAccessEpicInternal            = 0x00000008u,
+        // Creator code that is neither epic_internal nor callable from <predicts>: clients never run it (SOL-4610).
+        CannotRunOnClient                = 0x00000010u
     }
 }
