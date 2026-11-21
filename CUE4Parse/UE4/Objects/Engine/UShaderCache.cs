@@ -174,9 +174,41 @@ namespace CUE4Parse.UE4.Objects.Engine
 
     public class FShaderCacheShaderMap
     {
-        public FStaticParameterSet StaticParameterSet;
-        public int ShaderMapVersion;
-        public int ShaderMapLicenseeVersion;
+        public FGuid? MaterialId;
+        public FStaticParameterSet? StaticParameterSet;
+        public int? ShaderMapVersion;
+        public int? ShaderMapLicenseeVersion;
+
+        public void WriteJson(JsonWriter writer, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            if (MaterialId is { } materialId)
+            {
+                writer.WritePropertyName(nameof(MaterialId));
+                serializer.Serialize(writer, materialId);
+            }
+
+            if (StaticParameterSet is { } staticParameterSet)
+            {
+                writer.WritePropertyName(nameof(StaticParameterSet));
+                serializer.Serialize(writer, staticParameterSet);
+            }
+
+            if (ShaderMapVersion is { } shaderMapVersion)
+            {
+                writer.WritePropertyName(nameof(ShaderMapVersion));
+                writer.WriteValue(shaderMapVersion);
+            }
+
+            if (ShaderMapLicenseeVersion is { } shaderMapLicenseeVersion)
+            {
+                writer.WritePropertyName(nameof(ShaderMapLicenseeVersion));
+                writer.WriteValue(shaderMapLicenseeVersion);
+            }
+
+            writer.WriteEndObject();
+        }
     }
 
     public class UShaderCache : Assets.Exports.UObject
@@ -204,10 +236,13 @@ namespace CUE4Parse.UE4.Objects.Engine
                 ShaderCachePriority = Ar.Read<int>();
             }
 
-            if (Ar.Ver < EUnrealEngineObjectUE3Version.GLOBAL_SHADER_FILE)
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_PLATFORMTOSERIALIZEMASK && Ar.Ver < EUnrealEngineObjectUE3Version.GLOBAL_SHADER_FILE)
             {
-                Platform = Ar.Read<EShaderPlatform>();
+                Ar.Position += 4; // Platform Mask
+            }
 
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.SHADER_CRC_CHECKING && Ar.Ver < EUnrealEngineObjectUE3Version.GLOBAL_SHADER_FILE)
+            {
                 ShaderTypeMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
                 VertexFactoryMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
             }
@@ -221,6 +256,11 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             ShaderCache = new FShaderCache(Ar);
 
+            if (Ar.Ver >= EUnrealEngineObjectUE3Version.GLOBAL_SHADER_FILE)
+            {
+                Platform = ShaderCache.Platform;
+            }
+
             if (Ar.Ver >= EUnrealEngineObjectUE3Version.GLOBAL_SHADER_FILE && Ar.Ver < EUnrealEngineObjectUE3Version.FIXED_AUTO_SHADER_VERSIONING)
             {
                 VertexFactoryMap = Ar.ReadMap(Ar.ReadFName, Ar.Read<int>);
@@ -231,10 +271,16 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             for (int i = 0; i < NumMaterialShaderMaps; i++)
             {
-                var shaderMap = new FShaderCacheShaderMap
+                var shaderMap = new FShaderCacheShaderMap();
+
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.STATIC_MATERIAL_PARAMETERS)
                 {
-                    StaticParameterSet = new FStaticParameterSet(Ar)
-                };
+                    shaderMap.MaterialId = Ar.Read<FGuid>();
+                }
+                else
+                {
+                    shaderMap.StaticParameterSet = new FStaticParameterSet(Ar);
+                }
 
                 if (Ar.Ver >= EUnrealEngineObjectUE3Version.UNIFORMEXPRESSION_TEXTUREINDEX)
                 {
@@ -250,6 +296,10 @@ namespace CUE4Parse.UE4.Objects.Engine
 
             if (Ar.Ver < EUnrealEngineObjectUE3Version.GLOBAL_SHADER_FILE)
             {
+                if (Ar.Ver < EUnrealEngineObjectUE3Version.SHADER_CRC_CHECKING)
+                {
+                    Ar.Position += 8; // unknown
+                }
                 NumShaders = Ar.Read<int>();
                 Shaders = new FShaderCacheShader[NumShaders];
 
@@ -258,6 +308,11 @@ namespace CUE4Parse.UE4.Objects.Engine
                     Shaders[i] = new FShaderCacheShader { ShaderType = Ar.ReadFName(), ShaderId = Ar.Read<FGuid>() };
                     Ar.ReadFName(); // ShaderType again
                 }
+            }
+
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.SHADER_CRC_CHECKING)
+            {
+                Ar.Position += 8; // unknown
             }
         }
 
@@ -284,7 +339,12 @@ namespace CUE4Parse.UE4.Objects.Engine
             }
 
             writer.WritePropertyName(nameof(ShaderMaps));
-            serializer.Serialize(writer, ShaderMaps);
+            writer.WriteStartArray();
+            foreach (var shaderMap in ShaderMaps)
+            {
+                shaderMap.WriteJson(writer, serializer);
+            }
+            writer.WriteEndArray();
 
             if (Shaders?.Length > 0)
             {
@@ -303,6 +363,8 @@ namespace CUE4Parse.UE4.Objects.Engine
 
                     writer.WriteEndObject();
                 }
+
+                writer.WriteEndArray();
             }
         }
     }

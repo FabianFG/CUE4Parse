@@ -69,12 +69,12 @@ public class FPoly
             Ar.Read<short>(); // PanV
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.LightMapScaleAddedToPoly)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.LightMapScaleAddedToPoly && Ar.Ver < EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS)
         {
             LightMapScale = Ar.Read<float>();
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS && Ar.Ver < EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.TWOSIDEDSIGN_PARAMETERS)
         {
             Ar.Read<float>(); // ShadowMapScale
         }
@@ -89,13 +89,16 @@ public class FPoly
             LightmassSettings = new FLightmassPrimitiveSettings(Ar);
         }
 
-        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_FPOLY_PBRULESET_POINTER && Ar.Ver < EUnrealEngineObjectUE3Version.FPOLY_RULESET_VARIATIONNAME)
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADD_FPOLY_PBRULESET_POINTER)
         {
-            new FPackageIndex(Ar); // Ruleset
-        }
-        else
-        {
-            RulesetVariation = Ar.ReadFName();
+            if (Ar.Ver < EUnrealEngineObjectUE3Version.FPOLY_RULESET_VARIATIONNAME)
+            {
+                new FPackageIndex(Ar); // Ruleset
+            }
+            else
+            {
+                RulesetVariation = Ar.ReadFName();
+            }
         }
     }
 }

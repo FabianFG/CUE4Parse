@@ -523,8 +523,8 @@ public class FLightMap2D : FLightMap
         ScaleVectors = new FVector4[NUM_STORED_LIGHTMAP_COEF];
         AddVectors = new FVector4[NUM_STORED_LIGHTMAP_COEF];
         if (Ar.Ver < EUnrealEngineObjectUE3Version.MAXCOMPONENT_LIGHTMAP_ENCODING)
-        {   
-            Ar.Position += 16 *4;
+        {
+            Ar.Position += 16 * 4;
         }
         else if (Ar.Ver <= EUnrealEngineObjectUE4Version.SH_LIGHTMAPS)
         {

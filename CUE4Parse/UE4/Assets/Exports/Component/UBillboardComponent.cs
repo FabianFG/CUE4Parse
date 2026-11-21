@@ -15,6 +15,6 @@ public class UBillboardComponent : UPrimitiveComponent
             current = current.Template?.Load<UBillboardComponent>();
         }
 
-        return Owner?.Provider?.LoadPackageObject<UTexture2D>("Engine/Content/EditorResources/S_Actor.S_Actor");
+        return Owner?.Provider?.SafeLoadPackageObject<UTexture2D>("Engine/Content/EditorResources/S_Actor.S_Actor");
     }
 }
