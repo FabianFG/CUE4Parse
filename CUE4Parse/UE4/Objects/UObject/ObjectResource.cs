@@ -397,7 +397,7 @@ namespace CUE4Parse.UE4.Objects.UObject
             OuterIndex = new FPackageIndex(Ar);
             ObjectName = Ar.ReadFName();
 
-            if (Ar.Game >=  GAME_UE5_8 || Ar.Ver >= EUnrealEngineObjectUE4Version.NON_OUTER_PACKAGE_IMPORT && !Ar.IsFilterEditorOnly)
+            if (Ar.Ver >= EUnrealEngineObjectUE4Version.NON_OUTER_PACKAGE_IMPORT && (Ar.Game >= GAME_UE5_8 || !Ar.IsFilterEditorOnly))
             {
                 PackageName = Ar.ReadFName();
             }
