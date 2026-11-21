@@ -60,5 +60,9 @@ switch (obj)
 ```
 Further detailed documentation is available in the [wiki](https://github.com/FabianFG/CUE4Parse/wiki)
 
+### Release builds
+
+The `CUE4Parse-Conversion` package uses SixLabors.ImageSharp 3.2.0. Release builds require a Six Labors license key; eligible users can apply for a free Community license at https://sixlabors.com/pricing/. Set `SixLaborsLicenseKey` locally and configure the `SIXLABORS_LICENSE_KEY` GitHub Actions secret for package releases. Never commit the key.
+
 ### License:
 CUE4Parse is licensed under [Apache License 2.0](https://github.com/FabianFG/CUE4Parse/blob/master/LICENSE), and licenses of third-party libraries used are listed [here](https://github.com/FabianFG/CUE4Parse/blob/master/NOTICE).
