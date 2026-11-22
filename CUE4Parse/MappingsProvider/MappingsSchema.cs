@@ -156,6 +156,11 @@ public class PropertyType
                 break;
             case FEnumProperty e:
                 ApplyEnum(prop, e.Enum);
+                // The underlying numeric property decides how many bytes the value takes
+                // (e.g. an enum class : uint16 is 2 bytes); the size switch in ApplyEnum is only a fallback.
+                // Only its type name is used: a serialized underlying ByteProperty can reference the enum
+                // too, and reading it as an enum would return a name instead of the index.
+                if (e.UnderlyingProp != null) InnerType = new PropertyType(e.UnderlyingProp.GetType().Name[1..]);
                 break;
             case FMapProperty map:
                 var key = map.KeyProp;
