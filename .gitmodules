@@ -7,3 +7,6 @@
 [submodule "CUE4Parse-Natives/Alembic/external/Alembic"]
 	path = CUE4Parse-Natives/Alembic/external/Alembic
 	url = https://github.com/alembic/alembic.git
+[submodule "CUE4Parse-Natives/UsmapGen/external/UsmapGen"]
+	path = CUE4Parse-Natives/UsmapGen/external/UsmapGen
+	url = https://github.com/Ka1serM/UsmapGen.git

@@ -21,6 +21,10 @@ if (EXISTS "${PROJECT_SOURCE_DIR}/Oodle/external/oodle2/core")
     set(WITH_Oodle 1)
 endif()
 
+if (WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.29 AND EXISTS "${PROJECT_SOURCE_DIR}/UsmapGen/external/UsmapGen/CMakeLists.txt")
+    set(WITH_USMAPGEN 1)
+endif()
+
 # ACL
 if (WITH_ACL)
         add_compile_definitions(WITH_ACL)
@@ -60,6 +64,11 @@ if (WITH_Oodle)
     else() # Linux and other platforms
         target_link_options("${PROJECT_NAME}" PRIVATE "-Wl,--whole-archive" "$<TARGET_FILE:oodle2>" "-Wl,--no-whole-archive")
     endif()
+endif()
+
+if (WITH_USMAPGEN)
+    enable_language(C RC)
+    add_subdirectory(UsmapGen)
 endif()
 
 if (WIN32)

@@ -1,0 +1,5 @@
+101 RCDATA "external/UsmapGen/LICENSE"
+102 RCDATA "external/UsmapGen/external/zydis/LICENSE"
+103 RCDATA "external/UsmapGen/external/zydis/dependencies/zycore/LICENSE"
+104 RCDATA "external/UsmapGen/external/zstd/LICENSE"
+105 RCDATA "external/UsmapGen/external/brotli/LICENSE"
