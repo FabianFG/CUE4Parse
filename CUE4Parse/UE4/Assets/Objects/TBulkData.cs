@@ -22,7 +22,7 @@ public abstract class TBulkData<T> where T: struct
     public EBulkDataFlags BulkDataFlags => Header.BulkDataFlags;
 
     public T[]? Data => _data?.Value;
-    protected Lazy<T[]?>? _data { get; init; }
+    protected Lazy<T[]?>? _data { get; set; }
 
     protected FAssetArchive? _savedAr { get; init; }
     protected string? _savedTfc { get; init; }
@@ -88,6 +88,19 @@ public abstract class TBulkData<T> where T: struct
         }
 
         return ReadBulkDataInto(out var data) ? data : null;
+    }
+
+    /// <summary>
+    /// Releases loaded bulk bytes when this object can reload them from its source archive.
+    /// Returns false when the data has no reloadable archive backing or has not been loaded.
+    /// </summary>
+    public bool TryReleaseCachedData()
+    {
+        if (_savedAr is null || _data is not { IsValueCreated: true })
+            return false;
+
+        _data = new Lazy<T[]?>(() => ReadBulkDataInto(out var data) ? data : null);
+        return true;
     }
 
     protected virtual bool ReadBulkDataInto(out T[] data)
