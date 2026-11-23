@@ -53,7 +53,7 @@ public partial class FPakInfo
     public const uint PAK_FILE_MAGIC_ArenaBreakoutMobile = 0x57647500; // Special case, magic is incremented for encryption updates
     public const uint PAK_FILE_MAGIC_AssaultFireFuture = 0x4F6FAE86;
     public const uint PAK_FILE_MAGIC_Back4Blood = 0x18772;
-    public const uint PAK_FILE_MAGIC_SilverPalace = 0x12E15A6F;
+    public const uint PAK_FILE_MAGIC_SilverPalace = 0xDD4F2A84;
     public const uint PAK_FILE_MAGIC_ValorantSource = 0x167C2AB4;
     public const uint PAK_FILE_MAGIC_ArcheAgeChronicles = 0x5835F00D;
 
@@ -451,12 +451,6 @@ public partial class FPakInfo
             EncryptionKeyGuid = default;
             IndexOffset = (long) ((ulong) IndexOffset ^ 0xD5B9B05CE8143A3C) - 0xAA;
             IndexSize = (long) ((ulong) IndexSize ^ 0x6DB425B4BC084B4B) - 0xA8;
-        }
-
-        if (Ar.Game is GAME_SilverPalace)
-        {
-            IndexOffset = (long) ((ulong) IndexOffset ^ 0x8b3c9f2a5e1d7046);
-            IndexSize = (long) ((ulong) IndexSize ^ 0x8b3c9f2a5e1d7046);
         }
 
         if (Ar.Game is GAME_DeadByDaylight or GAME_DeadByDaylight_Old)
