@@ -166,7 +166,7 @@ public abstract class PrimitiveComponentDto : SceneComponentDto
     protected PrimitiveComponentDto(UPrimitiveComponent component, ActorDto owner) : base(component, owner)
     {
         var visible = !component.TryGetValue(out bool isVisible, "bVisible") || isVisible;
-        var hidden = component.TryGetValue(out bool isHidden, "bHiddenInGame", "bIsHidden") && isHidden;
+        var hidden = component.TryGetValue(out bool isHidden, "bHiddenInGame", "bIsHidden", "HiddenInGame", "HiddenGame") && isHidden;
         IsVisible = visible && !hidden && component.bRenderInMainPass;
 
         if (component.TryGetValue(out bool castShadow, "CastShadow", "bCastStaticShadow", "bCastDynamicShadow"))

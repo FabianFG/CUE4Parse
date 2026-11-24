@@ -9,7 +9,6 @@ namespace CUE4Parse.UE4.Objects.UObject;
 [SkipObjectRegistration]
 public class UStruct : UField
 {
-    
     public FPackageIndex SuperStruct;
     public FPackageIndex[] Children;
     public FField[] ChildProperties;
@@ -19,7 +18,7 @@ public class UStruct : UField
     {
         base.Deserialize(Ar, validPos);
 
-        SuperStruct = Ar.Ver >= EUnrealEngineObjectUE3Version.MOVED_SUPERFIELD_TO_USTRUCT ? new FPackageIndex(Ar) : SuperField;
+        SuperStruct = Ar.Game == GAME_BioshockInfinite || Ar.Ver >= EUnrealEngineObjectUE3Version.MOVED_SUPERFIELD_TO_USTRUCT ? new FPackageIndex(Ar) : SuperField;
 
         if (Ar.Ver < EUnrealEngineObjectUE4Version.CONSOLIDATE_HEADER_PARSER_ONLY_PROPERTIES)
         {

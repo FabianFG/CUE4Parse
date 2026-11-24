@@ -1,4 +1,5 @@
-﻿using CUE4Parse.UE4.Assets.Exports.Material;
+﻿using CUE4Parse.UE4.Assets.Exports.Component.Decal;
+using CUE4Parse.UE4.Assets.Exports.Material;
 using CUE4Parse.UE4.Assets.Readers;
 using CUE4Parse.UE4.Objects.Core.Math;
 using CUE4Parse.UE4.Objects.UObject;
@@ -6,21 +7,39 @@ using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.Assets.Exports.Component;
 
-
-public class UDecalComponent : USceneComponent {
+public class UDecalComponent : USceneComponent
+{
     public FPackageIndex? DecalMaterial;
     public FVector? DecalSize;
 
-    public override void Deserialize(FAssetArchive Ar, long validPos) {
+    public override void Deserialize(FAssetArchive Ar, long validPos)
+    {
         base.Deserialize(Ar, validPos);
-        
+
         if (Ar.Ver < EUnrealEngineObjectUE4Version.DECAL_SIZE)
+        {
             DecalSize = FVector.OneVector;
-        DecalMaterial = GetOrDefault<FPackageIndex>(nameof(DecalMaterial), new FPackageIndex());
+        }
+
+        DecalMaterial = GetOrDefault(nameof(DecalMaterial), new FPackageIndex());
         DecalSize = GetOrDefault<FVector>(nameof(DecalSize));
+
+        if (Ar.Game >= GAME_UE4_0) return;
+
+        if (Ar.Ver >= EUnrealEngineObjectUE3Version.DECAL_STATIC_DECALS_SERIALIZED)
+        {
+            Ar.ReadArray(() => new FStaticReceiverData(Ar));
+        }
+        else if (Ar.Ver < EUnrealEngineObjectUE3Version.DECAL_REFACTOR &&
+                 (Ar.Ver == EUnrealEngineObjectUE3Version.DECAL_RENDERDATA ||
+                  Ar.Ver >= EUnrealEngineObjectUE3Version.DECAL_RENDERDATA_POINTER))
+        {
+            Ar.ReadArray(() => new FDecalRenderData(Ar));
+        }
     }
 
-    public UMaterialInterface? GetDecalMaterial() {
+    public UMaterialInterface? GetDecalMaterial()
+    {
         if (DecalMaterial == null) return null;
         return DecalMaterial?.Load<UMaterialInterface>();
     }

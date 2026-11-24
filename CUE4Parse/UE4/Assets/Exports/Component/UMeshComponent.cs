@@ -16,6 +16,6 @@ public class UMeshComponent : UPrimitiveComponent
     {
         base.Deserialize(Ar, validPos);
 
-        OverrideMaterials = GetOrDefault(nameof(OverrideMaterials), OverrideMaterials);
+        OverrideMaterials = GetOrDefault(nameof(OverrideMaterials), GetOrDefault("Materials", OverrideMaterials));
     }
 }

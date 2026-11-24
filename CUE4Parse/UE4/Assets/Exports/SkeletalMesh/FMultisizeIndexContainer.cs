@@ -21,6 +21,8 @@ public class FMultisizeIndexContainer() : FRawIndexBuffer
 
         if (Ar.Game == GAME_OutlastTrials) Ar.Position += 4;
 
+        if (Ar.Game == GAME_DevilMayCry && dataSize == 0x00) return;
+
         if (dataSize == 0x02)
         {
             SetIndices(Ar.ReadBulkArray<ushort>());

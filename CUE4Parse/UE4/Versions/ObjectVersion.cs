@@ -954,7 +954,6 @@ public enum EUnrealEngineObjectUE3Version
     LightMapScaleAddedToPoly = 106,
     Release119 = 119,
     AddedCppTextToUStruct = 120,
-    Release122 = 122,
     // only comments exist for these three
     // Merge in skeletal collision stuff for SVehicle support.
     temp1 = 122,
@@ -974,7 +973,6 @@ public enum EUnrealEngineObjectUE3Version
     temp8 = 128,
     // StaticMeshActor Socket Type Added
     temp9 = 128,
-    AddedIsValidToFBox = 146,
     MovedFriendlyNameToUFunction = 160,
     TextureDeprecatedFromPoly = 170,
     // Deprecated FCompactIndex
@@ -1830,6 +1828,10 @@ public enum EUnrealEngineObjectUE3Version
     SKELCONTROL_ANIMMETADATA_LIST = 646,
     // Added material vertex shader parameters
     MATERIAL_EDITOR_VERTEX_SHADER = 647,
+    // Freed up an extra shader constant in the GPU skinning shader (needed for translucent decals)
+    FREE_GPUSKIN_SHADER_CONSTANT = 648,
+    // Added per-object foliage shader parameters
+    ADDED_FOLIAGE_PARAMETERS = 649,
     // Fixed hit proxy material parameters not getting serialized
     FIXED_HIT_PROXY_VERTEX_OFFSET = 650,
     // Added general OcclusionPercentage material expression

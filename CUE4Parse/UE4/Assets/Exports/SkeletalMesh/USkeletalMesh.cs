@@ -47,6 +47,11 @@ public partial class USkeletalMesh : USkinnedAsset, IAssetUserData
             Ar.Position += sizeof(float); // float - m_fRadius
         }
 
+        if (Ar.Game == GAME_MirrorEdge && Ar.LicenseeVer >= 15)
+        {
+            Ar.Position += sizeof(int);
+        }
+
         ImportedBounds = new FBoxSphereBounds(Ar);
         Bounds = ImportedBounds;
 
@@ -57,6 +62,12 @@ public partial class USkeletalMesh : USkinnedAsset, IAssetUserData
 
         if (Ar.Game < GAME_UE4_0)
         {
+            if (Ar.Game == GAME_BatmanArkhamAsylum && Ar.LicenseeVer >= 15)
+            {
+                Ar.Position += sizeof(float); // ConservativeBounds
+                Ar.SkipFixedArray(28); // BoneBounds
+            }
+
             Materials = Ar.ReadArray(() => new FPackageIndex(Ar));
 
             SkeletalMaterials = new FSkeletalMaterial[Materials.Length];
@@ -255,8 +266,18 @@ public partial class USkeletalMesh : USkinnedAsset, IAssetUserData
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.SKELMESH_BONE_KDOP && Ar.Game < GAME_UE4_0)
         {
-            // this is not an array of ints, it's a complex FPerPolyBoneCollisionData struct
-            Ar.SkipArray<int>(); // PerPolyBoneKDOPs
+            int numPerPolyBones = Ar.Read<int>();
+            for (int i = 0; i < numPerPolyBones; i++)
+            {
+                if (Ar.Ver >= EUnrealEngineObjectUE3Version.COMPACTKDOPSTATICMESH)
+                {
+                    Ar.Position += 24; // RootBound
+                }
+
+                Ar.SkipBulkArrayData(6); // Nodes
+                Ar.SkipBulkArrayData(8); // Triangles
+                Ar.SkipArray<FVector>(); // CollisionVerts
+            }
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.ADDED_EXTRA_SKELMESH_VERTEX_INFLUENCE_MAPPING && Ar.Game < GAME_UE4_0)
@@ -266,6 +287,11 @@ public partial class USkeletalMesh : USkinnedAsset, IAssetUserData
             {
                 Ar.SkipArray<int>(); // BoneBreakOptions
             }
+        }
+
+        if (Ar.Game == GAME_FableAnniversary && Ar.LicenseeVer >= 1007 || Ar.Game == GAME_DevilMayCry)
+        {
+            return;
         }
 
         if (Ar.Ver >= EUnrealEngineObjectUE3Version.APEX_CLOTHING && Ar.Game < GAME_UE4_0)
