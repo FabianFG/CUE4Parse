@@ -101,13 +101,15 @@ public static class FAion2PropertyReader
             if (!mappings.Types.TryGetValue(structName, out var propMappings))
                 throw new ParserException(Ar, $"No property mappings found for struct {structName}");
 
-            var propCount = propMappings.CountProperties(true);
+            // DAT files only hold runtime data, so editor-only properties from the mappings never appear in them
+            const bool filterEditorOnly = true;
+            var propCount = propMappings.CountProperties(true, filterEditorOnly);
             var properties = new List<FPropertyTag>(propCount);
             var previousProperty = "none";
 
             foreach (var index in Enumerable.Range(0, propCount))
             {
-                propMappings.TryGetValue(index, out var info);
+                propMappings.TryGetValue(index, filterEditorOnly, out var info);
 
                 var tag = new FPropertyTag()
                 {
