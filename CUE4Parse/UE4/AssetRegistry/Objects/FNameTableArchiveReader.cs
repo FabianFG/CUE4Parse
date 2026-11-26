@@ -37,7 +37,11 @@ public class FNameTableArchiveReader : FAssetRegistryArchive
         }
     }
 
-    public override void SkipFName() => baseArchive.Position += 8;
+    public override void SkipFName()
+    {
+        if (Header.Version < FAssetRegistryVersionType.AddAssetRegistryState) baseArchive.SkipFString();
+        else baseArchive.Position += 8;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override FName ReadFName()
