@@ -1,4 +1,3 @@
-﻿using System;
 using System.ComponentModel;
 
 namespace CUE4Parse_Conversion.Options;
@@ -15,8 +14,12 @@ public enum EMeshQuality
 
 internal static class MeshQualityExtensions
 {
-    internal static IReadOnlyList<uint> GetRange(this EMeshQuality quality, int count, Func<uint, bool> skipPredicate)
+    internal static IReadOnlyList<uint> GetRange(this EMeshQuality quality, int count, Func<uint, bool> skipPredicate, ExportOptions options)
     {
+        var preferredMeshLodIndex = options.PreferredMeshLodIndex;
+        if (preferredMeshLodIndex is >= 0 && preferredMeshLodIndex.Value < count && !skipPredicate((uint) preferredMeshLodIndex.Value))
+            return [(uint) preferredMeshLodIndex.Value];
+
         var indices = new List<uint>();
         for (var i = 0u; i < count; i++)
         {

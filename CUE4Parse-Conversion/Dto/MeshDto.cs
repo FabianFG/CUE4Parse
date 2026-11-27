@@ -314,7 +314,7 @@ public class StaticMeshDto : MeshDto<MeshVertex>
 
     private void ParseMeshRenderData(FStaticMeshRenderData renderData, ExportOptions options, USplineMeshComponent? spline = null)
     {
-        foreach (var sourceLodIndex in options.MeshQuality.GetRange(renderData.LODs!.Length, i => renderData.LODs[i].SkipLod))
+        foreach (var sourceLodIndex in options.MeshQuality.GetRange(renderData.LODs!.Length, i => renderData.LODs[i].SkipLod, options))
         {
             var screenSize = 0.0f;
             if (sourceLodIndex < renderData.ScreenSize.Length)
@@ -473,7 +473,7 @@ public sealed class SkeletalMeshDto : SkeletonDto
     private void ParseMeshRenderData(USkinnedAsset mesh, ExportOptions options)
     {
         var lodInfo = mesh.LODInfo;
-        foreach (var sourceLodIndex in options.MeshQuality.GetRange(mesh.LODModels!.Length, i => mesh.LODModels[i].SkipLod))
+        foreach (var sourceLodIndex in options.MeshQuality.GetRange(mesh.LODModels!.Length, i => mesh.LODModels[i].SkipLod, options))
         {
             var screenSize = lodInfo is not null && sourceLodIndex < lodInfo.Length ? lodInfo[sourceLodIndex].ScreenSize.Value : 1.0f;
             LODs.Add(MeshLodDto<SkinnedMeshVertex>.FromSkeletalMesh(this, options, sourceLodIndex, mesh.LODModels[sourceLodIndex], screenSize));

@@ -15,6 +15,11 @@ namespace CUE4Parse.FileProvider.Vfs
         private ConcurrentDictionary<FPackageId, GameFile>? _byId;
         private ConcurrentDictionary<FPackageId, GameFile>? _optionalById;
         private int _count;
+
+        // Changed index can resolve different payloads for an already cached package
+        private long _revision;
+        internal long Revision => Volatile.Read(ref _revision);
+
         public IReadOnlyDictionary<FPackageId, GameFile> ById => GetPackageIndex();
         public IReadOnlyDictionary<FPackageId, GameFile> OptionalById => GetOptionalSegmentPackageIndex();
 
@@ -159,6 +164,7 @@ namespace CUE4Parse.FileProvider.Vfs
                 foreach (var (packageId, file) in optionalSegmentPackageFiles)
                     optionalSegmentIndex[packageId] = file;
             }
+            Interlocked.Increment(ref _revision);
         }
 
         /// <summary>
@@ -177,6 +183,7 @@ namespace CUE4Parse.FileProvider.Vfs
             Volatile.Read(ref _byId)?.Clear();
             Volatile.Read(ref _optionalById)?.Clear();
             Interlocked.Exchange(ref _count, 0);
+            Interlocked.Increment(ref _revision);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

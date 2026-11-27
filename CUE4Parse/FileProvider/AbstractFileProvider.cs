@@ -60,6 +60,13 @@ namespace CUE4Parse.FileProvider
 
         public TypeMappings? MappingsForGame => MappingsContainer?.MappingsForGame;
 
+        private PackageCache? _packageCache;
+        public bool CachePackages
+        {
+            get => _packageCache is not null;
+            set => _packageCache = value ? _packageCache ?? new PackageCache(this) : null;
+        }
+
         protected AbstractFileProvider(VersionContainer? versions = null, StringComparer? pathComparer = null)
         {
             Versions = versions ?? VersionContainer.DEFAULT_VERSION_CONTAINER;
@@ -608,18 +615,25 @@ namespace CUE4Parse.FileProvider
         public virtual IPackage LoadPackage(GameFile file)
         {
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
+            var cache = _packageCache;
+            PackageCache.LoadState cacheState = default;
+            if (cache?.Get(file, out cacheState) is { } cached)
+                return cached;
+
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
 
             var archiveName = (file as VfsEntry)?.Vfs.Name;
             var uasset = file.CreateReader();
             var (lazyUbulk, lazyUptnl) = GetPayloadReaders(ubulks, uptnls);
 
-            return file switch
+            IPackage package = file switch
             {
                 FPakEntry or VersionedGameFile => new Package(uasset, uexp?.CreateReader(), lazyUbulk, lazyUptnl, this, UseLazyPackageSerialization, archiveName),
                 FIoStoreEntry ioStoreEntry when this is IVfsFileProvider vfsFileProvider => new IoPackage(uasset, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, vfsFileProvider, FindOptionalSegment(ioStoreEntry), archiveName),
                 _ => throw new NotImplementedException($"type {file.GetType()} is not supported")
             };
+
+            return cache?.Add(file, package, uexp?.Size ?? 0, cacheState) ?? package;
         }
 
         /// <summary>
@@ -652,22 +666,32 @@ namespace CUE4Parse.FileProvider
         public virtual async Task<IPackage> LoadPackageAsync(GameFile file)
         {
             if (!file.IsUePackage) throw new ArgumentException("cannot load non-UE package", nameof(file));
+            var cache = _packageCache;
+            PackageCache.LoadState cacheState = default;
+            if (cache?.Get(file, out cacheState) is { } cached)
+                return cached;
+
             Files.FindPayloads(file, out var uexp, out var ubulks, out var uptnls);
 
             var archiveName = (file as VfsEntry)?.Vfs.Name;
             var uasset = await file.CreateReaderAsync().ConfigureAwait(false);
             var (lazyUbulk, lazyUptnl) = GetPayloadReaders(ubulks, uptnls);
 
+            IPackage package;
             switch (file)
             {
                 case FPakEntry or VersionedGameFile:
                     var uexpAr = uexp != null ? await uexp.CreateReaderAsync().ConfigureAwait(false) : null;
-                    return new Package(uasset, uexpAr, lazyUbulk, lazyUptnl, this, UseLazyPackageSerialization, archiveName);
+                    package = new Package(uasset, uexpAr, lazyUbulk, lazyUptnl, this, UseLazyPackageSerialization, archiveName);
+                    break;
                 case FIoStoreEntry ioStoreEntry when this is IVfsFileProvider vfsFileProvider:
-                    return new IoPackage(uasset, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, vfsFileProvider, FindOptionalSegment(ioStoreEntry), archiveName);
+                    package = new IoPackage(uasset, ioStoreEntry.IoStoreReader.ContainerHeader, lazyUbulk, lazyUptnl, vfsFileProvider, FindOptionalSegment(ioStoreEntry), archiveName);
+                    break;
                 default:
                     throw new NotImplementedException($"type {file.GetType()} is not supported");
             }
+
+            return cache?.Add(file, package, uexp?.Size ?? 0, cacheState) ?? package;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -956,6 +980,7 @@ namespace CUE4Parse.FileProvider
 
         public virtual void Dispose()
         {
+            _packageCache = null;
             Files.Clear();
             VirtualPaths.Clear();
             Internationalization.Clear();

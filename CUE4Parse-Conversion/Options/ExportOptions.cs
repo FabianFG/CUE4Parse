@@ -21,11 +21,13 @@ public class ExportOptions(
     int pngCompressionLevel = 3,
     bool tgaRleCompression = true,
     bool includeDisabledMeshSections = false,
-    EAnimatedTextureFormat animatedTextureFormat = EAnimatedTextureFormat.Auto)
+    EAnimatedTextureFormat animatedTextureFormat = EAnimatedTextureFormat.Auto,
+    int? preferredMeshLodIndex = null)
 {
     public readonly EMeshFormat MeshFormat = meshFormat;
     public readonly ENaniteMeshFormat NaniteMeshFormat = naniteMeshFormat;
     public readonly EMeshQuality MeshQuality = meshQuality;
+    public readonly int? PreferredMeshLodIndex = preferredMeshLodIndex;
     public readonly bool IncludeDisabledMeshSections = includeDisabledMeshSections;
 
     public readonly ETexturePlatform TexturePlatform = texturePlatform;
