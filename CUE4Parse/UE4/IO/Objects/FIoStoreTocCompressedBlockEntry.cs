@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using CUE4Parse.UE4.Readers;
+using CUE4Parse.UE4.Versions;
 
 namespace CUE4Parse.UE4.IO.Objects;
 
@@ -24,6 +25,17 @@ public readonly struct FIoStoreTocCompressedBlockEntry
 
     public FIoStoreTocCompressedBlockEntry(FArchive Ar)
     {
+        if (Ar.Game is GAME_MisaOnline)
+        {
+            var uncompressedSizeAndMethod = Ar.Read<uint>();
+            var compressedSizeAndOffset = Ar.Read<uint>();
+            var offsetHigh = Ar.Read<uint>();
+            var offset = ((ulong) offsetHigh << 8) | (compressedSizeAndOffset >> 24);
+            Offset_CompressedSize = offset | ((ulong) (compressedSizeAndOffset & SizeMask) << OffsetBits);
+            UncompressedSize_CompressionMethodIndex = uncompressedSizeAndMethod;
+            return;
+        }
+
         Offset_CompressedSize = Ar.Read<ulong>();
         UncompressedSize_CompressionMethodIndex = Ar.Read<uint>();
     }

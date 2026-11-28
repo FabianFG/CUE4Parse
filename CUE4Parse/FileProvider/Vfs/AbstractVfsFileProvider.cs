@@ -15,6 +15,7 @@ using CUE4Parse.GameTypes.Embark.Encryption.Aes;
 using CUE4Parse.GameTypes.INikki.Encryption.Aes;
 using CUE4Parse.GameTypes.MindsEye.Encryption.Aes;
 using CUE4Parse.GameTypes.MisaOnline.Encryption.Aes;
+using CUE4Parse.GameTypes.MisaOnline.Vfs;
 using CUE4Parse.GameTypes.MonsterHunterOutlanders.Encryption.Aes;
 using CUE4Parse.GameTypes.NetEase.MAR.Encryption.Aes;
 using CUE4Parse.GameTypes.NFS.Mobile.Encryption.Aes;
@@ -153,7 +154,9 @@ namespace CUE4Parse.FileProvider.Vfs
                         break;
                     case "UTOC":
                         openContainerStreamFunc ??= it => new FStreamArchive(it, stream!, Versions);
-                        reader = new IoStoreReader(archive, openContainerStreamFunc);
+                        reader = archive.Game is GAME_MisaOnline
+                            ? new MisaOnlineIoStoreReader(archive, openContainerStreamFunc)
+                            : new IoStoreReader(archive, openContainerStreamFunc);
                         break;
                     case "UONDEMANDTOC":
                         if (OnDemandOptions is null)
@@ -187,7 +190,9 @@ namespace CUE4Parse.FileProvider.Vfs
                         break;
                     case "UTOC":
                         openContainerStreamFunc ??= _ => utocArchive!;
-                        reader = new IoStoreReader(pakOrUtocArchive, openContainerStreamFunc);
+                        reader = pakOrUtocArchive.Game is GAME_MisaOnline
+                            ? new MisaOnlineIoStoreReader(pakOrUtocArchive, openContainerStreamFunc)
+                            : new IoStoreReader(pakOrUtocArchive, openContainerStreamFunc);
                         break;
                     case "UONDEMANDTOC":
                         if (OnDemandOptions is null)
@@ -220,7 +225,9 @@ namespace CUE4Parse.FileProvider.Vfs
                         break;
                     case "UTOC":
                         openContainerStreamFunc ??= it => new FRandomAccessStreamArchive(it, utocStream!, Versions);
-                        reader = new IoStoreReader(pakOrUtocArchive, openContainerStreamFunc);
+                        reader = pakOrUtocArchive.Game is GAME_MisaOnline
+                            ? new MisaOnlineIoStoreReader(pakOrUtocArchive, openContainerStreamFunc)
+                            : new IoStoreReader(pakOrUtocArchive, openContainerStreamFunc);
                         break;
                     case "UONDEMANDTOC":
                         if (OnDemandOptions is null)
@@ -502,6 +509,9 @@ namespace CUE4Parse.FileProvider.Vfs
 
         public void PostMount()
         {
+            if (Versions.Game is GAME_MisaOnline)
+                MountMisaOnlineIoStores();
+
             var workingAes = LoadIniConfigs();
             if (workingAes || DefaultGame.EncryptionKeyGuid is null) return;
 
@@ -520,6 +530,40 @@ namespace CUE4Parse.FileProvider.Vfs
                 }
                 _keys.TryRemove(group.Key, out _);
                 _requiredKeys[group.Key] = null;
+            }
+        }
+
+        private void MountMisaOnlineIoStores()
+        {
+            var readers = _unloadedVfs.Keys.OfType<MisaOnlineIoStoreReader>()
+                .Where(reader => reader.TocResource.DirectoryIndexBufferOffset == -1).ToArray();
+            if (readers.Length == 0 || !Files.TryGetValue($"{ProjectName}/AssetRegistry.bin", out var registryFile))
+                return;
+
+            Dictionary<FPackageId, string> packagePaths;
+            try
+            {
+                LoadVirtualPaths();
+                using var registryArchive = registryFile.CreateReader();
+                packagePaths = MisaOnlinePackagePaths.Read(registryArchive, FixPath);
+            }
+            catch (Exception e)
+            {
+                Log.Warning(e, "Failed to recover Misa Online IoStore paths from AssetRegistry.bin");
+                return;
+            }
+
+            Files.PreallocatePackageIndex(packagePaths.Count);
+            var countNewMounts = 0;
+            foreach (var reader in readers)
+            {
+                FAesKey? key = null;
+                if (reader.IsEncrypted && !_keys.TryGetValue(reader.EncryptionKeyGuid, out key))
+                    continue;
+
+                reader.SetPackagePaths(packagePaths);
+                reader.AesKey = key;
+                TryMountReader(reader, ref countNewMounts);
             }
         }
 
