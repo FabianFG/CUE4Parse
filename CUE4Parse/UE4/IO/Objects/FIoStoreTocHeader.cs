@@ -81,6 +81,31 @@ public class FIoStoreTocHeader
         Version = Ar.Read<EIoStoreTocVersion>();
         _reserved0 = Ar.Read<byte>();
         _reserved1 = Ar.Read<ushort>();
+        if (Ar.Game is GAME_MisaOnline)
+        {
+            // Misa Online writes the usual IoStore fields in a different order.
+            TocHeaderSize = Ar.Read<uint>();
+            TocEntryCount = Ar.Read<uint>();
+            CompressionBlockSize = Ar.Read<uint>();
+            PartitionCount = Ar.Read<uint>();
+            TocChunkPerfectHashSeedsCount = Ar.Read<uint>();
+            TocCompressedBlockEntryCount = Ar.Read<uint>();
+            DirectoryIndexSize = Ar.Read<uint>();
+            CompressionMethodNameLength = Ar.Read<uint>();
+            TocChunksWithoutPerfectHashCount = Ar.Read<uint>();
+            PartitionSize = Ar.Read<ulong>();
+            EncryptionKeyGuid = Ar.Read<FGuid>();
+            ContainerFlags = Ar.Read<EIoContainerFlags>();
+            EncryptionMethod = Ar.Read<EIoEncryptionMethod>();
+            _reserved4 = Ar.Read<ushort>();
+            TocCompressedBlockEntrySize = Ar.Read<uint>();
+            ContainerId = Ar.Read<FIoContainerId>();
+            CompressionMethodNameCount = Ar.Read<uint>();
+            Ar.Position += sizeof(uint); // reserved
+            CustomGameData = Ar.ReadArray<ulong>(5);
+            Ar.Position = Ar.Position.Align(4);
+            return;
+        }
         if (Ar.Game is GAME_ArcheAgeChronicles) Ar.Position += 8;
         TocHeaderSize = Ar.Read<uint>();
         TocEntryCount = Ar.Read<uint>();

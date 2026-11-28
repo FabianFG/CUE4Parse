@@ -153,7 +153,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
         }
 
         var encryptedBytesCount = Game is GAME_TamasShadowveil ? PakFileReader.CalculateEncryptedBytesCountForNetEase(ioEntry.ChunkId) : 0;
-        return Read(offset, size, offsetInFile, encryptedBytesCount);
+        return Read(offset, size, ioEntry.ChunkId, offsetInFile, encryptedBytesCount);
     }
 
     // If anyone really comes to read this here are some of my thoughts on designing loading of chunk ids
@@ -236,13 +236,13 @@ public partial class IoStoreReader : AbstractAesVfsReader
         if (TryResolve(chunkId, out var offsetLength))
         {
             var encryptedBytesCount = Game is GAME_TamasShadowveil ? PakFileReader.CalculateEncryptedBytesCountForNetEase(chunkId) : 0;
-            return Read((long) offsetLength.Offset, (long) offsetLength.Length, encryptedBytesCount: encryptedBytesCount);
+            return Read((long) offsetLength.Offset, (long) offsetLength.Length, chunkId, encryptedBytesCount: encryptedBytesCount);
         }
 
         throw new KeyNotFoundException($"Couldn't find chunk {chunkId} in IoStore {Name}");
     }
 
-    private byte[] Read(long offset, long length, long offsetInFile = 0L, int encryptedBytesCount = 0)
+    private byte[] Read(long offset, long length, FIoChunkId chunkId, long offsetInFile = 0L, int encryptedBytesCount = 0)
     {
         switch (Game)
         {
@@ -261,6 +261,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
 
         var compressedBuffer = Array.Empty<byte>();
         var uncompressedBuffer = Array.Empty<byte>();
+        object? customData = Game is GAME_MisaOnline ? chunkId : null;
 
         FArchive?[]? clonedReaders = null;
         for (int blockIndex = firstBlockIndex; blockIndex <= lastBlockIndex; blockIndex++)
@@ -294,7 +295,7 @@ public partial class IoStoreReader : AbstractAesVfsReader
             reader.ReadAt(partitionOffset, compressedBuffer, 0, (int) rawSize);
             // FragPunk decided to encrypt the global utoc too.
             // For Lord of Mysteries utoc files are "synthetic", without dir index, so we can't test the key.
-            compressedBuffer = DecryptCompressionBlock(compressedBuffer, (int) rawSize, blockIndex,
+            compressedBuffer = DecryptCompressionBlock(compressedBuffer, (int) rawSize, blockIndex, customData,
                 Game == GAME_LordOfMysteries || Game == GAME_FragPunk && Path.Contains("global", StringComparison.Ordinal));
 
             byte[] src;
@@ -519,12 +520,13 @@ public partial class IoStoreReader : AbstractAesVfsReader
         return bytes.CryptCtr(beginOffset, count, key, directoryIndexIv.Bytes);
     }
 
-    private byte[] DecryptCompressionBlock(byte[] bytes, int count, int blockIndex, bool bypassMountPointCheck)
+    private byte[] DecryptCompressionBlock(byte[] bytes, int count, int blockIndex, object? customData, bool bypassMountPointCheck)
     {
         if (!IsEncrypted || TocResource.EncryptionMethod != EIoEncryptionMethod.AES_CTR)
-            return DecryptIfEncrypted(bytes, 0, count, IsEncrypted, bypassMountPointCheck);
+            return DecryptIfEncrypted(bytes, 0, count, IsEncrypted, bypassMountPointCheck,
+                customData: customData);
         if (CustomEncryption is not null)
-            return CustomEncryption(bytes, 0, count, false, this);
+            return CustomEncryption(bytes, 0, count, false, this, customData);
 
         EnsureValidAesKey(AesKey, bypassMountPointCheck);
         bytes.AsSpan(0, count).CryptCtrInPlace(AesKey!, TocResource.EncryptionIVs[blockIndex].Bytes);

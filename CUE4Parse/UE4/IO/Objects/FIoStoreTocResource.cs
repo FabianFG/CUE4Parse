@@ -84,7 +84,16 @@ namespace CUE4Parse.UE4.IO.Objects
             ChunkIds = archive.ReadArray<FIoChunkId>((int) Header.TocEntryCount);
 
             // Chunk offsets
-            ChunkOffsetLengths = archive.ReadArray<FIoOffsetAndLength>((int) Header.TocEntryCount);
+            if (archive.Game is GAME_MisaOnline)
+            {
+                ChunkOffsetLengths = new FIoOffsetAndLength[Header.TocEntryCount];
+                for (var i = 0; i < ChunkOffsetLengths.Length; i++)
+                    ChunkOffsetLengths[i] = FIoOffsetAndLength.FromMisaOnline(archive.ReadSpan(10));
+            }
+            else
+            {
+                ChunkOffsetLengths = archive.ReadArray<FIoOffsetAndLength>((int) Header.TocEntryCount);
+            }
 
             if (Ar.Game == GAME_NeedForSpeedMobile && !Ar.Name.EndsWith("global.utoc"))
             {
@@ -118,7 +127,7 @@ namespace CUE4Parse.UE4.IO.Objects
 
             // Compression blocks
             var isFragPunk = archive.Game == GAME_FragPunk;
-            if (!isFragPunk)
+            if (archive.Game is not (GAME_FragPunk or GAME_MisaOnline))
             {
                 CompressionBlocks = archive.ReadArray<FIoStoreTocCompressedBlockEntry>(
                     (int) Header.TocCompressedBlockEntryCount);
@@ -129,7 +138,7 @@ namespace CUE4Parse.UE4.IO.Objects
                 for (var i = 0; i < Header.TocCompressedBlockEntryCount; i++)
                 {
                     CompressionBlocks[i] = new FIoStoreTocCompressedBlockEntry(archive);
-                    archive.Position += 4;
+                    if (isFragPunk) archive.Position += 4;
                 }
             }
 
